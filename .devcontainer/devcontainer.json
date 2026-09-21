@@ -1,0 +1,39 @@
+{
+  "name": "RAG Backend",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "rag-backend",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "vscode",
+  "containerUser": "vscode",
+  "updateRemoteUserUID": true,
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": false,
+      "username": "vscode",
+      "uid": "automatic",
+      "gid": "automatic",
+      "upgradePackages": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": true
+    }
+  },
+  "postCreateCommand": "git config --global --add safe.directory /workspace && git config --global --add safe.directory /app",
+  "forwardPorts": [8000, 5432, 11434],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/app/.venv/bin/python",
+        "git.autofetch": true,
+        "git.confirmSync": false
+      }
+    }
+  }
+}

@@ -1,7 +1,0 @@
-[project]
-name = "expert-knowledge-acquisition"
-version = "0.1.0"
-description = "Expert knowledge acquisition system for eliciting Psychology expert knowledge for ADHD"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
