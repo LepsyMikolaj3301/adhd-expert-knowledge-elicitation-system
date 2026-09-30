@@ -8,13 +8,13 @@ services:
       - ${OLLAMA_DATA_PATH:-ollama-data}:/root/.ollama
     restart: unless-stopped
     # Uncomment when running on a machine with an NVIDIA GPU:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   postgres:
     image: pgvector/pgvector:pg16
