@@ -46,7 +46,7 @@ services:
     volumes:
       - .:/workspace:cached
       - ./backend:/app
-      - backend-venv:/app/.venv
+      - backend-venv:/opt/venv
     depends_on:
       postgres:
         condition: service_healthy

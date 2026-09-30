@@ -31,3 +31,10 @@ dev = [
     "ruff>=0.16.9",
     "ty>=0.0.84",
 ]
+notebooks = [
+    "ipykernel>=7.4.0",
+]
+scripts = [
+    "beautifulsoup4>=4.15.0",
+    "lxml>=6.1.3",
+]
