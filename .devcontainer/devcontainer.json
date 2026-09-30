@@ -7,17 +7,16 @@
   "remoteUser": "vscode",
   "containerUser": "vscode",
   "updateRemoteUserUID": true,
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,readonly"
+  ],
   "features": {
     "ghcr.io/devcontainers/features/common-utils:2": {
       "installZsh": false,
       "username": "vscode",
       "uid": "automatic",
       "gid": "automatic",
-      "upgradePackages": true
-    },
-    "ghcr.io/devcontainers/features/git:1": {
-      "version": "latest",
-      "ppa": true
+      "upgradePackages": false
     }
   },
   "postCreateCommand": "git config --global --add safe.directory /workspace && git config --global --add safe.directory /app",
