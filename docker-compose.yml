@@ -4,7 +4,8 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama-data:/root/.ollama
+      # Host path for models (bind mount). Falls back to the named volume if unset.
+      - ${OLLAMA_DATA_PATH:-ollama-data}:/root/.ollama
     restart: unless-stopped
     # Uncomment when running on a machine with an NVIDIA GPU:
     # deploy:
