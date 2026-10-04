@@ -34,8 +34,32 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # Dev workspace: the devcontainer attaches here. Full toolchain, scripts, notebooks, experiments.
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
+      OLLAMA_BASE_URL: http://ollama:11434
+      PYTHONPATH: /workspace/backend
+    volumes:
+      - .:/workspace:cached
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+  # Slim, deployable-style backend image. Start with: docker compose --profile app up
   rag-backend:
-    build: ./backend
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     env_file:
@@ -44,9 +68,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
       OLLAMA_BASE_URL: http://ollama:11434
     volumes:
-      - .:/workspace:cached
-      - ./backend:/app
-      - backend-venv:/opt/venv
+      - ./backend:/workspace/backend
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,4 +79,3 @@ services:
 volumes:
   ollama-data:
   postgres-data:
-  backend-venv:
