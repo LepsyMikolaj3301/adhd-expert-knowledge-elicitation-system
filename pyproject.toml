@@ -3,7 +3,10 @@ name = "rag-workspace"
 version = "0.0.0"
 description = "Monorepo root: shared tooling and dependency groups for backend, scripts and experiments"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "onnxruntime>=1.30.0",
+    "opencv-python-headless>=5.0.0.93",
+]
 
 # Root is a virtual project; every deployable lives in a workspace member.
 # Add future members here (e.g. "frontend" only if it has a Python side).
@@ -16,6 +19,7 @@ members = ["backend"]
 
 [dependency-groups]
 dev = [
+    "docling>=2.133.0",
     "pre-commit>=4.6.2",
     "ruff>=0.16.9",
     "ty>=0.0.84",
@@ -27,7 +31,6 @@ scripts = [
     "beautifulsoup4>=4.15.0",
     "lxml>=6.1.3",
 ]
-experiments = []
 
 [tool.ruff]
 line-length = 100
