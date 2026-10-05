@@ -46,6 +46,14 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
       OLLAMA_BASE_URL: http://ollama:11434
       PYTHONPATH: /workspace/backend
+    # GPU for experiments (torch / docling / local LMs). Needs the NVIDIA Container Toolkit on the host.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     volumes:
       - .:/workspace:cached
     depends_on:
