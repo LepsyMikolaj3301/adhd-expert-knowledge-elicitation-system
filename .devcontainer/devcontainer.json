@@ -1,7 +1,8 @@
 {
-  "name": "RAG Backend",
+  "name": "RAG Workspace",
   "dockerComposeFile": "../docker-compose.yml",
-  "service": "rag-backend",
+  "service": "dev",
+  "runServices": ["dev", "postgres", "ollama"],
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
   "remoteUser": "vscode",
@@ -19,7 +20,7 @@
       "upgradePackages": false
     }
   },
-  "postCreateCommand": "git config --global --add safe.directory /workspace && git config --global --add safe.directory /app",
+  "postCreateCommand": "git config --global --add safe.directory /workspace",
   "forwardPorts": [8000, 5432, 11434],
   "customizations": {
     "vscode": {

@@ -1,0 +1,40 @@
+[project]
+name = "rag-workspace"
+version = "0.0.0"
+description = "Monorepo root: shared tooling and dependency groups for backend, scripts and experiments"
+requires-python = ">=3.12"
+dependencies = []
+
+# Root is a virtual project; every deployable lives in a workspace member.
+# Add future members here (e.g. "frontend" only if it has a Python side).
+[tool.uv]
+package = false
+default-groups = ["dev", "notebooks", "scripts"]
+
+[tool.uv.workspace]
+members = ["backend"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.2",
+    "ruff>=0.16.9",
+    "ty>=0.0.84",
+]
+notebooks = [
+    "ipykernel>=7.4.0",
+]
+scripts = [
+    "beautifulsoup4>=4.15.0",
+    "lxml>=6.1.3",
+]
+experiments = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM"]
+
+[tool.ty.environment]
+python-version = "3.12"
