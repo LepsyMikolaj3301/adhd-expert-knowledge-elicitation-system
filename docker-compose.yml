@@ -90,6 +90,9 @@ services:
               capabilities: [gpu]
     volumes:
       - .:/workspace:cached
+      # Dev-only caches
+      - uv-cache:/home/vscode/.cache/uv
+      - hf-cache:/home/vscode/.cache/huggingface
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,3 +131,5 @@ volumes:
   ollama-data:
   postgres-data:
   graphdb-data:
+  uv-cache:
+  hf-cache:

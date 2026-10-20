@@ -21,17 +21,46 @@
     }
   },
   "postCreateCommand": "git config --global --add safe.directory /workspace",
-  "forwardPorts": [8000, 5432, 7200, 11434],
+  "forwardPorts": [8000, 5432, 7200, 11434, 8888],
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "charliermarsh.ruff",
+        "astral-sh.ty",
         "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker",
         "anthropic.claude-code"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "jupyter.notebookFileRoot": "${workspaceFolder}",
+        "notebook.output.textLineLimit": 60,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+        "[jupyter]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        "notebook.formatOnSave.enabled": true,
+        "notebook.codeActionsOnSave": {
+          "notebook.source.fixAll": "explicit",
+          "notebook.source.organizeImports": "explicit"
+        },
+        "python.analysis.typeCheckingMode": "off",
         "git.autofetch": true,
         "git.confirmSync": false
       }

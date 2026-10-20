@@ -22,6 +22,8 @@ dev = [
 ]
 notebooks = [
     "ipykernel>=7.4.0",
+    "ipywidgets>=8.1",
+    "jupyterlab>=4.3",
 ]
 scripts = [
     "beautifulsoup4>=4.15.0",
