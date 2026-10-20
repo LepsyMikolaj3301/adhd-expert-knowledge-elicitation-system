@@ -2,7 +2,7 @@
   "name": "RAG Workspace",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "dev",
-  "runServices": ["dev", "postgres", "ollama"],
+  "runServices": ["dev", "postgres", "graphdb", "graphdb-init", "ollama"],
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
   "remoteUser": "vscode",
@@ -21,7 +21,7 @@
     }
   },
   "postCreateCommand": "git config --global --add safe.directory /workspace",
-  "forwardPorts": [8000, 5432, 11434],
+  "forwardPorts": [8000, 5432, 7200, 11434],
   "customizations": {
     "vscode": {
       "extensions": [

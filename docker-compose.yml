@@ -34,6 +34,38 @@ services:
       retries: 10
     restart: unless-stopped
 
+  graphdb:
+    image: ontotext/graphdb:11.5.2
+    ports:
+      - "${GRAPHDB_HOST_PORT:-7200}:7200"
+    environment:
+      GDB_JAVA_OPTS: >-
+        -Xms1g -Xmx${GRAPHDB_HEAP_SIZE:-2g}
+        -Dgraphdb.home=/opt/graphdb/home
+    volumes:
+      - graphdb-data:/opt/graphdb/home
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:7200/rest/repositories >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  # One-shot: creates the GraphDB repository if it does not exist yet (idempotent).
+  graphdb-init:
+    image: curlimages/curl:latest
+    depends_on:
+      graphdb:
+        condition: service_healthy
+    environment:
+      GRAPHDB_URL: http://graphdb:7200
+      GRAPHDB_REPOSITORY: ${GRAPHDB_REPOSITORY:-adhd-knowledge}
+    volumes:
+      - ./backend/db/graphdb:/init:ro
+    entrypoint: ["sh", "/init/init-repo.sh"]
+    restart: "no"
+
   # Dev workspace: the devcontainer attaches here. Full toolchain, scripts, notebooks, experiments.
   dev:
     build:
@@ -45,6 +77,8 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
       OLLAMA_BASE_URL: http://ollama:11434
+      GRAPHDB_URL: http://graphdb:7200
+      GRAPHDB_REPOSITORY: ${GRAPHDB_REPOSITORY:-adhd-knowledge}
       PYTHONPATH: /workspace/backend
     # GPU for experiments (torch / docling / local LMs). Needs the NVIDIA Container Toolkit on the host.
     deploy:
@@ -59,6 +93,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      graphdb-init:
+        condition: service_completed_successfully
       ollama:
         condition: service_started
 
@@ -75,11 +111,15 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
       OLLAMA_BASE_URL: http://ollama:11434
+      GRAPHDB_URL: http://graphdb:7200
+      GRAPHDB_REPOSITORY: ${GRAPHDB_REPOSITORY:-adhd-knowledge}
     volumes:
       - ./backend:/workspace/backend
     depends_on:
       postgres:
         condition: service_healthy
+      graphdb-init:
+        condition: service_completed_successfully
       ollama:
         condition: service_started
     restart: unless-stopped
@@ -87,3 +127,4 @@ services:
 volumes:
   ollama-data:
   postgres-data:
+  graphdb-data:
