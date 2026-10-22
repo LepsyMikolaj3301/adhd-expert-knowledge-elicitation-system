@@ -66,6 +66,43 @@ services:
     entrypoint: ["sh", "/init/init-repo.sh"]
     restart: "no"
 
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_API_HOST_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_HOST_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  # One-shot: creates the S3 bucket and the app user if they do not exist yet (idempotent).
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_URL: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-documents}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-rag-app}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-rag-app-secret}
+    volumes:
+      - ./backend/db/minio:/init:ro
+    entrypoint: ["sh", "/init/init-bucket.sh"]
+    restart: "no"
+
   # Dev workspace: the devcontainer attaches here. Full toolchain, scripts, notebooks, experiments.
   dev:
     build:
@@ -79,6 +116,11 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       GRAPHDB_URL: http://graphdb:7200
       GRAPHDB_REPOSITORY: ${GRAPHDB_REPOSITORY:-adhd-knowledge}
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-documents}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-rag-app}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-rag-app-secret}
+      S3_REGION: ${S3_REGION:-us-east-1}
       PYTHONPATH: /workspace/backend
     # GPU for experiments (torch / docling / local LMs). Needs the NVIDIA Container Toolkit on the host.
     deploy:
@@ -98,6 +140,8 @@ services:
         condition: service_healthy
       graphdb-init:
         condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
       ollama:
         condition: service_started
 
@@ -116,12 +160,19 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       GRAPHDB_URL: http://graphdb:7200
       GRAPHDB_REPOSITORY: ${GRAPHDB_REPOSITORY:-adhd-knowledge}
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-documents}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-rag-app}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-rag-app-secret}
+      S3_REGION: ${S3_REGION:-us-east-1}
     volumes:
       - ./backend:/workspace/backend
     depends_on:
       postgres:
         condition: service_healthy
       graphdb-init:
+        condition: service_completed_successfully
+      minio-init:
         condition: service_completed_successfully
       ollama:
         condition: service_started
@@ -131,5 +182,6 @@ volumes:
   ollama-data:
   postgres-data:
   graphdb-data:
+  minio-data:
   uv-cache:
   hf-cache:
