@@ -1,0 +1,40 @@
+# ============================================================================
+# Chunking config — consumed by scripts/chunk_parsed_documents.py
+# (s3://$S3_BUCKET/parsed/ -> s3://$S3_BUCKET/chunked/).
+# Schema + validation: backend/app/chunking/config.py.
+#
+# Adding a chunking method: write backend/app/chunking/<name>.py, add its
+# config model/field and `method` literal in config.py, register it in
+# backend/app/chunking/__init__.py, then add a sibling block below.
+# Changing anything the active method uses re-chunks all documents (the
+# config hash is stored on every output object).
+# ============================================================================
+
+method: semantic            # which method block below is used
+
+documents:
+  # Documents whose source.metadata.role is listed here are not chunked.
+  #  - level0_structured: ICD-11 MMS entities; structured fields go to GraphDB, and their
+  #    diagnostic criteria duplicate the Foundation entity below.
+  #  - fallback_for_missing_cddr_sections: CDDR PDF; same text as the Foundation entity (API)
+  #    plus page-overlap noise from neighbouring disorders. Only needed if the API lacks sections.
+  skip_roles: [level0_structured, fallback_for_missing_cddr_sections]
+
+embeddings:                 # shared by every method that needs vectors
+  model: bge-m3             # docker compose exec ollama ollama pull bge-m3
+  batch_size: 64
+  truncate: true
+
+tokenizer: BAAI/bge-m3      # HF tokenizer used to measure chunk size (null = word count)
+
+semantic:
+  sentence_split: true      # paragraphs -> sentences; list items and tables stay atomic units
+  buffer_size: 1            # neighbours on each side joined into a unit's embedding text
+  breakpoint:
+    type: percentile        # percentile | std_dev | interquartile | gradient
+    amount: 90
+  min_tokens: 80
+  max_tokens: 512
+  respect_sections: true    # section boundaries are hard breaks...
+  merge_scope_level: 1      # ...but undersized chunks merge with neighbours sharing path[:N]
+  contextual_header: true   # also store "H1 > H2 > H3\n\n<text>" as contextual_text
