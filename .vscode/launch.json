@@ -36,6 +36,22 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Script: parse_raw_documents",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/parse_raw_documents.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Script: chunk_parsed_documents",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/chunk_parsed_documents.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Python: current file",
       "type": "debugpy",
       "request": "launch",
