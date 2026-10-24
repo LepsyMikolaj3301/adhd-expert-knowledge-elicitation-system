@@ -1,0 +1,18 @@
+# ============================================================================
+# Indexing config — consumed by scripts/index_chunks.py
+# (s3://$S3_BUCKET/chunked/ -> Postgres `chunks` table, pgvector).
+# Schema + validation: backend/app/indexing/config.py.
+#
+# Changing anything below re-embeds all documents (the config hash is stored
+# on every row). `dimensions` must match `chunks.embedding` in
+# backend/db/init.sql; a different width needs DROP TABLE chunks, then
+# scripts/init_db.py, then a re-index.
+# ============================================================================
+
+embeddings:
+  model: bge-m3             # docker compose exec ollama ollama pull bge-m3
+  batch_size: 32
+  truncate: true
+  dimensions: 1024          # checked against the model output and the table column
+
+text_field: contextual_text # contextual_text | text — what gets embedded

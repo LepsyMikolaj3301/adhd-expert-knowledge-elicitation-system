@@ -44,7 +44,7 @@ from lxml import etree
 from app.settings import settings
 from app.storage import get_s3_client, s3_get, s3_head, s3_put
 
-PARSER_VERSION = "2"
+PARSER_VERSION = "3"
 SCHEMA_VERSION = 1
 
 # Only this section of these PDFs is parsed: source_id -> title of its PDF outline bookmark.
@@ -388,7 +388,7 @@ def parse_icd(entity: dict, siblings: dict[str, dict], release: str | None) -> t
         "parents": [ref(u) for u in entity.get("parent", [])],
         "children": [ref(u) for u in entity.get("child", [])],
     }
-    sections = split_markdown_sections(criteria) if criteria else []
+    sections = icd_sections(title, icd, criteria)
     parsed = {
         "parser": {"name": "icd"},
         "document": {"title": title, "page_range": None},
@@ -396,6 +396,45 @@ def parse_icd(entity: dict, siblings: dict[str, dict], release: str | None) -> t
         "icd": icd,
     }
     return parsed, icd_markdown(title, icd, criteria)
+
+
+def icd_sections(title: str, icd: dict, criteria: str) -> list[dict]:
+    """The structured fields and the diagnostic criteria as sections, all under one root heading
+    ("<code> <title>") so every chunk keeps the entity it came from."""
+    root = f"{icd['code']} {title}" if icd["code"] else title
+    # Children not among the fetched entities (all of them for the Foundation) are bare URIs.
+    subcategories = [
+        f"{c['code'] or ''} {c['title']}".strip() for c in icd["children"] if c["title"]
+    ]
+    fields = [
+        ("Definition", "paragraph", [icd["definition"]] if icd["definition"] else []),
+        ("Inclusions", "list_item", icd["inclusions"]),
+        ("Exclusions", "list_item", icd["exclusions"]),
+        ("Synonyms", "list_item", icd["synonyms"]),
+        ("Subcategories", "list_item", subcategories),
+    ]
+    sections = [
+        {
+            "heading": heading,
+            "level": 2,
+            "path": [root, heading],
+            "blocks": [{"type": kind, "text": text, "page": None} for text in texts],
+        }
+        for heading, kind, texts in fields
+        if texts
+    ]
+    if criteria:
+        sections += [
+            {
+                "heading": s["heading"],
+                "level": s["level"],
+                "path": [root, *s["path"]],
+                "blocks": s["blocks"],
+            }
+            for s in split_markdown_sections(criteria)
+        ]
+    # Renumbered: the criteria sections come with ids of their own, starting at s1.
+    return [{"id": f"s{i}", **s} for i, s in enumerate(sections, 1)]
 
 
 def icd_markdown(title: str, icd: dict, criteria: str) -> str:

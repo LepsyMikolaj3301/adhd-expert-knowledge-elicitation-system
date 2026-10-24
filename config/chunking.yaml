@@ -13,12 +13,13 @@
 method: semantic            # which method block below is used
 
 documents:
-  # Documents whose source.metadata.role is listed here are not chunked.
-  #  - level0_structured: ICD-11 MMS entities; structured fields go to GraphDB, and their
-  #    diagnostic criteria duplicate the Foundation entity below.
+  # Documents whose source.metadata.role is listed here are not chunked. Empty: every source
+  # goes to the vector index. Candidates if retrieval gets crowded with duplicates:
+  #  - level0_structured: ICD-11 MMS entities; their diagnostic criteria repeat the
+  #    Foundation entity (the structured fields also go to GraphDB).
   #  - fallback_for_missing_cddr_sections: CDDR PDF; same text as the Foundation entity (API)
-  #    plus page-overlap noise from neighbouring disorders. Only needed if the API lacks sections.
-  skip_roles: [level0_structured, fallback_for_missing_cddr_sections]
+  #    plus page-overlap noise from neighbouring disorders.
+  skip_roles: []
 
 embeddings:                 # shared by every method that needs vectors
   model: bge-m3             # docker compose exec ollama ollama pull bge-m3
