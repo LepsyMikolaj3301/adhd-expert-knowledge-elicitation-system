@@ -20,6 +20,22 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Script: fetch_sources",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/fetch_sources.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Script: upload_raw_documents",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/upload_raw_documents.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Python: current file",
       "type": "debugpy",
       "request": "launch",

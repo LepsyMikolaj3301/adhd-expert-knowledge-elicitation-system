@@ -1,0 +1,220 @@
+# ============================================================================
+# Literature source manifest — ADHD knowledge base (baseline corpus)
+# ----------------------------------------------------------------------------
+# Consumed by scripts/fetch_sources.py (download -> data/raw/<id>/) and
+# scripts/upload_raw_documents.py (data/raw/ -> s3://$S3_BUCKET/raw/).
+# Schema + validation: backend/app/sources.py. Live results of a run are in
+# data/raw/_fetch_report.json; per-source details in data/raw/<id>/meta.json.
+#
+# Rules:
+#   - `attempts` are tried in order (primary first, then fallbacks); the first
+#     whose response passes its `expect` check is saved UNMODIFIED.
+#   - Polite fetching: User-Agent with CONTACT_EMAIL, max 1 req/s per host,
+#     retries with exponential backoff, skip if the saved file's sha256 matches.
+#   - Secrets (ICD_CLIENT_ID, ICD_CLIENT_SECRET) come from env only.
+#   - `metadata` is copied into meta.json for downstream stages.
+#   - Licences: corpus + extracted claims stay OUT of the public repo (several
+#     sources are NC-ND). Only code + this manifest are published.
+# ============================================================================
+
+sources:
+
+  # --------------------------------------------------------------------------
+  # LEVEL 0 — ICD-11 (WHO). Not fetched yet: waiting for ICD credentials.
+  # --------------------------------------------------------------------------
+  - id: icd11_mms_6a05
+    title: "ICD-11 MMS — 6A05 Attention deficit hyperactivity disorder"
+    release_or_version: "2026-01"
+    metadata:
+      role: level0_structured        # deterministic -> GraphDB, no LLM
+      licence: "WHO ICD-11 licence — https://icd.who.int/en/docs/icd11-license.pdf"
+    auth:
+      type: oauth2_client_credentials
+      token_url: https://icdaccessmanagement.who.int/connect/token  # POST form: grant_type, client_id, client_secret, scope
+      scope: icdapi_access
+      env: [ICD_CLIENT_ID, ICD_CLIENT_SECRET]   # register at https://icd.who.int/icdapi
+      token_ttl_minutes: 55                     # tokens live ~1h
+    required_headers:                           # plus "Authorization: Bearer <token>"
+      API-Version: v2
+      Accept-Language: en
+      Accept: application/json
+    # Traversal: fetch `mms_entity`, then every URI in its `child` array (never hardcode
+    # child IDs; URIs come back as http:// -> rewrite to https://). 6A05.Y / 6A05.Z are
+    # residuals served by the /other and /unspecified endpoints. One raw JSON per entity.
+    endpoints:
+      list_releases: https://id.who.int/icd/release/11/mms                    # log latestRelease
+      code_lookup: https://id.who.int/icd/release/11/2026-01/mms/codeinfo/6A05  # stemId must end in /821852937
+      mms_entity: https://id.who.int/icd/release/11/2026-01/mms/821852937?include=diagnosticCriteria
+      mms_residual_other: https://id.who.int/icd/release/11/2026-01/mms/821852937/other              # 6A05.Y
+      mms_residual_unspecified: https://id.who.int/icd/release/11/2026-01/mms/821852937/unspecified  # 6A05.Z
+
+  - id: icd11_foundation_6a05_diagnostic_requirements
+    title: "ICD-11 Foundation — 6A05 with diagnostic requirements (CDDR content)"
+    release_or_version: "2026-01"
+    metadata:
+      role: level0_text_for_claims
+      licence: "WHO ICD-11 licence — https://icd.who.int/en/docs/icd11-license.pdf"
+    credentials_from: icd11_mms_6a05
+    endpoints:
+      # diagnosticCriteria is opt-in and returned as Markdown (ICD-API release notes v2.2).
+      # Prefer the foundation URI from the MMS entity's `source` field over this hardcoded ID.
+      foundation_entity: https://id.who.int/icd/entity/821852937?releaseId=2026-01&include=diagnosticCriteria
+
+  - id: icd11_cddr_pdf
+    title: "Clinical descriptions and diagnostic requirements for ICD-11 MBND (CDDR), WHO 2024"
+    release_or_version: "2024"
+    metadata:
+      role: fallback_for_missing_cddr_sections
+      licence: "CC BY-NC-SA 3.0 IGO per link (page icons show NC-ND) — confirm on PDF copyright page"
+    # Landing page: https://www.who.int/publications/i/item/9789240077263 (ISBN 9789240077263)
+    attempts:
+      - kind: http
+        expect: pdf
+        name: cddr
+        url: https://iris.who.int/server/api/core/bitstreams/dcf73611-9e0f-4d5c-85f6-85a58b0da6de/content
+
+  # --------------------------------------------------------------------------
+  # LITERATURE CLAIMS — consensus statements
+  # --------------------------------------------------------------------------
+  - id: wfadhd_consensus_2021
+    title: "The World Federation of ADHD International Consensus Statement: 208 Evidence-based Conclusions about the Disorder"
+    doi: 10.1016/j.neubiorev.2021.01.022
+    pmid: "33549739"
+    pmcid: PMC8328933
+    release_or_version: "2021;128:789-818"
+    metadata:
+      role: literature_claims
+      citation: "Faraone SV et al. Neurosci Biobehav Rev. 2021;128:789-818"
+      evidence_level: meta_analysis_or_large_registry
+      licence: "PMC author manuscript — 'available for text mining; may be used consistent with fair use' (efetch <license>); Europe PMC lists cc by"
+    attempts:
+      # efetch JATS has one <list-item> per numbered statement (208).
+      - kind: http
+        expect: xml
+        name: fulltext
+        url: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=8328933
+      # Europe PMC returned 500 (author manuscript is outside the OA subset).
+      - kind: http
+        expect: xml
+        name: fulltext
+        url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8328933/fullTextXML
+      # PMC HTML is behind a reCAPTCHA for non-browser clients.
+      - kind: http
+        expect: html
+        name: fulltext
+        url: https://pmc.ncbi.nlm.nih.gov/articles/PMC8328933/
+
+  - id: euro_consensus_adult_adhd_2019
+    title: "Updated European Consensus Statement on diagnosis and treatment of adult ADHD"
+    doi: 10.1016/j.eurpsy.2018.11.001
+    pmid: "30453134"
+    release_or_version: "2019;56:14-34"
+    metadata:
+      role: literature_claims
+      citation: "Kooij JJS et al. European Psychiatry. 2019;56:14-34"
+      evidence_level: expert_consensus
+      licence: "CC BY-NC-ND (Europe PMC: cc by-nc-nd)"
+    attempts:
+      # No PMCID / not open access in Europe PMC today — kept in case that changes.
+      - kind: europepmc_resolve
+        query: 'DOI:"10.1016/j.eurpsy.2018.11.001"'
+      # The DOI now resolves to Cambridge Core (journal moved), with full-text HTML.
+      - kind: http
+        expect: html
+        name: fulltext
+        url: https://doi.org/10.1016/j.eurpsy.2018.11.001
+      - kind: http
+        expect: pdf
+        name: fulltext
+        url: https://www.cambridge.org/core/services/aop-cambridge-core/content/view/707E2A36539213CF85EACCA576F47427/S092493380000910Xa.pdf/updated-european-consensus-statement-on-diagnosis-and-treatment-of-adult-adhd.pdf
+      # Self-archived copy.
+      - kind: http
+        expect: pdf
+        name: fulltext
+        url: https://ddd.uab.cat/pub/artpub/2019/223450/223450.pdf
+
+  # --------------------------------------------------------------------------
+  # LITERATURE CLAIMS — guidelines
+  # --------------------------------------------------------------------------
+  - id: nice_ng87
+    title: "Attention deficit hyperactivity disorder: diagnosis and management (NICE NG87)"
+    metadata:
+      role: literature_claims
+      evidence_level: national_guideline
+      licence: "© NICE, all rights reserved, subject to Notice of rights — research use, no redistribution"
+    # Not NBK53659: that is the superseded 2008 guideline (CG72).
+    attempts:
+      - kind: http
+        expect: html
+        urls:
+          recommendations: https://www.nice.org.uk/guidance/ng87/chapter/Recommendations
+          update_information: https://www.nice.org.uk/guidance/ng87/chapter/Update-information
+          overview: https://www.nice.org.uk/guidance/ng87
+      - kind: http
+        expect: pdf
+        name: guideline
+        url: https://www.nice.org.uk/guidance/ng87/resources/attention-deficit-hyperactivity-disorder-diagnosis-and-management-pdf-1837699732933
+
+  - id: aadpa_guideline_2022
+    title: "Australian Evidence-Based Clinical Practice Guideline for ADHD (AADPA, 2022)"
+    release_or_version: "2022"
+    metadata:
+      role: literature_claims
+      evidence_level: national_guideline   # tag each rec: evidence_based | consensus | practice_point
+    # Not scraped. Site: https://adhdguideline.aadpa.com.au/ — download URL and licence
+    # unconfirmed, check the licence before ingesting.
+    manual:
+      paths: [data/manual/aadpa_guideline.pdf, data/manual/aadpa_guideline.html]
+
+  # --------------------------------------------------------------------------
+  # LITERATURE CLAIMS — language / discourse (fills the "ADHD traits in texts" gap)
+  # --------------------------------------------------------------------------
+  - id: discourse_review_lifespan
+    title: "Narrative and Non-Narrative Discourse Skills in ADHD Across the Lifespan: A Systematic Review of the Literature"
+    doi: 10.1177/10870547251389329
+    pmid: "41250857"
+    pmcid: PMC13033048
+    metadata:
+      role: literature_claims
+      citation: "Journal of Attention Disorders (SAGE)"
+      evidence_level: systematic_review
+      licence: "CC BY 4.0"
+    attempts:
+      - kind: http
+        expect: xml
+        name: fulltext
+        url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13033048/fullTextXML
+      - kind: europepmc_resolve
+        query: 'TITLE:"Narrative and Non-Narrative Discourse Skills in ADHD"'
+
+  - id: carruthers_2021_pragmatics
+    title: "The profile of pragmatic language impairments in children with ADHD: A systematic review"
+    doi: 10.1017/S0954579421000328
+    pmid: "33973504"
+    release_or_version: "2021"
+    metadata:
+      role: literature_claims
+      citation: "Carruthers S et al. Development and Psychopathology. 2021"
+      evidence_level: systematic_review
+      population: children             # tag every claim — do not generalise to adults
+      licence: "CC BY"
+    attempts:
+      # No PMCID in Europe PMC today — kept in case that changes.
+      - kind: europepmc_resolve
+        query: 'DOI:"10.1017/S0954579421000328"'
+      - kind: http
+        expect: html
+        name: fulltext
+        url: https://doi.org/10.1017/S0954579421000328
+      - kind: http
+        expect: pdf
+        name: fulltext
+        url: https://www.cambridge.org/core/services/aop-cambridge-core/content/view/C2F8A25308982F7E0D2BDBE947B81DA1/S0954579421000328a.pdf/the-profile-of-pragmatic-language-impairments-in-children-with-adhd-a-systematic-review.pdf
+
+excluded:
+  - name: DSM-5-TR
+    reason: copyrighted; ICD-11 CDDR covers the same ground openly
+  - name: CADDRA Canadian ADHD Practice Guidelines 4.1
+    reason: licence permits one copy for personal/medical-practice use only
+  - name: NCBI Bookshelf NBK53659
+    reason: superseded 2008 NICE guideline (CG72)

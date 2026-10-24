@@ -66,8 +66,10 @@ services:
     entrypoint: ["sh", "/init/init-repo.sh"]
     restart: "no"
 
+  # MinIO no longer publishes images to Docker Hub/quay.io; Chainguard rebuilds them from upstream.
+  # Free tier only has floating tags, so pin by digest (minio RELEASE.2026-09-22T19-25-18Z).
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: cgr.dev/chainguard/minio:latest@sha256:d88920d6a50bd0b088223b688be3b76c63e6205dbe494437f67ba1240ea12880
     command: server /data --console-address ":9001"
     ports:
       - "${MINIO_API_HOST_PORT:-9000}:9000"
@@ -87,7 +89,8 @@ services:
 
   # One-shot: creates the S3 bucket and the app user if they do not exist yet (idempotent).
   minio-init:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    # -dev variant ships a shell, needed for the init script.
+    image: cgr.dev/chainguard/minio-client:latest-dev@sha256:f0b1d3d6ae12391d9bbe88345dee6da67027c93cda18dc5c9a463c2cc7d61b29
     depends_on:
       minio:
         condition: service_healthy

@@ -28,6 +28,7 @@ notebooks = [
 scripts = [
     "beautifulsoup4>=4.15.0",
     "lxml>=6.1.3",
+    "pyyaml>=6.0",
 ]
 experiments = []
 
