@@ -24,6 +24,7 @@ K = 5  # chunks given to the generator
 CANDIDATES = 20  # retrieval depth for the metrics
 MODELS = ["qwen3.5:9b", "gemma4:e4b"]
 GENERATION_OPTIONS = {"temperature": 0, "num_ctx": 8192, "num_predict": 600}
+SAMPLING_TEMPERATURE = 0.7  # used when a question is asked more than once
 NOT_IN_SOURCES = "NOT_IN_SOURCES"
 
 DATASET = Path("data/eval/bronze_qa.json")
@@ -85,6 +86,37 @@ async def retrieve(
         )
         for r in rows
     ]
+
+
+async def oracle_context(
+    conn: asyncpg.Connection, embedder: Embedder, item: dict, retrieved: list[RetrievedChunk]
+) -> list[RetrievedChunk]:
+    """The retrieved context with the item's gold chunks forced in: gold chunks plus the best
+    non-gold retrieved ones, same size as `retrieved`, ordered by similarity to the question.
+    Answering well here but not from `retrieved` points at retrieval, not the model."""
+    gold_ids = [ev["chunk_id"] for ev in item["evidence"]]
+    rows = await conn.fetch(
+        "SELECT id, metadata->>'source_id' AS source_id, metadata->>'title' AS title, "
+        "heading_path, pages, text, 1 - (embedding <=> $1) AS score "
+        "FROM chunks WHERE id = ANY($2)",
+        embedder.embed([item["question"]])[0],
+        gold_ids,
+    )
+    gold = [
+        RetrievedChunk(
+            r["id"],
+            r["source_id"],
+            r["title"] or "",
+            list(r["heading_path"]),
+            list(r["pages"]),
+            r["text"],
+            float(r["score"]),
+        )
+        for r in rows
+    ]
+    fill = [c for c in retrieved if not relevant_evidence(c.id, c.text, item)]
+    context = gold + fill[: max(len(retrieved) - len(gold), 0)]
+    return sorted(context, key=lambda c: c.score, reverse=True)
 
 
 # --------------------------------------------------------------------------- generation
@@ -233,10 +265,13 @@ def write_json(path: Path, data: dict) -> None:
 # --------------------------------------------------------------------------- judge
 
 JUDGE_RUBRIC = f"""You grade answers from a retrieval-augmented QA system about ADHD.
-You get the question, a reference answer, the context passages the system saw (numbered
-[1]..[k]) and the system's answer, which should cite passages as [n] or say {NOT_IN_SOURCES}.
+Each item is one question with a reference answer, the context passages the systems saw
+(numbered [1]..[k]) and the answers of one or more anonymous systems. A system may have been
+asked the same question several times (samples 1..N); grade every sample on its own, then
+judge how consistent that system was across its samples. Answers should cite passages as [n]
+or say {NOT_IN_SOURCES}.
 
-Score each from 1 (bad) to 5 (excellent):
+Per sample, score each from 1 (bad) to 5 (excellent):
 - correctness: agreement with the reference answer on the facts that matter. Extra correct
   detail is fine; contradictions or wrong facts are not.
 - faithfulness: every claim is supported by the context passages (not by outside knowledge).
@@ -249,36 +284,72 @@ anyway gives abstention_ok = false and correctness 1. For answerable questions a
 gets correctness 1 and completeness 1; abstention_ok = null.
 pass = correctness >= 4 and faithfulness >= 4 (for unanswerable: pass = abstention_ok).
 
+Per system (only when it has 2+ samples):
+- consistency 1-5: 5 = same conclusion, same key facts and same supporting passages in every
+  sample (wording may differ); 3 = same conclusion but samples differ in which facts or
+  passages they use, or some drop key points; 1 = samples contradict each other, or some
+  abstain while others answer.
+- behaviour_changed: true if any sample differs from the others in its conclusion, its
+  abstain/answer decision or its line of reasoning (not just wording or length).
+- consistency_note: one sentence on what changed, or "stable".
+
 Reply with one JSON object only:
-{{"correctness": int, "faithfulness": int, "citation_quality": int, "completeness": int,
- "abstention_ok": bool|null, "pass": bool, "rationale": "<one sentence>"}}"""
+{{"<system label>": {{"samples": [{{"correctness": int, "faithfulness": int,
+   "citation_quality": int, "completeness": int, "abstention_ok": bool|null, "pass": bool,
+   "rationale": "<one sentence>"}}, ...one per sample, in order],
+  "consistency": int|null, "behaviour_changed": bool|null, "consistency_note": str|null}},
+ ...one per system}}"""
 
 JUDGE_FIELDS = ("correctness", "faithfulness", "citation_quality", "completeness")
 
 
-def judge_prompt(question: dict, answer_text: str) -> str:
-    """`question` is an entry of generations.json["questions"] (it holds the context)."""
-    context = "\n\n".join(
-        f"[{n}] {c['id']}\n{c['text']}" for n, c in enumerate(question["context"], 1)
+def judge_prompt(question: dict, context: list[dict], systems: dict[str, list[str]]) -> str:
+    """One grading item: `question` is an entry of generations.json["questions"], `context` the
+    passages the systems saw and `systems` maps a blind label to its sample answers."""
+    passages = "\n\n".join(f"[{n}] {c['id']}\n{c['text']}" for n, c in enumerate(context, 1))
+    answers = "\n\n".join(
+        f"=== System {label}, sample {i} ===\n{text}"
+        for label, samples in systems.items()
+        for i, text in enumerate(samples, 1)
     )
     return (
         f"Question type: {question['type']}\n"
         f"Question: {question['question']}\n\n"
         f"Reference answer: {question['reference_answer']}\n\n"
-        f"Context passages:\n\n{context}\n\n"
-        f"System answer:\n{answer_text}"
+        f"Context passages:\n\n{passages}\n\n"
+        f"Answers:\n\n{answers}"
     )
 
 
-def parse_judgment(text: str) -> dict:
-    """The judge's JSON object, validated. Raises ValueError on a malformed reply."""
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
-        raise ValueError(f"no JSON object in judge reply: {text[:200]!r}")
-    data = json.loads(match.group(0))
+def parse_sample_judgment(data: dict) -> dict:
     for name in JUDGE_FIELDS:
         if not isinstance(data.get(name), int) or not 1 <= data[name] <= 5:
             raise ValueError(f"{name} must be an int 1-5, got {data.get(name)!r}")
     if not isinstance(data.get("pass"), bool):
         raise ValueError(f"pass must be a bool, got {data.get('pass')!r}")
     return {k: data.get(k) for k in (*JUDGE_FIELDS, "abstention_ok", "pass", "rationale")}
+
+
+def parse_judgment(reply: str | dict, systems: dict[str, list[str]]) -> dict:
+    """The judge's reply for one item, validated against the systems and sample counts it was
+    given. Raises ValueError on a malformed reply."""
+    if isinstance(reply, str):
+        match = re.search(r"\{.*\}", reply, re.DOTALL)
+        if not match:
+            raise ValueError(f"no JSON object in judge reply: {reply[:200]!r}")
+        reply = json.loads(match.group(0))
+    out = {}
+    for label, samples in systems.items():
+        verdict = reply.get(label)
+        if not isinstance(verdict, dict) or len(verdict.get("samples", [])) != len(samples):
+            raise ValueError(f"system {label}: expected {len(samples)} sample judgments")
+        consistency = verdict.get("consistency")
+        if len(samples) > 1 and (not isinstance(consistency, int) or not 1 <= consistency <= 5):
+            raise ValueError(f"system {label}: consistency must be an int 1-5")
+        out[label] = {
+            "samples": [parse_sample_judgment(j) for j in verdict["samples"]],
+            "consistency": consistency,
+            "behaviour_changed": verdict.get("behaviour_changed"),
+            "consistency_note": verdict.get("consistency_note"),
+        }
+    return out
