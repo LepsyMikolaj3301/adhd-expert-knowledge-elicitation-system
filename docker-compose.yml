@@ -34,6 +34,25 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # Web UI for Postgres: docker compose --profile tools up -d pgadmin  ->  http://<host>:5050
+  # Login-free (single-user desktop mode); only expose it on a private network such as Tailscale.
+  pgadmin:
+    profiles: [tools]
+    image: dpage/pgadmin4:latest
+    ports:
+      - "${PGADMIN_HOST_PORT:-5050}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   graphdb:
     image: ontotext/graphdb:11.5.2
     ports:
@@ -184,6 +203,7 @@ services:
 volumes:
   ollama-data:
   postgres-data:
+  pgadmin-data:
   graphdb-data:
   minio-data:
   uv-cache:
