@@ -14,11 +14,10 @@ method: semantic            # which method block below is used
 
 documents:
   # Documents whose source.metadata.role is listed here are not chunked. Empty: every source
-  # goes to the vector index. Candidates if retrieval gets crowded with duplicates:
-  #  - level0_structured: ICD-11 MMS entities; their diagnostic criteria repeat the
-  #    Foundation entity (the structured fields also go to GraphDB).
-  #  - fallback_for_missing_cddr_sections: CDDR PDF; same text as the Foundation entity (API)
-  #    plus page-overlap noise from neighbouring disorders.
+  # goes to the vector index. Sources under `excluded:` (with an id) in config/sources.yaml are
+  # skipped by every stage regardless. The ICD Foundation entity and CDDR PDF are excluded there
+  # (duplicates of the MMS entity); level0_structured (MMS) is the only ICD text indexed, so do
+  # not skip that role.
   skip_roles: []
 
 embeddings:                 # shared by every method that needs vectors

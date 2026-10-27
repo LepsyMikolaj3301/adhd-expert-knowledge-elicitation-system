@@ -1,13 +1,15 @@
 """Score retrieval from the pgvector `chunks` table against the bronze QA dataset.
 
 Usage: python scripts/eval_retrieval.py [--dataset data/eval/bronze_qa.json] [--k 20]
+                                        [--retrieval dense|bm25|hybrid]
                                         [--run-dir data/eval/runs/<ts>] [--check]
 
 For every answerable question, retrieves the top-k chunks and scores them against the question's
 evidence. A chunk is relevant to an evidence item if it contains the item's quote (whitespace-
 normalised) or has its chunk id, so the dataset survives re-chunking. Reports Hit@1/3/5/10,
 Recall@5/10 (share of evidence items found), MRR@10, nDCG@10 and a lenient source-level Hit@5,
-overall and per source. Writes <run-dir>/retrieval.json.
+overall and per source. Writes <run-dir>/retrieval.json. --retrieval picks the ranking: dense
+(pgvector cosine), bm25 (sparse BM25) or hybrid (both fused with reciprocal rank fusion).
 
 --check only verifies that every evidence quote is still found in some chunk.
 """
@@ -24,7 +26,12 @@ from pathlib import Path
 from rag_common import (
     CANDIDATES,
     DATASET,
+    FUSION_DEPTH,
+    RETRIEVAL,
+    RETRIEVAL_MODES,
+    RRF_K,
     RUNS_DIR,
+    bm25_config,
     connect,
     corpus_snapshot,
     load_dataset,
@@ -85,7 +92,7 @@ async def check(dataset: list[dict]) -> int:
             if not any(quote in text for text in chunks.values()):
                 missing += 1
                 print(f"MISSING {item['id']}  {ev['source_id']}: {ev['quote'][:80]!r}")
-            elif quote not in chunks.get(ev["chunk_id"], ""):
+            elif ev.get("chunk_id") and quote not in chunks.get(ev["chunk_id"], ""):
                 print(f"moved   {item['id']}  {ev['chunk_id']} no longer holds the quote")
     print(f"{missing} missing quotes in {len(dataset)} questions")
     return missing
@@ -94,12 +101,15 @@ async def check(dataset: list[dict]) -> int:
 async def run(args: argparse.Namespace) -> None:
     dataset = [q for q in load_dataset(args.dataset) if q["evidence"]]
     embedder = query_embedder()
+    sparse_config = bm25_config()
     conn = await connect()
     try:
         snapshot = await corpus_snapshot(conn)
         results = []
         for item in dataset:
-            chunks = await retrieve(conn, embedder, item["question"], args.k)
+            chunks = await retrieve(
+                conn, embedder, item["question"], args.k, args.retrieval, sparse_config
+            )
             metrics = score(item, [(c.id, c.source_id, c.text) for c in chunks])
             results.append(
                 {
@@ -134,6 +144,10 @@ async def run(args: argparse.Namespace) -> None:
                 "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
                 "dataset": str(args.dataset),
                 "k": args.k,
+                "retrieval": args.retrieval,
+                "fusion": {"rrf_k": RRF_K, "depth": FUSION_DEPTH}
+                if args.retrieval == "hybrid"
+                else None,
                 "corpus": snapshot,
                 "summary": summary,
                 "questions": results,
@@ -158,6 +172,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dataset", type=Path, default=DATASET)
     parser.add_argument("--k", type=int, default=CANDIDATES, help="retrieval depth")
+    parser.add_argument("--retrieval", choices=RETRIEVAL_MODES, default=RETRIEVAL)
     parser.add_argument(
         "--run-dir", type=Path, default=RUNS_DIR / datetime.now().strftime("%Y%m%d-%H%M")
     )

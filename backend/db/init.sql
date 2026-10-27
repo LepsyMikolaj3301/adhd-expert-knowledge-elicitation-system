@@ -61,3 +61,9 @@ CREATE TABLE IF NOT EXISTS chunks (
 );
 CREATE INDEX IF NOT EXISTS chunks_document_id_idx ON chunks (document_id);
 CREATE INDEX IF NOT EXISTS chunks_embedding_idx ON chunks USING hnsw (embedding vector_cosine_ops);
+
+-- BM25 term weights (scripts/index_chunks.py refits them for the whole corpus on every run, since
+-- idf and avgdl are corpus-global). Terms are hashed into 2^20 dimensions, see app/indexing/bm25.py.
+-- Queried with `sparse <#> query_vector` (negative inner product = -BM25) as an exact scan: no
+-- index on purpose, the corpus is small and an HNSW index on sparsevec would be approximate.
+ALTER TABLE chunks ADD COLUMN IF NOT EXISTS sparse sparsevec(1048576);

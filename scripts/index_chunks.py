@@ -9,7 +9,9 @@ rows in the Postgres `chunks` table, then marks the document `indexed`. Run scri
 first so the table exists.
 
 Rows carry the chunked file's sha256 and the config hash, so unchanged documents are skipped
-unless --force is given. A per-file report is written to chunked/_index_report.json.
+unless --force is given. Afterwards the BM25 sparse vectors (chunks.sparse) are refitted over the
+whole table, as idf and avgdl are corpus-global. A per-file report is written to
+chunked/_index_report.json.
 """
 
 import argparse
@@ -23,8 +25,9 @@ import asyncpg
 import numpy as np
 from pgvector.asyncpg import register_vector
 
-from app.indexing import IndexingConfig, build_embedder, load_indexing_config
+from app.indexing import IndexingConfig, bm25, build_embedder, load_indexing_config
 from app.settings import settings
+from app.sources import excluded_source_ids
 from app.storage import s3_get, s3_list_keys, s3_put
 
 INSERT_CHUNK = """
@@ -58,6 +61,29 @@ async def check_table(conn: asyncpg.Connection, cfg: IndexingConfig) -> None:
             f"chunks.embedding is {column_type} but the config wants {expected}: "
             "DROP TABLE chunks, run scripts/init_db.py (after updating init.sql) and re-index"
         )
+
+
+async def check_sparse_column(conn: asyncpg.Connection) -> None:
+    width = await conn.fetchval(
+        "SELECT format_type(atttypid, atttypmod) FROM pg_attribute "
+        "WHERE attrelid = to_regclass('chunks') AND attname = 'sparse'"
+    )
+    if width != f"sparsevec({bm25.DIMENSIONS})":
+        raise SystemExit("chunks.sparse is missing or has the wrong width: run scripts/init_db.py")
+
+
+async def refresh_sparse(conn: asyncpg.Connection, cfg: IndexingConfig) -> int:
+    """Refit BM25 over every chunk in the table and store the vectors in chunks.sparse. idf and
+    avgdl are corpus-global, so this runs on every index run, also when all documents were
+    skipped. Returns the number of chunks."""
+    rows = await conn.fetch(f"SELECT id, {cfg.text_field} AS text FROM chunks ORDER BY id")
+    vectors = bm25.fit([r["text"] for r in rows], cfg.sparse)
+    async with conn.transaction():
+        await conn.executemany(
+            "UPDATE chunks SET sparse = $2 WHERE id = $1",
+            [(r["id"], v) for r, v in zip(rows, vectors, strict=True)],
+        )
+    return len(rows)
 
 
 async def document_id_of(conn: asyncpg.Connection, document: dict) -> str | None:
@@ -106,7 +132,11 @@ def chunk_rows(
 async def run(args: argparse.Namespace) -> int:
     cfg = load_indexing_config(args.config)
     config_hash = cfg.config_hash()
+    excluded = excluded_source_ids()
     keys = chunked_keys(args.prefix)
+    for key in [k for k in keys if PurePosixPath(k).parts[-2] in excluded]:
+        print(f"exclude {key}")
+    keys = [k for k in keys if PurePosixPath(k).parts[-2] not in excluded]
     if args.only:
         keys = [k for k in keys if PurePosixPath(k).parts[-2] in args.only]
     if not keys:
@@ -118,6 +148,7 @@ async def run(args: argparse.Namespace) -> int:
     try:
         await register_vector(conn)
         await check_table(conn, cfg)
+        await check_sparse_column(conn)
         for key in keys:
             entry: dict = {"source_id": PurePosixPath(key).parts[-2], "key": key}
             try:
@@ -167,6 +198,8 @@ async def run(args: argparse.Namespace) -> int:
                 entry |= {"status": "FAILED", "detail": f"{type(e).__name__}: {e}"}
                 print(f"FAILED  {key}: {entry['detail']}")
             report.append(entry)
+        sparse_chunks = await refresh_sparse(conn, cfg)
+        print(f"bm25    {sparse_chunks} chunks refitted ({cfg.sparse.model_dump()})")
     finally:
         await conn.close()
 
@@ -177,6 +210,7 @@ async def run(args: argparse.Namespace) -> int:
                 "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
                 "config_hash": config_hash,
                 "embedding_model": cfg.embeddings.model,
+                "bm25": {**cfg.sparse.model_dump(), "chunks": sparse_chunks},
                 "files": report,
             },
             indent=2,

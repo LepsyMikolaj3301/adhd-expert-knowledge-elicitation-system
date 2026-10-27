@@ -76,7 +76,6 @@ class Source(Model):
     attempts: list[Attempt] | None = None  # downloaded, tried in order
     manual: Manual | None = None  # placed by hand
     auth: Auth | None = None  # API behind credentials
-    credentials_from: str | None = None  # id of the source whose `auth` this one reuses
 
     # Only for API sources.
     required_headers: dict[str, str] | None = None
@@ -84,19 +83,18 @@ class Source(Model):
 
     @model_validator(mode="after")
     def _one_acquisition_method(self) -> "Source":
-        methods = [self.attempts, self.manual, self.auth, self.credentials_from]
+        methods = [self.attempts, self.manual, self.auth]
         if sum(m is not None for m in methods) != 1:
-            raise ValueError(
-                f"{self.id}: exactly one of attempts, manual, auth, credentials_from is required"
-            )
+            raise ValueError(f"{self.id}: exactly one of attempts, manual, auth is required")
         return self
 
     @property
     def needs_credentials(self) -> bool:
-        return self.auth is not None or self.credentials_from is not None
+        return self.auth is not None
 
 
 class Excluded(Model):
+    id: str | None = None  # source id; set when the source was once fetched, so stages skip it
     name: str
     reason: str
 
@@ -110,11 +108,19 @@ class Manifest(Model):
         ids = [s.id for s in self.sources]
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate source ids")
-        for source in self.sources:
-            if source.credentials_from and source.credentials_from not in ids:
-                raise ValueError(f"{source.id}: unknown credentials_from {source.credentials_from}")
+        if clash := set(ids) & self.excluded_ids:
+            raise ValueError(f"ids both in sources and excluded: {sorted(clash)}")
         return self
+
+    @property
+    def excluded_ids(self) -> set[str]:
+        return {e.id for e in self.excluded if e.id}
 
 
 def load_manifest(path: Path) -> Manifest:
     return Manifest.model_validate(yaml.safe_load(path.read_text()))
+
+
+def excluded_source_ids(path: Path = Path("config/sources.yaml")) -> set[str]:
+    """Source ids that must never enter the pipeline (stale copies may linger on disk / in S3)."""
+    return load_manifest(path).excluded_ids

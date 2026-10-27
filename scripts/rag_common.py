@@ -17,11 +17,15 @@ import httpx
 from pgvector.asyncpg import register_vector
 
 from app.embeddings import Embedder
-from app.indexing import build_embedder, load_indexing_config
+from app.indexing import Bm25Config, bm25, build_embedder, load_indexing_config
 from app.settings import settings
 
 K = 5  # chunks given to the generator
 CANDIDATES = 20  # retrieval depth for the metrics
+RETRIEVAL_MODES = ("dense", "bm25", "hybrid")
+RETRIEVAL = "hybrid"  # dense: pgvector cosine; bm25: sparsevec BM25; hybrid: both fused with RRF
+RRF_K = 60  # reciprocal rank fusion: score = sum over rankings of 1 / (RRF_K + rank)
+FUSION_DEPTH = 50  # candidates taken from each ranking before fusing
 MODELS = ["qwen3.5:9b", "gemma4:e4b"]
 GENERATION_OPTIONS = {"temperature": 0, "num_ctx": 8192, "num_predict": 600}
 SAMPLING_TEMPERATURE = 0.7  # used when a question is asked more than once
@@ -56,6 +60,10 @@ def query_embedder(config: Path = Path("config/indexing.yaml")) -> Embedder:
     return build_embedder(load_indexing_config(config))
 
 
+def bm25_config(config: Path = Path("config/indexing.yaml")) -> Bm25Config:
+    return load_indexing_config(config).sparse
+
+
 async def connect() -> asyncpg.Connection:
     conn = await asyncpg.connect(settings.database_url)
     await register_vector(conn)
@@ -63,17 +71,37 @@ async def connect() -> asyncpg.Connection:
     return conn
 
 
-async def retrieve(
-    conn: asyncpg.Connection, embedder: Embedder, query: str, k: int = K
-) -> list[RetrievedChunk]:
-    vector = embedder.embed([query])[0]
-    rows = await conn.fetch(
-        "SELECT id, metadata->>'source_id' AS source_id, metadata->>'title' AS title, "
-        "heading_path, pages, text, 1 - (embedding <=> $1) AS score "
-        "FROM chunks ORDER BY embedding <=> $1 LIMIT $2",
-        vector,
-        k,
-    )
+COLUMNS = (
+    "c.id, c.metadata->>'source_id' AS source_id, c.metadata->>'title' AS title, "
+    "c.heading_path, c.pages, c.text"
+)
+
+DENSE_SQL = (
+    f"SELECT {COLUMNS}, 1 - (c.embedding <=> $1) AS score FROM chunks c "
+    "ORDER BY c.embedding <=> $1 LIMIT $2"
+)
+# `sparse <#> q` is -BM25; chunks sharing no term with the query (score 0) are not matches.
+BM25_SQL = (
+    f"SELECT {COLUMNS}, -(c.sparse <#> $1) AS score FROM chunks c "
+    "WHERE (c.sparse <#> $1) < 0 ORDER BY c.sparse <#> $1 LIMIT $2"
+)
+HYBRID_SQL = f"""
+WITH dense AS (
+    SELECT id, row_number() OVER (ORDER BY embedding <=> $1) AS rank
+    FROM chunks ORDER BY embedding <=> $1 LIMIT $4
+), sparse AS (
+    SELECT id, row_number() OVER (ORDER BY sparse <#> $2) AS rank
+    FROM chunks WHERE (sparse <#> $2) < 0 ORDER BY sparse <#> $2 LIMIT $4
+), fused AS (
+    SELECT id, sum(1.0 / ($5 + rank)) AS score
+    FROM (SELECT * FROM dense UNION ALL SELECT * FROM sparse) r GROUP BY id
+)
+SELECT {COLUMNS}, f.score FROM fused f JOIN chunks c USING (id)
+ORDER BY f.score DESC, c.id LIMIT $3
+"""
+
+
+def to_chunks(rows: list[asyncpg.Record]) -> list[RetrievedChunk]:
     return [
         RetrievedChunk(
             r["id"],
@@ -88,34 +116,62 @@ async def retrieve(
     ]
 
 
+async def retrieve(
+    conn: asyncpg.Connection,
+    embedder: Embedder,
+    query: str,
+    k: int = K,
+    mode: str = RETRIEVAL,
+    sparse_config: Bm25Config | None = None,
+) -> list[RetrievedChunk]:
+    """Top-k chunks by `mode`. `score` is cosine similarity (dense), BM25 (bm25) or the RRF
+    score (hybrid); only the order is comparable across modes. A query with no BM25 terms
+    (all stopwords) falls back to dense."""
+    if mode not in RETRIEVAL_MODES:
+        raise ValueError(f"unknown retrieval mode {mode!r}, expected one of {RETRIEVAL_MODES}")
+    vector = embedder.embed([query])[0] if mode != "bm25" else None
+    sparse = bm25.query_vector(query, sparse_config or bm25_config()) if mode != "dense" else None
+    if mode == "bm25" and sparse is None:
+        return []
+    if mode == "hybrid" and sparse is None:
+        mode = "dense"
+    if mode == "dense":
+        rows = await conn.fetch(DENSE_SQL, vector, k)
+    elif mode == "bm25":
+        rows = await conn.fetch(BM25_SQL, sparse, k)
+    else:
+        rows = await conn.fetch(HYBRID_SQL, vector, sparse, k, FUSION_DEPTH, RRF_K)
+    return to_chunks(rows)
+
+
 async def oracle_context(
     conn: asyncpg.Connection, embedder: Embedder, item: dict, retrieved: list[RetrievedChunk]
 ) -> list[RetrievedChunk]:
     """The retrieved context with the item's gold chunks forced in: gold chunks plus the best
-    non-gold retrieved ones, same size as `retrieved`, ordered by similarity to the question.
+    non-gold retrieved ones, same size as `retrieved`, ordered by cosine similarity to the
+    question (whatever retrieval mode produced `retrieved`, whose scores are not comparable).
     Answering well here but not from `retrieved` points at retrieval, not the model."""
-    gold_ids = [ev["chunk_id"] for ev in item["evidence"]]
-    rows = await conn.fetch(
-        "SELECT id, metadata->>'source_id' AS source_id, metadata->>'title' AS title, "
-        "heading_path, pages, text, 1 - (embedding <=> $1) AS score "
-        "FROM chunks WHERE id = ANY($2)",
-        embedder.embed([item["question"]])[0],
-        gold_ids,
-    )
-    gold = [
-        RetrievedChunk(
-            r["id"],
-            r["source_id"],
-            r["title"] or "",
-            list(r["heading_path"]),
-            list(r["pages"]),
-            r["text"],
-            float(r["score"]),
+    gold_ids = [ev["chunk_id"] for ev in item["evidence"] if ev.get("chunk_id")]
+    if quoted := [ev for ev in item["evidence"] if not ev.get("chunk_id")]:
+        # Evidence without a chunk id (the chunks it pointed at were re-chunked or removed): the
+        # chunks holding the quote, best match to the question first, at most one per quote.
+        found = await conn.fetch(
+            "SELECT id, text FROM chunks ORDER BY embedding <=> $1",
+            embedder.embed([item["question"]])[0],
         )
-        for r in rows
-    ]
+        for ev in quoted:
+            quote = normalize(ev["quote"])
+            gold_ids += [r["id"] for r in found if quote in normalize(r["text"])][:1]
     fill = [c for c in retrieved if not relevant_evidence(c.id, c.text, item)]
-    context = gold + fill[: max(len(retrieved) - len(gold), 0)]
+    rows = await conn.fetch(
+        f"SELECT {COLUMNS}, 1 - (c.embedding <=> $1) AS score FROM chunks c WHERE c.id = ANY($2)",
+        embedder.embed([item["question"]])[0],
+        gold_ids + [c.id for c in fill],
+    )
+    by_id = {c.id: c for c in to_chunks(rows)}
+    gold = [by_id[i] for i in dict.fromkeys(gold_ids) if i in by_id]
+    best_fill = [by_id[c.id] for c in fill if c.id in by_id and c.id not in gold_ids]
+    context = gold + best_fill[: max(len(retrieved) - len(gold), 0)]
     return sorted(context, key=lambda c: c.score, reverse=True)
 
 

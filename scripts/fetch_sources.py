@@ -34,7 +34,8 @@ CONTENT_TYPES = {".pdf": "application/pdf", ".html": "text/html", ".xml": "appli
 BLOCK_PAGE = re.compile(rb"<title[^>]*>[^<]*(captcha|checking your browser|just a moment)", re.I)
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 MIN_INTERVAL = 1.0  # seconds between requests to the same host
-# Section headings of the ICD-11 CDDR diagnostic requirements; only logged, never enforced here.
+# Section headings of the ICD-11 CDDR diagnostic requirements; the MMS entity is checked for
+# them (logged, never enforced) since it is the only ICD text indexed.
 CDDR_SECTIONS = [
     "Essential (Required) Features",
     "Additional Clinical Features",
@@ -248,11 +249,15 @@ def run_icd_mms(session: IcdSession, source: Source) -> tuple[list[Download], di
         if https(endpoints[key]) not in seen:
             print(f"    warning: {key} was not reached through the child links")
     root_body = json.loads(entities[0].body)
+    text = criteria_text(root_body.get("diagnosticCriteria")).lower()
+    present = [s for s in CDDR_SECTIONS if s.lower() in text]
     meta = {
         "icd": {
             "latest_release": latest,
             "entity_uris": sorted(seen),
             "diagnostic_criteria_in_mms": bool(root_body.get("diagnosticCriteria")),
+            "cddr_sections_present": present,
+            "cddr_sections_missing": [s for s in CDDR_SECTIONS if s not in present],
         }
     }
     return [releases, lookup, *entities], meta
@@ -265,46 +270,17 @@ def criteria_text(value: object) -> str:
     return value if isinstance(value, str) else ""
 
 
-def run_icd_foundation(
-    session: IcdSession, source: Source, mms_dir: Path
-) -> tuple[list[Download], dict]:
-    url = (source.endpoints or {})["foundation_entity"]
-    mms_root = mms_dir / "6A05.json"
-    if mms_root.is_file():
-        # Prefer the foundation URI the MMS entity points at over the hardcoded ID.
-        foundation_uri = json.loads(mms_root.read_text()).get("source")
-        if foundation_uri:
-            query = f"releaseId={source.release_or_version}&include=diagnosticCriteria"
-            url = f"{https(foundation_uri)}?{query}"
-    entity = session.get(url, "foundation")
-    text = criteria_text(json.loads(entity.body).get("diagnosticCriteria")).lower()
-    present = [s for s in CDDR_SECTIONS if s.lower() in text]
-    missing = [s for s in CDDR_SECTIONS if s not in present]
-    meta = {
-        "icd": {
-            "cddr_sections_present": present,
-            "cddr_sections_missing": missing,
-            "needs_fallback": "icd11_cddr_pdf" if missing else None,
-        }
-    }
-    return [entity], meta
-
-
 def process_icd(sessions: dict[str, IcdSession], source: Source, out_root: Path) -> dict:
-    session = sessions[source.id if source.auth else source.credentials_from or ""]
+    session = sessions[source.id]
     if missing := session.missing_env():
         return {"status": "SKIPPED", "detail": f"set {', '.join(missing)} (env or .env)"}
     try:
-        if source.auth:
-            downloads, meta = run_icd_mms(session, source)
-        else:
-            mms_dir = out_root / (source.credentials_from or "")
-            downloads, meta = run_icd_foundation(session, source, mms_dir)
+        downloads, meta = run_icd_mms(session, source)
     except AttemptFailed as e:
         return {"status": "FAILED", "detail": str(e)}
     save(source, out_root / source.id, downloads, meta)
     if missing_sections := meta["icd"].get("cddr_sections_missing"):
-        print(f"    CDDR sections missing, fall back to icd11_cddr_pdf: {missing_sections}")
+        print(f"    warning: CDDR sections missing from the MMS criteria: {missing_sections}")
     return {"status": "OK", "detail": ", ".join(d.name for d in downloads)}
 
 
@@ -430,7 +406,9 @@ def main() -> None:
     # Merge into the previous report so an --only run doesn't drop the other sources.
     report_path = args.out / "_fetch_report.json"
     previous = json.loads(report_path.read_text())["sources"] if report_path.exists() else []
-    merged = {r["source_id"]: r for r in previous} | {r["source_id"]: r for r in report}
+    known = {s.id for s in all_sources}
+    merged = {r["source_id"]: r for r in previous if r["source_id"] in known}
+    merged |= {r["source_id"]: r for r in report}
     args.out.mkdir(parents=True, exist_ok=True)
     report_doc = {
         "generated_at": now(),

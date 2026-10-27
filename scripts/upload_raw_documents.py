@@ -26,6 +26,7 @@ import asyncpg
 from botocore.exceptions import ClientError
 
 from app.settings import settings
+from app.sources import excluded_source_ids
 from app.storage import get_s3_client
 
 UPSERT_DOCUMENT = """
@@ -122,11 +123,15 @@ def main() -> None:
         raise SystemExit(f"No files found in {args.source}")
 
     s3 = get_s3_client()
+    excluded = excluded_source_ids()
     to_register = []
     for path in files:
         key = args.prefix + path.relative_to(args.source).as_posix()
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         found = source_file(path)
+        if found and found.meta["source_id"] in excluded:
+            print(f"exclude {key}")
+            continue
         if found:
             if found.record["sha256"] != digest:
                 raise SystemExit(f"{path} does not match the sha256 in its meta.json")

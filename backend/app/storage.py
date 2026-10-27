@@ -52,3 +52,14 @@ def s3_list_keys(prefix: str) -> list[str]:
         for page in paginator.paginate(Bucket=settings.s3_bucket, Prefix=prefix)
         for obj in page.get("Contents", [])
     ]
+
+
+def s3_delete_prefix(prefix: str) -> int:
+    """Delete every object under `prefix`; returns how many."""
+    keys = s3_list_keys(prefix)
+    for i in range(0, len(keys), 1000):
+        get_s3_client().delete_objects(
+            Bucket=settings.s3_bucket,
+            Delete={"Objects": [{"Key": k} for k in keys[i : i + 1000]]},
+        )
+    return len(keys)

@@ -51,7 +51,8 @@ def retrieval_section(retrieval: dict) -> list[str]:
     rows = [["**overall**", *(s["overall"][c] for c in cols)]]
     rows += [[f"type: {t}", *(m[c] for c in cols)] for t, m in s["by_type"].items()]
     rows += [[src, *(m[c] for c in cols)] for src, m in s["by_source"].items()]
-    return [f"## Retrieval (top-{retrieval['k']}, bge-m3)", "", *table(["", *cols], rows), ""]
+    mode = retrieval.get("retrieval", "dense")  # runs before hybrid retrieval were dense only
+    return [f"## Retrieval (top-{retrieval['k']}, {mode})", "", *table(["", *cols], rows), ""]
 
 
 class Run:

@@ -20,13 +20,14 @@
 sources:
 
   # --------------------------------------------------------------------------
-  # LEVEL 0 — ICD-11 (WHO). Not fetched yet: waiting for ICD credentials.
+  # LEVEL 0 — ICD-11 (WHO). The MMS API is the single ICD source: its 6A05 entity carries the
+  # full CDDR diagnosticCriteria, so it feeds both GraphDB and the vector index.
   # --------------------------------------------------------------------------
   - id: icd11_mms_6a05
     title: "ICD-11 MMS — 6A05 Attention deficit hyperactivity disorder"
     release_or_version: "2026-01"
     metadata:
-      role: level0_structured        # deterministic -> GraphDB, no LLM
+      role: level0_structured        # GraphDB (deterministic) + the only ICD text in the vector index
       licence: "WHO ICD-11 licence — https://icd.who.int/en/docs/icd11-license.pdf"
     auth:
       type: oauth2_client_credentials
@@ -47,31 +48,6 @@ sources:
       mms_entity: https://id.who.int/icd/release/11/2026-01/mms/821852937?include=diagnosticCriteria
       mms_residual_other: https://id.who.int/icd/release/11/2026-01/mms/821852937/other              # 6A05.Y
       mms_residual_unspecified: https://id.who.int/icd/release/11/2026-01/mms/821852937/unspecified  # 6A05.Z
-
-  - id: icd11_foundation_6a05_diagnostic_requirements
-    title: "ICD-11 Foundation — 6A05 with diagnostic requirements (CDDR content)"
-    release_or_version: "2026-01"
-    metadata:
-      role: level0_text_for_claims
-      licence: "WHO ICD-11 licence — https://icd.who.int/en/docs/icd11-license.pdf"
-    credentials_from: icd11_mms_6a05
-    endpoints:
-      # diagnosticCriteria is opt-in and returned as Markdown (ICD-API release notes v2.2).
-      # Prefer the foundation URI from the MMS entity's `source` field over this hardcoded ID.
-      foundation_entity: https://id.who.int/icd/entity/821852937?releaseId=2026-01&include=diagnosticCriteria
-
-  - id: icd11_cddr_pdf
-    title: "Clinical descriptions and diagnostic requirements for ICD-11 MBND (CDDR), WHO 2024"
-    release_or_version: "2024"
-    metadata:
-      role: fallback_for_missing_cddr_sections
-      licence: "CC BY-NC-SA 3.0 IGO per link (page icons show NC-ND) — confirm on PDF copyright page"
-    # Landing page: https://www.who.int/publications/i/item/9789240077263 (ISBN 9789240077263)
-    attempts:
-      - kind: http
-        expect: pdf
-        name: cddr
-        url: https://iris.who.int/server/api/core/bitstreams/dcf73611-9e0f-4d5c-85f6-85a58b0da6de/content
 
   # --------------------------------------------------------------------------
   # LITERATURE CLAIMS — consensus statements
@@ -212,6 +188,12 @@ sources:
         url: https://www.cambridge.org/core/services/aop-cambridge-core/content/view/C2F8A25308982F7E0D2BDBE947B81DA1/S0954579421000328a.pdf/the-profile-of-pragmatic-language-impairments-in-children-with-adhd-a-systematic-review.pdf
 
 excluded:
+  - id: icd11_foundation_6a05_diagnostic_requirements
+    name: ICD-11 Foundation entity 6A05
+    reason: diagnosticCriteria/definition/title identical to the MMS entity; only adds synonyms (duplicate chunks)
+  - id: icd11_cddr_pdf
+    name: ICD-11 CDDR PDF (WHO 2024)
+    reason: same text as the MMS API entity plus page-overlap noise from neighbouring disorders
   - name: DSM-5-TR
     reason: copyrighted; ICD-11 CDDR covers the same ground openly
   - name: CADDRA Canadian ADHD Practice Guidelines 4.1

@@ -42,6 +42,7 @@ from docling_core.types.doc import (
 from lxml import etree
 
 from app.settings import settings
+from app.sources import excluded_source_ids
 from app.storage import get_s3_client, s3_get, s3_head, s3_put
 
 PARSER_VERSION = "3"
@@ -51,7 +52,7 @@ SCHEMA_VERSION = 1
 # TODO: this is still a problem for big documents of which we only want one section. It relies on
 # the PDF having an outline and on a hardcoded section title per source; there is no general way
 # yet to say "read only the part about X" (scanned PDFs, no outline, section spread over pages).
-PDF_SECTIONS = {"icd11_cddr_pdf": "6A05 Attention deficit hyperactivity disorder"}
+PDF_SECTIONS: dict[str, str] = {}
 
 # Docling only treats XML as JATS when the DOCTYPE says so; PMC / Europe PMC files have none.
 JATS_DOCTYPE = (
@@ -530,7 +531,11 @@ async def set_status(conn: asyncpg.Connection, key: str, status: str, detail: st
 
 
 async def run(args: argparse.Namespace) -> int:
+    excluded = excluded_source_ids()
     source_ids = list_source_ids(args.prefix)
+    for source_id in sorted(excluded & set(source_ids)):
+        print(f"exclude {args.prefix}{source_id}/")
+    source_ids = [s for s in source_ids if s not in excluded]
     if args.only:
         source_ids = [s for s in source_ids if s in args.only]
     if not source_ids:

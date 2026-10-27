@@ -1,7 +1,8 @@
 """Generate answers to the bronze QA questions with several Ollama models and score them.
 
 Usage: python scripts/eval_generation.py [--dataset data/eval/bronze_qa.json] [--models M ...]
-                                         [--k 5] [--samples 1] [--temperature T]
+                                         [--k 5] [--retrieval dense|bm25|hybrid]
+                                         [--samples 1] [--temperature T]
                                          [--contexts retrieved oracle] [--only ID ...]
                                          [--run-dir data/eval/runs/<ts>] [--think]
        python scripts/eval_generation.py --run-dir ... --import-answers FILE --as-model NAME
@@ -34,15 +35,20 @@ from pathlib import Path
 
 from rag_common import (
     DATASET,
+    FUSION_DEPTH,
     GENERATION_OPTIONS,
     MODELS,
     NOT_IN_SOURCES,
+    RETRIEVAL,
+    RETRIEVAL_MODES,
+    RRF_K,
     RUNS_DIR,
     SAMPLING_TEMPERATURE,
     K,
     OllamaChat,
     RetrievedChunk,
     answer,
+    bm25_config,
     cited_numbers,
     connect,
     corpus_snapshot,
@@ -89,6 +95,7 @@ def same_ids(a: list[RetrievedChunk], b: list[RetrievedChunk]) -> bool:
 async def build_contexts(dataset: list[dict], previous: dict, args) -> dict:
     """{question id: {context name: chunks}}; contexts stored in `previous` are kept."""
     embedder = query_embedder()
+    sparse_config = bm25_config()
     conn = await connect()
     contexts: dict[str, dict[str, list[RetrievedChunk]]] = {}
     try:
@@ -96,7 +103,9 @@ async def build_contexts(dataset: list[dict], previous: dict, args) -> dict:
             stored = previous.get("questions", {}).get(q["id"], {}).get("contexts", {})
             ctx = {name: [RetrievedChunk(**c) for c in chunks] for name, chunks in stored.items()}
             if "retrieved" not in ctx:
-                ctx["retrieved"] = await retrieve(conn, embedder, q["question"], args.k)
+                ctx["retrieved"] = await retrieve(
+                    conn, embedder, q["question"], args.k, args.retrieval, sparse_config
+                )
             if "oracle" in contexts_for(q, args.contexts) and "oracle" not in ctx:
                 ctx["oracle"] = await oracle_context(conn, embedder, q, ctx["retrieved"])
             contexts[q["id"]] = ctx
@@ -167,6 +176,8 @@ async def run(args: argparse.Namespace) -> None:
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "dataset": str(args.dataset),
         "k": args.k,
+        "retrieval": args.retrieval,
+        "fusion": {"rrf_k": RRF_K, "depth": FUSION_DEPTH} if args.retrieval == "hybrid" else None,
         "think": args.think,
         "options": {**GENERATION_OPTIONS, "temperature": temperature},
         "samples": max(args.samples, previous.get("samples", 1)),
@@ -243,6 +254,7 @@ def main() -> None:
     parser.add_argument("--dataset", type=Path, default=DATASET)
     parser.add_argument("--models", nargs="+", default=MODELS)
     parser.add_argument("--k", type=int, default=K, help="chunks given to the models")
+    parser.add_argument("--retrieval", choices=RETRIEVAL_MODES, default=RETRIEVAL)
     parser.add_argument("--samples", type=int, default=1, help="times each question is asked")
     parser.add_argument("--temperature", type=float, help="default 0, or 0.7 with --samples > 1")
     parser.add_argument("--contexts", nargs="+", choices=CONTEXTS, default=["retrieved"])

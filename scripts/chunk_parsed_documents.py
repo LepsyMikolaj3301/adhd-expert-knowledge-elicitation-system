@@ -8,7 +8,8 @@ Reads s3://$S3_BUCKET/parsed/<source_id>/<stem>.json (as written by parse_raw_do
 writes chunked/<source_id>/<stem>.json (chunks with their heading path, sections, pages and
 token counts) and chunked/<source_id>/<stem>.md (a viewable rendering for tuning). The method
 and its hyperparameters come from the chunking config; documents whose source role is listed
-under `documents.skip_roles` are not chunked.
+under `documents.skip_roles` or whose source id is under `excluded:` in the manifest are not
+chunked.
 
 Output objects carry the parsed sha256 and the config hash as user metadata, so unchanged
 documents are skipped unless --force is given. A per-file report is written to
@@ -27,6 +28,7 @@ import asyncpg
 
 from app.chunking import Chunk, ChunkingConfig, build_chunker, load_chunking_config
 from app.settings import settings
+from app.sources import excluded_source_ids
 from app.storage import s3_get, s3_head, s3_list_keys, s3_put
 
 SCHEMA_VERSION = 1
@@ -102,6 +104,7 @@ async def document_id_of(conn: asyncpg.Connection, raw_key: str) -> str | None:
 async def run(args: argparse.Namespace) -> int:
     cfg = load_chunking_config(args.config)
     config_hash = cfg.config_hash()
+    excluded = excluded_source_ids()
     keys = parsed_keys(args.prefix)
     if args.only:
         keys = [k for k in keys if PurePosixPath(k).parts[-2] in args.only]
@@ -120,7 +123,10 @@ async def run(args: argparse.Namespace) -> int:
                 parsed_sha = hashlib.sha256(raw).hexdigest()
                 document = json.loads(raw)
 
-                if document["source"]["metadata"].get("role") in cfg.documents.skip_roles:
+                if (
+                    document["source"]["source_id"] in excluded
+                    or document["source"]["metadata"].get("role") in cfg.documents.skip_roles
+                ):
                     entry["status"] = "EXCLUDED"
                     print(f"exclude {key}")
                     report.append(entry)

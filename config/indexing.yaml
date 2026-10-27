@@ -16,3 +16,10 @@ embeddings:
   dimensions: 1024          # checked against the model output and the table column
 
 text_field: contextual_text # contextual_text | text — what gets embedded
+
+# BM25 side of hybrid retrieval, stored as chunks.sparse. Refitted over the whole corpus on every
+# scripts/index_chunks.py run (idf is corpus-global), so changing it does not re-embed anything.
+sparse:
+  k1: 1.2
+  b: 0.75
+  stemmer: english          # Snowball language, or null
