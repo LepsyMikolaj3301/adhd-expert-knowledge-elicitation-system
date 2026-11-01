@@ -1,6 +1,6 @@
 """Remove sources from Postgres and S3 (raw/, parsed/, chunked/), e.g. after excluding them.
 
-Usage: python scripts/purge_sources.py [ID ...] [--dry-run]
+Usage: python scripts/corpus/purge_sources.py [ID ...] [--dry-run]
 
 Without ids, purges every source listed with an `id` under `excluded:` in config/sources.yaml.
 Ids still listed under `sources:` are refused. Deleting the `documents` rows cascades to their

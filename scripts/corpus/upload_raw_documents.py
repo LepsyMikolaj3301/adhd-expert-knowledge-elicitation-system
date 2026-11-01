@@ -1,6 +1,6 @@
 """Upload everything under data/raw/ to the S3 (MinIO) documents bucket and register it.
 
-Usage: python scripts/upload_raw_documents.py [--source data/raw] [--prefix raw/] [--force]
+Usage: python scripts/corpus/upload_raw_documents.py [--source data/raw] [--prefix raw/] [--force]
 
 Object keys are the file paths relative to --source, prefixed with --prefix, so a source fetched
 by fetch_sources.py lands at raw/<source_id>/<file>. Every object carries its sha256 as user

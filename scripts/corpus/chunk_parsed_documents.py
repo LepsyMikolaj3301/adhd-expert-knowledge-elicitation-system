@@ -1,6 +1,6 @@
 """Chunk the parsed documents in the S3 (MinIO) documents bucket into retrieval-sized chunks.
 
-Usage: python scripts/chunk_parsed_documents.py [--config config/chunking.yaml]
+Usage: python scripts/corpus/chunk_parsed_documents.py [--config config/chunking.yaml]
                                                 [--prefix parsed/] [--out-prefix chunked/]
                                                 [--only ID ...] [--force]
 

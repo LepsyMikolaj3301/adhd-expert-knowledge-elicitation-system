@@ -2,7 +2,7 @@
 
 Retrieval over the pgvector `chunks` table, generation with Ollama chat models (answers cite
 the context as [n]) and the LLM-as-judge rubric. Not a backend module on purpose: the scripts
-import it as `rag_common` (scripts/ is on sys.path when they run as `python scripts/x.py`).
+import it as `rag_common` (their folder, scripts/rag/, is on sys.path when they run as `python scripts/rag/x.py`).
 """
 
 import json

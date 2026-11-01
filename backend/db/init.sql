@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- One row per raw file stored in S3. `id` is the stable document id that later stages
 -- (parsing, chunking, claims) reference; user uploads from the frontend get a row too.
--- Keep this file idempotent: it is also applied to existing databases by scripts/init_db.py.
+-- Keep this file idempotent: it is also applied to existing databases by scripts/db/init_db.py.
 CREATE TABLE IF NOT EXISTS documents (
     id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     origin             text NOT NULL CHECK (origin IN ('manifest', 'user_upload')),
@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS documents (
 CREATE INDEX IF NOT EXISTS documents_sha256_idx ON documents (sha256);
 CREATE INDEX IF NOT EXISTS documents_source_id_idx ON documents (source_id);
 
--- One row per chunk from s3://$S3_BUCKET/chunked/, written by scripts/index_chunks.py.
+-- One row per chunk from s3://$S3_BUCKET/chunked/, written by scripts/corpus/index_chunks.py.
 -- The embedding width must match config/indexing.yaml; changing it needs DROP TABLE chunks,
--- scripts/init_db.py and a re-index.
+-- scripts/db/init_db.py and a re-index.
 CREATE TABLE IF NOT EXISTS chunks (
     -- "<source_id>/<stem>#0001", the chunk id from the chunked JSON.
     id              text PRIMARY KEY,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS chunks (
 CREATE INDEX IF NOT EXISTS chunks_document_id_idx ON chunks (document_id);
 CREATE INDEX IF NOT EXISTS chunks_embedding_idx ON chunks USING hnsw (embedding vector_cosine_ops);
 
--- BM25 term weights (scripts/index_chunks.py refits them for the whole corpus on every run, since
+-- BM25 term weights (scripts/corpus/index_chunks.py refits them for the whole corpus on every run, since
 -- idf and avgdl are corpus-global). Terms are hashed into 2^20 dimensions, see app/indexing/bm25.py.
 -- Queried with `sparse <#> query_vector` (negative inner product = -BM25) as an exact scan: no
 -- index on purpose, the corpus is small and an HNSW index on sparsevec would be approximate.

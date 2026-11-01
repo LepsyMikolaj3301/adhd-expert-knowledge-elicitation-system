@@ -1,6 +1,6 @@
 """Compare evaluation runs (historic vs old vs new retrieval) as one markdown file.
 
-Usage: python scripts/compare_runs.py --out data/eval/runs/bronze-v3-hybrid/comparison.md
+Usage: python scripts/rag/compare_runs.py --out data/eval/runs/bronze-v3-hybrid/comparison.md
            --historic data/eval/runs/bronze-v2-samples
            --dense data/eval/runs/bronze-v3-dense --hybrid data/eval/runs/bronze-v3-hybrid
            [--bm25 data/eval/runs/bronze-v3-bm25] [--intro FILE] [--findings FILE]

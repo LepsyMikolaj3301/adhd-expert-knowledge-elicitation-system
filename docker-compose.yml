@@ -7,6 +7,10 @@ services:
       # Host path for models (bind mount). Falls back to the named volume if unset.
       - ${OLLAMA_DATA_PATH:-ollama-data}:/root/.ollama
     restart: unless-stopped
+    environment:
+      # Defaults equal Ollama's own (5m); raise them in .env for big models, see .env.example.
+      OLLAMA_LOAD_TIMEOUT: ${OLLAMA_LOAD_TIMEOUT:-5m}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
     # Uncomment when running on a machine with an NVIDIA GPU:
     deploy:
       resources:

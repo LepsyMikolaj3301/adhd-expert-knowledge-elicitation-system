@@ -1,6 +1,6 @@
 """Summarise an evaluation run (retrieval.json, generations.json, judgments.json) as markdown.
 
-Usage: python scripts/report_eval.py --run-dir data/eval/runs/<ts>
+Usage: python scripts/rag/report_eval.py --run-dir data/eval/runs/<ts>
 
 Prints, and writes to <run-dir>/summary.md:
 - retrieval metrics (overall, per question type and per source);

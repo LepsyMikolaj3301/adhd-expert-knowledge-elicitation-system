@@ -1,12 +1,12 @@
 # ============================================================================
-# Indexing config — consumed by scripts/index_chunks.py
+# Indexing config — consumed by scripts/corpus/index_chunks.py
 # (s3://$S3_BUCKET/chunked/ -> Postgres `chunks` table, pgvector).
 # Schema + validation: backend/app/indexing/config.py.
 #
 # Changing anything below re-embeds all documents (the config hash is stored
 # on every row). `dimensions` must match `chunks.embedding` in
 # backend/db/init.sql; a different width needs DROP TABLE chunks, then
-# scripts/init_db.py, then a re-index.
+# scripts/db/init_db.py, then a re-index.
 # ============================================================================
 
 embeddings:
@@ -18,7 +18,7 @@ embeddings:
 text_field: contextual_text # contextual_text | text — what gets embedded
 
 # BM25 side of hybrid retrieval, stored as chunks.sparse. Refitted over the whole corpus on every
-# scripts/index_chunks.py run (idf is corpus-global), so changing it does not re-embed anything.
+# scripts/corpus/index_chunks.py run (idf is corpus-global), so changing it does not re-embed anything.
 sparse:
   k1: 1.2
   b: 0.75

@@ -1,11 +1,11 @@
 """Generate answers to the bronze QA questions with several Ollama models and score them.
 
-Usage: python scripts/eval_generation.py [--dataset data/eval/bronze_qa.json] [--models M ...]
+Usage: python scripts/rag/eval_generation.py [--dataset data/eval/bronze_qa.json] [--models M ...]
                                          [--k 5] [--retrieval dense|bm25|hybrid]
                                          [--samples 1] [--temperature T]
                                          [--contexts retrieved oracle] [--only ID ...]
                                          [--run-dir data/eval/runs/<ts>] [--think]
-       python scripts/eval_generation.py --run-dir ... --import-answers FILE --as-model NAME
+       python scripts/rag/eval_generation.py --run-dir ... --import-answers FILE --as-model NAME
 
 Retrieves the top-k chunks once per question and gives the same context to every model, so the
 comparison is only about generation. With `--contexts ... oracle` every answerable question is
@@ -23,7 +23,7 @@ context, sample) entries already done and reusing the stored contexts.
 
 --import-answers adds answers produced outside Ollama (e.g. a larger model given the same system
 prompt and context) as model NAME: FILE is {"<id>|<context>|<sample>": "<answer text>", ...}.
-LLM-as-judge scores come from scripts/judge_generations.py; scripts/report_eval.py summarises.
+LLM-as-judge scores come from scripts/rag/judge_generations.py; scripts/rag/report_eval.py summarises.
 """
 
 import argparse

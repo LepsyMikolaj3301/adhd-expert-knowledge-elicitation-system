@@ -1,11 +1,11 @@
 """Embed the chunked documents in the S3 (MinIO) documents bucket into the pgvector `chunks` table.
 
-Usage: python scripts/index_chunks.py [--config config/indexing.yaml] [--prefix chunked/]
+Usage: python scripts/corpus/index_chunks.py [--config config/indexing.yaml] [--prefix chunked/]
                                       [--only ID ...] [--force]
 
 Reads s3://$S3_BUCKET/chunked/<source_id>/<stem>.json (as written by chunk_parsed_documents.py),
 embeds each chunk with the model from the indexing config (Ollama) and replaces that document's
-rows in the Postgres `chunks` table, then marks the document `indexed`. Run scripts/init_db.py
+rows in the Postgres `chunks` table, then marks the document `indexed`. Run scripts/db/init_db.py
 first so the table exists.
 
 Rows carry the chunked file's sha256 and the config hash, so unchanged documents are skipped
@@ -54,12 +54,12 @@ async def check_table(conn: asyncpg.Connection, cfg: IndexingConfig) -> None:
         "WHERE attrelid = to_regclass('chunks') AND attname = 'embedding'"
     )
     if column_type is None:
-        raise SystemExit("No `chunks` table: run scripts/init_db.py first")
+        raise SystemExit("No `chunks` table: run scripts/db/init_db.py first")
     expected = f"vector({cfg.embeddings.dimensions})"
     if column_type != expected:
         raise SystemExit(
             f"chunks.embedding is {column_type} but the config wants {expected}: "
-            "DROP TABLE chunks, run scripts/init_db.py (after updating init.sql) and re-index"
+            "DROP TABLE chunks, run scripts/db/init_db.py (after updating init.sql) and re-index"
         )
 
 
@@ -69,7 +69,7 @@ async def check_sparse_column(conn: asyncpg.Connection) -> None:
         "WHERE attrelid = to_regclass('chunks') AND attname = 'sparse'"
     )
     if width != f"sparsevec({bm25.DIMENSIONS})":
-        raise SystemExit("chunks.sparse is missing or has the wrong width: run scripts/init_db.py")
+        raise SystemExit("chunks.sparse is missing or has the wrong width: run scripts/db/init_db.py")
 
 
 async def refresh_sparse(conn: asyncpg.Connection, cfg: IndexingConfig) -> int:

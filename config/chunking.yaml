@@ -1,5 +1,5 @@
 # ============================================================================
-# Chunking config — consumed by scripts/chunk_parsed_documents.py
+# Chunking config — consumed by scripts/corpus/chunk_parsed_documents.py
 # (s3://$S3_BUCKET/parsed/ -> s3://$S3_BUCKET/chunked/).
 # Schema + validation: backend/app/chunking/config.py.
 #

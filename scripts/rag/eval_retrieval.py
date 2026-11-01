@@ -1,6 +1,6 @@
 """Score retrieval from the pgvector `chunks` table against the bronze QA dataset.
 
-Usage: python scripts/eval_retrieval.py [--dataset data/eval/bronze_qa.json] [--k 20]
+Usage: python scripts/rag/eval_retrieval.py [--dataset data/eval/bronze_qa.json] [--k 20]
                                         [--retrieval dense|bm25|hybrid]
                                         [--run-dir data/eval/runs/<ts>] [--check]
 

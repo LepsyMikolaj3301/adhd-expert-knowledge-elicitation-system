@@ -1,6 +1,6 @@
 """Download the corpus sources listed in config/sources.yaml into data/raw/<id>/.
 
-Usage: python scripts/fetch_sources.py [--manifest config/sources.yaml] [--out data/raw]
+Usage: python scripts/corpus/fetch_sources.py [--manifest config/sources.yaml] [--out data/raw]
                                        [--only ID ...] [--force]
 
 Each source's `attempts` are tried in order; the first one whose response passes its `expect`

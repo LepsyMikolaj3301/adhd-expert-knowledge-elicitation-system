@@ -1,6 +1,6 @@
 """Parse the raw documents in the S3 (MinIO) documents bucket into structured JSON + Markdown.
 
-Usage: python scripts/parse_raw_documents.py [--prefix raw/] [--out-prefix parsed/]
+Usage: python scripts/corpus/parse_raw_documents.py [--prefix raw/] [--out-prefix parsed/]
                                              [--only ID ...] [--force]
 
 Reads s3://$S3_BUCKET/raw/<source_id>/ (as uploaded by upload_raw_documents.py) and writes, for

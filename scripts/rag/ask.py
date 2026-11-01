@@ -1,6 +1,6 @@
 """Answer one question with retrieval-augmented generation over the pgvector `chunks` table.
 
-Usage: python scripts/ask.py "question" [--model qwen3.5:9b] [--k 5] [--retrieval hybrid]
+Usage: python scripts/rag/ask.py "question" [--model qwen3.5:9b] [--k 5] [--retrieval hybrid]
                              [--think] [--show-context]
 
 Takes the top-k chunks for the question (dense bge-m3, BM25, or both fused with RRF), asks an

@@ -1,6 +1,6 @@
 """Apply backend/db/init.sql to the running Postgres (idempotent).
 
-Usage: python scripts/init_db.py
+Usage: python scripts/db/init_db.py
 
 Docker only runs init.sql when the postgres volume is first created; use this to add new tables
 to an existing database.
@@ -13,7 +13,7 @@ import asyncpg
 
 from app.settings import settings
 
-INIT_SQL = Path(__file__).resolve().parent.parent / "backend" / "db" / "init.sql"
+INIT_SQL = Path(__file__).resolve().parents[2] / "backend" / "db" / "init.sql"
 
 
 async def main() -> None:

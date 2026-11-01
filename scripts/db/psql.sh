@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Open psql in the postgres container (run on the host that runs docker compose).
-#   scripts/psql.sh              interactive psql
-#   scripts/psql.sh overview     table sizes, row counts, pgvector info
-#   scripts/psql.sh -c "SQL"     any extra args go straight to psql
+#   scripts/db/psql.sh              interactive psql
+#   scripts/db/psql.sh overview     table sizes, row counts, pgvector info
+#   scripts/db/psql.sh -c "SQL"     any extra args go straight to psql
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 set -a; [ -f .env ] && . ./.env; set +a
 U="${POSTGRES_USER:-rag}"; D="${POSTGRES_DB:-rag}"
 

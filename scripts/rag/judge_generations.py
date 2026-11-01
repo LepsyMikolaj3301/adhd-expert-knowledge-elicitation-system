@@ -1,8 +1,8 @@
-"""LLM-as-judge scoring of the answers in a generation run (scripts/eval_generation.py).
+"""LLM-as-judge scoring of the answers in a generation run (scripts/rag/eval_generation.py).
 
-Usage: python scripts/judge_generations.py --run-dir data/eval/runs/<ts> --judge-model M
-       python scripts/judge_generations.py --run-dir ... --export-blind [--parts N] [--models M ...]
-       python scripts/judge_generations.py --run-dir ... --import-blind RESULTS... --judge-name N
+Usage: python scripts/rag/judge_generations.py --run-dir data/eval/runs/<ts> --judge-model M
+       python scripts/rag/judge_generations.py --run-dir ... --export-blind [--parts N] [--models M ...]
+       python scripts/rag/judge_generations.py --run-dir ... --import-blind RESULTS... --judge-name N
 
 Answers are graded per (question, context) item: the judge sees the question, the reference
 answer, the context passages and every system's samples, and returns per-sample scores with the

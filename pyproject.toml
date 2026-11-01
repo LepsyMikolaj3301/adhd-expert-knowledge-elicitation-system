@@ -16,6 +16,7 @@ members = ["backend"]
 
 [dependency-groups]
 dev = [
+    "pytest>=8.3",
     "pre-commit>=4.6.2",
     "ruff>=0.16.9",
     "ty>=0.0.84",
@@ -42,3 +43,7 @@ select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM"]
 
 [tool.ty.environment]
 python-version = "3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["backend", "scripts/elicitation"]
