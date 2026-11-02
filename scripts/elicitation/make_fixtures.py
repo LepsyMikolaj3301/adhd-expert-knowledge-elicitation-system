@@ -399,6 +399,7 @@ def design_from_output(data: dict, scenario: dict, text: str) -> VignetteDesign:
             is_control=scenario["control"],
             track=scenario.get("track", "general"),
             knowledge_target=scenario.get("knowledge_target"),
+            population="adult" if scenario["age"] >= 18 else "child",
         )
     except (ValidationError, TypeError) as e:
         raise Rejected(f"bad design block: {e}") from e

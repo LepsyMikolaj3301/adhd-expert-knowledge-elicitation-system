@@ -69,6 +69,7 @@ class VignetteDesign(_Model):
         default=None, description="the expert knowledge this vignette is meant to elicit"
     )
     origin: Origin = "llm"
+    population: str = Field(default="adult", description="age group of the writer, e.g. 'adult'")
     source_ref: str | None = Field(
         default=None, description="where a real_text came from, e.g. 'reddit:abc123'"
     )

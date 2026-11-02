@@ -377,16 +377,30 @@ def judge_prompt(question: dict, context: list[dict], systems: dict[str, list[st
     )
 
 
-def parse_sample_judgment(data: dict) -> dict:
-    for name in JUDGE_FIELDS:
+def parse_sample_judgment(data: dict, expert: bool = False) -> dict:
+    fields = EXPERT_FIELDS if expert else JUDGE_FIELDS
+    if expert and data.get("key_points") == 0:
+        # Haiku writes 0 when an answer covers none of the key points: the bottom of the scale,
+        # and exactly the answers (no notes, wrong notes) that must not drop out of the results.
+        data = {**data, "key_points": 1}
+    for name in fields:
+        if expert and name in EXPERT_NULLABLE and data.get(name) is None:
+            continue  # nothing to check against: the answer saw no notes
         if not isinstance(data.get(name), int) or not 1 <= data[name] <= 5:
             raise ValueError(f"{name} must be an int 1-5, got {data.get(name)!r}")
-    if not isinstance(data.get("pass"), bool):
-        raise ValueError(f"pass must be a bool, got {data.get('pass')!r}")
-    return {k: data.get(k) for k in (*JUDGE_FIELDS, "abstention_ok", "pass", "rationale")}
+    flags = ("unsupported_claims", "pass") if expert else ("pass",)
+    for name in flags:
+        if not isinstance(data.get(name), bool):
+            raise ValueError(f"{name} must be a bool, got {data.get(name)!r}")
+    extra = (
+        ("abstention_ok", "unsupported_claims", "pass", "rationale")
+        if expert
+        else ("abstention_ok", "pass", "rationale")
+    )
+    return {k: data.get(k) for k in (*fields, *extra)}
 
 
-def parse_judgment(reply: str | dict, systems: dict[str, list[str]]) -> dict:
+def parse_judgment(reply: str | dict, systems: dict[str, list[str]], expert: bool = False) -> dict:
     """The judge's reply for one item, validated against the systems and sample counts it was
     given. Raises ValueError on a malformed reply."""
     if isinstance(reply, str):
@@ -403,9 +417,78 @@ def parse_judgment(reply: str | dict, systems: dict[str, list[str]]) -> dict:
         if len(samples) > 1 and (not isinstance(consistency, int) or not 1 <= consistency <= 5):
             raise ValueError(f"system {label}: consistency must be an int 1-5")
         out[label] = {
-            "samples": [parse_sample_judgment(j) for j in verdict["samples"]],
+            "samples": [parse_sample_judgment(j, expert) for j in verdict["samples"]],
             "consistency": consistency,
             "behaviour_changed": verdict.get("behaviour_changed"),
             "consistency_note": verdict.get("consistency_note"),
         }
     return out
+
+
+# --------------------------------------------------------------------------- expert-notes judge
+
+EXPERT_FIELDS = ("key_points", "fidelity", "attribution", "usefulness", "citation_quality")
+EXPERT_NULLABLE = ("fidelity", "citation_quality")  # null when the answer saw no notes
+
+EXPERT_JUDGE_RUBRIC = f"""You are a consultant psychiatrist in an adult ADHD service. A colleague
+asked a knowledge base a question about reading patients' own writing. An AI assistant answered from
+short numbered notes that other clinicians wrote ([E1], [E2], ...), or, for some items, with no
+notes. You review each answer as you would a junior colleague's summary: you care that what
+clinicians said is reported faithfully, with its conditions, and is never turned into
+established fact or diagnostic criteria. Score every answer on its own; do not reward length; do
+not use outside knowledge to excuse a claim the notes do not support.
+
+You get the question, main key points that a good answer draws on (each with its direction: whether it
+raises or lowers the case for ADHD traits, and its condition), the notes the assistant saw, and the
+answers. A good answer does not need every key point, but should cover the main ones the notes
+allow. It may add other readings that the notes support; do not penalise those.
+
+Score each from 1 (bad) to 5 (excellent):
+- key_points: how many of the main key points the answer covers (not how many the notes contained).
+- fidelity: direction and conditions match the notes. A hedge or condition in the notes ("only if",
+  "unless", "weak alone") that the answer drops is an error. Reversing a direction is the worst
+  error. Null if there were no notes.
+- attribution: presented as what clinicians in the notes said or read, not as established fact or
+  diagnostic criteria; no invented quotes; says so when only one clinician made a point.
+- usefulness: concrete and usable by a busy clinician who has to decide what to look for or ask.
+- citation_quality: each [E#] supports the claim it is attached to. Null if there were no notes.
+Anchors for fidelity: 5 = the note says one missed deadline in a house-move week lowers the weight,
+and the answer says that with the condition. 3 = keeps the direction, drops the condition. 1 = the
+note says fatigue lowers the weight and the answer says fatigue raises it.
+Anchors for attribution: 5 = "The clinicians read X as ...; one of them adds ...". 3 = partly
+attributed, partly stated as how things are. 1 = "Diagnostic criteria require ..." or a made-up
+quote.
+
+Flags:
+- unsupported_claims: true if the answer states a clinical fact or rule that is in neither the
+  notes nor the question (with no notes, true if it presents specific rules as established).
+- abstention_ok: if the answer says {NOT_IN_SOURCES} or that the notes do not cover it: true if the
+  notes truly hold nothing relevant, false if they hold material that answers the question; null
+  when the answer does not abstain.
+- pass: fidelity >= 4 (or null) and attribution >= 4 and key_points >= 3 and unsupported_claims is
+  false.
+
+Write the rationale first in your head, then the scores. Reply with one JSON object only, one entry
+per system label (each system has one sample here):
+{{"<system label>": {{"samples": [{{"key_points": int, "fidelity": int|null, "attribution": int,
+   "usefulness": int, "citation_quality": int|null, "unsupported_claims": bool,
+   "abstention_ok": bool|null, "pass": bool, "rationale": "<one sentence>"}}],
+  "consistency": null, "behaviour_changed": null, "consistency_note": null}}}}"""
+
+
+def expert_judge_prompt(question: dict, context: list[dict], systems: dict[str, list[str]]) -> str:
+    """One grading item: `question` is an entry of an expert run's questions, `context` the notes
+    the system saw (empty for the no-notes baseline) and `systems` maps a blind label to answers."""
+    points = "\n".join(f"- {p}" for p in question["reference_points"])
+    notes = "\n\n".join(f"[E{n}] {c['text']}" for n, c in enumerate(context, 1))
+    answers = "\n\n".join(
+        f"=== System {label}, sample {i} ===\n{text}"
+        for label, samples in systems.items()
+        for i, text in enumerate(samples, 1)
+    )
+    return (
+        f"Question: {question['question']}\n\n"
+        f"Key points a good answer draws on:\n{points}\n\n"
+        f"Notes the assistant saw:\n\n{notes or '(no notes were given)'}\n\n"
+        f"Answers:\n\n{answers}"
+    )

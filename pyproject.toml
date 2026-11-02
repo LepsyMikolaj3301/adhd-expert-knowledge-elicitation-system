@@ -46,4 +46,4 @@ python-version = "3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["backend", "scripts/elicitation"]
+pythonpath = ["backend", "scripts/elicitation", "scripts/rag"]
