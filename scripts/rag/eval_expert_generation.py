@@ -103,12 +103,13 @@ def build_contexts(args) -> dict:
     name, mode, diversity = parse(label)
     label_key = "claim_ids" if args.labels == "original" else "pooled_ids"
     questions = report["questions"][: args.limit]
-    vignettes, claims, answers = load_fixture(args.tier)
-    units, lean = load_units(args.tier), load_units(args.tier, context_words=30, max_context=1)
+    vignettes, claims, answers = load_fixture(args.tier, args.source)
+    units = load_units(args.tier, source=args.source)
+    lean = load_units(args.tier, source=args.source, context_words=30, max_context=1)
     embed = make_embed(query_embedder())
     cfg = bm25_config()
     covers = cover_claims(units, claims, vignettes, embed)
-    indexes = build_indexes(units, lean, answers, load_keys(args.tier))
+    indexes = build_indexes(units, lean, answers, load_keys(args.tier, args.source))
     main, rules = Searcher(indexes[name], embed, cfg), Searcher(indexes["C"], embed, cfg)
     by_unit = {it.unit_ids[0]: it for it in indexes[name]}
     everyone = np.ones(len(indexes[name]), dtype=bool)
@@ -307,6 +308,7 @@ def report(run_dir: Path) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", default="silver", choices=["bronze", "silver", "gold"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
     ap.add_argument("--run-dir", type=Path, default=RUNS / datetime.now().strftime("%Y%m%d-%H%M"))
     ap.add_argument("--model", default="qwen3.5:9b")
     ap.add_argument("--representation", help="experiment label; default: `selected` in latest.json")

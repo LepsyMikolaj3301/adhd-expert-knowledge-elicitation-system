@@ -61,8 +61,9 @@ def test_ab_pairs_are_whole(vignettes):
     assert all(a == {"A", "B"} for a in arms.values())
 
 
-def test_claims_match_documents(documents, claims):
-    assert set(claims) == set(documents)
+def test_claims_match_documents(documents, claims, tier):
+    # gold: the agent writes the claims after the expert has answered, so they may lag the documents
+    assert set(claims) <= set(documents) if tier == "gold" else set(claims) == set(documents)
     for name, claim_list in claims.items():
         doc = ElicitationDocument.model_validate(documents[name])
         texts = {v.id: v.text for v in doc.vignettes}
@@ -98,7 +99,7 @@ def test_text_analysis_vignettes_exist(vignettes):
 
 
 def test_edge_cases_fail_with_named_error(edge_cases):
-    assert len(edge_cases) == 6
+    assert len(edge_cases) == 8  # incl. q4_why_without_shift, gate_not_passed
     for name, case in edge_cases.items():
         with pytest.raises(ValidationError) as exc:
             ElicitationDocument.model_validate(case["document"])

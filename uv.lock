@@ -2949,6 +2949,7 @@ notebooks = [
 scripts = [
     { name = "beautifulsoup4" },
     { name = "lxml" },
+    { name = "prompt-toolkit" },
     { name = "pyyaml" },
 ]
 
@@ -2970,6 +2971,7 @@ notebooks = [
 scripts = [
     { name = "beautifulsoup4", specifier = ">=4.15.0" },
     { name = "lxml", specifier = ">=6.1.3" },
+    { name = "prompt-toolkit", specifier = ">=3.0.53" },
     { name = "pyyaml", specifier = ">=6.0" },
 ]
 

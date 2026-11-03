@@ -69,7 +69,9 @@ async def check_sparse_column(conn: asyncpg.Connection) -> None:
         "WHERE attrelid = to_regclass('chunks') AND attname = 'sparse'"
     )
     if width != f"sparsevec({bm25.DIMENSIONS})":
-        raise SystemExit("chunks.sparse is missing or has the wrong width: run scripts/db/init_db.py")
+        raise SystemExit(
+            "chunks.sparse is missing or has the wrong width: run scripts/db/init_db.py"
+        )
 
 
 async def refresh_sparse(conn: asyncpg.Connection, cfg: IndexingConfig) -> int:

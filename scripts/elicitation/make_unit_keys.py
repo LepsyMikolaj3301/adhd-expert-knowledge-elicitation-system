@@ -2,21 +2,23 @@
 
 Usage: python scripts/elicitation/make_unit_keys.py --tier silver [--model qwen3.5:9b] [--limit N]
 
-For every unit of every document in data/fixtures/<tier>/documents, one JSON-mode call returns
-{reading_rule, questions, traits, direction}. The keys are only embedded and searched; the unit's
-own verbatim text is what reaches the answer generator, so a bad key costs recall, not faithfulness.
+For every unit of every document in data/fixtures/<source>/<tier>/documents, one JSON-mode call
+returns {reading_rule, questions, traits, direction}. The keys are only embedded and searched; the
+unit's own verbatim text is what reaches the answer generator, so a bad key costs recall, not
+faithfulness.
 A reply that is not valid or leaks a name from the vignette is retried with a new seed.
-Writes data/expert_units/<tier>/<session>.json (units + keys); a cache makes reruns free.
+Writes data/expert_units/<source>/<tier>/<session>.json (units + keys); a cache makes reruns free.
 """
 
 import argparse
+import json
 import os
 import re
 import sys
 from pathlib import Path
 
 from llm_clients import CachedGenerator, GenRequest, ModelRefused, OllamaGenerator
-from make_fixtures import PERSONAS, Rejected, parse_json, write_json
+from make_fixtures import PERSONAS, Rejected, fixture_dir, parse_json, write_json
 from prompt_loader import load_prompt
 
 from app.elicitation.schema import ElicitationDocument
@@ -28,8 +30,14 @@ OPTIONS = {"temperature": 0.3, "num_predict": 500, "num_ctx": 8192}
 DIRECTIONS = {"raises", "lowers", "neutral"}
 
 
-def role_for(tier: str, session_id: str) -> str | None:
-    """Short role line for the header, from the persona that wrote document N (silver: C1, C2)."""
+def role_for(
+    tier: str, session_id: str, expert_id: str | None = None, source: str = "synthetic"
+) -> str | None:
+    """Short role line for the header: silver, from the persona that wrote document N (C1, C2);
+    gold, from the role the expert gave in data/fixtures/<source>/gold/experts.json."""
+    if tier == "gold":
+        path = fixture_dir("gold", source) / "experts.json"
+        return json.loads(path.read_text()).get(expert_id) if path.exists() else None
     personas = PERSONAS.get(tier)
     index = int(session_id.rsplit("-", 1)[1]) - 1
     if not personas or not 0 <= index < len(personas):
@@ -37,12 +45,17 @@ def role_for(tier: str, session_id: str) -> str | None:
     return ", ".join(personas[index][1].split(";")[0].split(",")[:2])
 
 
-def load_units(tier: str, fixtures: Path = ROOT / "data/fixtures", **context) -> list[ExpertUnit]:
+def load_units(
+    tier: str, fixtures: Path = ROOT / "data/fixtures", source: str = "synthetic", **context
+) -> list[ExpertUnit]:
     """Units of every document of a tier; `context` is passed to build_units (lean contexts)."""
     units: list[ExpertUnit] = []
-    for path in sorted((fixtures / tier / "documents").glob("DOC-*.json")):
+    for path in sorted(
+        fixture_dir(tier, source, fixtures).joinpath("documents").glob("DOC-*.json")
+    ):
         doc = ElicitationDocument.model_validate_json(path.read_text())
-        units += build_units(doc, role_for(tier, doc.session_id), **context)
+        role = role_for(tier, doc.session_id, doc.expert_id, source)
+        units += build_units(doc, role, **context)
     return units
 
 
@@ -104,6 +117,7 @@ def make_keys(unit: ExpertUnit, vignette: str, by_id, gen, retries: int, seed: i
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver", "gold"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
     ap.add_argument("--fixtures", type=Path, default=ROOT / "data/fixtures")
     ap.add_argument("--out", type=Path, default=ROOT / "data/expert_units")
     ap.add_argument("--cache", type=Path, default=ROOT / "data/cache")
@@ -117,10 +131,12 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     gen = CachedGenerator(OllamaGenerator(args.base_url, args.model), args.cache)
-    units = load_units(args.tier, args.fixtures)[: args.limit]
+    units = load_units(args.tier, args.fixtures, args.source)[: args.limit]
     by_id = {u.unit_id: u for u in units}
     vignettes = {}
-    for path in (args.fixtures / args.tier / "documents").glob("DOC-*.json"):
+    for path in (fixture_dir(args.tier, args.source, args.fixtures) / "documents").glob(
+        "DOC-*.json"
+    ):
         doc = ElicitationDocument.model_validate_json(path.read_text())
         vignettes |= {(doc.session_id, v.id): v.text for v in doc.vignettes}
 
@@ -132,7 +148,7 @@ def main(argv=None) -> int:
 
     for session in sorted({u.session_id for u in units}):
         write_json(
-            args.out / args.tier / f"{session}.json",
+            args.out / args.source / args.tier / f"{session}.json",
             {
                 "model": gen.name,
                 "prompt": PROMPT,

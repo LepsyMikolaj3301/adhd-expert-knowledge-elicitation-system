@@ -15,6 +15,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "elicitation"))
 from expert_metrics import Item  # noqa: E402
 from llm_clients import AwaitingResponse, GenRequest, InboxGenerator  # noqa: E402
+from make_fixtures import fixture_dir  # noqa: E402
 from make_unit_keys import ROOT  # noqa: E402
 from prompt_loader import load_prompt  # noqa: E402
 from rag_common import FUSION_DEPTH, RRF_K  # noqa: E402
@@ -32,26 +33,25 @@ POOL_DEPTH, POOL_PART = 8, 10  # claims pooled per system and question; question
 # --- fixtures ----------------------------------------------------------------------------------
 
 
-def load_fixture(tier: str):
+def load_fixture(tier: str, source: str = "synthetic"):
     """(vignettes by id, claims by id, answers by (session, vignette, question))."""
     vignettes, claims, answers = {}, {}, {}
-    for path in sorted((ROOT / "data/fixtures" / tier / "documents").glob("DOC-*.json")):
+    for path in sorted((fixture_dir(tier, source) / "documents").glob("DOC-*.json")):
         doc = ElicitationDocument.model_validate_json(path.read_text())
         vignettes |= {v.id: v for v in doc.vignettes}
         for r in doc.responses:
             answers |= {(doc.session_id, r.vignette_id, q): a for q, a in r.answers.items()}
-        raw = json.loads(
-            (path.parent.parent / "claims" / f"{doc.session_id}.claims.json").read_text()
-        )
+        claims_path = path.parent.parent / "claims" / f"{doc.session_id}.claims.json"
+        raw = json.loads(claims_path.read_text()) if claims_path.exists() else []  # gold: pending
         claims |= {
             f"{doc.session_id}#{i}": {**c, "session_id": doc.session_id} for i, c in enumerate(raw)
         }
     return vignettes, claims, answers
 
 
-def load_keys(tier: str) -> dict[str, dict]:
+def load_keys(tier: str, source: str = "synthetic") -> dict[str, dict]:
     keys: dict[str, dict] = {}
-    for path in sorted((ROOT / "data/expert_units" / tier).glob("DOC-*.json")):
+    for path in sorted((ROOT / "data/expert_units" / source / tier).glob("DOC-*.json")):
         keys |= {k: v["keys"] for k, v in json.loads(path.read_text())["keys"].items() if v["keys"]}
     return keys
 

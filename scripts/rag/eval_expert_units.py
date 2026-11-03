@@ -231,6 +231,7 @@ def distortion(units, keys, claims, covers) -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver", "gold"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
     ap.add_argument("--inbox", type=Path, default=ROOT / "data/inbox")
     ap.add_argument("--out", type=Path, default=ROOT / "data/eval/expert_units")
     ap.add_argument("--experiments", nargs="+", default=DEFAULT_EXPERIMENTS)
@@ -238,7 +239,7 @@ def main(argv=None) -> int:
     ap.add_argument("--make-queries", action="store_true", help="write the question request, stop")
     args = ap.parse_args(argv)
 
-    vignettes, claims, answers = load_fixture(args.tier)
+    vignettes, claims, answers = load_fixture(args.tier, args.source)
     if args.make_queries:
         try:
             load_questions(args.tier, vignettes, claims, args.inbox)
@@ -247,8 +248,8 @@ def main(argv=None) -> int:
             print(e)
         return 0
 
-    units, keys = load_units(args.tier), load_keys(args.tier)
-    lean_units = load_units(args.tier, **LEAN)
+    units, keys = load_units(args.tier, source=args.source), load_keys(args.tier, args.source)
+    lean_units = load_units(args.tier, source=args.source, **LEAN)
     embed, cfg = make_embed(query_embedder()), bm25_config()
     covers = cover_claims(units, claims, vignettes, embed)
     print(
@@ -256,7 +257,12 @@ def main(argv=None) -> int:
         f"{sum(not c for c in covers.values())} claims no unit holds"
     )
     indexes = build_indexes(units, lean_units, answers, keys)
-    report: dict = {"tier": args.tier, "units": len(units), "keys": len(keys)}
+    report: dict = {
+        "source": args.source,
+        "tier": args.tier,
+        "units": len(units),
+        "keys": len(keys),
+    }
 
     try:
         questions = load_questions(args.tier, vignettes, claims, args.inbox)

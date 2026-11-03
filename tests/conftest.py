@@ -1,4 +1,4 @@
-"""Fixtures for the elicitation tests: load data/fixtures/<tier>, or rebuild bronze offline.
+"""Fixtures for the elicitation tests: data/fixtures/synthetic/<tier>, or rebuild bronze offline.
 
 data/ and tests/sample_inputs are gitignored. Without data/fixtures the bronze tier is rebuilt from
 local sample inputs (tests/sample_inputs) with the `file` sources: no model, no network; without
@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA_FIXTURES = ROOT / "data" / "fixtures"
+DATA_FIXTURES = ROOT / "data" / "fixtures" / "synthetic"  # edge_cases/ sits one level up
 SAMPLES = ROOT / "tests" / "sample_inputs"
 TIERS = ("bronze", "silver", "gold")
 
@@ -25,10 +25,11 @@ def fixtures_dir(tmp_path_factory) -> Path:
         pytest.skip("no fixtures in data/ and no tests/sample_inputs (both gitignored)")
     import make_fixtures
 
-    out = tmp_path_factory.mktemp("fixtures")
+    root = tmp_path_factory.mktemp("fixtures")
+    out = root / "synthetic"
     code = make_fixtures.main(
         ["--persona-source", "file", "--answer-source", "file", "--tier", "bronze"]
-        + ["--out", str(out), "--persona-dir", str(SAMPLES / "personas")]
+        + ["--out", str(root), "--persona-dir", str(SAMPLES / "personas")]
         + ["--answer-dir", str(SAMPLES / "answers" / "bronze")]
     )
     assert code == 0
@@ -70,4 +71,4 @@ def vignettes(tier_dir) -> dict[str, dict]:
 
 @pytest.fixture(scope="session")
 def edge_cases(fixtures_dir) -> dict[str, dict]:
-    return _load(fixtures_dir / "edge_cases", "*.json")
+    return _load(fixtures_dir.parent / "edge_cases", "*.json")

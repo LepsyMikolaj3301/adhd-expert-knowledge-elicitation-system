@@ -5,8 +5,8 @@ Usage:
         # no model
     python scripts/elicitation/make_fixtures.py --persona-source ollama --answer-source ollama \
         --model qwen3.5:9b
-    python scripts/elicitation/make_fixtures.py --reddit-vignettes 4 \
-        --reddit-pool data/raw/<posts>.jsonl
+    python scripts/elicitation/make_fixtures.py --source reddit --answer-source ollama \
+        [--reddit-vignettes 12] [--reddit-pool data/raw/reddit_adhd.jsonl] [--n-documents 0]
     python scripts/elicitation/make_fixtures.py --dry-run
 
 Sources (see llm_clients.py):
@@ -23,9 +23,12 @@ Tiers (docs/fixtures.md): answers and reference claims are only as trustworthy a
     silver  Claude instances (claude / its samples)    development metrics
     gold    real expert answers - cannot be generated here
 
-Output: <out>/<tier>/{vignettes,documents,claims}/ + manifest.json, and <out>/edge_cases/
-(default out: data/fixtures). Same arguments and --seed reproduce the same files; model outputs
-are cached in data/cache/.
+Text sources (--source): synthetic = model-written vignettes; reddit = real r/ADHD posts only
+(scripts/elicitation/fetch_reddit_pool.py makes the pool). The two never mix in one run.
+
+Output: <out>/<source>/<tier>/{vignettes,documents,claims}/ + manifest.json, and <out>/edge_cases/
+(default out: data/fixtures). --n-documents 0 writes the vignettes only. Same arguments and
+--seed reproduce the same files; model outputs are cached in data/cache/.
 """
 
 import argparse
@@ -55,7 +58,7 @@ from pydantic import ValidationError
 from reddit_posts import load_pool as load_reddit_pool
 from reddit_posts import pick_posts
 
-from app.elicitation.questions import QUESTIONS, render_question
+from app.elicitation.questions import QUESTIONS, SHIFT_LABELS, TOWARD_LABELS, render_question
 from app.elicitation.schema import (
     MAX_WORDS,
     MIN_WORDS,
@@ -65,16 +68,27 @@ from app.elicitation.schema import (
     PlantedCue,
     ReferenceClaim,
     Response,
+    ShiftAnswer,
     VariantInfo,
     Vignette,
     VignetteDesign,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+FIXTURES = ROOT / "data/fixtures"
+SOURCES = ("synthetic", "reddit")
+
+
+def fixture_dir(tier: str, source: str = "synthetic", root: Path = FIXTURES) -> Path:
+    """data/fixtures/<source>/<tier>: where one tier of one text source lives."""
+    return root / source / tier
+
+
 PERSONA_PROMPT = "Persona_claude.v1"
 BASE_PROMPT = "Persona_base_fewshot.v1"
-# v1 stays with bronze so cached qwen answers still rebuild; silver uses the stricter v2
-ANSWER_PROMPTS = {"bronze": "Synthetic_expert_answer.v1", "silver": "Synthetic_expert_answer.v2"}
+# v1 stays with bronze so cached qwen answers still rebuild (bronze vignettes have no what-if, so
+# no Q4); silver uses v3: the stricter v2 plus the Q4 what-if scale
+ANSWER_PROMPTS = {"bronze": "Synthetic_expert_answer.v1", "silver": "Synthetic_expert_answer.v3"}
 EPOCH = datetime(2026, 1, 5, 9, 0, tzinfo=UTC)  # fixed: fixtures must be reproducible
 
 # --- scenarios: what each vignette is about (the model writes the text) -------------------------
@@ -90,7 +104,6 @@ SCENARIOS = [
         style="long run-on sentences, returns to the point late",
         traits="task_initiation: moderate; time_estimation: weak",
         confounders="moved flats two months ago and has been sleeping badly",
-        q4="the recent move and the poor sleep",
         max_cues=2,
         control=False,
     ),
@@ -103,7 +116,6 @@ SCENARIOS = [
         style="terse, lowercase, few commas",
         traits=NO_TRAITS,
         confounders="none",
-        q4="the amount of time she has before the dinner",
         max_cues=0,
         control=True,
     ),
@@ -116,7 +128,6 @@ SCENARIOS = [
         style="chatty, many asides in brackets",
         traits="novelty_seeking: moderate; sustained_attention_on_boring_tasks: weak",
         confounders="lost a parent in the spring and describes low mood in passing",
-        q4="the bereavement earlier this year",
         max_cues=2,
         control=False,
     ),
@@ -129,7 +140,6 @@ SCENARIOS = [
         style="short paragraphs, self-deprecating humour",
         traits="distractibility: moderate; working_memory: weak",
         confounders="drinks a lot of coffee and has exam anxiety",
-        q4="the exam anxiety",
         max_cues=2,
         control=False,
     ),
@@ -142,7 +152,6 @@ SCENARIOS = [
         style="orderly, formal, a few worried asides",
         traits=NO_TRAITS,
         confounders="clear anxiety about the move",
-        q4="the anxiety about the move",
         max_cues=0,
         control=True,
     ),
@@ -164,7 +173,6 @@ SCENARIOS = [
         style="digressive: side stories, circles back to the point late, then apologises",
         traits="discourse_tangentiality: moderate; time_estimation: weak",
         confounders="has been ruminating about a conflict with a colleague",
-        q4="the ongoing conflict with the colleague",
         max_cues=2,
         control=False,
     ),
@@ -184,7 +192,6 @@ SCENARIOS = [
         style="matter of fact, lots of 'about', 'a bit', 'soon'",
         traits="time_estimation: strong; task_initiation: weak",
         confounders="the business has got busier and the writer works long tired days",
-        q4="the long working hours",
         max_cues=2,
         control=False,
     ),
@@ -203,7 +210,6 @@ SCENARIOS = [
         style="polite, over-explained, apologetic",
         traits="task_initiation: moderate; working_memory: weak",
         confounders="started a new job three weeks ago and feels under pressure",
-        q4="the fact that the job is brand new",
         max_cues=2,
         control=False,
     ),
@@ -222,7 +228,6 @@ SCENARIOS = [
         style="fragments, unfinished sentences, self-interruptions, a few typos",
         traits="distractibility: moderate; working_memory: moderate",
         confounders="typing in a hurry on a phone after a night shift",
-        q4="the fact that it was typed on a phone after a night shift",
         max_cues=2,
         control=False,
     ),
@@ -241,7 +246,6 @@ SCENARIOS = [
         style="tone swings within a paragraph, blunt then apologetic",
         traits="emotional_reactivity: moderate; quick_to_act: weak",
         confounders="low mood for several weeks after a break-up",
-        q4="the break-up and the weeks of low mood",
         max_cues=2,
         control=False,
     ),
@@ -260,7 +264,6 @@ SCENARIOS = [
         style="reflective, storytelling, vague on dates",
         traits="task_initiation: moderate; distractibility: moderate, recalled from childhood",
         confounders="many of the memories are second-hand, from stories the parents tell",
-        q4="the fact that many memories are second-hand",
         max_cues=2,
         control=False,
     ),
@@ -279,7 +282,6 @@ SCENARIOS = [
         style="warm, long-winded, many digressions that all return neatly to the story",
         traits=NO_TRAITS,
         confounders="naturally talkative and enjoys storytelling",
-        q4="the writer's age and love of storytelling",
         max_cues=0,
         control=True,
     ),
@@ -294,7 +296,6 @@ SCENARIOS = [
         style="plain, slightly tired, short sentences with one thought each",
         traits="time_estimation: moderate; task_initiation: weak",
         confounders="a newborn who wakes the household several times a night",
-        q4="the newborn and the broken nights",
         max_cues=2,
         control=False,
         variant_change="The newborn and the broken nights are not mentioned.",
@@ -409,6 +410,20 @@ def design_from_output(data: dict, scenario: dict, text: str) -> VignetteDesign:
     return design
 
 
+def q4_whatif_from(data: dict) -> str | None:
+    """The what-if Q4 asks about: written by the vignette author (the persona file's `q4_whatif`).
+    There is no fallback: a quote from the text is not a what-if."""
+    whatif = data.get("q4_whatif")
+    if whatif is not None and (not isinstance(whatif, str) or not whatif.strip()):
+        raise Rejected(f"q4_whatif is not a non-blank string: {whatif!r}")
+    return whatif.strip() if whatif else None
+
+
+def question_ids(q4_whatif: str | None) -> list[str]:
+    """All questions; Q4 only when there is a what-if to ask about."""
+    return [q.id for q in QUESTIONS if q.id != "Q4" or q4_whatif]
+
+
 def quoted_strings(text: str) -> list[str]:
     return [m for pair in re.findall(r'"([^"]{15,})"|“([^”]{15,})”', text) for m in pair if m]
 
@@ -430,8 +445,24 @@ def inject_misquote(q1: str, vignette_text: str, spans: list[str]) -> str:
     raise Rejected("no quoted fragment in Q1 that can be misquoted")
 
 
+def q4_pieces(data: dict, answers: dict) -> tuple[ShiftAnswer, str | None]:
+    """Validate the Q4 part of an expert-answer output: (scale answer, why or None)."""
+    raw = data.get("q4")
+    if not isinstance(raw, dict):
+        raise Rejected("no 'q4' object although Q4 was asked")
+    if type(raw.get("shift")) is not int:  # type(): True is not a shift
+        raise Rejected(f"q4.shift {raw.get('shift')!r} is not an integer -2..2")
+    try:
+        q4 = ShiftAnswer(**{k: raw.get(k) for k in ShiftAnswer.model_fields if k in raw})
+    except ValidationError as e:
+        raise Rejected(f"bad q4: {e}") from e
+    why = answers.get("Q4")
+    why = why.strip() if isinstance(why, str) and why.strip() and q4.shift != 0 else None
+    return q4, why
+
+
 def answer_pieces(data: dict, vignette: Vignette, kind: str):
-    """Validate an expert-answer output; returns (answers, rating, insufficient, claims)."""
+    """Validate an expert-answer output; returns (answers, rating, insufficient, claims, q4)."""
     answers = data.get("answers")
     if not isinstance(answers, dict):
         raise Rejected("no 'answers' object")
@@ -442,6 +473,11 @@ def answer_pieces(data: dict, vignette: Vignette, kind: str):
         if not isinstance(value, str) or not value.strip():
             raise Rejected(f"answer {qid} missing or blank")
         clean[qid] = value.strip()
+    q4 = None
+    if "Q4" in vignette.question_ids:
+        q4, why = q4_pieces(data, answers)
+        if why:
+            clean["Q4"] = why
 
     insufficient = data.get("insufficient_information") is True
     rating = data.get("overall_rating")
@@ -482,7 +518,7 @@ def answer_pieces(data: dict, vignette: Vignette, kind: str):
     if kind == "bad_quote":
         spans = [c.quoted_span_text for c in claims if c.quoted_span_text]
         clean["Q1"] = inject_misquote(clean["Q1"], vignette.text, spans)
-    return clean, rating, insufficient, claims
+    return clean, rating, insufficient, claims, q4
 
 
 # --- running generators with retries -----------------------------------------------------------
@@ -605,12 +641,13 @@ def make_vignettes(gen: Gen, args, pool) -> list[Vignette]:
                 b_text = derive_variant(text, sc["variant_drop"])
                 check_variant(text, b_text)
                 check_text(b_text)
-            return text, design_from_output(data, sc, text)
+            design = design_from_output(data, sc, text)
+            return text, design, q4_whatif_from(data)
 
         got = gen.run(req, build)
         if got is None:
             continue
-        text, design = got
+        text, design, whatif = got
         vid = f"V{len(out) + 1:03d}"
         variant = VariantInfo(pair_id=sc["id"], arm="A") if pair else None
         out.append(
@@ -620,8 +657,8 @@ def make_vignettes(gen: Gen, args, pool) -> list[Vignette]:
                 text=text,
                 framing=sc["source"],
                 design=design,
-                question_ids=[q.id for q in QUESTIONS],
-                q4_element=sc["q4"],
+                question_ids=question_ids(whatif),
+                q4_whatif=whatif,
                 variant=variant,
             )
         )
@@ -641,8 +678,8 @@ def make_vignettes(gen: Gen, args, pool) -> list[Vignette]:
                     text=text_b,
                     framing=sc["source"],
                     design=design_b,
-                    question_ids=[q.id for q in QUESTIONS],
-                    q4_element=sc["q4"],
+                    question_ids=question_ids(whatif),  # not tied to the text: B keeps it
+                    q4_whatif=whatif,
                     variant=VariantInfo(pair_id=sc["id"], arm="B", change=sc["variant_change"]),
                 )
             )
@@ -655,10 +692,23 @@ def kind_for(doc_i: int, vig_i: int, vignette: Vignette, seed: int) -> str:
     return KINDS[(doc_i + vig_i + seed) % len(KINDS)]
 
 
+Q4_SCALE = (
+    "\n    (answer in `q4`: shift -2..+2 = with this, my hypothesis "
+    + ", ".join(f"{k:+d} {v}" if k else f"0 {v}" for k, v in SHIFT_LABELS.items())
+    + "; toward only for +1/+2: "
+    + " | ".join(f"{k} ({v})" for k, v in TOWARD_LABELS.items())
+    + '; a short why in answers["Q4"] unless the shift is 0)'
+)
+
+
 def answer_request(
     vignette: Vignette, kind: str, persona: tuple[str, str], prompt: str
 ) -> GenRequest:
-    questions = "\n".join(f"{q.id}: {render_question(q, vignette.q4_element)}" for q in QUESTIONS)
+    questions = "\n".join(
+        f"{q.id}: {render_question(q, vignette.q4_whatif)}" + (Q4_SCALE if q.id == "Q4" else "")
+        for q in QUESTIONS
+        if q.id in vignette.question_ids
+    )
     p = load_prompt(prompt).fill(
         PERSONA=persona[1],
         FIXTURE_KIND="clean" if kind == "bad_quote" else kind,  # the misquote is injected later
@@ -688,7 +738,7 @@ def make_document(doc_i: int, vignettes: list[Vignette], gen: Gen, args, skipped
         if got is None:
             skipped.append(req.key)
             continue
-        answers, rating, insufficient, claims = got
+        answers, rating, insufficient, claims, q4 = got
         spans = sorted({c.quoted_span_text for c in claims if c.quoted_span_text})
         started = clock + timedelta(minutes=1)
         clock = started + timedelta(minutes=4 + (len(answers["Q1"]) // 80))
@@ -703,6 +753,7 @@ def make_document(doc_i: int, vignettes: list[Vignette], gen: Gen, args, skipped
                 quoted_fragments=spans,
                 rating=rating,
                 insufficient_information=insufficient,
+                q4=q4,
                 started_at=started,
                 submitted_at=clock,
             )
@@ -744,7 +795,7 @@ def edge_cases() -> dict[str, dict]:
         text=EDGE_TEXT,
         framing="personal_journal",
         question_ids=["Q1", "Q4", "Q6"],
-        q4_element="the recent move",
+        q4_whatif="the writer had started a new medication for low mood a month earlier",
         design=VignetteDesign(
             purpose="edge-case base",
             planted_cues=[
@@ -769,9 +820,18 @@ def edge_cases() -> dict[str, dict]:
         vignette_hash=v.content_hash,
         expert_id="SYN-900",
         is_synthetic=True,
-        answers={"Q1": "'tomorrow turns into the next week' - task initiation."},
+        answers={
+            "Q1": "'tomorrow turns into the next week' - task initiation.",
+            "Q4": "Low mood would explain the stalling as well as anything trait-like.",
+        },
         quoted_fragments=["tomorrow turns into the next week"],
         rating=3,
+        q4={
+            "hypothesis": "long-standing trouble starting tasks",
+            "shift": 1,
+            "toward": "less_adhd",
+            "other_explanation": None,
+        },
         started_at=t0.isoformat(),
         submitted_at=(t0 + timedelta(minutes=9)).isoformat(),
     )
@@ -822,6 +882,19 @@ def edge_cases() -> dict[str, dict]:
             "unknown_question_id",
             **{"responses.0.answers": {"Q9": "x"}},
         ),
+        "q4_why_without_shift": variant(
+            "a Q4 why although the expert chose 0 (no change)",
+            "q4_why_without_shift",
+            **{"responses.0.q4.shift": 0, "responses.0.q4.toward": None},
+        ),
+        "gate_not_passed": variant(
+            "Q4 and Q6 answered but Q1 (a gate question) not",
+            "gate_not_passed",
+            **{
+                "responses.0.answers": {"Q4": "Low mood fits as well."},
+                "responses.0.quoted_fragments": [],
+            },
+        ),
         "duplicate_response": {
             "expected_error": "duplicate_response",
             "description": "two responses to the same vignette",
@@ -854,8 +927,7 @@ def add_reddit_vignettes(vignettes: list[Vignette], args) -> list[Vignette]:
                 version=1,
                 text=post.text,
                 framing="forum_post",
-                question_ids=[q.id for q in QUESTIONS],
-                q4_element="the writer's sleep, mood and workload at the time",
+                question_ids=question_ids(None),  # no hand-picked fragment for Q4
                 design=VignetteDesign(
                     purpose=f"real r/ADHD post fitting {sc['trait_key']}; sentences naming the "
                     "construct, medication, links or handles were dropped",
@@ -916,6 +988,12 @@ def parse_args(argv=None):
     ap.add_argument(
         "--tier", choices=["bronze", "silver", "gold"], help="default: by answer source"
     )
+    ap.add_argument(
+        "--source",
+        choices=SOURCES,
+        default="synthetic",
+        help="vignette texts: model-written (synthetic) or real r/ADHD posts (reddit)",
+    )
     ap.add_argument("--persona-dir", type=Path, default=ROOT / "tests/sample_inputs/personas")
     ap.add_argument("--answer-dir", type=Path, help="default: tests/sample_inputs/answers/<tier>")
     ap.add_argument("--inbox", type=Path, default=ROOT / "data/inbox")
@@ -929,10 +1007,9 @@ def parse_args(argv=None):
     ap.add_argument(
         "--reddit-vignettes",
         type=int,
-        default=0,
-        help="number of real posts to add as text_analysis vignettes",
+        help="--source reddit: number of real posts used as vignettes (default 12)",
     )
-    ap.add_argument("--out", type=Path, default=ROOT / "data/fixtures")
+    ap.add_argument("--out", type=Path, default=FIXTURES)
     ap.add_argument("--cache", type=Path, default=ROOT / "data/cache")
     ap.add_argument(
         "--base-url", default=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -985,16 +1062,25 @@ def main(
     args = parse_args(argv)
     tier = args.tier = resolve_tier(args)
     n_personas = len(PERSONAS[tier])
-    args.n_documents = min(args.n_documents or n_personas, n_personas)
+    n_docs = n_personas if args.n_documents is None else args.n_documents
+    args.n_documents = min(n_docs, n_personas)  # 0 = vignettes only
     args.answer_dir = args.answer_dir or ROOT / "tests/sample_inputs/answers" / tier
-    out = args.out / tier
+    if args.source == "reddit":
+        args.n_vignettes = 0  # real posts only, no model-written texts
+        args.reddit_vignettes = 12 if args.reddit_vignettes is None else args.reddit_vignettes
+    elif args.reddit_vignettes:
+        raise SystemExit("real posts are their own source: use --source reddit")
+    else:
+        args.reddit_vignettes = 0
+    out = fixture_dir(tier, args.source, args.out)
 
     if args.dry_run:
         n_vig = args.n_vignettes + args.reddit_vignettes
         print(
-            f"tier {tier}; persona source: {args.persona_source} -> up to {args.n_vignettes} "
-            f"vignettes (scenarios {[s['id'] for s in SCENARIOS]}, S05 is an A/B pair, "
-            f"{len(TEXT_ANALYSIS)} are text_analysis) + {args.reddit_vignettes} real r/ADHD posts"
+            f"{args.source}/{tier}; persona source: {args.persona_source} -> up to "
+            f"{args.n_vignettes} vignettes (scenarios {[s['id'] for s in SCENARIOS]}, S05 is an "
+            f"A/B pair, {len(TEXT_ANALYSIS)} are text_analysis) + {args.reddit_vignettes} real "
+            "r/ADHD posts"
         )
         print(
             f"answer source:  {args.answer_source} -> {args.n_documents} documents x ~{n_vig} "
@@ -1088,6 +1174,7 @@ def main(
     write_json(
         out / "manifest.json",
         dict(
+            source=args.source,
             tier=tier,
             quality=TIER_QUALITY[tier].format(model=ag.name),
             entries=manifest,
@@ -1101,7 +1188,8 @@ def main(
 
     n_docs = sum(1 for m in manifest if m["kind"] == "document")
     print(
-        f"[{tier}] wrote {len(vignettes)} vignettes, {n_docs} documents, 6 edge cases to {args.out}"
+        f"[{args.source}/{tier}] wrote {len(vignettes)} vignettes, {n_docs} documents, "
+        f"{len(edge_cases())} edge cases to {args.out}"
         + (f"; skipped {len(skipped)}: {sorted(skipped)}" if skipped else "")
     )
     return 0

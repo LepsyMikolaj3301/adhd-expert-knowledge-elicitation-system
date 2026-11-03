@@ -193,8 +193,9 @@ class OllamaChat:
         self.options = {**GENERATION_OPTIONS, **options}
         self.client = httpx.Client(base_url=base_url or settings.ollama_base_url, timeout=900)
 
-    def chat(self, system: str, user: str) -> tuple[str, dict]:
-        """Reply text and stats (tokens, seconds, tokens/s)."""
+    def chat(self, system: str, user: str, history: list[dict] | None = None) -> tuple[str, dict]:
+        """Reply text and stats (tokens, seconds, tokens/s). `history`: earlier
+        {"role", "content"} turns, placed between the system message and `user`."""
         start = time.perf_counter()
         resp = self.client.post(
             "/api/chat",
@@ -202,6 +203,7 @@ class OllamaChat:
                 "model": self.model,
                 "messages": [
                     {"role": "system", "content": system},
+                    *(history or []),
                     {"role": "user", "content": user},
                 ],
                 "think": self.think,

@@ -1,6 +1,7 @@
 import json
 
 import make_fixtures
+import pytest
 from leak_terms import find_leaks
 from reddit_posts import clean_post, load_pool, pick_posts, trait_score
 
@@ -43,7 +44,7 @@ def test_pool_loading_and_trait_pick(tmp_path):
     assert pick_posts(posts, "time_estimation", 1, {"a"}, seed=1) == []
 
 
-def test_reddit_vignettes_in_generator(tmp_path):
+def run_reddit(tmp_path, *extra, source="reddit"):
     from test_make_fixtures import FakeGenerator
 
     pool = tmp_path / "pool.jsonl"
@@ -52,18 +53,32 @@ def test_reddit_vignettes_in_generator(tmp_path):
     gen = FakeGenerator()
     out = tmp_path / "out"
     code = make_fixtures.main(
-        ["--out", str(out), "--persona-source", "ollama", "--answer-source", "ollama"]
-        + ["--n-vignettes", "2", "--n-documents", "1", "--retries", "0"]
-        + ["--reddit-vignettes", "1", "--reddit-pool", str(pool)],
+        ["--out", str(out), "--source", source, "--persona-source", "ollama"]
+        + ["--answer-source", "ollama", "--retries", "0", "--reddit-pool", str(pool)]
+        + list(extra),
         persona_gen=gen,
         answer_gen=gen,
     )
+    return code, out / source / "bronze"
+
+
+def test_reddit_source_has_only_real_posts(tmp_path):
+    code, tier_dir = run_reddit(tmp_path, "--reddit-vignettes", "1", "--n-documents", "0")
     assert code == 0
-    real = [
-        Vignette.model_validate_json(p.read_text())
-        for p in (out / "bronze" / "vignettes").glob("V*.json")
-        if '"origin": "real_text"' in p.read_text()
-    ]
-    assert len(real) == 1
+    real = [Vignette.model_validate_json(p.read_text()) for p in tier_dir.glob("vignettes/V*.json")]
+    assert len(real) == 1 and real[0].design.origin == "real_text"
     assert real[0].design.source_ref == "reddit:r1" and real[0].design.track == "text_analysis"
     assert real[0].framing == "forum_post"
+    manifest = json.loads((tier_dir / "manifest.json").read_text())
+    assert manifest["source"] == "reddit" and manifest["tier"] == "bronze"
+
+
+def test_n_documents_zero_writes_vignettes_only(tmp_path):
+    code, tier_dir = run_reddit(tmp_path, "--reddit-vignettes", "1", "--n-documents", "0")
+    assert code == 0 and list(tier_dir.glob("vignettes/V*.json"))
+    assert not list(tier_dir.glob("documents/*.json"))
+
+
+def test_reddit_posts_need_the_reddit_source(tmp_path):
+    with pytest.raises(SystemExit, match="--source reddit"):
+        run_reddit(tmp_path, "--reddit-vignettes", "1", source="synthetic")

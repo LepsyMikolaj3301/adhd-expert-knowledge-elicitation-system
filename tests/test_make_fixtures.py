@@ -71,12 +71,14 @@ def run(tmp_path, seed="1"):
 
 def test_generates_valid_reproducible_set(tmp_path):
     out, gen = run(tmp_path / "a")
-    docs = sorted((out / "bronze" / "documents").glob("*.json"))
+    docs = sorted((out / "synthetic" / "bronze" / "documents").glob("*.json"))
     assert len(docs) == 3
     for path in docs:
         doc = ElicitationDocument.model_validate_json(path.read_text())
         assert doc.is_synthetic and doc.expert_id.startswith("SYN-")
-    assert all((out / "bronze" / "claims" / f"{p.stem}.claims.json").exists() for p in docs)
+    assert all(
+        (out / "synthetic" / "bronze" / "claims" / f"{p.stem}.claims.json").exists() for p in docs
+    )
     out2, _ = run(tmp_path / "b")
     for path in sorted(out.rglob("*.json")):
         assert path.read_text() == (out2 / path.relative_to(out)).read_text()
@@ -118,12 +120,12 @@ def test_ngram_copy_detected():
 
 def test_text_analysis_track_and_tier_manifest(tmp_path):
     out, _ = run(tmp_path)
-    manifest = json.loads((out / "bronze" / "manifest.json").read_text())
+    manifest = json.loads((out / "synthetic" / "bronze" / "manifest.json").read_text())
     assert manifest["tier"] == "bronze" and "plumbing" in manifest["quality"]
     assert all(e["tier"] == "bronze" for e in manifest["entries"])
     tracks = {
         json.loads(p.read_text())["design"]["track"]
-        for p in (out / "bronze" / "vignettes").glob("V*.json")
+        for p in (out / "synthetic" / "bronze" / "vignettes").glob("V*.json")
     }
     assert tracks == {"general", "text_analysis"}
 
@@ -148,6 +150,7 @@ def answer_json(**override):
         "overall_rating": 3,
         "insufficient_information": False,
         "gold_claims": [{"claim": "c", "quoted_span_text": CUE, "trait": "t"}],
+        "q4": {"hypothesis": "h", "shift": 1, "toward": "less_adhd", "other_explanation": None},
     }
     return {**data, **override}
 
@@ -164,10 +167,30 @@ def test_odd_model_output_is_rejected_not_a_crash():
         {"overall_rating": True},
         {"overall_rating": "3"},
         {"gold_claims": [{"claim": "x", "quoted_span_text": "not in the text"}]},
+        {"q4": None},  # Q4 was asked
+        {"q4": {"shift": True}},
+        {"q4": {"shift": "1"}},
+        {"q4": {"shift": 5}},
+        {"q4": {"shift": -1, "toward": "more_adhd"}},
     ):
         with pytest.raises(make_fixtures.Rejected):
             make_fixtures.answer_pieces(answer_json(**bad), v, "clean")
-    make_fixtures.answer_pieces(answer_json(), v, "clean")
+    answers, *_, q4 = make_fixtures.answer_pieces(answer_json(), v, "clean")
+    assert answers == {"Q1": "answer Q1", "Q4": "answer Q4"} and q4.shift == 1
+    answers, *_, q4 = make_fixtures.answer_pieces(answer_json(q4={"shift": 0}), v, "clean")
+    assert "Q4" not in answers and q4.shift == 0  # a why only goes with a change
+
+
+def test_q4_whatif_comes_from_the_author_only():
+    import pytest
+
+    assert make_fixtures.q4_whatif_from({"q4_whatif": " the writer had an exam "}) == (
+        "the writer had an exam"
+    )
+    assert make_fixtures.q4_whatif_from({"q4_fragment": "old style"}) is None
+    assert make_fixtures.question_ids(None) == ["Q1", "Q2", "Q3", "Q5", "Q6"]
+    with pytest.raises(make_fixtures.Rejected):
+        make_fixtures.q4_whatif_from({"q4_whatif": "  "})
 
 
 def test_variant_b_must_differ_from_a():
@@ -184,7 +207,7 @@ def test_variant_b_must_differ_from_a():
 def test_generated_pairs_differ(tmp_path):
     out, _ = run(tmp_path)
     by_arm = {}
-    for path in (out / "bronze" / "vignettes").glob("V*.json"):
+    for path in (out / "synthetic" / "bronze" / "vignettes").glob("V*.json"):
         v = json.loads(path.read_text())
         if v["variant"]:
             by_arm[v["variant"]["arm"]] = v["text"]
@@ -195,7 +218,7 @@ def test_bad_quote_is_injected_in_code(tmp_path):
     out, gen = run(tmp_path)
     assert any(":bad_quote:" in key for key in gen.calls)
     found = 0
-    for path in (out / "bronze" / "documents").glob("DOC-*.json"):
+    for path in (out / "synthetic" / "bronze" / "documents").glob("DOC-*.json"):
         doc = ElicitationDocument.model_validate_json(path.read_text())
         text = doc.vignettes[0].text
         for r in doc.responses:
@@ -233,7 +256,7 @@ def test_local_source_and_small_pool(tmp_path):
         persona_gen=RawFake(),
         answer_gen=FakeGenerator(),
     )
-    assert code == 0 and list((out / "bronze" / "vignettes").glob("V*.json"))
+    assert code == 0 and list((out / "synthetic" / "bronze" / "vignettes").glob("V*.json"))
     with pytest.raises(SystemExit, match="need 3"):
         make_fixtures.main(
             [*args, "--out", str(tmp_path / "o2"), "--seed-pool", str(pool_file(2))],
@@ -271,6 +294,6 @@ def test_model_refusal_is_retried_with_the_next_seed(tmp_path):
         answer_gen=gen,
     )
     assert code == 0
-    manifest = json.loads((out / "bronze" / "manifest.json").read_text())
+    manifest = json.loads((out / "synthetic" / "bronze" / "manifest.json").read_text())
     assert any("repeat limit" in line for line in manifest["rejections"])
     assert manifest["skipped"] == []

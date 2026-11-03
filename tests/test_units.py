@@ -2,6 +2,9 @@
 
 from datetime import UTC, datetime
 
+import pytest
+from pydantic import ValidationError
+
 from app.elicitation.schema import ElicitationDocument, Response, Vignette, VignetteDesign
 from app.elicitation.units import anchor_quote, build_units, expand_shorthand, render_unit, segment
 
@@ -24,14 +27,19 @@ PROSE = (
 )
 
 
-def make_doc(answers: dict[str, str]) -> ElicitationDocument:
+WHATIF = "the writer had a night shift before writing this"
+Q4 = {"hypothesis": "tired, not much trait-like", "shift": 1, "toward": "less_adhd"}
+
+
+def make_doc(answers: dict[str, str], q4: dict | None = Q4) -> ElicitationDocument:
+    """One response to a vignette that asks the gate questions answered here, then Q4-Q6."""
     v = Vignette(
         id="V001",
         version=1,
         text=TEXT,
         framing="email",
-        question_ids=["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"],
-        q4_element="the sleep",
+        question_ids=[q for q in ("Q1", "Q2", "Q3") if q in answers] + ["Q4", "Q5", "Q6"],
+        q4_whatif=WHATIF,
         design=VignetteDesign(purpose="test"),
     )
     r = Response(
@@ -42,6 +50,7 @@ def make_doc(answers: dict[str, str]) -> ElicitationDocument:
         is_synthetic=True,
         answers=answers,
         rating=2,
+        q4=q4,
         started_at=NOW,
         submitted_at=NOW,
     )
@@ -102,6 +111,11 @@ def test_units_get_header_context_and_cross_reference():
     assert first.vignette_context == [TEXT.split(". ")[0] + "."]
     assert len(first.quote_spans) == 1 and not first.unanchored_quotes
     q4 = by_id["DOC-SYN-9999:V001:Q4:1"]
+    assert f'Q4 "how the hypothesis changes if {WHATIF}"' in q4.header
+    assert (
+        ' · hypothesis "tired, not much trait-like" · +1 partly changes, towards less ADHD-like ·'
+        in q4.header
+    )
     assert q4.refers_to == ["DOC-SYN-9999:V001:Q2:1"]
     assert "Q2: Sleep covers it." in render_unit(q4, by_id)
 
@@ -140,3 +154,65 @@ def test_key_check_rejects_names_from_the_vignette():
         check_keys(json.dumps({**good, "reading_rule": "Kevin's remark is rumination."}), names)
     with pytest.raises(Rejected, match="direction"):
         check_keys(json.dumps({**good, "direction": "up"}), names)
+
+
+def test_q4_needs_whatif_not_tied_to_text():
+    v = make_doc({"Q1": PROSE}).vignettes[0]
+    assert v.q4_whatif not in v.text  # a what-if is not a quote
+    with pytest.raises(ValidationError, match="q4_without_whatif"):
+        Vignette(**(v.model_dump() | {"q4_whatif": None}))
+    with pytest.raises(ValidationError, match="extra"):
+        Vignette(**(v.model_dump() | {"q4_fragment": "after a proper night of sleep"}))
+
+
+def test_render_question_fills_whatif():
+    from app.elicitation.questions import QUESTIONS_BY_ID, render_question
+
+    text = render_question(QUESTIONS_BY_ID["Q4"], "the writer had an exam earlier that day.")
+    assert text.endswith("how would it change if the writer had an exam earlier that day?")
+    with pytest.raises(ValueError, match="q4_whatif"):
+        render_question(QUESTIONS_BY_ID["Q4"], None)
+
+
+@pytest.mark.parametrize(
+    ("q4", "code"),
+    [
+        ({"shift": 3}, "less_than_equal"),
+        ({"shift": -1, "toward": "less_adhd"}, "toward_without_change"),
+        ({"shift": 0, "toward": "more_adhd"}, "toward_without_change"),
+        ({"shift": 2, "toward": "other"}, "other_without_name"),
+        ({"shift": 2, "toward": "more_adhd", "other_explanation": "grief"}, "other_without_name"),
+        ({"shift": 1, "hypothesis": "  "}, "empty_answer"),
+    ],
+)
+def test_shift_answer_rules(q4, code):
+    from app.elicitation.schema import ShiftAnswer
+
+    with pytest.raises(ValidationError, match=code):
+        ShiftAnswer(**q4)
+
+
+def test_q4_why_needs_a_nonzero_shift():
+    answers = {"Q1": PROSE, "Q4": "Because the night shift explains it."}
+    make_doc(answers)  # +1 with a why: fine
+    make_doc({"Q1": PROSE}, q4={"shift": 0})  # 0 without a why: fine
+    for q4 in ({"shift": 0}, None):
+        with pytest.raises(ValidationError, match="q4_why_without_shift"):
+            make_doc(answers, q4=q4)
+
+
+def test_q4_answer_needs_q4_asked():
+    doc = make_doc({"Q1": PROSE})
+    data = doc.model_dump()
+    data["vignettes"][0]["question_ids"] = ["Q1", "Q6"]
+    with pytest.raises(ValidationError, match="question_not_asked: Q4"):
+        ElicitationDocument.model_validate(data)
+
+
+def test_gate_questions_come_before_the_rest():
+    data = make_doc({"Q1": PROSE, "Q2": "Sleep covers it."}).model_dump()
+    data["responses"][0]["answers"].pop("Q2")  # Q2 asked but unanswered, Q4 and Q6 answered
+    with pytest.raises(ValidationError, match="gate_not_passed"):
+        ElicitationDocument.model_validate(data)
+    data["vignettes"][0]["question_ids"] = ["Q1", "Q4", "Q5", "Q6"]  # Q2 not asked: Q1 is the gate
+    ElicitationDocument.model_validate(data)

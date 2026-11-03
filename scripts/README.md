@@ -9,8 +9,8 @@ folder is self-contained.
 |---|---|---|
 | `corpus/` | Build the knowledge base from the literature | `fetch_sources` -> `upload_raw_documents` -> `parse_raw_documents` -> `chunk_parsed_documents` -> `index_chunks`; `purge_sources` removes sources again |
 | `db/` | Database setup and access | `init_db` (apply `backend/db/init.sql`), `psql.sh` (psql shell, `overview`) |
-| `rag/` | Query the RAG and evaluate it | `ask`; evaluation: `eval_retrieval`, `eval_generation`, `judge_generations`, `report_eval`, `compare_runs`; shared `rag_common` |
-| `elicitation/` | Elicitation documents: test fixtures and schema | `make_fixtures` (see `docs/fixtures.md`), `export_schema`; `llm_clients`, `prompt_loader`, `leak_terms` and `reddit_posts` are helpers of `make_fixtures` (generation lives here, not in `backend/`) |
+| `rag/` | Query the RAG and evaluate it | `ask`; evaluation: `eval_retrieval`, `eval_generation`, `judge_generations`, `report_eval`, `compare_runs`; expert notes: `eval_expert_units`, `eval_expert_generation`, `chat_expert` (human chat + ratings); shared `rag_common` |
+| `elicitation/` | Elicitation documents: test fixtures and schema | `make_fixtures` (`--source synthetic|reddit`, see `docs/fixtures.md`), `fetch_reddit_pool`, `screen_reddit_posts`, `export_schema`; gold: `answer_vignettes` (a human answers in the terminal), `make_gold_claims` (an agent writes the claims); `migrate_q4_whatif` (one-off: schema 1.0 → 1.1, the Q4 what-if); `llm_clients`, `prompt_loader`, `leak_terms` and `reddit_posts` are helpers of `make_fixtures` (generation lives here, not in `backend/`) |
 
 Rule of thumb: production logic belongs in `backend/app/`; a script only wires it together or
 holds throwaway/example code (like the Reddit post reader).

@@ -61,7 +61,7 @@ no longer needed for safety; it can come back as an optional "is this rule what 
 - [Expert_unit_keys.v1.md](../prompts/Expert_unit_keys.v1.md) and
   [make_unit_keys.py](../scripts/elicitation/make_unit_keys.py): one qwen3.5:9b call per unit returns
   `{reading_rule, questions, traits, direction}`. A reply that is invalid JSON or carries a name from
-  the vignette is retried with a new seed. Output: `data/expert_units/<tier>/<session>.json`.
+  the vignette is retried with a new seed. Output: `data/expert_units/<source>/<tier>/<session>.json`.
 - [eval_expert_units.py](../scripts/rag/eval_expert_units.py), [eval_expert_generation.py](../scripts/rag/eval_expert_generation.py): the experiments (see below).
 - `VignetteDesign.population` (default `"adult"`, filled from the scenario age in `make_fixtures.py`).
 
@@ -179,6 +179,9 @@ Two independent Haiku passes (j1 / j2). Means with a 95% interval for pass rate:
    already finds a relevant unit every time.
 4. Open: the hand check, gold data from real clinicians, and the patient-text mode (weak labels,
    `--patient`).
+5. A proposed next step, checked LLM-extracted atoms shown with the verbatim evidence, is in
+   [expert-atoms.md](expert-atoms.md). It replaces B1 only if it wins on this harness with
+   human-written answers.
 
 ## Literature check
 

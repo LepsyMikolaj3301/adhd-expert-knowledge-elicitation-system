@@ -9,6 +9,7 @@ from difflib import SequenceMatcher
 
 from pydantic import BaseModel, ConfigDict
 
+from app.elicitation.questions import describe_shift
 from app.elicitation.schema import ElicitationDocument, Response, Vignette
 
 SEGMENTER_VERSION = 1
@@ -24,7 +25,7 @@ QUESTION_GIST = {
     "Q1": "fragments relevant to ADHD-related traits",
     "Q2": "what else could explain those fragments",
     "Q3": "what is missing from the text",
-    "Q4": "how the reading changes if {element} were different",
+    "Q4": "how the hypothesis changes if {whatif}",
     "Q5": "what a less experienced clinician would over- or under-read",
 }
 SHORTHAND = {"hx": "history", "ddx": "differential diagnosis", "r/o": "rule out", "->": "leads to"}
@@ -213,7 +214,13 @@ def expand_shorthand(text: str) -> str:
 def header(doc_role: str | None, vignette: Vignette, response: Response, question_id: str) -> str:
     who = f"Clinician ({doc_role})" if doc_role else "Clinician"
     framing = FRAMING_LABEL[vignette.framing]
-    gist = QUESTION_GIST[question_id].format(element=vignette.q4_element)
+    gist = QUESTION_GIST[question_id].format(whatif=vignette.q4_whatif)
+    q4 = ""  # Q4: the scale answer next to the why, e.g. ' · hypothesis "..." · +1 partly changes'
+    if question_id == "Q4" and response.q4 is not None:
+        a = response.q4
+        if a.hypothesis:
+            q4 += f' · hypothesis "{a.hypothesis.strip()}"'
+        q4 += f" · {describe_shift(a.shift, a.toward, a.other_explanation)}"
     if response.insufficient_information:
         overall = "overall: insufficient information"
     elif response.rating is not None:
@@ -222,7 +229,7 @@ def header(doc_role: str | None, vignette: Vignette, response: Response, questio
         overall = "no overall rating"
     population = vignette.design.population
     article = "an" if population[0] in "aeiou" else "a"
-    return f'{who} on {article} {population}\'s {framing} · {question_id} "{gist}" · {overall}'
+    return f'{who} on {article} {population}\'s {framing} · {question_id} "{gist}"{q4} · {overall}'
 
 
 # --- building units ----------------------------------------------------------------------------

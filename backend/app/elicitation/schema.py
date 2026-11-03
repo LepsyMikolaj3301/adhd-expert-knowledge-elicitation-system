@@ -1,8 +1,8 @@
 """Elicitation-session schema: what the web platform hands to the backend after one expert session.
 
 An ElicitationDocument is the unit the backend ingests (see docs/elicitation-document.md).
-ReferenceClaim is fixture-only: it lives next to a document in data/fixtures/<tier>/claims/,
-never inside it (tiers: see docs/fixtures.md).
+ReferenceClaim is fixture-only: it lives next to a document in
+data/fixtures/<source>/<tier>/claims/, never inside it (tiers: see docs/fixtures.md).
 
 Validation errors carry a stable snake_case code at the start of the message (e.g.
 "vignette_hash_mismatch: ...") so tests and edge-case fixtures can name the error they expect.
@@ -13,7 +13,7 @@ from typing import Literal, Self
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"  # 1.1: Q4 is a what-if scale (ShiftAnswer), Q1-Q3 gate
 SYNTHETIC_PREFIX = "SYN-"
 MIN_WORDS, MAX_WORDS = 120, 250
 
@@ -41,9 +41,10 @@ def is_synthetic_id(expert_id: str) -> bool:
 
 class Question(_Model):
     id: QuestionId
-    # Q4 contains "{element}", filled from Vignette.q4_element.
+    # Q4 contains "{whatif}", filled from Vignette.q4_whatif.
     text: str = Field(min_length=1)
-    kind: Literal["open", "rating_1_5"]
+    # shift: a -2..+2 scale (Response.q4) plus an optional why (answers["Q4"])
+    kind: Literal["open", "rating_1_5", "shift"]
 
 
 class PlantedCue(_Model):
@@ -103,7 +104,12 @@ class Vignette(_Model):
     text: str = Field(min_length=1)
     framing: Framing
     question_ids: list[QuestionId] = Field(min_length=1)
-    q4_element: str | None = Field(default=None, description="fills {element} in Q4")
+    q4_whatif: str | None = Field(
+        default=None,
+        min_length=1,
+        description="written by the vignette author: a clause completing 'how would your "
+        "hypothesis change if ...', e.g. 'the writer had an exam earlier that day'",
+    )
     variant: VariantInfo | None = None
     content_hash: str = Field(pattern=r"^[0-9a-f]{64}$", description="sha256 of `text`")
     design: VignetteDesign
@@ -121,8 +127,8 @@ class Vignette(_Model):
             raise ValueError("content_hash_mismatch: content_hash does not match text")
         if len(set(self.question_ids)) != len(self.question_ids):
             raise ValueError("duplicate_question_id: question_ids must be unique")
-        if "Q4" in self.question_ids and not self.q4_element:
-            raise ValueError("q4_without_element: Q4 needs q4_element")
+        if "Q4" in self.question_ids and not (self.q4_whatif and self.q4_whatif.strip()):
+            raise ValueError("q4_without_whatif: Q4 needs q4_whatif")
         spans = [c.quote for c in self.design.planted_cues]
         spans += [c.quote for c in self.design.confounders]
         for span in spans:
@@ -139,13 +145,46 @@ class Vignette(_Model):
         return self.model_dump(mode="json", exclude={"design"})
 
 
+class ShiftAnswer(_Model):
+    """Q4: how the expert's hypothesis changes given the vignette's what-if (short SCT item)."""
+
+    hypothesis: str | None = Field(
+        default=None, description="the expert's working hypothesis so far, in one sentence"
+    )
+    shift: int = Field(
+        ge=-2, le=2, description="-2 strongly reinforced ... 0 unchanged ... +2 changes completely"
+    )
+    toward: Literal["more_adhd", "less_adhd", "other"] | None = Field(
+        default=None, description="direction of the change; only when shift > 0"
+    )
+    other_explanation: str | None = Field(
+        default=None, description='names the alternative when toward == "other"'
+    )
+
+    @model_validator(mode="after")
+    def _check(self) -> Self:
+        for name in ("hypothesis", "other_explanation"):
+            value = getattr(self, name)
+            if value is not None and not value.strip():
+                raise ValueError(f"empty_answer: Q4 {name} is blank")
+        if self.toward is not None and self.shift <= 0:
+            raise ValueError("toward_without_change: toward needs a shift of +1 or +2")
+        if (self.toward == "other") != (self.other_explanation is not None):
+            raise ValueError(
+                'other_without_name: other_explanation goes with toward="other", and only with it'
+            )
+        return self
+
+
 class Response(_Model):
     vignette_id: str
     vignette_version: int = Field(ge=1)
     vignette_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     expert_id: str = Field(min_length=1)
     is_synthetic: bool
-    answers: dict[QuestionId, str] = Field(description="free-text answers, open questions only")
+    answers: dict[QuestionId, str] = Field(
+        description="free-text answers: open questions, and Q4's optional why"
+    )
     quoted_fragments: list[str] = Field(
         default=[], description="fragments the expert marked in the text (Q1); exact substrings"
     )
@@ -153,6 +192,7 @@ class Response(_Model):
     insufficient_information: bool = Field(
         default=False, description='Q6 "insufficient information"'
     )
+    q4: ShiftAnswer | None = Field(default=None, description="Q4 scale answer")
     started_at: AwareDatetime
     submitted_at: AwareDatetime
 
@@ -165,7 +205,14 @@ class Response(_Model):
             raise ValueError("empty_answer: blank quoted fragment")
         if self.rating is not None and self.insufficient_information:
             raise ValueError("rating_conflict: rating and insufficient_information are exclusive")
-        if not (self.answers or self.rating is not None or self.insufficient_information):
+        if "Q4" in self.answers and (self.q4 is None or self.q4.shift == 0):
+            raise ValueError("q4_why_without_shift: a Q4 why needs a non-zero Q4 shift")
+        if not (
+            self.answers
+            or self.rating is not None
+            or self.insufficient_information
+            or self.q4 is not None
+        ):
             raise ValueError("empty_answer: response contains nothing")
         if self.is_synthetic != is_synthetic_id(self.expert_id):
             raise ValueError(
@@ -181,7 +228,7 @@ class ElicitationDocument(_Model):
     session_id: str = Field(min_length=1)
     expert_id: str = Field(min_length=1)
     created_at: AwareDatetime
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.1"] = SCHEMA_VERSION
     is_synthetic: bool
     vignettes: list[Vignette] = Field(min_length=1, description="in the order shown")
     responses: list[Response]
@@ -189,7 +236,7 @@ class ElicitationDocument(_Model):
     @model_validator(mode="after")
     def _check(self) -> Self:
         # lazy: questions.py imports Question from this module
-        from app.elicitation.questions import QUESTIONS_BY_ID
+        from app.elicitation.questions import GATE, QUESTIONS_BY_ID
 
         if self.is_synthetic != is_synthetic_id(self.expert_id):
             raise ValueError(
@@ -219,10 +266,24 @@ class ElicitationDocument(_Model):
             for qid in r.answers:
                 if qid not in v.question_ids:
                     raise ValueError(f"question_not_asked: {qid} was not asked for {v.id}")
-                if QUESTIONS_BY_ID[qid].kind != "open":
+                if QUESTIONS_BY_ID[qid].kind == "rating_1_5":
                     raise ValueError(f"answer_to_rating_question: {qid} is answered via rating")
             if (r.rating is not None or r.insufficient_information) and "Q6" not in v.question_ids:
                 raise ValueError(f"question_not_asked: Q6 was not asked for {v.id}")
+            if r.q4 is not None and "Q4" not in v.question_ids:
+                raise ValueError(f"question_not_asked: Q4 was not asked for {v.id}")
+            after_gate = (
+                r.q4 is not None
+                or r.rating is not None
+                or r.insufficient_information
+                or any(q not in GATE for q in r.answers)
+            )
+            unanswered = [q for q in GATE if q in v.question_ids and q not in r.answers]
+            if after_gate and unanswered:
+                raise ValueError(
+                    f"gate_not_passed: {v.id} has answers after {', '.join(GATE)} "
+                    f"but none to {', '.join(unanswered)}"
+                )
             for fragment in r.quoted_fragments:
                 if fragment not in v.text:
                     raise ValueError(
