@@ -1,23 +1,23 @@
 # Vignettes in the frontend
 
 How the web elicitation platform should show a vignette and collect a clinician's answers. It
-covers structure and behaviour, not a framework. The reference implementations are the notebook
-`notebooks/answer_vignettes.ipynb` and the terminal app `scripts/elicitation/answer_vignettes.py`.
-The data contract is [elicitation-document.md](elicitation-document.md), and the JSON Schema is
-`data/schemas/elicitation_document.schema.json` (schema version 1.1).
+covers structure and behaviour, not a framework. The API and the workflow around it are in
+[backend-workflow.md](backend-workflow.md). The API's types are generated into
+`frontend/src/api/schema.d.ts`, so field names are not repeated here where they can be looked up.
 
 ## 1. What the frontend gets
 
-| From | What | Notes |
-|---|---|---|
-| `Vignette.expert_view()` | `id`, `version`, `text`, `framing`, `question_ids`, `q4_whatif`, `variant`, `content_hash` | Never the hidden `design` block: it holds the planted cues and is what the answers are scored against. |
-| `questions.QUESTIONS` | `id`, `kind`, `text` per question | `kind` is `open`, `shift` (Q4) or `rating_1_5` (Q6). |
-| `questions.render_question(q, vignette.q4_whatif)` | The question text as shown | Fills Q4's `{whatif}`. |
-| `questions.GATE` | `("Q1", "Q2", "Q3")` | The questions that must be answered before anything else is shown. |
-| `questions.Q4_HYPOTHESIS`, `SHIFT_LEAD`, `SHIFT_LABELS`, `TOWARD_LABELS`, `Q4_TOWARD`, `Q4_WHY` | The wording of the Q4 step | Use these strings rather than rewording them, so all answers are given to the same item. |
+`GET /api/v1/assignments/{id}` returns everything the answering screen needs:
 
-The questions per vignette are `question_ids`, in that order. A vignette without a `q4_whatif` is
-asked without Q4.
+| Field | What | Notes |
+|---|---|---|
+| `vignette` | `code`, `version`, `text`, `framing`, `word_count`, `content_hash` | Never the hidden `design` block: it holds the planted cues and is what the answers are scored against. A/B variant information isn't sent either. |
+| `vignette.questions[]` | `id`, `kind`, `text`, `min_words` | Only the questions the expert may see now, in order, with the text as shown (Q4's what-if is filled in). `kind` is `open`, `shift` (Q4) or `rating_1_5` (Q6). `min_words` is the minimum of different words, for a counter. |
+| `vignette.questions[].wording` | The wording of the Q4 step | Use these strings rather than rewording them, so all answers are given to the same item. |
+| `draft` | `version`, `payload` | The saved answers. |
+| `allowed_actions` | e.g. `save_draft`, `pass_gate`, `submit` | Show only these actions; the server owns the workflow rules. |
+
+A vignette without a what-if is asked without Q4.
 
 ## 2. Screen layout
 
@@ -47,8 +47,8 @@ asked without Q4.
   that exactly matches the vignette is highlighted there. A quote that doesn't match is flagged
   under the answer, but this is not an error.
 - Optionally, the expert can select text in the vignette to insert it as a quote. That gives exact
-  matches. The matched fragments become `quoted_fragments` (see `answer_vignettes.quoted_fragments`).
-  A quote shortened with `…` is matched piece by piece.
+  matches. The matched fragments become `quoted_fragments`. A quote shortened with `…` is matched
+  piece by piece.
 - One question at a time. A long single page makes it too easy to read ahead, and Q4–Q6 must not be
   seen early (see §3).
 
@@ -78,13 +78,15 @@ stateDiagram-v2
 
 ### Phase 1: Q1–Q3, the gate
 
-- Q1, Q2 and Q3 are open questions. **Each needs a non-blank answer** before Next moves on. If an
-  answer is blank, show: "Q2 needs an answer before the next questions."
+- Q1, Q2 and Q3 are open questions. **Each needs an answer with at least `min_words` different words**
+  before Next moves on. If an answer is blank, show: "Q2 needs an answer before the next questions."
+  The check is here because these answers can't be corrected once the gate is passed.
 - **Q4–Q6 are not rendered, and not even sent to the client, until all three are answered.** The
   answers to Q1–Q3 are the expert's reading of the text before they see the what-if or the rating.
-- **Passing the gate locks Q1–Q3.** The moment the expert moves from Q3 to the next question, Q1–Q3
-  become read-only for this vignette: Back still shows them, but disabled, with a note "locked: you
-  have seen the questions after this one". Record the time (`gate_passed_at` in the draft).
+- **Passing the gate locks Q1–Q3.** The moment the expert moves from Q3 to the next question, call
+  `POST /assignments/{id}/pass-gate`. It records `gate_passed_at` and returns Q4–Q6, and from then on
+  the server refuses changes to Q1–Q3 (`gate_locked`). They become read-only for this vignette: Back
+  still shows them, but disabled, with a note "locked: you have seen the questions after this one".
 - If a vignette asks only some of Q1–Q3, the gate is the ones it asks.
 
 ### Phase 2: Q4, Q5, Q6
@@ -121,88 +123,90 @@ The step has four parts, in this order:
 4. **Why? (required, only when the value is not 0).** A multi-line answer, like the open questions.
 
 Next stays on Q4 until every part that is shown has an answer, and it warns about the first one
-missing (`answer_vignettes.q4_incomplete` has the messages). **At 0, only the hypothesis line and
-the scale are shown, and Next goes straight on.** If the
-expert moves the slider from +2 to 0, hide "Towards…" and "Why?". Their contents may stay in the
-draft, but they aren't submitted (see §5).
+missing. **At 0, only the hypothesis line and the scale are shown, and Next goes straight on.** If
+the expert moves the slider from +2 to 0, hide "Towards…" and "Why?". The screen may remember their
+contents in case the slider moves back, but they must be left out of what it saves: the server
+submits the saved draft exactly as it is, and refuses leftovers (see §5 and §6).
 
-**Q5** is an open question. **Q6** is a choice of 1–5 or *insufficient information*; the two are
-exclusive, and an answer is required.
+**Q5** is an open question, and needs at least `min_words` different words. **Q6** is a choice of
+1–5 or *insufficient information*; the two are exclusive, and an answer is required.
 
 ### Review
 
 After the last question, review lists every answer. Q4–Q6 have an Edit button; Q1–Q3 are shown
 with "locked" and no Edit button. Q4 is shown in one line, e.g. *hypothesis: tired, not trait-like
-· +1 partly changes, towards less ADHD-like · why: …* (`answer_vignettes.q4_summary`). **Accept &
-next vignette** marks the vignette done. A vignette with nothing written should be skipped, not
-accepted.
+· +1 partly changes, towards less ADHD-like · why: …*. **Submit** freezes this vignette's answers
+for good and moves to the next assignment. A vignette with nothing written should be left for later,
+not submitted.
 
 ## 4. Skip, pause, resume
 
-- **Order:** the vignettes come in a random order that is fixed per expert (seeded by the expert
-  id), so a resumed session shows the same sequence.
+- **Order:** `GET /assignments` returns the expert's assignments in a random order that is fixed per
+  expert, so a resumed session shows the same sequence.
 - **Skip vignette** sets it aside (orange chip); the expert can come back to it by clicking its chip.
-- **Autosave:** save the draft on every Next/Back and every few seconds while typing. Reopening a
-  vignette goes to its first unanswered step. A gate question counts as unanswered while it is
-  blank, Q4 until a stop is chosen, and Q6 until it is rated.
-- **Finish** asks for confirmation, then submits one document with the vignettes that are done.
-  Skipped and unfinished ones are left out.
+- **Autosave:** `PUT /assignments/{id}/draft` on every Next/Back and every few seconds while typing,
+  sending the `version` of the last save. A `draft_conflict` means another tab has saved since, so
+  reload the draft. Reopening a vignette goes to its first unanswered step. A gate question counts as
+  unanswered while it is blank, Q4 until a stop is chosen, and Q6 until it is rated.
+- **Submit** works per vignette, after a confirmation: `POST /assignments/{id}/submit`. Nothing is
+  ever reopened afterwards. Other assignments stay as they are.
 
 ## 5. From UI controls to the payload
 
-One `Response` per finished vignette:
+What the draft's `payload` holds when it is submitted:
 
-| UI control | `Response` field | Rule |
+| UI control | Field | Rule |
 |---|---|---|
-| Q1, Q2, Q3, Q5 text | `answers["Q1"]` … | Trimmed. A blank Q5 is left out; Q1–Q3 can't be blank. |
+| Q1, Q2, Q3, Q5 text | `answers["Q1"]` … | The server trims them. All required, each with at least its `min_words`. |
 | Quotes matched in the answers | `quoted_fragments` | Exact substrings of `text`. |
-| Q4 hypothesis line | `q4.hypothesis` | Trimmed; required by the UI. |
+| Q4 hypothesis line | `q4.hypothesis` | Required, at least `wording.hypothesis_min_words` different words. |
 | Q4 slider | `q4.shift` | Integer −2…2. Required whenever Q4 was asked and the vignette is submitted. |
 | Q4 towards | `q4.toward` | `more_adhd` / `less_adhd` / `other`; required with shift +1/+2, else `null`. |
 | Q4 "which explanation" | `q4.other_explanation` | Required with `toward = "other"`, else `null`. |
-| Q4 why | `answers["Q4"]` | Required with shift ≠ 0; dropped at 0. |
+| Q4 why | `answers["Q4"]` | Required with shift ≠ 0, at least Q4's `min_words` different words; must be absent at 0. |
 | Q6 | `rating` (1–5) or `insufficient_information: true` | Exclusive. |
-| Vignette opened / accepted | `started_at`, `submitted_at` | ISO 8601 with a timezone. |
-| The vignette as shown | `vignette_id`, `vignette_version`, `vignette_hash` | Must match the vignette in the document. |
+
+The server adds the rest when it freezes the submission: the vignette's code, version and hash, the
+expert's pseudonym, and the `started_at`, `gate_passed_at` and `submitted_at` times.
 
 ```json
 {
-  "vignette_id": "V001", "vignette_version": 1, "vignette_hash": "bfcf…",
-  "expert_id": "E01", "is_synthetic": false,
   "answers": {"Q1": "…", "Q2": "…", "Q3": "…", "Q4": "An exam would explain the rush.", "Q5": "…"},
   "quoted_fragments": ["I haven't slept well since moving into this new flat two months ago"],
   "q4": {"hypothesis": "sleep loss after the move, not clearly more",
          "shift": 1, "toward": "less_adhd", "other_explanation": null},
-  "rating": 2, "insufficient_information": false,
-  "started_at": "2026-11-03T10:02:00Z", "submitted_at": "2026-11-03T10:21:00Z"
+  "rating": 2, "insufficient_information": false
 }
 ```
 
-The backend schema still accepts a missing hypothesis, direction or why (synthetic answers and
-older drafts don't always have them); requiring them is the UI's job.
+The server requires the hypothesis, the direction and the why at submission, as well as the UI.
 
 ## 6. Backend validation codes and what to show
 
-The backend validates every document; each error message starts with a stable code. The UI should
-prevent these errors, so if one does come back, it means a bug. Show the message and keep the draft.
+The backend validates every save and submission. Errors are `{code, message, details}`, with a
+stable `code`. The UI should prevent these errors, so if one does come back, it means a bug. Show the
+message and keep the draft.
 
 | Code | Meaning | UI message |
 |---|---|---|
 | `gate_not_passed` | Q4–Q6 answered while a Q1–Q3 answer is missing | "Q1–Q3 need answers first." |
+| `gate_locked` | A Q1–Q3 answer changed after the gate | Keep them read-only after the gate. |
+| `submission_incomplete` | A required Q4 part or Q6 is missing | Name the missing part. |
+| `answer_too_short` | Below the minimum of different words; `details.answers` lists which | Show a counter, and keep Next disabled until it is met. |
+| `draft_conflict` | Another tab has saved since | Reload the draft. |
 | `q4_why_without_shift` | A Q4 why with shift 0 or no shift | Drop the why at 0. |
 | `toward_without_change` | A direction with shift ≤ 0 | Clear `toward` when the slider goes ≤ 0. |
 | `other_without_name` | `toward = other` without a name, or a name without `other` | Name it, or clear it. |
-| `empty_answer` | A blank answer, hypothesis or quoted fragment | Trim; send `null` or omit. |
+| `empty_answer` | A blank required answer or quoted fragment | Ask for the answer. |
 | `quote_not_in_vignette` | A `quoted_fragments` entry is not in the text | Send only exact matches. |
 | `question_not_asked` | An answer to a question the vignette didn't ask | — |
 | `rating_conflict` | Both a rating and "insufficient information" | — |
-| `vignette_hash_mismatch` / `vignette_version_mismatch` | The text changed under the expert | Reload the vignette. |
 
 ## 7. Writing vignettes (admin side)
 
-- **Text:** 120–250 words, first person, with a `framing` of `forum_post`, `personal_journal` or
-  `email`. No words that name the construct (ADHD, attention deficit, medication names); the leak
-  check in `scripts/elicitation/leak_terms.py` lists them.
+- **Text:** 120–250 words (the server checks this at publishing), first person, with a `framing` of
+  `forum_post`, `personal_journal` or `email`. No words that name the construct (ADHD, attention
+  deficit, medication names). The backend doesn't check this yet.
 - **The hidden `design` block:**
   - `purpose`;
   - `planted_cues` and `confounders`, each with an exact quote from the text;
@@ -246,7 +250,5 @@ prevent these errors, so if one does come back, it means a bug. Show the message
     the direction is asked for separately.
 - **Open:** more than one what-if per vignette (a full SCT case has 3–5), each its own Q4-style
   step.
-- **Open:** whether the submitted document should record when the gate was passed. Today it is
-  only in the draft.
 - **Considered, not built:** linking the what-if to text fragments ("which parts does this change
   how you read?"), and a "can't judge this what-if" option next to the scale.

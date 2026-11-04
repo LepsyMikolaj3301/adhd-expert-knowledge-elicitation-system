@@ -55,17 +55,14 @@ how far to trust it depends on the tier, see [fixtures.md](fixtures.md).
 
 ## Lifecycle
 
+**Replaced for the web application:** the workflow of submitted answers is now in
+[backend-workflow.md](backend-workflow.md). The older states below remain in
+`backend/app/elicitation/lifecycle.py` only for the existing fixtures, scripts and their tests.
+
 ```
 submitted → extracted → member_checked → approved
                                        ↘ rejected
 ```
-
-1. **submitted** – document validated and stored.
-2. **extracted** – an LLM pulled claims out of the answers.
-3. **member_checked** – the expert confirmed/corrected the extracted claims.
-4. **approved / rejected** – terminal. Only approved claims reach the knowledge base.
-
-Transitions are defined in `backend/app/elicitation/lifecycle.py`.
 
 ## Synthetic documents
 
