@@ -15,9 +15,12 @@ npm run test:unit  # vitest (watch mode; add -- --run for a single pass)
 
 ## Talking to the backend
 
-In dev, Vite proxies `/api/*` to the FastAPI backend and strips the prefix, so `fetch('/api/health')` hits
-`GET /health` on `http://localhost:8000`. Start the backend from `backend/` with `uvicorn app.main:app --port 8000`
+In dev, Vite proxies `/api/*` to the FastAPI backend at `http://localhost:8000`, with the same path as in
+production (`/api/v1/...`). Start the backend from `backend/` with `uvicorn app.main:app --port 8000`
 (or the "Backend: FastAPI" launch config). Set `VITE_API_PROXY_TARGET` to point the proxy somewhere else.
+
+Call the API through `api` from `src/api/client.ts`. Its types are generated from `openapi.json`: after
+changing the API, see "Running it" in [docs/backend-workflow.md](../docs/backend-workflow.md).
 Path alias: `@` -> `src/`.
 
 IDE: [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar), disable Vetur.

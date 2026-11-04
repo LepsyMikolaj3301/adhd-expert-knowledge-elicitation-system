@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const status = ref<'loading' | 'ok' | 'down'>('loading')
 
@@ -20,5 +21,6 @@ onMounted(async () => {
       Backend:
       <strong data-testid="backend-status">{{ status }}</strong>
     </p>
+    <RouterLink to="/assignments">Go to assignments</RouterLink>
   </main>
 </template>
