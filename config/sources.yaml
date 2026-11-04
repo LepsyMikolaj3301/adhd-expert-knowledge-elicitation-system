@@ -21,13 +21,13 @@ sources:
 
   # --------------------------------------------------------------------------
   # LEVEL 0 — ICD-11 (WHO). The MMS API is the single ICD source: its 6A05 entity carries the
-  # full CDDR diagnosticCriteria, so it feeds both GraphDB and the vector index.
+  # full CDDR diagnosticCriteria, so it feeds the vector index.
   # --------------------------------------------------------------------------
   - id: icd11_mms_6a05
     title: "ICD-11 MMS — 6A05 Attention deficit hyperactivity disorder"
     release_or_version: "2026-01"
     metadata:
-      role: level0_structured        # GraphDB (deterministic) + the only ICD text in the vector index
+      role: level0_structured        # the only ICD text in the vector index
       licence: "WHO ICD-11 licence — https://icd.who.int/en/docs/icd11-license.pdf"
     auth:
       type: oauth2_client_credentials
