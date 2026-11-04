@@ -114,6 +114,9 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-rag-app-secret}
       S3_REGION: ${S3_REGION:-us-east-1}
       PYTHONPATH: /workspace/backend
+      # Keeps ~/.claude.json inside the claude-config volume too, not just ~/.claude.
+      # TODO: DELETE LATER
+      CLAUDE_CONFIG_DIR: /home/vscode/.claude
     # GPU for experiments (torch / docling / local LMs). Needs the NVIDIA Container Toolkit on the host.
     deploy:
       resources:
@@ -127,6 +130,9 @@ services:
       # Dev-only caches
       - uv-cache:/home/vscode/.cache/uv
       - hf-cache:/home/vscode/.cache/huggingface
+      # Claude Code sessions, memory and login survive container rebuilds.
+      # TODO: DELETE LATER
+      - claude-config:/home/vscode/.claude
     depends_on:
       postgres:
         condition: service_healthy
@@ -209,3 +215,4 @@ volumes:
   minio-data:
   uv-cache:
   hf-cache:
+  claude-config:

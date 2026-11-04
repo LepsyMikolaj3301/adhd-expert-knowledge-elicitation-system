@@ -20,7 +20,7 @@ ARG USER_UID=1000
 RUN groupadd --gid $USER_UID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_UID --create-home --shell /bin/bash $USERNAME \
     && install -d -o $USERNAME -g $USERNAME /opt/venv /workspace \
-        /home/$USERNAME/.cache/uv /home/$USERNAME/.cache/huggingface
+        /home/$USERNAME/.cache/uv /home/$USERNAME/.cache/huggingface /home/$USERNAME/.claude
 
 USER $USERNAME
 WORKDIR /workspace
