@@ -18,10 +18,13 @@
       "uid": "automatic",
       "gid": "automatic",
       "upgradePackages": false
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
     }
   },
   "postCreateCommand": "git config --global --add safe.directory /workspace",
-  "forwardPorts": [8000, 5432, 9000, 9001, 11434, 8888],
+  "forwardPorts": [8000, 5173, 5432, 9000, 9001, 11434, 8888],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -38,6 +41,8 @@
         "tamasfe.even-better-toml",
         "redhat.vscode-yaml",
         "ms-azuretools.vscode-docker",
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
         "anthropic.claude-code"
       ],
       "settings": {
