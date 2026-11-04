@@ -17,11 +17,10 @@ export default defineConfig({
     host: true,
     port: 5173,
     proxy: {
-      // Browser calls /api/foo -> FastAPI (backend/app/main.py) gets /foo. No CORS setup needed.
+      // Same path in dev and production (FastAPI serves /api/v1), and same origin: no CORS setup.
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

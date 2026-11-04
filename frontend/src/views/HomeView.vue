@@ -5,7 +5,7 @@ const status = ref<'loading' | 'ok' | 'down'>('loading')
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/health')
+    const res = await fetch('/api/v1/health')
     status.value = res.ok ? 'ok' : 'down'
   } catch {
     status.value = 'down'

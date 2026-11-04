@@ -16,6 +16,6 @@ describe('App', () => {
 
     expect(wrapper.text()).toContain('ADHD Expert Knowledge Elicitation')
     expect(wrapper.get('[data-testid="backend-status"]').text()).toBe('ok')
-    expect(fetch).toHaveBeenCalledWith('/api/health')
+    expect(fetch).toHaveBeenCalledWith('/api/v1/health')
   })
 })
