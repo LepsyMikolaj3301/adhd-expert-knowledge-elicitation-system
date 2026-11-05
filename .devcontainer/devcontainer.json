@@ -24,7 +24,7 @@
     }
   },
   "postCreateCommand": "git config --global --add safe.directory /workspace",
-  "forwardPorts": [8000, 5173, 5432, 9000, 9001, 11434, 8888],
+  "forwardPorts": [8000, 5432, 9000, 9001, 11434, 8888],
   "customizations": {
     "vscode": {
       "extensions": [

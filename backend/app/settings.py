@@ -5,6 +5,9 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://rag:rag@localhost:5432/rag"
+    # Migrations must not go through a connection pooler (Neon `-pooler` host). When set, alembic
+    # uses this instead of database_url.
+    database_url_unpooled: str | None = None
     ollama_base_url: str = "http://localhost:11434"
     # S3 (MinIO locally). Set s3_endpoint_url to an empty string to target real AWS S3.
     s3_endpoint_url: str | None = "http://localhost:9000"

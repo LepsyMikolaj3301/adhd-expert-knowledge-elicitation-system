@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -11,18 +12,25 @@ from app.core.errors import DomainError, invalid, not_found
 from app.core.security import content_hash
 from app.users.models import User
 from app.vignettes.models import VersionStatus, Vignette, VignetteVersion
+from app.vignettes.questions import QUESTION_IDS
 from app.vignettes.schemas import VersionAdminView, VersionContent, VersionUpdate, VignetteAdminView
 
 MIN_WORDS, MAX_WORDS = 120, 250
 
+# Words that name what the vignette is about. Experts must read the text without them.
+_CONSTRUCT_TERMS = re.compile(
+    r"\b(?:adhd|attention[\s-]+deficit|methylphenidate|ritalin|concerta|medikinet|adderall"
+    r"|vyvanse|elvanse|lisdexamfetamine|dexamfetamine|atomoxetine|strattera|guanfacine|intuniv)\b",
+    re.IGNORECASE,
+)
+_ADD_UPPERCASE = re.compile(r"\bADD\b")  # uppercase only: the verb "add" is ordinary
+
 
 def validate_content(content: VersionContent) -> None:
     """Rules that span fields. Errors carry stable codes that the admin screens can name."""
-    ids = content.question_ids
     design = content.design
-    if len(set(ids)) != len(ids):
-        raise invalid("duplicate_question_id", "question_ids must be unique.")
-    if "Q4" in ids and not (content.q4_whatif and content.q4_whatif.strip()):
+    # Every vignette asks Q4, so every vignette needs the what-if it is built on.
+    if not (content.q4_whatif and content.q4_whatif.strip()):
         raise invalid("q4_without_whatif", "Q4 needs a what-if.")
     if design.is_control and design.planted_cues:
         raise invalid("control_with_cues", "A control vignette can't have planted cues.")
@@ -44,11 +52,25 @@ def _new_version(vignette_id: UUID, number: int, content: VersionContent) -> Vig
         text=content.text,
         content_hash=content_hash(content.text),
         framing=content.framing,
-        question_ids=list(content.question_ids),
+        question_ids=list(QUESTION_IDS),
         q4_whatif=content.q4_whatif,
         variant=content.variant.model_dump(mode="json") if content.variant else None,
         design=content.design.model_dump(mode="json"),
     )
+
+
+def check_construct_words(text: str, whatif: str | None) -> None:
+    """Publishing only: a draft may still be unfinished. Reports the first term found."""
+    for field, value in (("text", text), ("q4_whatif", whatif or "")):
+        found = _CONSTRUCT_TERMS.search(value) or _ADD_UPPERCASE.search(value)
+        if found:
+            term = found.group(0)
+            raise invalid(
+                "construct_word_in_text",
+                f'The {field} contains "{term}", which names what the vignette is about. '
+                "Reword it.",
+                {"field": field, "term": term},
+            )
 
 
 async def create_vignette(
@@ -118,7 +140,6 @@ async def update_version(
     current = {
         "text": version.text,
         "framing": version.framing,
-        "question_ids": version.question_ids,
         "q4_whatif": version.q4_whatif,
         "variant": version.variant,
         "design": version.design,
@@ -135,7 +156,6 @@ async def update_version(
     version.text = merged.text
     version.content_hash = content_hash(merged.text)
     version.framing = merged.framing
-    version.question_ids = list(merged.question_ids)
     version.q4_whatif = merged.q4_whatif
     version.variant = merged.variant.model_dump(mode="json") if merged.variant else None
     version.design = merged.design.model_dump(mode="json")
@@ -153,6 +173,7 @@ async def publish_version(db: AsyncSession, version_id: UUID, admin: User) -> Vi
             f"The text must be {MIN_WORDS}-{MAX_WORDS} words; it has {words}.",
             {"words": words},
         )
+    check_construct_words(version.text, version.q4_whatif)
     version.status = VersionStatus.PUBLISHED
     version.published_at = utcnow()
     record_event(

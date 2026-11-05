@@ -59,7 +59,6 @@ async def test_new_versions_count_up_and_duplicate_code_is_refused():
 @pytest.mark.parametrize(
     ("overrides", "code"),
     [
-        ({"question_ids": ["Q1", "Q1"]}, "duplicate_question_id"),
         ({"q4_whatif": None}, "q4_without_whatif"),
         ({"q4_whatif": "   "}, "q4_without_whatif"),
         (
@@ -88,6 +87,105 @@ async def test_new_versions_count_up_and_duplicate_code_is_refused():
 async def test_content_rules_have_stable_codes(overrides, code):
     admin = await admin_api()
     await admin.fails("POST", "/vignettes", 422, code, json=vignette_body(**overrides))
+
+
+ALL_QUESTIONS = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]
+
+
+async def test_every_version_asks_all_six_questions():
+    admin = await admin_api()
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body())
+    version = vignette["versions"][0]
+    assert version["question_ids"] == ALL_QUESTIONS
+    edited = await admin.ok(
+        "PATCH", f"/vignette-versions/{version['id']}", json={"q4_whatif": "the writer slept well"}
+    )
+    assert edited["question_ids"] == ALL_QUESTIONS
+    second = await admin.ok(
+        "POST",
+        f"/vignettes/{vignette['id']}/versions",
+        201,
+        json={k: v for k, v in vignette_body().items() if k != "code"},
+    )
+    assert second["question_ids"] == ALL_QUESTIONS
+
+
+async def test_the_admin_cannot_choose_the_questions():
+    admin = await admin_api()
+    body = vignette_body(question_ids=["Q1", "Q2", "Q3"])
+    response = await admin.request("POST", "/vignettes", json=body)
+    assert response.status_code == 422
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body())
+    version_id = vignette["versions"][0]["id"]
+    response = await admin.request(
+        "PATCH", f"/vignette-versions/{version_id}", json={"question_ids": ["Q1"]}
+    )
+    assert response.status_code == 422
+
+
+async def test_a_missing_whatif_is_refused_even_for_a_draft():
+    admin = await admin_api()
+    body = vignette_body()
+    del body["q4_whatif"]
+    await admin.fails("POST", "/vignettes", 422, "q4_without_whatif", json=body)
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body())
+    await admin.fails(
+        "PATCH",
+        f"/vignette-versions/{vignette['versions'][0]['id']}",
+        422,
+        "q4_without_whatif",
+        json={"q4_whatif": "  "},
+    )
+
+
+async def test_an_admin_written_vignette_is_hand_written_by_default():
+    admin = await admin_api()
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body())
+    assert vignette["versions"][0]["design"]["origin"] == "hand_written"
+    llm = await admin.ok(
+        "POST",
+        "/vignettes",
+        201,
+        json=vignette_body(design={"purpose": "x", "origin": "llm"}),
+    )
+    assert llm["versions"][0]["design"]["origin"] == "llm"
+
+
+@pytest.mark.parametrize(
+    ("overrides", "field", "term"),
+    [
+        ({"text": VIGNETTE_TEXT + " My ADHD makes this hard."}, "text", "ADHD"),
+        ({"text": VIGNETTE_TEXT + " An attention-deficit story."}, "text", "attention-deficit"),
+        (
+            {"text": VIGNETTE_TEXT + " They put me on Attention Deficit pills."},
+            "text",
+            "Attention Deficit",
+        ),
+        ({"text": VIGNETTE_TEXT + " I take ritalin daily."}, "text", "ritalin"),
+        ({"q4_whatif": "the writer takes methylphenidate"}, "q4_whatif", "methylphenidate"),
+        ({"q4_whatif": "the writer has ADHD"}, "q4_whatif", "ADHD"),
+    ],
+)
+async def test_publishing_refuses_words_that_name_the_construct(overrides, field, term):
+    admin = await admin_api()
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body(**overrides))
+    version_id = vignette["versions"][0]["id"]
+    error = await admin.fails(
+        "POST", f"/vignette-versions/{version_id}/publish", 422, "construct_word_in_text"
+    )
+    assert error["details"] == {"field": field, "term": term}
+    listed = await admin.ok("GET", "/vignettes")
+    assert listed[0]["versions"][0]["status"] == "draft"
+
+
+async def test_ordinary_words_that_look_like_the_construct_are_fine():
+    admin = await admin_api()
+    text = VIGNETTE_TEXT + " I add milk. My medication is a vitamin. Hyperfocus on the add-on."
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body(text=text))
+    published = await admin.ok(
+        "POST", f"/vignette-versions/{vignette['versions'][0]['id']}/publish"
+    )
+    assert published["status"] == "published"
 
 
 async def test_patch_is_checked_against_the_merged_content():

@@ -19,13 +19,14 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+from chips_schema import load_document
 from llm_clients import AwaitingResponse, GenRequest, InboxGenerator
 from make_fixtures import Rejected, fixture_dir, parse_json, write_json
 from prompt_loader import load_prompt
 from pydantic import ValidationError
 
 from app.elicitation.questions import QUESTIONS_BY_ID, describe_shift, render_question
-from app.elicitation.schema import ElicitationDocument, ReferenceClaim, Response, Vignette
+from app.elicitation.schema import ReferenceClaim, Response, Vignette
 
 ROOT = Path(__file__).resolve().parents[2]
 PROMPT = "Gold_reference_claims.v1"
@@ -112,7 +113,7 @@ def add_manifest_entry(tier_dir: Path, session_id: str) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", default="gold")
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit", "chips"])
     ap.add_argument("--inbox", type=Path, default=ROOT / "data/inbox")
     args = ap.parse_args(argv)
     tier_dir = fixture_dir(args.tier, args.source)
@@ -122,7 +123,7 @@ def main(argv=None) -> int:
         out = tier_dir / "claims" / f"{path.stem}.claims.json"
         if out.exists():
             continue
-        doc = ElicitationDocument.model_validate_json(path.read_text())
+        doc = load_document(path)
         shown = {v.id: v for v in doc.vignettes}
         claims: list[ReferenceClaim] = []
         complete = True

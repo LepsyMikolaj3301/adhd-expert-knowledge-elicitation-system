@@ -14,41 +14,47 @@ covers structure and behaviour, not a framework. The API and the workflow around
 | `vignette` | `code`, `version`, `text`, `framing`, `word_count`, `content_hash` | Never the hidden `design` block: it holds the planted cues and is what the answers are scored against. A/B variant information isn't sent either. |
 | `vignette.questions[]` | `id`, `kind`, `text`, `min_words` | Only the questions the expert may see now, in order, with the text as shown (Q4's what-if is filled in). `kind` is `open`, `shift` (Q4) or `rating_1_5` (Q6). `min_words` is the minimum of different words, for a counter. |
 | `vignette.questions[].wording` | The wording of the Q4 step | Use these strings rather than rewording them, so all answers are given to the same item. |
-| `draft` | `version`, `payload` | The saved answers. |
+| `draft` | `version`, `payload` | The saved answers and citations. |
+| `locked_highlights` | How many citations were made before the lock-in | The first this many can't change. |
 | `allowed_actions` | e.g. `save_draft`, `pass_gate`, `submit` | Show only these actions; the server owns the workflow rules. |
 
-A vignette without a what-if is asked without Q4.
+Every vignette asks Q1–Q6, so every vignette has a what-if.
 
 ## 2. Screen layout
 
+An expert first sees a list of their vignettes (`/assignments`), and opens one (`/assignments/:id`).
+
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
-│ E01 · ▓▓▓▓░░░░ 4 done · 1 skipped · 7 to go                           │
-│ [V003][V007][V001]…   chips: current / done / skipped, click to open   │
-├───────────────────────────────────────────────────────────────────────┤
-│ V001 · personal journal · 212 words                                   │
-│ ┌───────────────────────────────────────────────────────────────────┐ │
-│ │ vignette text, always visible; fragments the expert has quoted    │ │
-│ │ are ▒highlighted▒                                                 │ │
-│ └───────────────────────────────────────────────────────────────────┘ │
-├───────────────────────────────────────────────────────────────────────┤
-│ Q2 · Which of those fragments could equally reflect something else…   │
-│ question 2 of 6                                                       │
-│ ┌───────────────────────────────────────────────────────────────────┐ │
-│ │ answer                                                            │ │
-│ └───────────────────────────────────────────────────────────────────┘ │
-│ 54 words · ✓ 2 quotes match the text · ⚠ "…" is not in the text      │
-├───────────────────────────────────────────────────────────────────────┤
-│ [Back] [Next] [Skip vignette] [Save draft] [Finish & write document]  │
-└───────────────────────────────────────────────────────────────────────┘
+│ Vignettes / V001  Personal journal   Q1 Q2 Q3 🔒 Q4 Q5 Q6 Review  Saved│
+├───────────────────────────────────┬───────────────────────────────────┤
+│ vignette text, always in view     │ Q2 Which of those fragments…      │
+│                                   │ ┌───────────────────────────────┐ │
+├───────────────────────────────────┤ │ [2] could just as easily…     │ │
+│ Citations                         │ └───────────────────────────────┘ │
+│ [1] "numbers on…"  Away from… Cite│ 12 of 10 different words          │
+│ [2] "I haven't…"   Direction… Cite│                                   │
+│                                   │ Back                Next question │
+└───────────────────────────────────┴───────────────────────────────────┘
 ```
 
-- **The vignette text stays on screen for every question.** Text the expert puts in double quotes
-  that exactly matches the vignette is highlighted there. A quote that doesn't match is flagged
-  under the answer, but this is not an error.
-- Optionally, the expert can select text in the vignette to insert it as a quote. That gives exact
-  matches. The matched fragments become `quoted_fragments`. A quote shortened with `…` is matched
-  piece by piece.
+- **The vignette text and the citations stay on screen for every question.** On a narrow screen the
+  columns stack.
+- **Selecting text with the mouse adds a citation** to the table when the button is released. The
+  selection grows to whole words and loses spaces at its edges. Selecting the same passage again
+  points at the existing row. On a touch screen or with the keyboard, a "Cite selection" button
+  confirms the selection instead.
+- **Nothing is highlighted in the text, except while a citation is hovered or focused:** a row of the
+  table, or a chip in an answer. Passages may overlap, because only one is lit at a time.
+- **Each citation has a number and a colour** (8 colours, repeating). The colour follows the number,
+  and the number is always shown, so colour is never the only cue.
+- **Each citation needs a direction:** `toward`, `away`, `neutral` or `unclear`.
+- **Answers are free text with chips.** Cite in the table inserts a chip at the cursor. A chip is one
+  unit: backspace removes all of it. Removing a citation takes its chips out of the answers, and moves
+  the later citations and their chips up one number, so the numbers are always 1..n.
+- **Soft checks never block.** A citation not cited in any answer is noted on its row and in the
+  lock-in and submit dialogs. A Q1 answer over about 60 words with no chips asks which fragments it is
+  about. Having no citations at all is a warning at the lock-in: some texts have nothing to cite.
 - One question at a time. A long single page makes it too easy to read ahead, and Q4–Q6 must not be
   seen early (see §3).
 
@@ -79,14 +85,18 @@ stateDiagram-v2
 ### Phase 1: Q1–Q3, the gate
 
 - Q1, Q2 and Q3 are open questions. **Each needs an answer with at least `min_words` different words**
-  before Next moves on. If an answer is blank, show: "Q2 needs an answer before the next questions."
-  The check is here because these answers can't be corrected once the gate is passed.
+  before Next moves on. Chips aren't words. The check is here because these answers can't be corrected
+  once the gate is passed. **Every citation also needs a direction** before the lock-in.
 - **Q4–Q6 are not rendered, and not even sent to the client, until all three are answered.** The
   answers to Q1–Q3 are the expert's reading of the text before they see the what-if or the rating.
-- **Passing the gate locks Q1–Q3.** The moment the expert moves from Q3 to the next question, call
-  `POST /assignments/{id}/pass-gate`. It records `gate_passed_at` and returns Q4–Q6, and from then on
-  the server refuses changes to Q1–Q3 (`gate_locked`). They become read-only for this vignette: Back
-  still shows them, but disabled, with a note "locked: you have seen the questions after this one".
+- **Passing the gate locks Q1–Q3 and the citations made so far.** Q3's button is "Lock in results",
+  which asks for confirmation, saves the draft and calls `POST /assignments/{id}/pass-gate`. That
+  records `gate_passed_at` and `locked_highlights`, and returns Q4–Q6. From then on the server refuses
+  changes to Q1–Q3 and to those citations, including their directions (`gate_locked`). Back still shows
+  the answers, read-only, with a note "locked: you have seen the questions after this one".
+- **New citations can still be added after the lock-in,** and changed or removed until submitting.
+  `locked_highlights` is frozen with the submission, so analysis can tell the citations made before the
+  what-if was seen from those made after it.
 - If a vignette asks only some of Q1–Q3, the gate is the ones it asks.
 
 ### Phase 2: Q4, Q5, Q6
@@ -143,10 +153,10 @@ not submitted.
 
 - **Order:** `GET /assignments` returns the expert's assignments in a random order that is fixed per
   expert, so a resumed session shows the same sequence.
-- **Skip vignette** sets it aside (orange chip); the expert can come back to it by clicking its chip.
-- **Autosave:** `PUT /assignments/{id}/draft` on every Next/Back and every few seconds while typing,
-  sending the `version` of the last save. A `draft_conflict` means another tab has saved since, so
-  reload the draft. Reopening a vignette goes to its first unanswered step. A gate question counts as
+- **Leaving a vignette** for later is going back to the list; it stays "In progress".
+- **Autosave:** `PUT /assignments/{id}/draft` on every Next/Back and 2 seconds after the last change,
+  one at a time, sending the `version` of the last save. A `draft_conflict` means another tab has saved
+  since, so saving stops until the draft is reloaded. The lock-in and submit always save first. Reopening a vignette goes to its first unanswered step. A gate question counts as
   unanswered while it is blank, Q4 until a stop is chosen, and Q6 until it is rated.
 - **Submit** works per vignette, after a confirmation: `POST /assignments/{id}/submit`. Nothing is
   ever reopened afterwards. Other assignments stay as they are.
@@ -158,7 +168,8 @@ What the draft's `payload` holds when it is submitted:
 | UI control | Field | Rule |
 |---|---|---|
 | Q1, Q2, Q3, Q5 text | `answers["Q1"]` … | The server trims them. All required, each with at least its `min_words`. |
-| Quotes matched in the answers | `quoted_fragments` | Exact substrings of `text`. |
+| Citations | `highlights[]` | `{chip, text, span, direction}`. `chip` is numbered 1..n, `span` is `[start, end)` in characters (code points, so an emoji is one, not the browser's two), and `text` must equal that slice of the vignette. `direction` may be `null` in a draft only. |
+| Chips in the answers | `⟦hN⟧` inside `answers[…]` | `N` is a citation's `chip`. |
 | Q4 hypothesis line | `q4.hypothesis` | Required, at least `wording.hypothesis_min_words` different words. |
 | Q4 slider | `q4.shift` | Integer −2…2. Required whenever Q4 was asked and the vignette is submitted. |
 | Q4 towards | `q4.toward` | `more_adhd` / `less_adhd` / `other`; required with shift +1/+2, else `null`. |
@@ -171,8 +182,9 @@ expert's pseudonym, and the `started_at`, `gate_passed_at` and `submitted_at` ti
 
 ```json
 {
-  "answers": {"Q1": "…", "Q2": "…", "Q3": "…", "Q4": "An exam would explain the rush.", "Q5": "…"},
-  "quoted_fragments": ["I haven't slept well since moving into this new flat two months ago"],
+  "answers": {"Q1": "⟦h1⟧ could just as easily be…", "Q2": "…", "Q3": "…", "Q4": "An exam would explain the rush.", "Q5": "…"},
+  "highlights": [{"chip": 1, "text": "I haven't slept well since moving into this new flat two months ago",
+                  "span": [167, 234], "direction": "away"}],
   "q4": {"hypothesis": "sleep loss after the move, not clearly more",
          "shift": 1, "toward": "less_adhd", "other_explanation": null},
   "rating": 2, "insufficient_information": false
@@ -190,15 +202,18 @@ message and keep the draft.
 | Code | Meaning | UI message |
 |---|---|---|
 | `gate_not_passed` | Q4–Q6 answered while a Q1–Q3 answer is missing | "Q1–Q3 need answers first." |
-| `gate_locked` | A Q1–Q3 answer changed after the gate | Keep them read-only after the gate. |
+| `gate_locked` | A Q1–Q3 answer or a locked citation changed after the gate | Keep them read-only after the gate. |
 | `submission_incomplete` | A required Q4 part or Q6 is missing | Name the missing part. |
 | `answer_too_short` | Below the minimum of different words; `details.answers` lists which | Show a counter, and keep Next disabled until it is met. |
 | `draft_conflict` | Another tab has saved since | Reload the draft. |
 | `q4_why_without_shift` | A Q4 why with shift 0 or no shift | Drop the why at 0. |
 | `toward_without_change` | A direction with shift ≤ 0 | Clear `toward` when the slider goes ≤ 0. |
 | `other_without_name` | `toward = other` without a name, or a name without `other` | Name it, or clear it. |
-| `empty_answer` | A blank required answer or quoted fragment | Ask for the answer. |
-| `quote_not_in_vignette` | A `quoted_fragments` entry is not in the text | Send only exact matches. |
+| `empty_answer` | A blank required answer | Ask for the answer. |
+| `highlight_not_in_vignette` | A citation's `span` doesn't hold its `text` | Send what was selected, in code points. |
+| `chip_numbers` | Citations aren't numbered 1..n | Renumber when one is removed. |
+| `unknown_chip` | A `⟦hN⟧` with no citation; `details` name the question and chip | Remove the chip with its citation. |
+| `highlight_no_direction` | A citation without a direction, at the gate or at submit; `details.chips` lists them | Name the citations. |
 | `question_not_asked` | An answer to a question the vignette didn't ask | — |
 | `rating_conflict` | Both a rating and "insufficient information" | — |
 
@@ -206,15 +221,19 @@ message and keep the draft.
 
 - **Text:** 120–250 words (the server checks this at publishing), first person, with a `framing` of
   `forum_post`, `personal_journal` or `email`. No words that name the construct (ADHD, attention
-  deficit, medication names). The backend doesn't check this yet.
+  deficit, medication names). Publishing is refused (`construct_word_in_text`, with the `field`
+  and `term` in `details`) when the text or the what-if contains one; drafts may still hold them.
 - **The hidden `design` block:**
   - `purpose`;
   - `planted_cues` and `confounders`, each with an exact quote from the text;
   - `is_control`;
-  - `track` (`general` / `text_analysis`, the latter with a `knowledge_target`).
+  - `track` (`general` / `text_analysis`, the latter with a `knowledge_target`);
+  - `origin`, which defaults to `hand_written` for what an admin writes.
 
   It is never shown to the expert.
-- **`question_ids`:** normally all of Q1–Q6, in order. Q4 only when there is a what-if.
+- **The questions are fixed.** The server asks Q1–Q6 of every version; the admin sends no
+  `question_ids` (the API refuses the field) and the wording is the same for everyone. The what-if
+  is therefore required, even for a draft (`q4_without_whatif`).
 - **The what-if (`q4_whatif`)** is a clause that completes *"…how would it change if ___?"*. It names
   one fact the text doesn't state, so that an expert's reading should move (or deliberately not move).
   It should:

@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Annotated
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from fastapi import Depends
 from sqlalchemy import Enum, MetaData
@@ -49,8 +50,24 @@ def enum_column(enum_class: type[StrEnum], name: str) -> Enum:
 
 
 def to_async_url(url: str) -> str:
-    """DATABASE_URL is shared with plain asyncpg code; SQLAlchemy needs the driver named."""
-    return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    """DATABASE_URL is shared with plain asyncpg code; SQLAlchemy needs the driver named.
+
+    Hosted Postgres (Neon) hands out libpq-style options that asyncpg does not know: `sslmode`
+    is spelled `ssl`, and `channel_binding` is dropped.
+    """
+    parts = urlsplit(url.replace("postgresql://", "postgresql+asyncpg://", 1))
+    query = [
+        ("ssl" if key == "sslmode" else key, value)
+        for key, value in parse_qsl(parts.query, keep_blank_values=True)
+        if key != "channel_binding"
+    ]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
+def is_pooled(url: str) -> bool:
+    """Neon's pooled endpoint (PgBouncer, transaction mode) has `-pooler` in its host name."""
+    host = urlsplit(url).hostname or ""
+    return "-pooler" in host
 
 
 _engine: AsyncEngine | None = None
@@ -60,10 +77,15 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 def configure_engine(url: str | None = None, **engine_options) -> AsyncEngine:
     """(Re)create the engine. Called lazily with the settings URL; tests pass their own."""
     global _engine, _session_factory
+    url = url or settings.database_url
+    if is_pooled(url):
+        # PgBouncer in transaction mode hands each statement to any backend connection, so asyncpg's
+        # per-connection prepared statements would go missing.
+        connect_args = {"statement_cache_size": 0, **engine_options.pop("connect_args", {})}
+        engine_options["connect_args"] = connect_args
+        engine_options.setdefault("pool_pre_ping", True)
     # hide_parameters: query values are expert text, and must not reach error messages or logs.
-    _engine = create_async_engine(
-        to_async_url(url or settings.database_url), hide_parameters=True, **engine_options
-    )
+    _engine = create_async_engine(to_async_url(url), hide_parameters=True, **engine_options)
     _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
     return _engine
 

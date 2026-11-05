@@ -396,7 +396,7 @@ def main(argv=None) -> int:
     ap.add_argument("--rater", required=True, help="short name; the run is human-<rater>")
     ap.add_argument("--tier", default="silver", choices=["bronze", "silver", "gold"],
                     help="whose expert answers are the notes")  # fmt: skip
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit", "chips"])
     ap.add_argument("--model", default="qwen3.5:9b")
     ap.add_argument(
         "--representation", default="B1", help="experiment label, as in eval_expert_units"

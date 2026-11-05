@@ -228,7 +228,9 @@ def answered_before(gold: Path, expert_id: str) -> set[str]:
     return done
 
 
-def add_manifest_entries(gold: Path, doc: ElicitationDocument, source_tier: str) -> None:
+def add_manifest_entries(
+    gold: Path, doc: ElicitationDocument, source_tier: str, how: str = "human:terminal"
+) -> None:
     path = gold / "manifest.json"
     manifest = json.loads(path.read_text()) if path.exists() else {"tier": "gold", "entries": []}
     manifest["quality"] = QUALITY
@@ -241,7 +243,7 @@ def add_manifest_entries(gold: Path, doc: ElicitationDocument, source_tier: str)
         for v in doc.vignettes
     ]  # fmt: skip
     new.append(
-        dict(id=doc.session_id, kind="document", tier="gold", source="human:terminal",
+        dict(id=doc.session_id, kind="document", tier="gold", source=how,
              expert_id=doc.expert_id, prompt=None, model=None, seed=None, created_at=created,
              path=f"documents/{doc.session_id}.json",
              claims_by="claude-agent", claims_prompt="Gold_reference_claims.v1")
@@ -264,16 +266,17 @@ def open_session(
     wanted: list[str] | None,
     order: str = "shuffle",
     text_source: str = "synthetic",
+    load=load_vignettes,
 ) -> tuple[Path, dict[str, Vignette], dict]:
     """(gold dir, the vignettes to ask, the draft: resumed from disk or new). Raises SetupError.
 
     `source` is the tier the vignettes come from, `text_source` their origin (synthetic|reddit):
-    gold lands next to them in data/fixtures/<text_source>/gold.
-    Shared by the terminal app and notebooks/answer_vignettes.ipynb."""
+    gold lands next to them in data/fixtures/<text_source>/gold. `load` reads the vignettes:
+    the notebook passes its own (chip_answers.py)."""
     if is_synthetic_id(expert):
         raise SetupError("expert ids starting with SYN- are synthetic; use e.g. E01")
     gold = fixture_dir("gold", text_source, FIXTURES)
-    vignettes = load_vignettes(gold, fixture_dir(source, text_source, FIXTURES), wanted)
+    vignettes = load(gold, fixture_dir(source, text_source, FIXTURES), wanted)
     experts_path = gold / "experts.json"
     experts = json.loads(experts_path.read_text()) if experts_path.exists() else {}
     if role:

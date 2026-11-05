@@ -26,6 +26,16 @@ describe('api client', () => {
     await expect(api.GET('/api/v1/me')).rejects.toMatchObject({ status: 502, code: 'unavailable' })
   })
 
+  it('survives JSON errors that are not in our format, such as a stale backend', async () => {
+    // FastAPI's own 404 for a path it doesn't serve.
+    stubFetch(() => jsonResponse(404, { detail: 'Not Found' }))
+    const error = await api
+      .POST('/api/v1/auth/login', { body: { email: 'a@b.co', password: 'x' } })
+      .catch((e: unknown) => e)
+    expect(error).toMatchObject({ status: 404, code: 'unavailable' })
+    expect((error as ApiError).message).not.toBe('')
+  })
+
   it('reports a 401 to the handler, and only a 401', async () => {
     const handler = vi.fn<() => void>()
     setUnauthorizedHandler(handler)

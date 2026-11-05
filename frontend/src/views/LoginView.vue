@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
+import AuthLayout from '@/layouts/AuthLayout.vue'
 import { safeNextPath } from '@/router/guard'
 import { useAuthStore } from '@/stores/auth'
 
@@ -30,19 +31,25 @@ async function submit() {
 </script>
 
 <template>
-  <main>
+  <AuthLayout>
     <h1>Log in</h1>
-    <form @submit.prevent="submit">
-      <label>
+    <form class="mt-8 space-y-5" @submit.prevent="submit">
+      <label class="block text-sm font-medium text-ink">
         Email
-        <input v-model="email" type="email" autocomplete="username" required />
+        <input v-model="email" class="field" type="email" autocomplete="username" required />
       </label>
-      <label>
+      <label class="block text-sm font-medium text-ink">
         Password
-        <input v-model="password" type="password" autocomplete="current-password" required />
+        <input
+          v-model="password"
+          class="field"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
       </label>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <button type="submit" :disabled="busy">Log in</button>
+      <p v-if="error" class="alert" role="alert">{{ error }}</p>
+      <button type="submit" class="btn w-full" :disabled="busy">Log in</button>
     </form>
-  </main>
+  </AuthLayout>
 </template>

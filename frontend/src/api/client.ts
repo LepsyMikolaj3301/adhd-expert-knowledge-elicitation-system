@@ -4,6 +4,15 @@ import type { components, paths } from './schema'
 
 export type User = components['schemas']['UserView']
 export type AssignmentSummary = components['schemas']['AssignmentSummary']
+export type ExpertAssignment = components['schemas']['ExpertAssignment']
+export type QuestionView = components['schemas']['QuestionView']
+export type AnswerPayload = components['schemas']['AnswerPayload']
+export type Q4Answer = components['schemas']['Q4Answer']
+export type Citation = components['schemas']['Highlight']
+export type Direction = NonNullable<Citation['direction']>
+export type VignetteAdminView = components['schemas']['VignetteAdminView']
+export type VersionAdminView = components['schemas']['VersionAdminView']
+export type VignetteDesign = components['schemas']['VignetteDesign']
 type ErrorBody = components['schemas']['ErrorResponse']
 
 /** Every failed API call throws this. `code` is stable; `message` is safe to show the user. */
@@ -28,13 +37,28 @@ export function setUnauthorizedHandler(handler: () => void): void {
   onUnauthorized = handler
 }
 
+const UNAVAILABLE: ErrorBody = {
+  code: 'unavailable',
+  message: 'The server is not responding. Please try again.',
+}
+
 async function readError(response: Response): Promise<ErrorBody> {
   try {
-    return (await response.clone().json()) as ErrorBody
+    const body: unknown = await response.clone().json()
+    // Our own errors always have both. FastAPI's default 404 is `{"detail": ...}`, and an
+    // outdated backend answers that for every path it doesn't know.
+    if (
+      typeof body === 'object' &&
+      body !== null &&
+      typeof (body as ErrorBody).code === 'string' &&
+      typeof (body as ErrorBody).message === 'string'
+    ) {
+      return body as ErrorBody
+    }
   } catch {
-    // Not from FastAPI: e.g. the proxy answering 502 while the backend is down.
-    return { code: 'unavailable', message: 'The server is not responding. Please try again.' }
+    // Not JSON at all: e.g. the proxy answering 502 while the backend is down.
   }
+  return UNAVAILABLE
 }
 
 const throwOnError: Middleware = {

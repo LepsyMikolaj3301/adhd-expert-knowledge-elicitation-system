@@ -35,7 +35,11 @@ def _run(connection: Connection) -> None:
 
 
 async def _main() -> None:
-    url = config.get_main_option("sqlalchemy.url") or settings.database_url
+    url = (
+        config.get_main_option("sqlalchemy.url")
+        or settings.database_url_unpooled
+        or settings.database_url
+    )
     engine = create_async_engine(to_async_url(url))
     async with engine.connect() as connection:
         await connection.run_sync(_run)

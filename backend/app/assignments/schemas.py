@@ -59,6 +59,8 @@ class ExpertAssignment(_AssignmentBase):
     vignette: ExpertVignette
     draft: DraftView | None
     gate_passed_at: datetime | None
+    # The first this many citations were made before the gate and can't change.
+    locked_highlights: int
     started_at: datetime | None
     submitted_at: datetime | None
 
@@ -94,6 +96,7 @@ class AssignmentSummary(BaseModel):
     job_running: bool
     vignette_code: str
     vignette_version: int
+    vignette_version_id: UUID
     expert_pseudonym: str
     updated_at: datetime
 

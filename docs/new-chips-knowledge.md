@@ -1,7 +1,8 @@
 # Expert findings: free text with citation chips
 
 How expert answers to vignettes become retrievable knowledge when the expert writes free text but links
-each point to the fragments it is about. This is a design, not code: nothing here is built. It replaces
+each point to the fragments it is about. The expert's input (step 1 of the flow below) is built, see
+[frontend-vignettes.md](frontend-vignettes.md); the rest is a design, not code. It replaces
 the regex segmentation of B1 ([expert-knowledge.md](expert-knowledge.md)) and is a lighter alternative
 to LLM-extracted atoms ([expert-atoms.md](expert-atoms.md)). B1 stays shipped until this wins on the
 same harness (see *Decision rule*).
@@ -441,8 +442,7 @@ Found in `DOC-SYN-0002`:
   quote assignment (reusing the difflib anchoring from `units.py`), checks, unit building, chip
   rendering. No model calls; tested like `test_units.py`.
 - New classifier prompt `prompts/Expert_sentence_targets.v1.md` and a script that runs it per response.
-- Frontend: highlight → chip, chip insertion in answer fields, per-highlight toggle, soft checks, the
-  review screen.
+- Frontend: the review screen. Highlights, chips, toggles and soft checks are built.
 - `retrieve_expert` in `rag_common.py` over I1 / I2 / I3, with the pack-time merge.
 
 ## Decision rule and evaluation

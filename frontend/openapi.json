@@ -154,6 +154,15 @@
             "title": "Answers",
             "type": "object"
           },
+          "highlights": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Highlight"
+            },
+            "maxItems": 200,
+            "title": "Highlights",
+            "type": "array"
+          },
           "insufficient_information": {
             "default": false,
             "title": "Insufficient Information",
@@ -168,16 +177,6 @@
                 "type": "null"
               }
             ]
-          },
-          "quoted_fragments": {
-            "default": [],
-            "items": {
-              "maxLength": 2000,
-              "type": "string"
-            },
-            "maxItems": 200,
-            "title": "Quoted Fragments",
-            "type": "array"
           },
           "rating": {
             "anyOf": [
@@ -253,6 +252,11 @@
           "vignette_version": {
             "title": "Vignette Version",
             "type": "integer"
+          },
+          "vignette_version_id": {
+            "format": "uuid",
+            "title": "Vignette Version Id",
+            "type": "string"
           }
         },
         "required": [
@@ -262,6 +266,7 @@
           "job_running",
           "vignette_code",
           "vignette_version",
+          "vignette_version_id",
           "expert_pseudonym",
           "updated_at"
         ],
@@ -602,6 +607,10 @@
             "title": "Id",
             "type": "string"
           },
+          "locked_highlights": {
+            "title": "Locked Highlights",
+            "type": "integer"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -646,6 +655,7 @@
           "vignette",
           "draft",
           "gate_passed_at",
+          "locked_highlights",
           "started_at",
           "submitted_at"
         ],
@@ -701,6 +711,61 @@
           "questions"
         ],
         "title": "ExpertVignette",
+        "type": "object"
+      },
+      "Highlight": {
+        "additionalProperties": false,
+        "description": "A passage the expert cited. Same shape as the chip fixtures (scripts/.../chips_schema.py).",
+        "properties": {
+          "chip": {
+            "minimum": 1.0,
+            "title": "Chip",
+            "type": "integer"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "enum": [
+                  "toward",
+                  "away",
+                  "neutral",
+                  "unclear"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "span": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Span",
+            "type": "array"
+          },
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "chip",
+          "text",
+          "span"
+        ],
+        "title": "Highlight",
         "type": "object"
       },
       "InviteIssued": {
@@ -1685,22 +1750,6 @@
             ],
             "title": "Q4 Whatif"
           },
-          "question_ids": {
-            "items": {
-              "enum": [
-                "Q1",
-                "Q2",
-                "Q3",
-                "Q4",
-                "Q5",
-                "Q6"
-              ],
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Question Ids",
-            "type": "array"
-          },
           "text": {
             "maxLength": 20000,
             "minLength": 1,
@@ -1721,7 +1770,6 @@
         "required": [
           "text",
           "framing",
-          "question_ids",
           "design"
         ],
         "title": "VersionContent",
@@ -1776,29 +1824,6 @@
               }
             ],
             "title": "Q4 Whatif"
-          },
-          "question_ids": {
-            "anyOf": [
-              {
-                "items": {
-                  "enum": [
-                    "Q1",
-                    "Q2",
-                    "Q3",
-                    "Q4",
-                    "Q5",
-                    "Q6"
-                  ],
-                  "type": "string"
-                },
-                "minItems": 1,
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Question Ids"
           },
           "text": {
             "anyOf": [
@@ -1893,22 +1918,6 @@
             ],
             "title": "Q4 Whatif"
           },
-          "question_ids": {
-            "items": {
-              "enum": [
-                "Q1",
-                "Q2",
-                "Q3",
-                "Q4",
-                "Q5",
-                "Q6"
-              ],
-              "type": "string"
-            },
-            "minItems": 1,
-            "title": "Question Ids",
-            "type": "array"
-          },
           "text": {
             "maxLength": 20000,
             "minLength": 1,
@@ -1929,7 +1938,6 @@
         "required": [
           "text",
           "framing",
-          "question_ids",
           "design",
           "code"
         ],
@@ -1964,7 +1972,7 @@
             "title": "Knowledge Target"
           },
           "origin": {
-            "default": "llm",
+            "default": "hand_written",
             "enum": [
               "llm",
               "real_text",
@@ -2043,6 +2051,23 @@
                 }
               ],
               "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "vignette_version_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Vignette Version Id"
             }
           },
           {

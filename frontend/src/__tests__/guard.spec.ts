@@ -25,12 +25,12 @@ describe('guardRoute', () => {
 
   it('keeps users away from routes of another role', () => {
     const meta: RouteMeta = { requiresAuth: true, roles: ['admin'] }
-    expect(guardRoute(to(meta), expert)).toEqual({ name: 'assignments' })
+    expect(guardRoute(to(meta), expert)).toEqual({ name: 'home' })
     expect(guardRoute(to(meta), admin)).toBe(true)
   })
 
   it('skips the login page when already logged in', () => {
-    expect(guardRoute(to({ guestOnly: true }), expert)).toEqual({ name: 'assignments' })
+    expect(guardRoute(to({ guestOnly: true }), expert)).toEqual({ name: 'home' })
     expect(guardRoute(to({ guestOnly: true }), null)).toBe(true)
   })
 })
@@ -38,10 +38,10 @@ describe('guardRoute', () => {
 describe('safeNextPath', () => {
   it.each([
     ['/assignments/1', '/assignments/1'],
-    ['//evil.example', '/assignments'],
-    ['https://evil.example', '/assignments'],
-    [undefined, '/assignments'],
-    [['/a', '/b'], '/assignments'],
+    ['//evil.example', '/'],
+    ['https://evil.example', '/'],
+    [undefined, '/'],
+    [['/a', '/b'], '/'],
   ])('%s -> %s', (input, expected) => {
     expect(safeNextPath(input)).toBe(expected)
   })

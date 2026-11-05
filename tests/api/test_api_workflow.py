@@ -615,7 +615,7 @@ async def test_a_reviewer_who_answered_another_version_can_review():
     admin = await admin_api()
     author, reviewer = await expert_api("a@example.com"), await expert_api("r@example.com")
     _, v1 = await reach_admin_review(admin, reviewer)
-    content = {key: v1[key] for key in ("text", "framing", "question_ids", "q4_whatif", "design")}
+    content = {key: v1[key] for key in ("text", "framing", "q4_whatif", "design")}
     v2 = await admin.ok("POST", f"/vignettes/{v1['vignette_id']}/versions", 201, json=content)
     v2 = await admin.ok("POST", f"/vignette-versions/{v2['id']}/publish")
     [assignment_id] = await assign(admin, v2, author)
@@ -635,9 +635,7 @@ async def test_contamination_covers_other_versions_of_the_vignette():
     [assignment_id], version = await reach_admin_review(admin, author)
     vignettes = await admin.ok("GET", "/vignettes")
     vignette = next(v for v in vignettes if v["id"] == version["vignette_id"])
-    content = {
-        key: version[key] for key in ("text", "framing", "question_ids", "q4_whatif", "design")
-    }
+    content = {key: version[key] for key in ("text", "framing", "q4_whatif", "design")}
     v2 = await admin.ok("POST", f"/vignettes/{vignette['id']}/versions", 201, json=content)
     v2 = await admin.ok("POST", f"/vignette-versions/{v2['id']}/publish")
     await assign(admin, v2, other)

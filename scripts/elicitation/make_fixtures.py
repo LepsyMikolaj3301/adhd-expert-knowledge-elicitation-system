@@ -76,11 +76,15 @@ from app.elicitation.schema import (
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "data/fixtures"
+CHIP_SOURCE = "chips"
 SOURCES = ("synthetic", "reddit")
 
 
 def fixture_dir(tier: str, source: str = "synthetic", root: Path = FIXTURES) -> Path:
-    """data/fixtures/<source>/<tier>: where one tier of one text source lives."""
+    """data/fixtures/<source>/<tier>: where one tier of one text source lives. The chip fixtures
+    are kept apart (see make_chip_fixtures.py), so `chips` is data/fixtures_chips/synthetic."""
+    if source == CHIP_SOURCE:
+        return root.parent / "fixtures_chips" / "synthetic" / tier
     return root / source / tier
 
 

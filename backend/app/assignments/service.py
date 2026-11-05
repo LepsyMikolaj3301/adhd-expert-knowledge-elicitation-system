@@ -197,6 +197,7 @@ async def build_view(
             if draft
             else None,
             gate_passed_at=assignment.gate_passed_at,
+            locked_highlights=assignment.locked_highlights,
             started_at=assignment.started_at,
             submitted_at=assignment.submitted_at,
         )
@@ -234,7 +235,13 @@ async def build_view(
 
 
 async def list_assignments(
-    db: AsyncSession, viewer: User, *, state: State | None, limit: int, offset: int
+    db: AsyncSession,
+    viewer: User,
+    *,
+    state: State | None,
+    vignette_version_id: UUID | None = None,
+    limit: int,
+    offset: int,
 ) -> list[AssignmentSummary]:
     """An expert's own list has a stable pseudo-random order, so a resumed session looks the same.
     The admin sees everything, most recently changed first."""
@@ -254,6 +261,8 @@ async def list_assignments(
         )
     if state is not None:
         query = query.where(Assignment.state == state)
+    if vignette_version_id is not None:
+        query = query.where(Assignment.vignette_version_id == vignette_version_id)
     rows = (await db.execute(query.limit(limit).offset(offset))).all()
     used = await _assignments_with_peers(db, [row[0].id for row in rows]) if is_admin else set()
     actor = Actor.ADMIN if is_admin else Actor.ASSIGNEE
@@ -271,6 +280,7 @@ async def list_assignments(
             job_running=assignment.state in JOB_STATES,
             vignette_code=code,
             vignette_version=version.version,
+            vignette_version_id=version.id,
             expert_pseudonym=pseudonym,
             updated_at=assignment.updated_at,
         )
@@ -395,6 +405,8 @@ async def save_draft(
         AnswerPayload.model_validate(draft.payload),
         version.question_ids,
         assignment.gate_passed_at is not None,
+        version.text,
+        assignment.locked_highlights,
     )
     draft.payload = payload.model_dump(mode="json")
     draft.version += 1
@@ -409,8 +421,10 @@ async def pass_gate(db: AsyncSession, assignment: Assignment, actor: Actor, view
         return
     draft = await _draft(db, assignment)
     version, _ = await _version_and_code(db, assignment.vignette_version_id)
-    check_gate_answers(AnswerPayload.model_validate(draft.payload), version.question_ids)
+    payload = AnswerPayload.model_validate(draft.payload)
+    check_gate_answers(payload, version.question_ids)
     assignment.gate_passed_at = utcnow()
+    assignment.locked_highlights = len(payload.highlights)
     record_event(
         db,
         actor_id=viewer.id,
@@ -447,6 +461,8 @@ async def submit(db: AsyncSession, assignment: Assignment, actor: Actor, viewer:
                 "gate_passed_at": (
                     assignment.gate_passed_at.isoformat() if assignment.gate_passed_at else None
                 ),
+                # Tells the citations made before the what-if was seen from those made after it.
+                "locked_highlights": assignment.locked_highlights,
                 "submitted_at": now.isoformat(),
             },
         )

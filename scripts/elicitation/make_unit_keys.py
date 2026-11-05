@@ -17,11 +17,11 @@ import re
 import sys
 from pathlib import Path
 
+from chips_schema import load_document
 from llm_clients import CachedGenerator, GenRequest, ModelRefused, OllamaGenerator
 from make_fixtures import PERSONAS, Rejected, fixture_dir, parse_json, write_json
 from prompt_loader import load_prompt
 
-from app.elicitation.schema import ElicitationDocument
 from app.elicitation.units import ExpertUnit, build_units, render_unit
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,7 +53,7 @@ def load_units(
     for path in sorted(
         fixture_dir(tier, source, fixtures).joinpath("documents").glob("DOC-*.json")
     ):
-        doc = ElicitationDocument.model_validate_json(path.read_text())
+        doc = load_document(path)
         role = role_for(tier, doc.session_id, doc.expert_id, source)
         units += build_units(doc, role, **context)
     return units
@@ -117,7 +117,7 @@ def make_keys(unit: ExpertUnit, vignette: str, by_id, gen, retries: int, seed: i
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver", "gold"])
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit", "chips"])
     ap.add_argument("--fixtures", type=Path, default=ROOT / "data/fixtures")
     ap.add_argument("--out", type=Path, default=ROOT / "data/expert_units")
     ap.add_argument("--cache", type=Path, default=ROOT / "data/cache")
@@ -137,7 +137,7 @@ def main(argv=None) -> int:
     for path in (fixture_dir(args.tier, args.source, args.fixtures) / "documents").glob(
         "DOC-*.json"
     ):
-        doc = ElicitationDocument.model_validate_json(path.read_text())
+        doc = load_document(path)
         vignettes |= {(doc.session_id, v.id): v.text for v in doc.vignettes}
 
     results = {}

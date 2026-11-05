@@ -35,6 +35,8 @@ class Assignment(Base):
     )
     required_approvals: Mapped[int] = mapped_column(Integer, default=1)
     gate_passed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # How many citations existed at the gate. These are fixed; later ones stay editable.
+    locked_highlights: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(

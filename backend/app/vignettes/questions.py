@@ -23,8 +23,9 @@ QUESTIONS: dict[str, Question] = {
         Question(
             "Q1",
             "open",
-            "Quote the fragments you consider relevant to ADHD-related traits. "
-            "For each: which trait, and why does this wording suggest it?",
+            "Which fragments of the text matter for your reading of ADHD-related traits, in either "
+            "direction: pointing toward them, pointing away from them, or just ordinary? For each: "
+            "what does it show, and why does this wording suggest it?",
             min_words=15,
         ),
         Question(

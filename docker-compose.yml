@@ -208,7 +208,42 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  # The web app with hot reload: http://localhost:5173. Proxies /api to rag-backend (see
+  # frontend/vite.config.ts), so it needs no CORS setup either. Start: docker compose --profile app up -d
+  frontend:
+    profiles: [app]
+    build:
+      context: ./frontend
+      target: dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://rag-backend:8000
+    volumes:
+      - ./frontend:/app
+      # Not the host's node_modules: those were installed for another platform.
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      - rag-backend
+    restart: unless-stopped
+
+  # The production image, run locally the way Render runs it: http://localhost:8080. It looks the
+  # backend up per request, so start the backend first (--profile app); nothing orders them here.
+  # Start: docker compose --profile preview up -d --build frontend-preview
+  frontend-preview:
+    profiles: [preview]
+    build:
+      context: ./frontend
+      dockerfile: ../infra/frontend.Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      API_UPSTREAM_URL: http://rag-backend:8000
+      API_HOST: rag-backend
+
 volumes:
+  frontend-node-modules:
   ollama-data:
   postgres-data:
   pgadmin-data:

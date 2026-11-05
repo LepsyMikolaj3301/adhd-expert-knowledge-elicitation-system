@@ -18,6 +18,7 @@ function summary(overrides: Partial<AssignmentSummary> = {}): AssignmentSummary 
     job_running: false,
     vignette_code: 'V001',
     vignette_version: 1,
+    vignette_version_id: 'v1',
     expert_pseudonym: 'E07',
     updated_at: '2026-11-04T10:00:00Z',
     ...overrides,
@@ -39,22 +40,60 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => vi.useRealTimers())
 
 describe('AssignmentsView', () => {
-  it('shows the state and what the server says is possible', async () => {
+  it.each([
+    ['assigned', ['start'], 'Not started', 'Start'],
+    ['in_progress', ['pass_gate', 'save_draft'], 'In progress', 'Continue'],
+    ['processing', [], 'Submitted', 'View'],
+    ['expert_check', ['complete_expert_check', 'skip_expert_check'], 'Submitted', 'View'],
+    ['ingested', [], 'Submitted', 'View'],
+  ] as const)(
+    'shows an expert %s in plain words, with a link',
+    async (state, actions, label, link) => {
+      logIn(expert)
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => jsonResponse(200, [summary({ state, allowed_actions: [...actions] })])),
+      )
+      const wrapper = mountView(AssignmentsView)
+      await flushPromises()
+
+      expect(wrapper.get('[data-testid="state"]').text()).toBe(label)
+      const anchor = wrapper.get('[data-testid="open"]')
+      expect(anchor.text()).toBe(link)
+      expect(anchor.attributes('href')).toBe('/assignments/a1')
+      expect(wrapper.text()).not.toContain('E07')
+      wrapper.unmount()
+    },
+  )
+
+  it('offers nothing to open on a cancelled assignment', async () => {
     logIn(expert)
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => jsonResponse(200, [summary()])),
+      vi.fn(async () => jsonResponse(200, [summary({ state: 'cancelled', allowed_actions: [] })])),
     )
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
-
-    expect(wrapper.get('[data-testid="state"]').text()).toBe('in_progress')
-    expect(wrapper.get('[data-testid="actions"]').text()).toBe('pass_gate, save_draft')
-    expect(wrapper.text()).not.toContain('E07')
+    expect(wrapper.get('[data-testid="state"]').text()).toBe('Cancelled')
+    expect(wrapper.find('[data-testid="open"]').exists()).toBe(false)
     wrapper.unmount()
   })
 
-  it('shows the expert column to admins only', async () => {
+  it('confirms a submission that just happened', async () => {
+    logIn(expert)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse(200, [summary({ state: 'processing' })])),
+    )
+    await router.push({ path: '/assignments', query: { submitted: 'V001' } })
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    expect(wrapper.get('[role="status"]').text()).toBe('V001 submitted.')
+    wrapper.unmount()
+    await router.push('/assignments')
+  })
+
+  it('shows admins the expert and the workflow state', async () => {
     logIn(admin)
     vi.stubGlobal(
       'fetch',
@@ -63,6 +102,8 @@ describe('AssignmentsView', () => {
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
     expect(wrapper.text()).toContain('E07')
+    expect(wrapper.get('[data-testid="state"]').text()).toBe('in_progress')
+    expect(wrapper.get('[data-testid="actions"]').text()).toBe('pass_gate, save_draft')
     wrapper.unmount()
   })
 
@@ -94,7 +135,7 @@ describe('AssignmentsView', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
     await vi.advanceTimersByTimeAsync(10_000)
     expect(fetchMock).toHaveBeenCalledTimes(3)
-    expect(wrapper.get('[data-testid="state"]').text()).toBe('expert_check')
+    expect(wrapper.get('[data-testid="state"]').text()).toBe('Submitted')
 
     await vi.advanceTimersByTimeAsync(60_000)
     expect(fetchMock).toHaveBeenCalledTimes(3)

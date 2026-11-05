@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import HomeView from '@/views/HomeView.vue'
+import PlaceholderView from '@/views/PlaceholderView.vue'
 
 import { guardRoute } from './guard'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: HomeView },
     {
       path: '/login',
       name: 'login',
@@ -21,17 +22,79 @@ const router = createRouter({
       component: () => import('@/views/AcceptInviteView.vue'),
     },
     {
-      path: '/assignments',
-      name: 'assignments',
-      component: () => import('@/views/AssignmentsView.vue'),
+      // Everything behind the login shares the side panel. The children inherit `requiresAuth`.
+      path: '/',
+      component: AppLayout,
       meta: { requiresAuth: true },
+      children: [
+        { path: '', name: 'home', component: HomeView },
+        {
+          path: 'assignments',
+          name: 'assignments',
+          component: () => import('@/views/AssignmentsView.vue'),
+        },
+        {
+          path: 'assignments/:id',
+          name: 'assignment',
+          component: () => import('@/views/AnswerView.vue'),
+          props: true,
+          meta: { wide: true, roles: ['expert'] },
+        },
+        {
+          path: 'reviews',
+          name: 'reviews',
+          component: PlaceholderView,
+          meta: { title: 'Reviews' },
+        },
+        {
+          path: 'vignettes',
+          name: 'vignettes',
+          component: () => import('@/views/AdminVignettesView.vue'),
+          meta: { roles: ['admin'] },
+        },
+        {
+          path: 'vignettes/new',
+          name: 'vignette-new',
+          component: () => import('@/views/VignetteEditView.vue'),
+          meta: { roles: ['admin'] },
+        },
+        {
+          path: 'vignettes/:id',
+          name: 'vignette',
+          component: () => import('@/views/VignetteEditView.vue'),
+          props: true,
+          meta: { roles: ['admin'] },
+        },
+        {
+          path: 'experts',
+          name: 'experts',
+          component: PlaceholderView,
+          meta: { title: 'Experts', roles: ['admin'] },
+        },
+        {
+          path: 'knowledge',
+          name: 'knowledge',
+          component: PlaceholderView,
+          meta: { title: 'Knowledge base', roles: ['admin'] },
+        },
+        {
+          path: 'account',
+          name: 'account',
+          component: () => import('@/views/AccountView.vue'),
+        },
+      ],
     },
   ],
 })
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
-  await auth.load()
+  try {
+    await auth.load()
+  } catch {
+    // The backend can't be reached. Carry on as logged out so that the login page still renders;
+    // load() only caches a successful answer, so the next navigation asks again.
+  }
   return guardRoute(to, auth.user)
 })
 

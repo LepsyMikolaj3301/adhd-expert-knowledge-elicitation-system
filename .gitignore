@@ -225,3 +225,13 @@ data/
 # Elicitation fixture inputs: vignette texts and synthetic expert answers (see docs/fixtures.md).
 # Kept local like data/; tests skip when they are absent.
 tests/sample_inputs/
+
+# Neon agent skills
+.agents/
+skills-lock.json
+
+# Deploy settings and secrets (see infra/.env.deploy.example)
+infra/.env.deploy
+
+# Local development logins
+passwords.txt

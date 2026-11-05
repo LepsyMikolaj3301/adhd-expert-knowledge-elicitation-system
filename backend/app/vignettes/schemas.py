@@ -37,7 +37,7 @@ class VignetteDesign(_Strict):
     is_control: bool = False
     track: Track = "general"
     knowledge_target: str | None = None
-    origin: Origin = "llm"
+    origin: Origin = "hand_written"
     population: str = "adult"
     source_ref: str | None = None
 
@@ -51,7 +51,7 @@ class VariantInfo(_Strict):
 class VersionContent(_Strict):
     text: str = Field(min_length=1, max_length=20_000)
     framing: Framing
-    question_ids: list[QuestionId] = Field(min_length=1)
+    # No question_ids: every version asks the same Q1-Q6, set by the server.
     q4_whatif: str | None = Field(default=None, max_length=1_000)
     variant: VariantInfo | None = None
     design: VignetteDesign
@@ -64,7 +64,6 @@ class VignetteCreate(VersionContent):
 class VersionUpdate(_Strict):
     text: str | None = Field(default=None, min_length=1, max_length=20_000)
     framing: Framing | None = None
-    question_ids: list[QuestionId] | None = Field(default=None, min_length=1)
     q4_whatif: str | None = Field(default=None, max_length=1_000)
     variant: VariantInfo | None = None
     design: VignetteDesign | None = None

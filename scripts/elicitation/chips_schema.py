@@ -4,10 +4,16 @@ See docs/new-chips-knowledge.md.
 
 Scripts only: the backend schema is untouched. A ChipDocument is an ElicitationDocument whose
 responses also carry `highlights`; every rule of the base schema still applies. `to_legacy` turns it
-back into a plain ElicitationDocument (chips rendered as quotes) for the B1 baseline.
+back into a plain ElicitationDocument (chips rendered as quotes) for the B1 baseline, and
+`load_document` does so for the tools that read plain documents.
+
+The synthetic chip answers leave Q4 out and always have highlights (make_chip_fixtures.py checks
+that). Gold answers from notebooks/answer_vignettes.ipynb have Q4, and may cite nothing.
 """
 
+import json
 import re
+from pathlib import Path
 from typing import Literal, Self
 
 from pydantic import Field, model_validator
@@ -41,7 +47,9 @@ class Highlight(_Model):
 
 
 class ChipResponse(Response):
-    highlights: list[Highlight] = Field(min_length=1)
+    highlights: list[Highlight] = []
+    # The first this many were made before the what-if was seen. Gold only.
+    locked_highlights: int = Field(default=0, ge=0)
 
 
 class ChipDocument(ElicitationDocument):
@@ -53,8 +61,6 @@ class ChipDocument(ElicitationDocument):
         shown = {v.id: v for v in self.vignettes}
         for r in self.responses:
             text = shown[r.vignette_id].text
-            if "Q4" in shown[r.vignette_id].question_ids:
-                raise ValueError(f"q4_out_of_scope: {r.vignette_id} asks Q4")
             numbers = [h.chip for h in r.highlights]
             if numbers != list(range(1, len(numbers) + 1)):
                 raise ValueError(f"chip_numbers: {r.vignette_id} highlights are {numbers}")
@@ -88,5 +94,13 @@ def to_legacy(doc: ChipDocument) -> ElicitationDocument:
     for resp, raw in zip(doc.responses, data["responses"], strict=True):
         raw["answers"] = {q: render_chips(a, resp.highlights) for q, a in resp.answers.items()}
         raw["quoted_fragments"] = list(dict.fromkeys(h.text for h in resp.highlights))
-        del raw["highlights"]
+        del raw["highlights"], raw["locked_highlights"]
     return ElicitationDocument.model_validate(data)
+
+
+def load_document(path: Path) -> ElicitationDocument:
+    """A document file as a plain ElicitationDocument, whichever kind it is."""
+    raw = json.loads(path.read_text())
+    if raw.get("schema_version") == CHIP_VERSION:
+        return to_legacy(ChipDocument.model_validate(raw))
+    return ElicitationDocument.model_validate(raw)

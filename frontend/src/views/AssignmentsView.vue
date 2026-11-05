@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 
 import { api, ApiError, type AssignmentSummary } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
@@ -8,13 +8,31 @@ import { useAuthStore } from '@/stores/auth'
 const POLL_MS = 10_000
 
 const auth = useAuthStore()
-const router = useRouter()
+const route = useRoute()
 
 const assignments = ref<AssignmentSummary[]>([])
 const loading = ref(true)
 const error = ref('')
 let timer: ReturnType<typeof setTimeout> | undefined
 let stopped = false
+
+const isAdmin = computed(() => auth.user?.role === 'admin')
+const justSubmitted = computed(() => route.query.submitted)
+
+/** For an expert, everything after submitting is the same thing: it's out of their hands. */
+function expertStatus(state: AssignmentSummary['state']): string {
+  if (state === 'assigned') return 'Not started'
+  if (state === 'in_progress') return 'In progress'
+  if (state === 'cancelled') return 'Cancelled'
+  return 'Submitted'
+}
+
+function openLabel(state: AssignmentSummary['state']): string | null {
+  if (state === 'assigned') return 'Start'
+  if (state === 'in_progress') return 'Continue'
+  if (state === 'cancelled') return null
+  return 'View'
+}
 
 async function refresh() {
   clearTimeout(timer)
@@ -34,11 +52,6 @@ async function refresh() {
   }
 }
 
-async function logout() {
-  await auth.logout()
-  await router.push({ name: 'login' })
-}
-
 onMounted(refresh)
 onUnmounted(() => {
   stopped = true
@@ -47,35 +60,71 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main>
-    <header>
-      <h1>Assignments</h1>
-      <p>
-        {{ auth.user?.display_name }} ({{ auth.user?.role }})
-        <button type="button" @click="logout">Log out</button>
-      </p>
-    </header>
+  <div>
+    <!-- The nav calls an expert's assignments "Vignettes": they only ever see their own. -->
+    <h1>{{ isAdmin ? 'Assignments' : 'Vignettes' }}</h1>
 
-    <p v-if="error" role="alert">{{ error }}</p>
-    <p v-if="loading">Loading…</p>
-    <p v-else-if="!assignments.length && !error" data-testid="empty">No assignments yet.</p>
-    <table v-else-if="assignments.length">
+    <p v-if="justSubmitted" class="mt-4 text-ink" role="status">{{ justSubmitted }} submitted.</p>
+    <p v-if="error" class="alert mt-6" role="alert">{{ error }}</p>
+    <p v-if="loading" class="mt-6 text-muted">Loading…</p>
+    <p v-else-if="!assignments.length && !error" class="mt-6 text-muted" data-testid="empty">
+      {{ isAdmin ? 'No assignments yet.' : 'Nothing is assigned to you yet.' }}
+    </p>
+
+    <table
+      v-else-if="assignments.length && isAdmin"
+      class="mt-8 w-full border-collapse text-left text-sm"
+    >
       <thead>
-        <tr>
-          <th scope="col">Vignette</th>
-          <th v-if="auth.user?.role === 'admin'" scope="col">Expert</th>
-          <th scope="col">State</th>
-          <th scope="col">Available actions</th>
+        <tr class="border-b border-line text-muted">
+          <th scope="col" class="py-2 pr-4 font-medium">Vignette</th>
+          <th scope="col" class="py-2 pr-4 font-medium">Expert</th>
+          <th scope="col" class="py-2 pr-4 font-medium">State</th>
+          <th scope="col" class="py-2 font-medium">Available actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="assignment in assignments" :key="assignment.id" data-testid="assignment">
-          <td>{{ assignment.vignette_code }} v{{ assignment.vignette_version }}</td>
-          <td v-if="auth.user?.role === 'admin'">{{ assignment.expert_pseudonym }}</td>
-          <td data-testid="state">{{ assignment.state }}</td>
-          <td data-testid="actions">{{ assignment.allowed_actions.join(', ') || '—' }}</td>
+        <tr
+          v-for="assignment in assignments"
+          :key="assignment.id"
+          class="border-b border-line"
+          data-testid="assignment"
+        >
+          <td class="py-3 pr-4">
+            {{ assignment.vignette_code }} v{{ assignment.vignette_version }}
+          </td>
+          <td class="py-3 pr-4">{{ assignment.expert_pseudonym }}</td>
+          <td class="py-3 pr-4" data-testid="state">{{ assignment.state }}</td>
+          <td class="py-3" data-testid="actions">
+            {{ assignment.allowed_actions.join(', ') || '—' }}
+          </td>
         </tr>
       </tbody>
     </table>
-  </main>
+
+    <ul v-else-if="assignments.length" class="mt-8 divide-y divide-line border-y border-line">
+      <li
+        v-for="assignment in assignments"
+        :key="assignment.id"
+        class="flex items-center gap-4 py-3"
+        data-testid="assignment"
+      >
+        <span class="flex-1 font-serif text-xl text-ink">{{ assignment.vignette_code }}</span>
+        <span class="text-sm text-muted" data-testid="state">
+          {{ expertStatus(assignment.state) }}
+        </span>
+        <span class="w-24 text-right">
+          <RouterLink
+            v-if="openLabel(assignment.state)"
+            :to="`/assignments/${assignment.id}`"
+            class="hover:no-underline"
+            :class="openLabel(assignment.state) === 'View' ? 'btn-quiet' : 'btn'"
+            data-testid="open"
+          >
+            {{ openLabel(assignment.state) }}
+          </RouterLink>
+        </span>
+      </li>
+    </ul>
+  </div>
 </template>

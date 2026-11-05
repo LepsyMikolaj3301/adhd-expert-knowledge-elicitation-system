@@ -1,26 +1,24 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const status = ref<'loading' | 'ok' | 'down'>('loading')
+import { navFor } from '@/navigation'
+import { useAuthStore } from '@/stores/auth'
 
-onMounted(async () => {
-  try {
-    const res = await fetch('/api/v1/health')
-    status.value = res.ok ? 'ok' : 'down'
-  } catch {
-    status.value = 'down'
-  }
-})
+const auth = useAuthStore()
+const sections = computed(() =>
+  auth.user ? navFor(auth.user.role).filter((item) => item.to !== '/') : [],
+)
 </script>
 
 <template>
-  <main>
-    <h1>ADHD Expert Knowledge Elicitation</h1>
-    <p>
-      Backend:
-      <strong data-testid="backend-status">{{ status }}</strong>
-    </p>
-    <RouterLink to="/assignments">Go to assignments</RouterLink>
-  </main>
+  <div>
+    <h1>Welcome, {{ auth.user?.display_name }}</h1>
+    <ul class="mt-8 divide-y divide-line border-y border-line" data-testid="sections">
+      <li v-for="item in sections" :key="item.to + item.label" class="py-4">
+        <RouterLink :to="item.to" class="font-serif text-xl">{{ item.label }}</RouterLink>
+        <p class="mt-1 text-muted">{{ item.blurb }}</p>
+      </li>
+    </ul>
+  </div>
 </template>

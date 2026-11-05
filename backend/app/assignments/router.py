@@ -38,10 +38,13 @@ async def list_assignments(
     db: DbSession,
     user: CurrentUser,
     state: State | None = None,
+    vignette_version_id: UUID | None = None,
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[AssignmentSummary]:
-    return await service.list_assignments(db, user, state=state, limit=limit, offset=offset)
+    return await service.list_assignments(
+        db, user, state=state, vignette_version_id=vignette_version_id, limit=limit, offset=offset
+    )
 
 
 @router.get("/assignments/{assignment_id}")

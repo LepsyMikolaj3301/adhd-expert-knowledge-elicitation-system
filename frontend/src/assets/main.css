@@ -1,0 +1,137 @@
+@import 'tailwindcss';
+
+/* Blue palette: an ink-blue panel beside a pale page, cobalt for anything you can act on. */
+@theme {
+  --color-ink: #14294d;
+  --color-ink-raised: #1f3a68;
+  --color-on-ink: #dce6f7;
+  --color-page: #f4f7fc;
+  --color-surface: #ffffff;
+  --color-text: #16233b;
+  --color-muted: #52627f;
+  --color-line: #cfdaec;
+  --color-action: #2459c9;
+  --color-action-hover: #1b479f;
+  --color-danger: #b3261e;
+
+  --font-serif: 'Newsreader Variable', Georgia, serif;
+  --font-sans: 'Instrument Sans Variable', system-ui, sans-serif;
+}
+
+/* Highlighter inks for citations, assigned by number. All dark text on these stays above 7:1. */
+:root {
+  --ink-1: #ffd66b;
+  --ink-2: #ffb8a3;
+  --ink-3: #a6e8c5;
+  --ink-4: #d5c4ff;
+  --ink-5: #9fe3e8;
+  --ink-6: #ffbbd9;
+  --ink-7: #d9ec8c;
+  --ink-8: #e8cfa6;
+}
+
+@layer base {
+  body {
+    @apply bg-page font-sans text-text antialiased;
+  }
+
+  h1 {
+    @apply font-serif text-3xl font-medium tracking-tight text-ink;
+  }
+
+  h2 {
+    @apply font-serif text-xl font-medium text-ink;
+  }
+
+  a {
+    @apply text-action underline-offset-2 hover:text-action-hover hover:underline;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-action;
+  }
+}
+
+/* Only what repeats across views. Everything else is a utility class in the template. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md bg-action px-4 py-2 text-sm font-medium text-white hover:bg-action-hover disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-quiet {
+    @apply inline-flex items-center justify-center rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium text-ink hover:border-action disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .field {
+    @apply mt-1 block w-full rounded-md border border-line bg-surface px-3 py-2 text-base text-text;
+  }
+
+  .alert {
+    @apply rounded-md border border-danger/40 bg-danger/5 px-3 py-2 text-sm text-danger;
+  }
+
+  /* The patient's words: the one thing on the screen set like a page to read. */
+  .patient-text {
+    @apply max-w-[68ch] font-serif text-[1.0625rem] leading-[1.65] whitespace-pre-wrap text-text;
+  }
+
+  /* A citation number, shaped like a page flag. The same in the table, the answers and the review. */
+  .chip {
+    @apply mx-px inline-flex h-[1.3em] min-w-[1.5em] items-center justify-center rounded-r-[3px] border-l-2 border-text/70 px-1 align-[-0.15em] font-sans text-[0.8em] leading-none font-semibold text-text;
+    background-color: var(--ink);
+    user-select: none;
+  }
+
+  /* The moment the page is built around: the ink crosses the passage like a pen, line by line. */
+  .ink-mark {
+    color: inherit;
+    background-color: transparent;
+    background-image: linear-gradient(var(--ink), var(--ink));
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    animation: ink-sweep 180ms ease-out;
+  }
+
+  .row-pulse {
+    animation: row-pulse 900ms ease-out;
+  }
+
+  .chip-editor {
+    @apply block min-h-44 w-full rounded-sm border border-line bg-surface px-4 py-3 text-base leading-relaxed text-text;
+    white-space: pre-wrap;
+  }
+
+  .chip-editor:focus {
+    @apply border-action outline-2 outline-offset-1 outline-action;
+  }
+
+  .chip-editor p {
+    min-height: 1.6em;
+  }
+}
+
+@keyframes ink-sweep {
+  from {
+    background-size: 0% 100%;
+  }
+}
+
+@keyframes row-pulse {
+  from {
+    background-color: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-mark,
+  .row-pulse {
+    animation: none;
+  }
+}
+
+/* Forced colours drop backgrounds, and the passage must still be findable. */
+@media (forced-colors: active) {
+  .ink-mark {
+    outline: 2px solid Highlight;
+  }
+}

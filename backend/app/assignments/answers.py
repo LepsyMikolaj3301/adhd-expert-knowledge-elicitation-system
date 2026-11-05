@@ -8,16 +8,36 @@ question's word minimum. Q1-Q3 are checked at the gate, because they can't be co
 """
 
 import re
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.errors import invalid
 from app.vignettes.questions import GATE, HYPOTHESIS_MIN_WORDS, QUESTIONS, QuestionId
 
-PAYLOAD_FORMAT = 1
+# 2: citations (`highlights`, `⟦hN⟧` chips) replace `quoted_fragments`, and Q1 has its new wording.
+PAYLOAD_FORMAT = 2
 AnswerText = Annotated[str, Field(max_length=20_000)]
 ShortText = Annotated[str, Field(max_length=2_000)]
+Direction = Literal["toward", "away", "neutral", "unclear"]
+
+# A citation inside an answer, as stored. The number is the citation's `chip`.
+CHIP_RE = re.compile(r"⟦h(\d+)⟧")
+# How much of a citation a chip shows when it is rendered as text.
+CHIP_QUOTE_WORDS = 8
+
+
+class Highlight(BaseModel):
+    """A passage the expert cited. Same shape as the chip fixtures (scripts/.../chips_schema.py)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    chip: int = Field(ge=1)
+    text: ShortText = Field(min_length=1)
+    # [start, end) in characters of the vignette text (code points, not the browser's UTF-16 units).
+    span: tuple[int, int]
+    # None only while drafting: the gate and submit require it.
+    direction: Direction | None = None
 
 
 class Q4Answer(BaseModel):
@@ -34,7 +54,7 @@ class AnswerPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     answers: dict[QuestionId, AnswerText] = {}
-    quoted_fragments: list[ShortText] = Field(default=[], max_length=200)
+    highlights: list[Highlight] = Field(default=[], max_length=200)
     q4: Q4Answer | None = None
     rating: int | None = Field(default=None, ge=1, le=5)
     insufficient_information: bool = False
@@ -67,10 +87,49 @@ def _check_asked(payload: AnswerPayload, question_ids: list[str]) -> None:
         raise invalid("question_not_asked", "Q6 wasn't asked for this vignette.")
 
 
+def _check_highlights(highlights: list[Highlight], text: str) -> None:
+    numbers = [highlight.chip for highlight in highlights]
+    if numbers != list(range(1, len(numbers) + 1)):
+        raise invalid("chip_numbers", "Citations must be numbered from 1.", {"chips": numbers})
+    for highlight in highlights:
+        start, end = highlight.span
+        if not 0 <= start < end <= len(text) or text[start:end] != highlight.text:
+            raise invalid(
+                "highlight_not_in_vignette",
+                "A citation doesn't match the vignette text.",
+                {"chip": highlight.chip},
+            )
+
+
+def _check_citations_complete(payload: AnswerPayload) -> None:
+    """Every chip points at a citation, and every citation has a direction."""
+    numbers = {highlight.chip for highlight in payload.highlights}
+    for question_id, answer in payload.answers.items():
+        for chip in map(int, CHIP_RE.findall(answer)):
+            if chip not in numbers:
+                raise invalid(
+                    "unknown_chip",
+                    f"{question_id} cites [{chip}], which is not in your citations.",
+                    {"question_id": question_id, "chip": chip},
+                )
+    if undirected := [h.chip for h in payload.highlights if h.direction is None]:
+        raise invalid(
+            "highlight_no_direction",
+            "Choose a direction for each citation.",
+            {"chips": undirected},
+        )
+
+
 def check_draft(
-    payload: AnswerPayload, previous: AnswerPayload, question_ids: list[str], gate_passed: bool
+    payload: AnswerPayload,
+    previous: AnswerPayload,
+    question_ids: list[str],
+    gate_passed: bool,
+    text: str,
+    locked_highlights: int,
 ) -> None:
     _check_asked(payload, question_ids)
+    _check_highlights(payload.highlights, text)
     gate = gate_questions(question_ids)
     if not gate:
         return
@@ -78,11 +137,28 @@ def check_draft(
         raise invalid("gate_not_passed", "Q1-Q3 need answers first.")
     if gate_passed and any(payload.answers.get(q) != previous.answers.get(q) for q in gate):
         raise invalid("gate_locked", "Q1-Q3 are locked once you have seen the next questions.")
+    # Citations made after the gate stay editable: only the ones the gate answers can use are fixed.
+    if gate_passed and (
+        payload.highlights[:locked_highlights] != previous.highlights[:locked_highlights]
+    ):
+        raise invalid("gate_locked", "Citations made before the lock-in can't change.")
 
 
 def count_words(text: str) -> int:
-    """Different words, so that "test test test" counts as one."""
-    return len(set(re.findall(r"\w+", text.lower())))
+    """Different words, so that "test test test" counts as one. A chip is not a word."""
+    return len(set(re.findall(r"\w+", CHIP_RE.sub(" ", text).lower())))
+
+
+def render_chips(answer: str, highlights: list[dict[str, Any]]) -> str:
+    """An answer as plain text: each chip becomes «the first words of its citation…»."""
+    by_chip = {highlight["chip"]: highlight["text"] for highlight in highlights}
+
+    def quote(match: re.Match[str]) -> str:
+        words = by_chip[int(match.group(1))].split()
+        cut = len(words) > CHIP_QUOTE_WORDS
+        return f"«{' '.join(words[:CHIP_QUOTE_WORDS])}{'…' if cut else ''}»"
+
+    return CHIP_RE.sub(quote, answer)
 
 
 def _require_words(*checks: tuple[str, str, int | None]) -> None:
@@ -119,6 +195,7 @@ def check_gate_answers(payload: AnswerPayload, question_ids: list[str]) -> None:
             for q in gate_questions(question_ids)
         )
     )
+    _check_citations_complete(payload)
 
 
 def _incomplete(message: str) -> Exception:
@@ -175,16 +252,8 @@ def clean_submission(payload: AnswerPayload, question_ids: list[str], text: str)
                 raise invalid("empty_answer", f"{question_id} needs an answer.")
             _require_words((question_id, answers[question_id], question.min_words))
 
-    fragments = [fragment.strip() for fragment in payload.quoted_fragments]
-    for fragment in fragments:
-        if not fragment:
-            raise invalid("empty_answer", "A quoted fragment is blank.")
-        if fragment not in text:
-            raise invalid(
-                "quote_not_in_vignette",
-                "A quoted fragment isn't in the vignette text.",
-                {"fragment": fragment},
-            )
+    _check_highlights(payload.highlights, text)
+    _check_citations_complete(payload)
 
     if payload.rating is not None and payload.insufficient_information:
         raise invalid("rating_conflict", 'Choose either a rating or "insufficient information".')
@@ -193,7 +262,7 @@ def clean_submission(payload: AnswerPayload, question_ids: list[str], text: str)
 
     return AnswerPayload(
         answers=answers,
-        quoted_fragments=fragments,
+        highlights=payload.highlights,
         q4=_clean_q4(payload, question_ids),
         rating=payload.rating,
         insufficient_information=payload.insufficient_information,

@@ -45,8 +45,11 @@ exists, but never the answer text.
 
 ## Answering
 
-Q1–Q3 form a gate. Q4–Q6, and the what-if inside Q4, are not sent to the browser until
-`POST /assignments/{id}/pass-gate`, and after that the Q1–Q3 answers can't change. Drafts save with a
+Every vignette asks Q1–Q6, with a what-if for Q4 that its author must write. Q1–Q3 form a gate.
+Q4–Q6, and the what-if inside Q4, are not sent to the browser until
+`POST /assignments/{id}/pass-gate`, and after that the Q1–Q3 answers and the citations made so far
+can't change. Citations added after the gate stay editable until submitting, and the number that were
+locked is frozen with the submission. Drafts save with a
 version number, so a stale tab gets `draft_conflict` instead of overwriting newer text.
 
 **Every question asked must be properly answered.** Saving a draft allows anything, but passing the
@@ -62,6 +65,9 @@ answers: it can't judge quality.
 | Q4 why (when the shift isn't 0) | 5 | Submit |
 | Q5 | 10 | Submit |
 
+Chips (`⟦hN⟧`) don't count as words. Every citation needs a direction, and every chip a citation:
+those made before the gate are checked there, the rest at submit.
+
 Q1–Q3 are checked at the gate because they can't be corrected after it. The minimums are in
 `backend/app/vignettes/questions.py`, and the API sends them with each question, for a counter on the
 screen.
@@ -72,7 +78,8 @@ the expert can close the page, and the assignment appears as ready to check once
 ## Review
 
 Reviewers judge **knowledge units, not raw answers**, and approve or reject each one. They can't
-edit units, which stay verbatim.
+edit units, which stay verbatim, except that chips are rendered as «the first 8 words…» of their
+citation.
 
 - **One admin approval is enough.** The admin either decides every unit, or sends them to peers
   first. These are the only two paths.
@@ -143,6 +150,11 @@ python -m app.jobs.worker
 # Create the first admin (asks for the password).
 python -m app.cli create-admin --email you@example.com --name "Your Name"
 # Reserved domains such as .local and .test are refused, here and at login.
+
+# Load ready-made vignette files as drafts (all or nothing; codes that exist are skipped).
+# Each needs a what-if, given in a JSON file {"V001": "the writer ..."}. Publish them afterwards.
+python -m app.cli import-vignettes --dir ../data/fixtures_chips/synthetic/silver/vignettes \
+  --whatifs ../scripts/elicitation/chip_whatifs.json --admin-email you@example.com
 
 # Frontend: http://localhost:5173 proxies /api to the backend.
 cd frontend && npm run dev

@@ -1,14 +1,17 @@
 """Clients per user and shortcuts that walk an assignment through the workflow."""
 
 from typing import Any
+from uuid import UUID
 
 import httpx
+from sqlalchemy import update
 
 from app.core.db import session_factory
 from app.jobs.worker import run_once
 from app.main import app
 from app.users.models import Role
 from app.users.service import create_user
+from app.vignettes.models import VignetteVersion
 
 PASSWORD = "correct horse battery"
 CUE = "I reorganised my entire desk instead of starting the report"
@@ -27,7 +30,6 @@ def vignette_body(code: str | None = None, **overrides: Any) -> dict[str, Any]:
         "code": code or f"V{_counter['n'] + 100:03d}",
         "text": VIGNETTE_TEXT,
         "framing": "personal_journal",
-        "question_ids": ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"],
         "q4_whatif": WHATIF,
         "design": {
             "purpose": DESIGN_SECRET,
@@ -93,9 +95,24 @@ async def expert_api(email: str, *, is_synthetic: bool = False) -> Api:
     return await login_as(Role.EXPERT, email, is_synthetic=is_synthetic)
 
 
-async def published_version(admin: Api, **overrides: Any) -> dict[str, Any]:
+async def set_stored_questions(version_id: str, question_ids: list[str]) -> None:
+    """The API always asks Q1-Q6, but rows stored earlier may hold fewer: simulate one."""
+    async with session_factory()() as db:
+        await db.execute(
+            update(VignetteVersion)
+            .where(VignetteVersion.id == UUID(version_id))
+            .values(question_ids=question_ids)
+        )
+        await db.commit()
+
+
+async def published_version(
+    admin: Api, question_ids: list[str] | None = None, **overrides: Any
+) -> dict[str, Any]:
     vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body(**overrides))
     version = vignette["versions"][0]
+    if question_ids is not None:
+        await set_stored_questions(version["id"], question_ids)
     return await admin.ok("POST", f"/vignette-versions/{version['id']}/publish")
 
 
@@ -117,9 +134,22 @@ GATE_ANSWERS = {
 Q5_ANSWER = "A junior clinician would over-read the desk story as a clear sign."
 Q4_WHY = "the-q4-why-text explains the rush."
 HYPOTHESIS = "the-hypothesis-text: tired, not trait-like"
+
+
+def highlight(chip: int, quote: str = CUE, direction: str | None = "toward") -> dict[str, Any]:
+    """A citation of `quote`, which must be in VIGNETTE_TEXT."""
+    start = VIGNETTE_TEXT.index(quote)
+    return {
+        "chip": chip,
+        "text": quote,
+        "span": [start, start + len(quote)],
+        "direction": direction,
+    }
+
+
 FULL_PAYLOAD = {
     "answers": {**GATE_ANSWERS, "Q4": Q4_WHY, "Q5": Q5_ANSWER},
-    "quoted_fragments": [CUE],
+    "highlights": [highlight(1)],
     "q4": {"hypothesis": HYPOTHESIS, "shift": 1, "toward": "less_adhd"},
     "rating": 2,
 }

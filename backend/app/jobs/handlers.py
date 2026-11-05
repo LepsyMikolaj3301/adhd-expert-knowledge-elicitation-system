@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assignments.answers import render_chips
 from app.assignments.models import Assignment, Submission
 from app.core.security import content_hash
 from app.jobs.models import JobKind
@@ -33,12 +34,14 @@ async def process(db: AsyncSession, assignment: Assignment) -> None:
 
 
 async def build_units(db: AsyncSession, assignment: Assignment) -> None:
-    """Stub: one verbatim unit per answered open question. Replaced by real segmentation."""
+    """Stub: one verbatim unit per answered open question, with chips rendered as quotes so that a
+    reviewer can read it. Replaced by real segmentation."""
     submission = await db.get(Submission, assignment.id)
     assert submission is not None
     answers: dict[str, str] = submission.payload["answers"]
+    highlights = submission.payload.get("highlights", [])  # absent in format 1
     open_answers = [
-        (question_id, answers[question_id])
+        (question_id, render_chips(answers[question_id], highlights))
         for question_id in QUESTIONS
         if QUESTIONS[question_id].kind == "open" and question_id in answers
     ]
