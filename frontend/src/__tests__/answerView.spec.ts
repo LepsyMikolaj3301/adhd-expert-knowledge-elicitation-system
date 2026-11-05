@@ -508,6 +508,52 @@ describe('submitting', () => {
     expect(router.currentRoute.value.query.submitted).toBe('V007')
   })
 
+  it('does not show a Q4 direction that will not be submitted', async () => {
+    // Start at +1 towards more ADHD-like, then move the scale to -1 in the same session: the screen
+    // remembers the hidden "towards", but saving drops it, so Review must not show it.
+    await open(
+      afterGate(
+        {
+          ...finished,
+          q4: { hypothesis: 'tired not a trait', shift: 1, toward: 'more_adhd' },
+          answers: { ...finished.answers, Q4: 'because of the exam it moves' },
+        },
+        1,
+      ),
+    )
+    expect(app().text()).toContain('towards more ADHD-like')
+
+    await app()
+      .findAll('button')
+      .find((b) => b.text() === 'Edit')
+      ?.trigger('click')
+    const minusOne = app().get('input[name="q4-shift"][value="-1"]')
+    ;(minusOne.element as HTMLInputElement).checked = true
+    await minusOne.trigger('change')
+    await app()
+      .findAll('[data-testid="step"]')
+      .find((s) => s.text() === 'Review')
+      ?.trigger('click')
+
+    expect(app().text()).toContain('somewhat reinforced')
+    expect(app().text()).not.toContain('towards')
+  })
+
+  it('does not count a reference in a hidden Q4 answer as used', async () => {
+    // At shift 0 the "why" is dropped when saving, so a reference only there is not in the answers.
+    await open(
+      afterGate(
+        {
+          ...finished,
+          answers: { ...GATE_ANSWERS, Q4: '⟦h1⟧ left over', Q5: TEN },
+          q4: { hypothesis: 'tired not a trait', shift: 0 },
+        },
+        1,
+      ),
+    )
+    expect(app().text()).toContain('is not cited in any answer')
+  })
+
   it('needs a direction on citations added after the lock-in', async () => {
     await open(
       afterGate(

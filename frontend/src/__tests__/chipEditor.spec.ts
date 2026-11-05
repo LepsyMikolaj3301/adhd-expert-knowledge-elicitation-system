@@ -46,6 +46,33 @@ describe('ChipEditor', () => {
     wrapper.unmount()
   })
 
+  it('does not bring back old numbers when undo is pressed after a renumbering', async () => {
+    const wrapper = mountEditor('⟦h3⟧ old')
+    await flushPromises()
+    await wrapper.setProps({ modelValue: '⟦h2⟧ old' })
+    await flushPromises()
+
+    await wrapper.get('.ProseMirror').trigger('keydown', { key: 'z', ctrlKey: true })
+    await flushPromises()
+
+    const emitted = (wrapper.emitted('update:modelValue') ?? []).map((e) => e[0])
+    expect(emitted).not.toContain('⟦h3⟧ old')
+    expect(wrapper.find('[data-chip="3"]').exists()).toBe(false)
+    expect(wrapper.get('[data-chip="2"]').text()).toBe('2')
+    wrapper.unmount()
+  })
+
+  it('still undoes what the expert typed', async () => {
+    const wrapper = mountEditor('see')
+    await flushPromises()
+    ;(wrapper.vm as unknown as { insertChip(n: number): void }).insertChip(3)
+    await flushPromises()
+    await wrapper.get('.ProseMirror').trigger('keydown', { key: 'z', ctrlKey: true })
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.slice(-1)[0]).toEqual(['see'])
+    wrapper.unmount()
+  })
+
   it('tells which chip the pointer is on', async () => {
     const wrapper = mountEditor('see ⟦h2⟧ here')
     await flushPromises()

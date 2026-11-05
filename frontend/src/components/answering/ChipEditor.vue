@@ -68,7 +68,13 @@ watch(
   (value) => {
     const current = editor.value
     if (current && value !== docToText(current.getJSON())) {
-      current.commands.setContent(textToDoc(value), { emitUpdate: false })
+      // Not an edit by the expert, so Ctrl+Z must not go back to it: the old numbers would point at
+      // different passages.
+      current
+        .chain()
+        .setMeta('addToHistory', false)
+        .setContent(textToDoc(value), { emitUpdate: false })
+        .run()
     }
   },
 )

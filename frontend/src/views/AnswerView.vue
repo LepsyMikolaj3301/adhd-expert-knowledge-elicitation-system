@@ -11,6 +11,7 @@ import {
 } from '@/answering/highlights'
 import {
   firstOpenStep,
+  forSaving,
   GATE_IDS,
   REVIEW,
   stepProblem,
@@ -82,7 +83,9 @@ const lastGateId = computed(
 const activeCitation = computed(
   () => citations.value.find((c) => c.chip === activeChip.value) ?? null,
 )
-const uncited = computed(() => uncitedChips(citations.value, answers.value))
+/** What will be saved and submitted: the screen may remember Q4 parts that are hidden right now. */
+const submittable = computed(() => forSaving(payload.value))
+const uncited = computed(() => uncitedChips(citations.value, submittable.value.answers))
 const undirected = computed(() => citations.value.filter((c) => !c.direction).map((c) => c.chip))
 
 const canInsert = computed(() => {
@@ -397,7 +400,7 @@ onBeforeRouteLeave(async () => {
             <div class="mt-5">
               <ReviewStep
                 :questions="questions"
-                :payload="payload"
+                :payload="submittable"
                 :editable-ids="editable ? LATER_IDS : []"
                 @edit="go"
                 @active="activeChip = $event"
