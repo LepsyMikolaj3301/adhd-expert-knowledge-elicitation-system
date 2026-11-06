@@ -107,7 +107,7 @@ def view(
 
 
 async def get(db: AsyncSession, assignment: Assignment, actor: Actor) -> FindingsView:
-    """Reviewers get a 404 before they get here: `actor_for` only lets them see units."""
+    """Reviewers read units and talk about them; how the answers were filed is not theirs."""
     if actor == Actor.REVIEWER:
         raise not_found("Findings")
     return view(await _row(db, assignment), assignment, actor, await feedback(db, assignment))

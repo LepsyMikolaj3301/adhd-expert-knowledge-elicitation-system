@@ -13,7 +13,11 @@ class AuditEvent(Base):
     """Append-only (a database trigger rejects UPDATE). Must never hold answer or unit text."""
 
     __tablename__ = "audit_events"
-    __table_args__ = (Index("ix_audit_events_entity", "entity_type", "entity_id", "at"),)
+    __table_args__ = (
+        Index("ix_audit_events_entity", "entity_type", "entity_id", "at"),
+        # The home page reads the trail by what happened, across assignments.
+        Index("ix_audit_events_action_at", "action", "at"),
+    )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     # NULL for the system (background jobs).

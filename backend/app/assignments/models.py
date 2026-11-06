@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, func, text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -23,7 +23,6 @@ class Assignment(Base):
             unique=True,
             postgresql_where=text("state <> 'cancelled'"),
         ),
-        CheckConstraint("required_approvals >= 1", name="required_approvals_min"),
     )
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -33,7 +32,6 @@ class Assignment(Base):
     state: Mapped[State] = mapped_column(
         enum_column(State, "state"), default=State.ASSIGNED, index=True
     )
-    required_approvals: Mapped[int] = mapped_column(Integer, default=1)
     # 1 until a reviewer's change request sends the units back to the author: then 2, and so on.
     review_round: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     gate_passed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

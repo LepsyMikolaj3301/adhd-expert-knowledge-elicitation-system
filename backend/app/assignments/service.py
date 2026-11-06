@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 from uuid import UUID
 
 from sqlalchemy import String, cast, func, select
@@ -39,24 +38,23 @@ from app.audit.service import record_event
 from app.core.db import utcnow
 from app.core.errors import DomainError, invalid, not_found
 from app.jobs.models import Job, JobKind, JobStatus
-from app.reviews.models import ReviewRequest, ReviewStage
+from app.reviews import access
+from app.reviews.models import ReviewParticipant
 from app.users.models import Role, User
 from app.vignettes.models import VersionStatus, Vignette, VignetteVersion
 from app.vignettes.questions import GATE, Q4_WORDING, QUESTIONS, render_question
+
+# Events of the discussion, which the author's timeline leaves out: it is for the workflow.
+REVIEW_CHATTER = ("review_opened", "comment_added", "vote_cast")
+# What peers' decisions were called before reviews were open. Old events keep these names.
+LEGACY_PEER_ACTIONS = frozenset({"peers_approved", "peer_rejected"})
 
 
 def gate_open(assignment: Assignment, version: VignetteVersion) -> bool:
     return assignment.gate_passed_at is not None or not gate_questions(version.question_ids)
 
 
-def allowed_actions(
-    state: State,
-    actor: Actor,
-    *,
-    gate_is_open: bool,
-    has_open_request: bool,
-    peers_used: bool,
-) -> list[str]:
+def allowed_actions(state: State, actor: Actor, *, gate_is_open: bool) -> list[str]:
     names = user_actions(state, actor)
     if state == State.IN_PROGRESS and actor == Actor.ASSIGNEE:
         names.add("save_draft")
@@ -65,10 +63,10 @@ def allowed_actions(
             names.discard("submit")
     if state == State.EXPERT_CHECK and actor == Actor.ASSIGNEE:
         names.add("correct_findings")
-    if actor == Actor.REVIEWER and not has_open_request:
-        names.discard("decide_units")
-    if peers_used:
-        names.discard("request_peers")
+    if state == State.PEER_REVIEW:
+        names.add("comment")  # the author, the reviewers and the admin all talk
+        if actor == Actor.REVIEWER:
+            names.add("vote")
     return sorted(names)
 
 
@@ -81,28 +79,43 @@ async def actor_for(db: AsyncSession, assignment: Assignment, viewer: User) -> A
         return Actor.ADMIN
     if assignment.expert_id == viewer.id:
         return Actor.ASSIGNEE
-    request = await db.scalar(
-        select(ReviewRequest.id).where(
-            ReviewRequest.assignment_id == assignment.id,
-            ReviewRequest.reviewer_id == viewer.id,
-            ReviewRequest.stage == ReviewStage.PEER,
-        )
-    )
-    if request is not None:
+    if await access.may_review(db, assignment, viewer):
         return Actor.REVIEWER
     raise not_found("Assignment")
 
 
-async def load(db: AsyncSession, assignment_id: UUID, viewer: User) -> tuple[Assignment, Actor]:
+async def _require_opened(
+    db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User
+) -> None:
+    """A reviewer reads nothing before agreeing to: reading is what rules them out of the vignette
+    later, and `GET`s must not do that on their own."""
+    if actor == Actor.REVIEWER and not await access.has_opened(db, assignment.id, viewer.id):
+        raise DomainError(
+            "review_not_opened",
+            "Open the review first. Reading it means you can't be assigned this vignette later.",
+        )
+
+
+async def load(
+    db: AsyncSession, assignment_id: UUID, viewer: User, *, allow_unopened: bool = False
+) -> tuple[Assignment, Actor]:
     assignment = await db.get(Assignment, assignment_id)
     if assignment is None:
         raise not_found("Assignment")
-    return assignment, await actor_for(db, assignment, viewer)
+    actor = await actor_for(db, assignment, viewer)
+    if not allow_unopened:
+        await _require_opened(db, assignment, actor, viewer)
+    return assignment, actor
 
 
-async def lock(db: AsyncSession, assignment_id: UUID, viewer: User) -> tuple[Assignment, Actor]:
+async def lock(
+    db: AsyncSession, assignment_id: UUID, viewer: User, *, allow_unopened: bool = False
+) -> tuple[Assignment, Actor]:
     assignment = await lock_assignment(db, assignment_id)
-    return assignment, await actor_for(db, assignment, viewer)
+    actor = await actor_for(db, assignment, viewer)
+    if not allow_unopened:
+        await _require_opened(db, assignment, actor, viewer)
+    return assignment, actor
 
 
 # --- views ----------------------------------------------------------------------------------
@@ -136,43 +149,12 @@ async def _version_and_code(db: AsyncSession, version_id: UUID) -> tuple[Vignett
     return row[0], row[1]
 
 
-async def _peers_used(db: AsyncSession, assignment_id: UUID) -> bool:
-    found = await db.scalar(
-        select(ReviewRequest.id)
-        .where(
-            ReviewRequest.assignment_id == assignment_id,
-            ReviewRequest.stage == ReviewStage.PEER,
-        )
-        .limit(1)
-    )
-    return found is not None
-
-
-async def _has_open_request(db: AsyncSession, assignment_id: UUID, viewer_id: UUID) -> bool:
-    found = await db.scalar(
-        select(ReviewRequest.id).where(
-            ReviewRequest.assignment_id == assignment_id,
-            ReviewRequest.reviewer_id == viewer_id,
-            ReviewRequest.stage == ReviewStage.PEER,
-            ReviewRequest.completed_at.is_(None),
-        )
-    )
-    return found is not None
-
-
 async def build_view(
     db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User
 ) -> ExpertAssignment | AdminAssignment | PeerAssignment:
     version, code = await _version_and_code(db, assignment.vignette_version_id)
     is_open = gate_open(assignment, version)
-    actions = allowed_actions(
-        assignment.state,
-        actor,
-        gate_is_open=is_open,
-        has_open_request=actor == Actor.REVIEWER
-        and await _has_open_request(db, assignment.id, viewer.id),
-        peers_used=actor == Actor.ADMIN and await _peers_used(db, assignment.id),
-    )
+    actions = allowed_actions(assignment.state, actor, gate_is_open=is_open)
     words = len(version.text.split())
     if actor == Actor.ASSIGNEE:
         draft = await db.get(AnswerDraft, assignment.id)
@@ -231,7 +213,6 @@ async def build_view(
         vignette_code=code,
         vignette_version=version.version,
         vignette_version_id=version.id,
-        required_approvals=assignment.required_approvals,
         gate_passed_at=assignment.gate_passed_at,
         started_at=assignment.started_at,
         submitted_at=assignment.submitted_at,
@@ -268,18 +249,13 @@ async def list_assignments(
     if vignette_version_id is not None:
         query = query.where(Assignment.vignette_version_id == vignette_version_id)
     rows = (await db.execute(query.limit(limit).offset(offset))).all()
-    used = await _assignments_with_peers(db, [row[0].id for row in rows]) if is_admin else set()
     actor = Actor.ADMIN if is_admin else Actor.ASSIGNEE
     return [
         AssignmentSummary(
             id=assignment.id,
             state=assignment.state,
             allowed_actions=allowed_actions(
-                assignment.state,
-                actor,
-                gate_is_open=gate_open(assignment, version),
-                has_open_request=False,
-                peers_used=assignment.id in used,
+                assignment.state, actor, gate_is_open=gate_open(assignment, version)
             ),
             job_running=assignment.state in JOB_STATES,
             vignette_code=code,
@@ -290,15 +266,6 @@ async def list_assignments(
         )
         for assignment, version, code, pseudonym in rows
     ]
-
-
-async def _assignments_with_peers(db: AsyncSession, ids: Iterable[UUID]) -> set[UUID]:
-    rows = await db.scalars(
-        select(ReviewRequest.assignment_id)
-        .where(ReviewRequest.assignment_id.in_(list(ids)), ReviewRequest.stage == ReviewStage.PEER)
-        .distinct()
-    )
-    return set(rows)
 
 
 # --- assigning ------------------------------------------------------------------------------
@@ -324,12 +291,11 @@ async def assign(
         )
     # Reading a colleague's answers first would contaminate the expert's own reading.
     reviewed = await db.scalars(
-        select(ReviewRequest.reviewer_id)
-        .join(Assignment, Assignment.id == ReviewRequest.assignment_id)
+        select(ReviewParticipant.expert_id)
+        .join(Assignment, Assignment.id == ReviewParticipant.assignment_id)
         .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
         .where(
-            ReviewRequest.reviewer_id.in_(unique_ids),
-            ReviewRequest.stage == ReviewStage.PEER,
+            ReviewParticipant.expert_id.in_(unique_ids),
             VignetteVersion.vignette_id == version.vignette_id,
         )
         .distinct()
@@ -519,11 +485,12 @@ async def events(
 ) -> list[EventAdminView | EventAuthorView]:
     if actor == Actor.REVIEWER:
         raise not_found("Assignment")
-    rows = await db.scalars(
-        select(AuditEvent)
-        .where(AuditEvent.entity_type == "assignment", AuditEvent.entity_id == assignment.id)
-        .order_by(AuditEvent.at, AuditEvent.id)
+    query = select(AuditEvent).where(
+        AuditEvent.entity_type == "assignment", AuditEvent.entity_id == assignment.id
     )
+    if actor != Actor.ADMIN:
+        query = query.where(AuditEvent.action.not_in(REVIEW_CHATTER))
+    rows = await db.scalars(query.order_by(AuditEvent.at, AuditEvent.id))
     if actor == Actor.ADMIN:
         return [
             EventAdminView(
@@ -555,6 +522,6 @@ def _author_sees_actor(event: AuditEvent, viewer: User):
         return "system"
     if event.actor_id == viewer.id:
         return "you"
-    if event.action in {Action.PEERS_APPROVED.value, Action.PEER_REJECTED.value}:
+    if event.action in LEGACY_PEER_ACTIONS:
         return "reviewer"
     return "admin"

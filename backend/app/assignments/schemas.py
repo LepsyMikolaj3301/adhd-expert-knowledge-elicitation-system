@@ -72,7 +72,6 @@ class AdminAssignment(_AssignmentBase):
     vignette_code: str
     vignette_version: int
     vignette_version_id: UUID
-    required_approvals: int
     gate_passed_at: datetime | None
     started_at: datetime | None
     submitted_at: datetime | None

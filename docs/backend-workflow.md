@@ -13,7 +13,7 @@ isn't built. It will have two levels: one unit, or a whole submission or expert 
 
 There are two roles, set per user. **Admins** are application users, not developers. They write
 vignettes, invite and assign experts, and decide what enters the knowledge base. **Experts** answer
-the vignettes assigned to them, and can be asked to review colleagues' units.
+the vignettes assigned to them, and read, discuss and vote on colleagues' units.
 
 An assignment is one expert on one vignette version, and holds the workflow state. One version can
 go to many experts. A vignette itself only has `draft → published → retired`, and only `published`
@@ -27,10 +27,9 @@ versions can be assigned.
 | `in_progress` | Answering, autosaved | Expert submits, admin cancels | `processing`, `cancelled` |
 | `processing` | Background job: files the sentences | System | `expert_check`, `processing_failed` |
 | `expert_check` | Expert reads the filing, may correct it. Waits as long as needed. Entered again, with the reviewers' comments, when the admin sends units back | Expert completes or skips, admin skips | `building_units` |
-| `building_units` | Background job: cuts units, asks the peers | System | `admin_review`, `peer_review`, `processing_failed` |
+| `building_units` | Background job: cuts units | System | `peer_review`, `processing_failed` |
 | `processing_failed` | The processing or unit job failed | Admin retries that job | `processing`, `building_units` |
-| `admin_review` | Decision on each unit | Admin decides, asks peers (only if none were asked yet), or sends back | `ingesting`, `rejected`, `peer_review`, `expert_check` |
-| `peer_review` | Decision on each unit | Peers decide; the admin may decide too, send back, or recall | `ingesting`, `rejected`, `admin_review`, `expert_check` |
+| `peer_review` | Open review: colleagues read, discuss and vote; only the admin decides on each unit | Everyone comments, reviewers vote, the admin decides or sends back | `ingesting`, `rejected`, `expert_check` |
 | `ingesting` | Background job: embeds the approved units | System | `ingested`, `ingestion_failed` |
 | `ingestion_failed` | The ingestion job failed | Admin retries | `ingesting` |
 | `ingested`, `rejected`, `cancelled` | Finished | Nobody | |
@@ -95,8 +94,8 @@ job's lease while it runs, so a long job isn't taken over, and a crashed one sti
    chips as «short quotes») and the two texts that will be embedded: `embed_text` (a header and
    the sentences) and `embed_text_combined` (the same with the patient's words). Its
    `content_hash` covers both, so an approval is for exactly what gets embedded.
-5. **Route.** Every colleague who may review gets a review request at once (see *Who can review*).
-   With none, the admin decides alone. Either way the admin sees the assignment in the queue.
+5. **Open the review.** The assignment goes to `peer_review`. Nobody is asked: every colleague who
+   may read it sees it in their list (see *Who can read*).
 6. **Review.** See below. If the admin asks for changes, the units are history and the author is
    back at step 3 (a new *review round*); steps 3 to 6 repeat on the corrected filing.
 7. **Ingest** (`ingesting`). Only approved units. They are embedded with bge-m3 (the units' two
@@ -123,61 +122,101 @@ in `chips.elicitation_sessions` removes everything under it.
 
 ## Review
 
-Reviewers judge **knowledge units, not raw answers**, and for each one **approve, reject, or ask
-for changes**. They can't edit units, which stay verbatim, except that chips are rendered as «the
-first 8 words…» of their citation. The comment field of a decision exists in the API but has no
-screen yet; asking for changes **requires** a comment (`comment_required`).
+A review is open: the units of a submission are read, discussed and voted on by colleagues, and
+**only the admin closes it**. Reviewers judge **knowledge units, not raw answers**. They can't edit
+units, which stay verbatim, except that chips are rendered as «the first 8 words…» of their citation.
 
+- **Reading is explicit.** A reviewer opens a review (`POST /assignments/{id}/review/open`, 204, safe
+  to repeat) before any of its text is sent. Until then every other route answers `409
+  review_not_opened`, even `GET /assignments/{id}`, because the vignette text is also reading. The
+  call is recorded (`review_participants`, audit event `review_opened`), and from then on the reader
+  can't be assigned that vignette (`reviewer_contaminated`). The author and the admin need not open
+  anything.
+- **Discussion.** `POST /assignments/{id}/units/{unit_id}/comments` with `body` (1 to 5,000
+  characters after trimming), an optional `parent_id` and an optional `stance`. Everyone in the
+  review may comment: the reviewers, the author and the admin. Only reviewers take a `stance`
+  (`support`, `challenge`, `question`; `stance_not_allowed` otherwise), because the author taking a
+  side on their own work would be a vote for it. Replies are one level deep: `parent_id` must be a
+  top-level comment on the same unit (`invalid_parent`). Comments can't be edited or deleted:
+  decisions rest on them. They are read with the units (`GET /assignments/{id}/units`, each unit has
+  `comments`).
+- **Vote.** `PUT /assignments/{id}/vote` with `vote` (`accept` or `decline`) and the `review_round`
+  the reviewer was reading, for the whole submission. One per reviewer and round, changeable until
+  the review closes. `GET /assignments/{id}/votes` has the tally and who voted what. A vote is
+  **advice**: it never moves the assignment, whatever the numbers. The author and the admin don't
+  vote (403). A vote for a round that has since been cut again is refused (`stale_round`).
+- **Closed means closed.** Comments and votes need `peer_review` (`review_closed` otherwise). They
+  take the assignment lock, so one can't slip in beside the admin's decision.
+- **The admin decides.** `POST /assignments/{id}/unit-decisions` covers every unit in one call
+  (`decisions_incomplete` otherwise) with approve, reject or request changes, and can't be changed
+  afterwards. Partial results work: rejected units stay out and approved ones are ingested; if
+  every unit is rejected the assignment ends as `rejected`. Each decision stores the hash of the
+  text it was about. The admin can decide at any time, without waiting for votes.
 - **Asking for changes** means the unit could be right with another filing. The only things an
   author can change are which citations a sentence belongs to and each citation's direction, never
-  the words. A peer's request goes to the admin like a rejection does. When the admin's own decision
-  includes a request for changes, **the whole set goes back to the author** (`expert_check`),
-  `review_round` goes up by one, the old units become `superseded` (history: the admin reads them
-  with `GET /assignments/{id}/units?review_round=1`), and the peers' open requests close. The
-  author reads the comments on `GET .../findings` (`feedback`: the unit, its text, the comment, and
-  only whether a `reviewer` or the `admin` wrote it), corrects the filing, and approves. Units are
-  cut again, numbered from 1 in the new round, and the colleagues who may review are asked again.
-  Nothing from an earlier round is ever ingested.
+  the words, and a comment is required (`comment_required`). When any decision asks for changes,
+  **the whole set goes back to the author** (`expert_check`), `review_round` goes up by one, and the
+  old units become `superseded`. The admin and the author can read them, with their discussion, by
+  `GET /assignments/{id}/units?review_round=1`. The author reads the admin's comments on
+  `GET .../findings` (`feedback`), corrects the filing, and approves. Units are cut again, numbered
+  from 1, and the new round starts with no comments or votes. Nothing from an earlier round is
+  ever ingested.
+- **The lists.** `GET /reviews?status=open|closed` has the submissions a person can follow, each
+  with its tally, comment count and `my_vote`: for an expert their own and every one they may read,
+  for the admin all. Open means the admin has yet to decide.
 
-- **Peers are asked automatically** when the units are built, with one approval required
-  (`required_approvals` is 1). `POST /assignments/{id}/reviewers` can still ask for more, but only
-  while nobody has been asked, which is the case only when no colleague was eligible then.
-- **The admin can decide at any time**, in `admin_review` or `peer_review`. It is final, and closes
-  the peers' open requests.
-- **Peers:** when every unit has the required approvals and no rejections, the assignment moves
-  on. Any rejection sends it back to the admin, who then decides every unit, seeing the peers'
-  decisions and comments. The admin can also recall a stuck review. Peers are asked once per
-  assignment.
-- **A decision covers every unit in one call** (`decisions_incomplete` otherwise) and can't be
-  changed afterwards. Each stores the hash of the text it was about, so if a unit's text changes, the
-  old approval no longer counts.
-- **Partial results:** rejected units stay out, approved ones are ingested. If the admin rejects
-  every unit, the assignment ends as `rejected`.
+**Who can read.** Every active expert, except the author and anyone who still has to answer the
+vignette themselves (an `assigned` or `in_progress` assignment on any version of it): what they read
+would colour their own answer. This is checked when someone asks, not when the units are cut, so an
+expert who joins later, or finishes later, sees the review too. The first expert to finish a vignette
+is therefore read by everyone not still answering, not only by the admin. Nobody else gets more than
+a 404.
 
-**Who can review.** A peer must be an active expert and not the author, and must have **submitted
-their own answers to that vignette first** (`reviewer_has_not_answered`; any version counts). So peer
-review needs at least two experts on the vignette, and otherwise the admin decides alone. The
-first expert to finish a vignette is therefore reviewed by the admin only, and each later one by
-all who finished before. Reading a
-colleague's answers would also contaminate any answer still to come, so someone with an unsubmitted
-assignment on any version of the vignette can't review it (`reviewer_contaminated`), and someone who
-was asked to review it can't later be assigned another version.
+## Home
+
+`GET /me/home` has what the home page shows, computed when read from the workflow's own records:
+
+- `next_up`: up to 5 of the viewer's cases to do (an expert's `assigned`, `in_progress` and
+  `expert_check`; for the admin the failed jobs), most recently changed first, with `next_up_total`.
+  Each has an `action` (`start`, `continue`, `check`, `retry`) chosen by the server.
+- `reviews_waiting`: up to 5 open reviews the viewer hasn't voted on (every open one for the admin).
+- `recent_reviews`: up to 10 reviews, open and closed, newest first.
+- `activity`: up to 30 changes that concern the viewer, newest first, each `unread` if newer than
+  the last time they looked. A person's own actions are never news to them.
+
+  | `kind` | Reaches | From |
+  |---|---|---|
+  | `case_assigned`, `check_ready` | The author | the audit trail |
+  | `review_opened` | Whoever may read it, and the admin | the units being built |
+  | `review_closed` (`accepted`, `rejected`, `sent_back`) | The author and those who opened it | the admin's decision |
+  | `comment_on_mine` | The author | a comment on their units |
+  | `reply` | Anyone in the thread | a reply in a thread they wrote in |
+  | `job_failed` | The admin | a failed job |
+
+`POST /me/activity/seen` (204) marks it read; give `until`, the time of the newest item the page
+showed, so that what arrived while it loaded stays unread. The mark never moves back or ahead of now.
+Excerpts are the first 140 characters of a comment. Audit events never hold comment text.
 
 ## Who sees what
 
-| | Author | Peer | Admin |
+| | Author | Reviewer | Admin |
 |---|---|---|---|
-| Vignette text | Yes | Yes | Yes |
+| Vignette text | Yes | Yes, after opening | Yes |
 | Hidden `design` block | No | No | Yes |
 | Raw answers | Own | No | Read-only |
-| Requests for changes | Comments by role only, never who | Own decision | All, with who |
+| Requests for changes | Comments by role only, never who | No | All, with who |
 | How they were filed (`findings`) | Own, correctable until approved | No | Read-only |
-| Units | Own, with status | Text, and own decision | With all decisions |
+| Units | Own, with status, and earlier rounds | Text, after opening | With the admin's decisions |
+| Comments | All, reviewers by pseudonym | All, other reviewers by pseudonym | All, everyone by pseudonym |
+| Votes | Tally and who voted what | Tally and who voted what | Tally and who voted what |
 | Who the author is | | No | Pseudonym |
-| Who the reviewers are | No | No | Yes |
-| Timeline | Actors as roles only | No | Full |
+| Who a reviewer is | By pseudonym, in comments and votes | By pseudonym | By pseudonym |
+| Timeline | Actors as roles only; the discussion is left out | No | Full |
 
-An unrelated expert gets a 404 for anything about someone else's assignment. Submissions and units
+Reviewers are known to each other and to the author only by pseudonym (`E03`), never by email or
+user id. The author and the admin appear in a discussion as a role, except to the admin.
+
+Someone who may not read an assignment gets a 404 for anything about it. Submissions and units
 carry the pseudonym (`E01`), never the email. Audit events, job errors and the application's logs
 never hold answer text: when something fails, the logs get the stack and the error type, without the
 error's message, because Postgres quotes row data in its messages.
@@ -191,7 +230,8 @@ backend/app/
   vignettes/       versions, publishing, the question wording
   assignments/     states.py and state_machine.py (the workflow), answers.py (the answer rules),
                    check.py (the expert check)
-  reviews/         peer requests, unit decisions, who can review
+  reviews/         access.py (who may read), comments, votes, the admin's unit decisions
+  home/            what the home page shows: next up, reviews waiting, activity
   knowledge/       findings.py (sentences, citations, units: pure, no models), classifier.py
                    (the model call), embedding.py, ingest.py (writes `chips`), the units table
   audit/           append-only events
@@ -227,8 +267,8 @@ python -m app.cli import-vignettes --dir ../data/fixtures_chips/synthetic/silver
 cd frontend && npm run dev
 ```
 
-There is no sign-up. An admin creates a user with `POST /users`, and passes on the one-time link it
-returns. The same link type resets a forgotten password (`POST /users/{id}/invite`). Email isn't
+There is no sign-up. An admin creates a user with `POST /users` (`GET /users` says who still has an
+`invite_pending`), and passes on the one-time link it returns. The same link type resets a forgotten password (`POST /users/{id}/invite`). Email isn't
 built yet. With `ENVIRONMENT=production` the session cookie is HTTPS-only, so production must be
 served over HTTPS or logins won't stick. `COOKIE_SECURE=true` turns this on in other environments too.
 

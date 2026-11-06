@@ -62,8 +62,21 @@ async def test_findings_are_kept_apart_from_the_frozen_submission():
     assert {"assignment_id", "record", "version", "check_outcome", "classifier"} <= set(columns)
 
 
-async def test_the_system_can_ask_for_a_review():
-    assert (await _columns("app", "review_requests"))["requested_by"] == "YES"
+async def test_reviews_are_read_by_participants_and_discussed_in_comments():
+    assert {"assignment_id", "expert_id", "opened_at"} == set(
+        await _columns("app", "review_participants")
+    )
+    comments = await _columns("app", "unit_comments")
+    assert comments["parent_id"] == "YES" and comments["stance"] == "YES"
+    assert comments["body"] == "NO"
+    votes = await _columns("app", "submission_votes")
+    assert {"assignment_id", "review_round", "voter_id", "vote"} <= set(votes)
+
+
+async def test_the_old_reviewer_list_and_approval_count_are_gone():
+    assert await _columns("app", "review_requests") == {}
+    assert "required_approvals" not in await _columns("app", "assignments")
+    assert (await _columns("app", "users"))["activity_seen_at"] == "YES"
 
 
 async def test_units_know_their_review_round_and_no_longer_a_question():

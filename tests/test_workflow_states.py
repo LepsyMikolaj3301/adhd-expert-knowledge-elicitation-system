@@ -13,7 +13,7 @@ from app.assignments.states import JOB_STATES, TERMINAL_STATES, Action, Actor, S
 from app.core.errors import DomainError
 from app.jobs.models import JobKind
 
-EXPECTED_TABLES = 14
+EXPECTED_TABLES = 16
 A, E, R, S = Actor.ADMIN, Actor.ASSIGNEE, Actor.REVIEWER, Actor.SYSTEM
 
 WORKFLOW = {
@@ -25,22 +25,13 @@ WORKFLOW = {
     (State.PROCESSING, Action.PROCESSING_FAILED): (State.PROCESSING_FAILED, {S}),
     (State.EXPERT_CHECK, Action.COMPLETE_EXPERT_CHECK): (State.BUILDING_UNITS, {E}),
     (State.EXPERT_CHECK, Action.SKIP_EXPERT_CHECK): (State.BUILDING_UNITS, {E, A}),
-    (State.BUILDING_UNITS, Action.UNITS_BUILT): (State.ADMIN_REVIEW, {S}),
-    (State.BUILDING_UNITS, Action.UNITS_BUILT_FOR_PEERS): (State.PEER_REVIEW, {S}),
+    (State.BUILDING_UNITS, Action.UNITS_BUILT): (State.PEER_REVIEW, {S}),
     (State.BUILDING_UNITS, Action.UNITS_FAILED): (State.PROCESSING_FAILED, {S}),
     (State.PROCESSING_FAILED, Action.RETRY_PROCESSING): (State.PROCESSING, {A}),
     (State.PROCESSING_FAILED, Action.RETRY_UNITS): (State.BUILDING_UNITS, {A}),
-    (State.ADMIN_REVIEW, Action.APPROVE_UNITS): (State.INGESTING, {A}),
-    (State.ADMIN_REVIEW, Action.REJECT_ALL_UNITS): (State.REJECTED, {A}),
-    (State.ADMIN_REVIEW, Action.REQUEST_PEERS): (State.PEER_REVIEW, {A}),
-    (State.PEER_REVIEW, Action.PEERS_APPROVED): (State.INGESTING, {R}),
-    (State.PEER_REVIEW, Action.PEER_REJECTED): (State.ADMIN_REVIEW, {R}),
-    (State.PEER_REVIEW, Action.RECALL_REVIEW): (State.ADMIN_REVIEW, {A}),
-    # The admin may decide while the peers are still looking.
+    # Peers discuss and vote, but only the admin closes a review or sends it back to the author.
     (State.PEER_REVIEW, Action.APPROVE_UNITS): (State.INGESTING, {A}),
     (State.PEER_REVIEW, Action.REJECT_ALL_UNITS): (State.REJECTED, {A}),
-    # Only the admin sends units back to the author, from either review state.
-    (State.ADMIN_REVIEW, Action.REQUEST_CHANGES): (State.EXPERT_CHECK, {A}),
     (State.PEER_REVIEW, Action.REQUEST_CHANGES): (State.EXPERT_CHECK, {A}),
     (State.INGESTING, Action.INGESTION_SUCCEEDED): (State.INGESTED, {S}),
     (State.INGESTING, Action.INGESTION_FAILED): (State.INGESTION_FAILED, {S}),
@@ -102,9 +93,9 @@ def test_the_system_has_no_user_actions():
 def test_user_action_names_per_role():
     assert user_actions(State.EXPERT_CHECK, E) == {"complete_expert_check", "skip_expert_check"}
     assert user_actions(State.EXPERT_CHECK, A) == {"skip_expert_check"}
-    assert user_actions(State.ADMIN_REVIEW, A) == {"decide_units", "request_peers"}
-    assert user_actions(State.PEER_REVIEW, A) == {"decide_units", "recall_review"}
-    assert user_actions(State.PEER_REVIEW, R) == {"decide_units"}
+    assert user_actions(State.PEER_REVIEW, A) == {"decide_units"}
+    assert not user_actions(State.PEER_REVIEW, R), "reviewers vote and comment, they don't decide"
+    assert not user_actions(State.PEER_REVIEW, E)
     assert user_actions(State.PROCESSING_FAILED, A) == {"retry"}
 
 
@@ -123,3 +114,14 @@ def test_each_entry_point_knows_every_table_on_its_own(module):
     )
     assert result.returncode == 0, result.stderr
     assert int(result.stdout) == EXPECTED_TABLES
+
+
+def test_only_the_admin_can_close_a_review():
+    """A review closes by the admin's decision alone: no combination of votes moves it on."""
+    leaving = {
+        actor
+        for (state, _), rule in TRANSITIONS.items()
+        if state == State.PEER_REVIEW
+        for actor in rule.actors
+    }
+    assert leaving == {A}

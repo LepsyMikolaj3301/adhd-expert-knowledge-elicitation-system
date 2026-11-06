@@ -40,25 +40,16 @@ TRANSITIONS: dict[tuple[State, Action], Rule] = {
     (State.EXPERT_CHECK, Action.SKIP_EXPERT_CHECK): _rule(
         State.BUILDING_UNITS, Actor.ASSIGNEE, Actor.ADMIN
     ),
-    (State.BUILDING_UNITS, Action.UNITS_BUILT): _rule(State.ADMIN_REVIEW, Actor.SYSTEM),
-    # Colleagues who can review are asked as soon as the units exist; with none, the admin decides.
-    (State.BUILDING_UNITS, Action.UNITS_BUILT_FOR_PEERS): _rule(State.PEER_REVIEW, Actor.SYSTEM),
+    # Every colleague who may read it can see the units at once; see reviews/access.py.
+    (State.BUILDING_UNITS, Action.UNITS_BUILT): _rule(State.PEER_REVIEW, Actor.SYSTEM),
     (State.BUILDING_UNITS, Action.UNITS_FAILED): _rule(State.PROCESSING_FAILED, Actor.SYSTEM),
     (State.PROCESSING_FAILED, Action.RETRY_PROCESSING): _rule(State.PROCESSING, Actor.ADMIN),
     (State.PROCESSING_FAILED, Action.RETRY_UNITS): _rule(State.BUILDING_UNITS, Actor.ADMIN),
-    (State.ADMIN_REVIEW, Action.APPROVE_UNITS): _rule(State.INGESTING, Actor.ADMIN),
-    (State.ADMIN_REVIEW, Action.REJECT_ALL_UNITS): _rule(State.REJECTED, Actor.ADMIN),
-    (State.ADMIN_REVIEW, Action.REQUEST_PEERS): _rule(State.PEER_REVIEW, Actor.ADMIN),
-    (State.PEER_REVIEW, Action.PEERS_APPROVED): _rule(State.INGESTING, Actor.REVIEWER),
-    (State.PEER_REVIEW, Action.PEER_REJECTED): _rule(State.ADMIN_REVIEW, Actor.REVIEWER),
-    # The admin may decide at any time, without waiting for the peers.
+    # Peers discuss and vote, but only the admin closes a review. Only the admin sends units back
+    # to the author, who corrects the filing for a new round.
     (State.PEER_REVIEW, Action.APPROVE_UNITS): _rule(State.INGESTING, Actor.ADMIN),
     (State.PEER_REVIEW, Action.REJECT_ALL_UNITS): _rule(State.REJECTED, Actor.ADMIN),
-    # Only the admin sends units back to the author, who corrects the filing for a new round. A
-    # peer's request for changes goes to the admin first, like a rejection does.
-    (State.ADMIN_REVIEW, Action.REQUEST_CHANGES): _rule(State.EXPERT_CHECK, Actor.ADMIN),
     (State.PEER_REVIEW, Action.REQUEST_CHANGES): _rule(State.EXPERT_CHECK, Actor.ADMIN),
-    (State.PEER_REVIEW, Action.RECALL_REVIEW): _rule(State.ADMIN_REVIEW, Actor.ADMIN),
     (State.INGESTING, Action.INGESTION_SUCCEEDED): _rule(State.INGESTED, Actor.SYSTEM),
     (State.INGESTING, Action.INGESTION_FAILED): _rule(State.INGESTION_FAILED, Actor.SYSTEM),
     (State.INGESTION_FAILED, Action.RETRY_INGESTION): _rule(State.INGESTING, Actor.ADMIN),
@@ -83,10 +74,6 @@ USER_ACTION_NAMES: dict[Action, str] = {
     Action.APPROVE_UNITS: "decide_units",
     Action.REJECT_ALL_UNITS: "decide_units",
     Action.REQUEST_CHANGES: "decide_units",
-    Action.REQUEST_PEERS: "request_peers",
-    Action.PEERS_APPROVED: "decide_units",
-    Action.PEER_REJECTED: "decide_units",
-    Action.RECALL_REVIEW: "recall_review",
 }
 
 

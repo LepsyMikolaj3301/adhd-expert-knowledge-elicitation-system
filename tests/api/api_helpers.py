@@ -183,8 +183,8 @@ async def run_jobs() -> int:
     return count
 
 
-async def reach_admin_review(admin: Api, *experts: Api) -> tuple[list[str], dict[str, Any]]:
-    """Assign one published version to the experts, then take each one up to admin review."""
+async def reach_review(admin: Api, *experts: Api) -> tuple[list[str], dict[str, Any]]:
+    """Assign one published version to the experts, then take each one up to review."""
     version = await published_version(admin)
     ids = await assign(admin, version, *experts)
     for expert, assignment_id in zip(experts, ids, strict=True):
@@ -215,7 +215,7 @@ async def to_units(admin, expert, assignment_id, skip=False):
 
 
 async def two_experts():
-    """e1 has finished (admin_review). e2 has finished too, and e1 is asked to review e2's units."""
+    """e1 and e2 have both finished, so both are in review and each can read the other's units."""
     admin = await admin_api()
     e1, e2 = await expert_api("e1@example.com"), await expert_api("e2@example.com")
     version = await published_version(admin)

@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import timedelta
-from uuid import UUID
 
 import pytest
 from api_helpers import (
@@ -16,11 +15,11 @@ from api_helpers import (
     decide_all,
     expert_api,
     published_version,
-    reach_admin_review,
+    reach_review,
     run_jobs,
 )
 from conftest import TEST_URL
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
 from sqlalchemy.pool import NullPool
 
 from app.audit.models import AuditEvent
@@ -67,7 +66,7 @@ async def test_full_path_with_admin_approval_alone():
     await expert.ok("POST", f"/assignments/{assignment_id}/expert-check/complete")
     assert await _state(expert, assignment_id) == "building_units"
     assert await run_jobs() == 1
-    assert await _state(admin, assignment_id) == "admin_review"
+    assert await _state(admin, assignment_id) == "peer_review"
 
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
     assert [(u["kind"], u["direction"]) for u in units] == [("fragment", "toward"), ("case", None)]
@@ -98,7 +97,7 @@ async def test_expert_check_waits_and_the_admin_can_skip_it():
     )
     await admin.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
     await run_jobs()
-    assert await _state(admin, assignment_id) == "admin_review"
+    assert await _state(admin, assignment_id) == "peer_review"
 
 
 async def test_failed_job_retries_then_fails_and_admin_retry_recovers(monkeypatch, caplog):
@@ -149,12 +148,12 @@ async def test_retry_runs_the_job_that_failed(monkeypatch):
     view = await admin.ok("POST", f"/assignments/{assignment_id}/retry")
     assert view["state"] == "building_units"
     await run_jobs()
-    assert await _state(admin, assignment_id) == "admin_review"
+    assert await _state(admin, assignment_id) == "peer_review"
 
 
 async def test_ingestion_failure_and_retry(monkeypatch):
     admin, expert = await admin_api(), await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, expert)
+    [assignment_id], _ = await reach_review(admin, expert)
     await decide_all(admin, assignment_id)
 
     async def broken(db, assignment, prepared):
@@ -229,7 +228,7 @@ async def test_crashing_on_the_last_attempt_fails_the_job():
 async def test_synthetic_answers_never_enter_production(monkeypatch):
     admin = await admin_api()
     expert = await expert_api("s@example.com", is_synthetic=True)
-    [assignment_id], _ = await reach_admin_review(admin, expert)
+    [assignment_id], _ = await reach_review(admin, expert)
     await decide_all(admin, assignment_id)
 
     monkeypatch.setattr(settings, "environment", "production")
@@ -302,7 +301,7 @@ async def test_a_failing_worker_loop_waits_between_tries_and_logs_no_message(mon
 
 async def test_partial_approval_ingests_only_the_approved_units():
     admin, expert = await admin_api(), await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, expert)
+    [assignment_id], _ = await reach_review(admin, expert)
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
     decisions = [
         {
@@ -325,7 +324,7 @@ async def test_partial_approval_ingests_only_the_approved_units():
 
 async def test_rejecting_every_unit_ends_the_assignment():
     admin, expert = await admin_api(), await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, expert)
+    [assignment_id], _ = await reach_review(admin, expert)
     view = await decide_all(admin, assignment_id, "reject")
     assert view["state"] == "rejected"
     assert view["allowed_actions"] == []
@@ -335,7 +334,7 @@ async def test_rejecting_every_unit_ends_the_assignment():
 @pytest.mark.parametrize("variant", ["missing", "duplicate", "foreign"])
 async def test_decisions_must_cover_every_unit_exactly_once(variant):
     admin, expert = await admin_api(), await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, expert)
+    [assignment_id], _ = await reach_review(admin, expert)
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
     decisions = [{"unit_id": u["id"], "decision": "approve"} for u in units]
     if variant == "missing":
@@ -351,12 +350,12 @@ async def test_decisions_must_cover_every_unit_exactly_once(variant):
         "decisions_incomplete",
         json={"decisions": decisions},
     )
-    assert await _state(admin, assignment_id) == "admin_review"
+    assert await _state(admin, assignment_id) == "peer_review"
 
 
 async def test_an_admin_decision_cannot_be_repeated():
     admin, expert = await admin_api(), await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, expert)
+    [assignment_id], _ = await reach_review(admin, expert)
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
     await decide_all(admin, assignment_id)
     await admin.fails(
@@ -371,7 +370,7 @@ async def test_an_admin_decision_cannot_be_repeated():
 async def test_two_admins_deciding_at_once_only_one_wins():
     first, second = await admin_api(), await admin_api("second@example.com")
     expert = await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(first, expert)
+    [assignment_id], _ = await reach_review(first, expert)
     units = await first.ok("GET", f"/assignments/{assignment_id}/units")
     body = {"decisions": [{"unit_id": u["id"], "decision": "approve"} for u in units]}
     url = f"/assignments/{assignment_id}/unit-decisions"
@@ -382,286 +381,7 @@ async def test_two_admins_deciding_at_once_only_one_wins():
     assert len(await _jobs(JobKind.INGEST)) == 1
 
 
-# --- peer review ------------------------------------------------------------------------------
-
-
-async def _with_peers(*peer_emails, required=1):
-    admin, author = await admin_api(), await expert_api("author@example.com")
-    peers = [await expert_api(email) for email in peer_emails]
-    # Reviewers must have answered the vignette themselves first.
-    [assignment_id, *_], version = await reach_admin_review(admin, author, *peers)
-    view = await admin.ok(
-        "POST",
-        f"/assignments/{assignment_id}/reviewers",
-        json={"reviewer_ids": [p.user_id for p in peers], "required_approvals": required},
-    )
-    assert view["state"] == "peer_review"
-    return admin, author, peers, assignment_id, version
-
-
-async def test_one_peer_approval_is_enough_by_default():
-    admin, _, [peer], assignment_id, _ = await _with_peers("p1@example.com")
-    view = await decide_all(peer, assignment_id)
-    assert view["state"] == "ingesting"
-    await run_jobs()
-    assert await _state(admin, assignment_id) == "ingested"
-    assert await peer.ok("GET", "/review-requests") == []
-
-
-async def test_several_required_approvals_wait_for_everyone():
-    admin, _, [p1, p2], assignment_id, _ = await _with_peers(
-        "p1@example.com", "p2@example.com", required=2
-    )
-    assert (await decide_all(p1, assignment_id))["state"] == "peer_review"
-    assert await _jobs(JobKind.INGEST) == []
-    # Peers decide once.
-    units = await p1.ok("GET", f"/assignments/{assignment_id}/units")
-    await p1.fails(
-        "POST",
-        f"/assignments/{assignment_id}/unit-decisions",
-        409,
-        "already_decided",
-        json={"decisions": [{"unit_id": u["id"], "decision": "reject"} for u in units]},
-    )
-    assert (await decide_all(p2, assignment_id))["state"] == "ingesting"
-
-
-async def test_enough_approvals_close_the_outstanding_requests():
-    _, _, [p1, p2], assignment_id, _ = await _with_peers("p1@example.com", "p2@example.com")
-    await decide_all(p1, assignment_id)
-    assert await p2.ok("GET", "/review-requests") == []
-    units = await p2.ok("GET", f"/assignments/{assignment_id}/units")
-    await p2.fails(
-        "POST",
-        f"/assignments/{assignment_id}/unit-decisions",
-        409,
-        "illegal_transition",
-        json={"decisions": [{"unit_id": u["id"], "decision": "approve"} for u in units]},
-    )
-
-
-async def test_peer_rejection_returns_to_the_admin_who_decides_with_the_comments():
-    admin, _, [p1, p2], assignment_id, _ = await _with_peers(
-        "p1@example.com", "p2@example.com", required=2
-    )
-    units = await p1.ok("GET", f"/assignments/{assignment_id}/units")
-    decisions = [
-        {"unit_id": u["id"], "decision": "approve" if i else "reject", "comment": "misleading"}
-        for i, u in enumerate(units)
-    ]
-    view = await p1.ok(
-        "POST", f"/assignments/{assignment_id}/unit-decisions", json={"decisions": decisions}
-    )
-    assert view["state"] == "admin_review"
-    assert view["allowed_actions"] == []
-    assert await p2.ok("GET", "/review-requests") == []
-
-    admin_view = await admin.ok("GET", f"/assignments/{assignment_id}")
-    assert admin_view["allowed_actions"] == ["decide_units"], "peers can't be asked twice"
-    await admin.fails(
-        "POST",
-        f"/assignments/{assignment_id}/reviewers",
-        409,
-        "peers_already_requested",
-        json={"reviewer_ids": [p2.user_id]},
-    )
-    seen = await admin.ok("GET", f"/assignments/{assignment_id}/units")
-    assert seen[0]["decisions"][0]["comment"] == "misleading"
-    assert seen[0]["decisions"][0]["reviewer_pseudonym"] == p1.pseudonym
-    assert all(u["status"] == "pending" for u in seen)
-
-    await decide_all(admin, assignment_id)
-    await run_jobs()
-    assert await _state(admin, assignment_id) == "ingested"
-
-
-async def test_admin_can_recall_a_stuck_review():
-    admin, _, [peer], assignment_id, _ = await _with_peers("p1@example.com")
-    assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["allowed_actions"] == [
-        "decide_units",
-        "recall_review",
-    ]
-    await peer.fails("POST", f"/assignments/{assignment_id}/recall-review", 403, "forbidden")
-    view = await admin.ok("POST", f"/assignments/{assignment_id}/recall-review")
-    assert view["state"] == "admin_review"
-    assert await peer.ok("GET", "/review-requests") == []
-    await decide_all(admin, assignment_id)
-
-
-async def test_two_simultaneous_final_approvals_queue_one_ingestion():
-    _, _, [p1, p2], assignment_id, _ = await _with_peers(
-        "p1@example.com", "p2@example.com", required=2
-    )
-    units = await p1.ok("GET", f"/assignments/{assignment_id}/units")
-    body = {"decisions": [{"unit_id": u["id"], "decision": "approve"} for u in units]}
-    url = f"/assignments/{assignment_id}/unit-decisions"
-    responses = await asyncio.gather(
-        p1.request("POST", url, json=body), p2.request("POST", url, json=body)
-    )
-    assert [r.status_code for r in responses] == [200, 200]
-    assert len(await _jobs(JobKind.INGEST)) == 1
-
-
-async def test_two_simultaneous_approvals_when_one_is_enough():
-    _, _, [p1, p2], assignment_id, _ = await _with_peers("p1@example.com", "p2@example.com")
-    units = await p1.ok("GET", f"/assignments/{assignment_id}/units")
-    body = {"decisions": [{"unit_id": u["id"], "decision": "approve"} for u in units]}
-    url = f"/assignments/{assignment_id}/unit-decisions"
-    responses = await asyncio.gather(
-        p1.request("POST", url, json=body), p2.request("POST", url, json=body)
-    )
-    assert sorted(r.status_code for r in responses) == [200, 409]
-    assert len(await _jobs(JobKind.INGEST)) == 1
-
-
-async def test_approvals_only_count_for_the_reviewed_text():
-    from app.knowledge.models import KnowledgeUnit
-    from app.reviews.models import UnitDecision
-
-    admin, _, [p1, p2], assignment_id, _ = await _with_peers(
-        "p1@example.com", "p2@example.com", required=2
-    )
-    await decide_all(p1, assignment_id)
-    async with session_factory()() as db:
-        # What a future reprocessing run could do: the unit's text changes after p1 approved it.
-        await db.execute(
-            update(KnowledgeUnit)
-            .where(KnowledgeUnit.assignment_id == UUID(assignment_id))
-            .values(content_hash="changed")
-        )
-        await db.commit()
-    view = await decide_all(p2, assignment_id)
-    assert view["state"] == "peer_review", "p1's approval was for different text"
-    assert await _jobs(JobKind.INGEST) == []
-    async with session_factory()() as db:
-        count = await db.scalar(select(func.count()).select_from(UnitDecision))
-    assert count == 2 * len(await admin.ok("GET", f"/assignments/{assignment_id}/units"))
-
-
-# --- peer eligibility -------------------------------------------------------------------------
-
-
-async def test_reviewer_rules():
-    admin, author = await admin_api(), await expert_api("author@example.com")
-    [assignment_id], version = await reach_admin_review(admin, author)
-    url = f"/assignments/{assignment_id}/reviewers"
-    peer = await expert_api("p@example.com")
-    second_admin = await admin_api("other@example.com")
-
-    await admin.fails(
-        "POST", url, 422, "reviewer_is_author", json={"reviewer_ids": [author.user_id]}
-    )
-    await admin.fails(
-        "POST", url, 422, "invalid_reviewer", json={"reviewer_ids": [second_admin.user_id]}
-    )
-    await admin.fails(
-        "POST",
-        url,
-        422,
-        "invalid_reviewer",
-        json={"reviewer_ids": ["00000000-0000-0000-0000-000000000000"]},
-    )
-    await admin.fails(
-        "POST",
-        url,
-        422,
-        "not_enough_reviewers",
-        json={"reviewer_ids": [peer.user_id], "required_approvals": 2},
-    )
-    await admin.ok("PATCH", f"/users/{peer.user_id}", json={"is_active": False})
-    await admin.fails("POST", url, 422, "invalid_reviewer", json={"reviewer_ids": [peer.user_id]})
-
-
-@pytest.mark.parametrize("started", [False, True])
-async def test_someone_still_answering_cannot_review(started):
-    admin = await admin_api()
-    author, other = await expert_api("a@example.com"), await expert_api("b@example.com")
-    [assignment_id], version = await reach_admin_review(admin, author)
-    [other_assignment] = await assign(admin, version, other)
-    if started:
-        await other.ok("POST", f"/assignments/{other_assignment}/start")
-    await admin.fails(
-        "POST",
-        f"/assignments/{assignment_id}/reviewers",
-        409,
-        "reviewer_contaminated",
-        json={"reviewer_ids": [other.user_id]},
-    )
-
-
-async def test_someone_who_already_submitted_can_review():
-    admin = await admin_api()
-    author, other = await expert_api("a@example.com"), await expert_api("b@example.com")
-    [first, second], _ = await reach_admin_review(admin, author, other)
-    await admin.ok(
-        "POST", f"/assignments/{first}/reviewers", json={"reviewer_ids": [other.user_id]}
-    )
-    assert second != first
-
-
-async def test_a_reviewer_must_have_answered_the_vignette_first():
-    admin = await admin_api()
-    author, never = await expert_api("a@example.com"), await expert_api("n@example.com")
-    cancelled, elsewhere = await expert_api("c@example.com"), await expert_api("e@example.com")
-    [assignment_id], version = await reach_admin_review(admin, author)
-    url = f"/assignments/{assignment_id}/reviewers"
-
-    [dropped] = await assign(admin, version, cancelled)
-    await admin.ok("POST", f"/assignments/{dropped}/cancel")
-    await reach_admin_review(admin, elsewhere)  # answered a different vignette
-    for reviewer in (never, cancelled, elsewhere):
-        body = await admin.fails(
-            "POST", url, 409, "reviewer_has_not_answered", json={"reviewer_ids": [reviewer.user_id]}
-        )
-        assert body["details"]["reviewer_ids"] == [reviewer.user_id]
-    assert await _state(admin, assignment_id) == "admin_review"
-
-
-async def test_a_reviewer_who_answered_another_version_is_asked_automatically():
-    admin = await admin_api()
-    author, reviewer = await expert_api("a@example.com"), await expert_api("r@example.com")
-    _, v1 = await reach_admin_review(admin, reviewer)
-    content = {key: v1[key] for key in ("text", "framing", "q4_whatif", "design")}
-    v2 = await admin.ok("POST", f"/vignettes/{v1['vignette_id']}/versions", 201, json=content)
-    v2 = await admin.ok("POST", f"/vignette-versions/{v2['id']}/publish")
-    [assignment_id] = await assign(admin, v2, author)
-    await answer_and_submit(author, assignment_id)
-    await run_jobs()
-    await author.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
-    await run_jobs()
-    assert await _state(admin, assignment_id) == "peer_review"
-    [request] = await reviewer.ok("GET", "/review-requests")
-    assert request["assignment_id"] == assignment_id
-
-
-async def test_contamination_covers_other_versions_of_the_vignette():
-    admin = await admin_api()
-    author, other = await expert_api("a@example.com"), await expert_api("b@example.com")
-    [assignment_id], version = await reach_admin_review(admin, author)
-    vignettes = await admin.ok("GET", "/vignettes")
-    vignette = next(v for v in vignettes if v["id"] == version["vignette_id"])
-    content = {key: version[key] for key in ("text", "framing", "q4_whatif", "design")}
-    v2 = await admin.ok("POST", f"/vignettes/{vignette['id']}/versions", 201, json=content)
-    v2 = await admin.ok("POST", f"/vignette-versions/{v2['id']}/publish")
-    await assign(admin, v2, other)
-    await admin.fails(
-        "POST",
-        f"/assignments/{assignment_id}/reviewers",
-        409,
-        "reviewer_contaminated",
-        json={"reviewer_ids": [other.user_id]},
-    )
-
-
-async def test_a_reviewer_cannot_later_be_assigned_the_vignette():
-    admin, _, [peer], _, version = await _with_peers("p1@example.com")
-    await admin.fails(
-        "POST",
-        f"/vignette-versions/{version['id']}/assignments",
-        409,
-        "reviewer_contaminated",
-        json={"expert_ids": [peer.user_id]},
-    )
+# Reading, discussing and voting on a review is in test_api_reviews.py.
 
 
 async def test_assignment_rules():
@@ -699,34 +419,44 @@ ASSIGNMENT_WRITES = [
 ]
 
 
-async def test_other_experts_get_404_on_everything_about_an_assignment():
+async def test_experts_who_may_not_read_get_404_on_everything_about_an_assignment():
+    """Before a submission is in review, only its author and the admin can see it. Afterwards a
+    colleague who still has the vignette to answer can't either."""
     admin, author = await admin_api(), await expert_api("a@example.com")
-    stranger = await expert_api("s@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, author)
-    for suffix in ASSIGNMENT_READS:
-        await stranger.fails("GET", f"/assignments/{assignment_id}{suffix}", 404, "not_found")
-    for method, suffix in ASSIGNMENT_WRITES:
+    free, midcase = await expert_api("f@example.com"), await expert_api("m@example.com")
+    [in_review], version = await reach_review(admin, author)
+    await assign(admin, version, midcase)
+    [not_yet] = await assign(admin, await published_version(admin), author)
+
+    async def refused(stranger, assignment_id):
+        for suffix in ASSIGNMENT_READS:
+            await stranger.fails("GET", f"/assignments/{assignment_id}{suffix}", 404, "not_found")
+        for method, suffix in ASSIGNMENT_WRITES:
+            await stranger.fails(
+                method,
+                f"/assignments/{assignment_id}{suffix}",
+                404,
+                "not_found",
+                json={"decisions": []},
+            )
         await stranger.fails(
-            method,
-            f"/assignments/{assignment_id}{suffix}",
+            "PUT",
+            f"/assignments/{assignment_id}/draft",
             404,
             "not_found",
-            json={"decisions": []},
+            json={"version": 1, "payload": {}},
         )
-    await stranger.fails(
-        "PUT",
-        f"/assignments/{assignment_id}/draft",
-        404,
-        "not_found",
-        json={"version": 1, "payload": {}},
-    )
-    assert await stranger.ok("GET", "/assignments") == []
-    assert await stranger.ok("GET", "/review-requests") == []
+
+    await refused(midcase, in_review)
+    await refused(free, not_yet)
+    assert await midcase.ok("GET", "/assignments") != [], "their own assignment is theirs"
+    assert await midcase.ok("GET", "/reviews") == []
+    assert await free.ok("GET", "/reviews", params={"status": "open"}) != []
 
 
 async def test_author_cannot_decide_their_own_units():
     admin, author = await admin_api(), await expert_api("a@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, author)
+    [assignment_id], _ = await reach_review(admin, author)
     units = await author.ok("GET", f"/assignments/{assignment_id}/units")
     assert units[0]["audience"] == "author"
     assert "decisions" not in units[0]
@@ -739,14 +469,11 @@ async def test_author_cannot_decide_their_own_units():
     )
 
 
-async def test_expert_cannot_use_a_peer_action_on_their_own_assignment_state():
-    """Peers can only act through their request, and only the assignee can answer."""
+async def test_a_reviewer_cannot_use_the_authors_actions_or_decide():
     admin, author = await admin_api(), await expert_api("a@example.com")
     peer = await expert_api("p@example.com")
-    [assignment_id, _], _ = await reach_admin_review(admin, author, peer)
-    await admin.ok(
-        "POST", f"/assignments/{assignment_id}/reviewers", json={"reviewer_ids": [peer.user_id]}
-    )
+    [assignment_id, _], _ = await reach_review(admin, author, peer)
+    await peer.ok("POST", f"/assignments/{assignment_id}/review/open", 204)
     await peer.fails("POST", f"/assignments/{assignment_id}/start", 409, "illegal_transition")
     await peer.fails(
         "PUT",
@@ -756,55 +483,78 @@ async def test_expert_cannot_use_a_peer_action_on_their_own_assignment_state():
         json={"version": 1, "payload": {}},
     )
     await peer.fails("POST", f"/assignments/{assignment_id}/pass-gate", 403, "forbidden")
+    units = await peer.ok("GET", f"/assignments/{assignment_id}/units")
+    await peer.fails(
+        "POST",
+        f"/assignments/{assignment_id}/unit-decisions",
+        403,
+        "forbidden",
+        json={"decisions": [{"unit_id": u["id"], "decision": "approve"} for u in units]},
+    )
 
 
 async def test_peers_see_neither_the_author_nor_the_raw_answers_nor_the_design():
     admin, author = await admin_api(), await expert_api("author@example.com")
     peer, other = await expert_api("p@example.com"), await expert_api("o@example.com")
-    [assignment_id, *_], _ = await reach_admin_review(admin, author, peer, other)
-    await admin.ok(
-        "POST",
-        f"/assignments/{assignment_id}/reviewers",
-        json={"reviewer_ids": [peer.user_id, other.user_id], "required_approvals": 2},
+    [assignment_id, *_], _ = await reach_review(admin, author, peer, other)
+    for reader in (peer, other):
+        await reader.ok("POST", f"/assignments/{assignment_id}/review/open", 204)
+    units = await author.ok("GET", f"/assignments/{assignment_id}/units")
+    url = f"/assignments/{assignment_id}/units/{units[0]['id']}/comments"
+    await author.ok("POST", url, 201, json={"body": "The author speaks."})
+    await other.ok("POST", url, 201, json={"body": "A colleague speaks.", "stance": "support"})
+    await other.ok(
+        "PUT", f"/assignments/{assignment_id}/vote", json={"vote": "accept", "review_round": 1}
     )
+
     await peer.fails("GET", f"/assignments/{assignment_id}/submission", 404, "not_found")
     await peer.fails("GET", f"/assignments/{assignment_id}/events", 404, "not_found")
-    await decide_all(other, assignment_id)
-
+    await peer.fails("GET", f"/assignments/{assignment_id}/findings", 404, "not_found")
     responses = [
         await peer.ok("GET", f"/assignments/{assignment_id}"),
         await peer.ok("GET", f"/assignments/{assignment_id}/units"),
-        await peer.ok("GET", "/review-requests"),
+        await peer.ok("GET", f"/assignments/{assignment_id}/votes"),
+        await peer.ok("GET", "/reviews"),
     ]
     assert responses[0]["audience"] == "peer"
     assert responses[1][0]["audience"] == "peer"
-    assert responses[1][0]["my_decision"] is None, "another reviewer's decision stays hidden"
-    assert responses[0]["allowed_actions"] == ["decide_units"]
+    assert responses[0]["allowed_actions"] == ["comment", "vote"]
     seen = str(responses)
+    assert "A colleague speaks." in seen and "The author speaks." in seen
+    assert other.pseudonym in seen, "reviewers talk to each other by pseudonym"
     for hidden in (
         author.pseudonym,
         author.user_id,
         "author@example.com",
+        "o@example.com",
+        other.user_id,
         Q4_WHY,
         HYPOTHESIS,
         DESIGN_SECRET,
         "planted_cues",
         "the-whatif-secret",
-        other.user_id,
-        other.pseudonym,
         "rating",
     ):
         assert hidden not in seen, hidden
 
 
-async def test_author_timeline_hides_reviewers_and_no_event_holds_text():
+async def test_author_timeline_hides_the_discussion_and_no_event_holds_text():
     admin, author = await admin_api(), await expert_api("author@example.com")
     peer = await expert_api("p@example.com")
-    [assignment_id, _], _ = await reach_admin_review(admin, author, peer)
-    await admin.ok(
-        "POST", f"/assignments/{assignment_id}/reviewers", json={"reviewer_ids": [peer.user_id]}
+    [assignment_id, _], _ = await reach_review(admin, author, peer)
+    await peer.ok("POST", f"/assignments/{assignment_id}/review/open", 204)
+    units = await peer.ok("GET", f"/assignments/{assignment_id}/units")
+    secret = "a-comment-nobody-should-find-in-the-audit-trail"
+    await peer.ok(
+        "POST",
+        f"/assignments/{assignment_id}/units/{units[0]['id']}/comments",
+        201,
+        json={"body": secret, "stance": "challenge"},
     )
-    await decide_all(peer, assignment_id)
+    await peer.ok(
+        "PUT", f"/assignments/{assignment_id}/vote", json={"vote": "decline", "review_round": 1}
+    )
+    await decide_all(admin, assignment_id)
     await run_jobs()
 
     author_events = await author.ok("GET", f"/assignments/{assignment_id}/events")
@@ -816,14 +566,13 @@ async def test_author_timeline_hides_reviewers_and_no_event_holds_text():
         "processing_succeeded",
         "skip_expert_check",
         "units_built",
-        "request_peers",
-        "peers_approved",
+        "approve_units",
         "ingestion_succeeded",
     ]
     actors = {e["action"]: e["actor"] for e in author_events}
     assert actors["start"] == "you"
     assert actors["assigned"] == "admin"
-    assert actors["peers_approved"] == "reviewer"
+    assert actors["approve_units"] == "admin"
     assert actors["units_built"] == "system"
     text = str(author_events)
     assert peer.user_id not in text
@@ -831,8 +580,10 @@ async def test_author_timeline_hides_reviewers_and_no_event_holds_text():
 
     admin_events = await admin.ok("GET", f"/assignments/{assignment_id}/events")
     by_action = {e["action"]: e for e in admin_events}
-    assert by_action["peers_approved"]["actor_id"] == peer.user_id
-    assert by_action["request_peers"]["meta"]["reviewer_ids"] == [peer.user_id]
+    assert by_action["vote_cast"]["actor_id"] == peer.user_id
+    assert by_action["vote_cast"]["meta"]["vote"] == "decline"
+    assert by_action["comment_added"]["meta"]["stance"] == "challenge"
+    assert "review_opened" in by_action
 
     async with session_factory()() as db:
         stored = list(await db.scalars(select(AuditEvent)))
@@ -840,6 +591,7 @@ async def test_author_timeline_hides_reviewers_and_no_event_holds_text():
     for answer in FULL_PAYLOAD["answers"].values():
         assert answer not in everything
     assert HYPOTHESIS not in everything
+    assert secret not in everything
 
 
 async def test_allowed_actions_in_the_lists():
@@ -864,13 +616,3 @@ async def test_list_says_when_a_job_is_running():
     assert (await expert.ok("GET", "/assignments"))[0]["job_running"] is True
     await run_jobs()
     assert (await expert.ok("GET", "/assignments"))[0]["job_running"] is False
-
-
-async def test_admin_review_queue():
-    admin, expert = await admin_api(), await expert_api("e@example.com")
-    [assignment_id], _ = await reach_admin_review(admin, expert)
-    [item] = await admin.ok("GET", "/review-requests")
-    assert item["assignment_id"] == assignment_id
-    assert item["stage"] == "admin"
-    assert item["unit_count"] == 2
-    assert await expert.ok("GET", "/review-requests") == []

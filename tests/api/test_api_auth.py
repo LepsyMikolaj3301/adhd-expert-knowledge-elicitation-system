@@ -55,8 +55,6 @@ ADMIN_ONLY = [
     ("POST", f"/vignette-versions/{ID}/assignments"),
     ("GET", "/knowledge-units"),
     ("POST", f"/assignments/{ID}/retry"),
-    ("POST", f"/assignments/{ID}/reviewers"),
-    ("POST", f"/assignments/{ID}/recall-review"),
 ]
 
 

@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assignments.models import Assignment, Submission
 from app.assignments.states import Action
-from app.core.db import session_factory, utcnow
+from app.core.db import session_factory
 from app.core.security import content_hash
 from app.jobs.errors import (  # noqa: F401  (PermanentJobError is also imported from here)
     NoFindings,
@@ -21,8 +21,6 @@ from app.jobs.models import JobKind
 from app.knowledge import classifier, findings
 from app.knowledge import ingest as ingest_module
 from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
-from app.reviews.models import ReviewRequest, ReviewStage
-from app.reviews.service import eligible_peers
 from app.settings import settings
 from app.users.models import User
 from app.vignettes.models import Vignette, VignetteVersion
@@ -118,7 +116,8 @@ async def build_units(
     db: AsyncSession, assignment: Assignment, prepared: Any = None
 ) -> Action | None:
     """Cuts the checked filing into units (steps 6 and 7 of docs/new-chips-knowledge.md), saves
-    them for review, and asks the colleagues who can review them, if there are any."""
+    them for review. Nobody is asked: every colleague who may read them sees them (see
+    `app.reviews.access`)."""
     row = await db.get(AnswerFindings, assignment.id)
     if row is None:
         raise NoFindings
@@ -146,34 +145,7 @@ async def build_units(
         )
         for ordinal, unit in enumerate(units, start=1)
     )
-    peers = await eligible_peers(db, assignment)
-    if not peers:
-        return None  # the admin decides alone
-    assignment.required_approvals = 1
-    # In a later round the same peers are asked again: their closed request is reopened.
-    earlier = {
-        request.reviewer_id: request
-        for request in await db.scalars(
-            select(ReviewRequest).where(
-                ReviewRequest.assignment_id == assignment.id,
-                ReviewRequest.stage == ReviewStage.PEER,
-            )
-        )
-    }
-    for peer_id in peers:
-        if request := earlier.get(peer_id):
-            request.completed_at = None
-            request.requested_at = utcnow()
-        else:
-            db.add(
-                ReviewRequest(
-                    assignment_id=assignment.id,
-                    reviewer_id=peer_id,
-                    stage=ReviewStage.PEER,
-                    requested_by=None,  # the system asked
-                )
-            )
-    return Action.UNITS_BUILT_FOR_PEERS
+    return None
 
 
 async def prepare_ingest(assignment_id: UUID) -> ingest_module.Ingestion:

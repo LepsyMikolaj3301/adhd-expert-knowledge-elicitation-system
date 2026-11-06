@@ -36,7 +36,7 @@ from app.jobs.handlers import unit_content_hash
 from app.jobs.models import Job, JobKind
 from app.jobs.queue import MAX_ATTEMPTS
 from app.knowledge.models import AnswerFindings, KnowledgeUnit
-from app.reviews.models import ReviewRequest
+from app.reviews.models import ReviewParticipant
 from app.settings import settings
 
 # Every open answer cites a highlight, so the classifier has nothing to do.
@@ -290,7 +290,7 @@ async def test_units_are_cut_by_citation_and_keep_the_experts_own_sentences():
     admin, expert, assignment_id = await setup_one()
     await answer_and_submit(expert, assignment_id)
     await to_units(admin, expert, assignment_id)
-    assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["state"] == "admin_review"
+    assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["state"] == "peer_review"
 
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
     assert [(u["ordinal"], u["kind"], u["direction"]) for u in units] == [
@@ -339,61 +339,69 @@ async def test_building_units_without_findings_fails_at_once(caplog):
     assert job is not None and job.last_error == "NoFindings"
 
 
-async def test_units_go_to_every_colleague_who_can_review_them():
+async def test_units_go_to_every_colleague_who_can_read_them():
     admin, e1, e2, first, second = await two_experts()
-    assert (await admin.ok("GET", f"/assignments/{first}"))["state"] == "admin_review"
-    assert (await admin.ok("GET", f"/assignments/{second}"))["state"] == "peer_review"
+    for assignment_id in (first, second):
+        assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["state"] == "peer_review"
 
-    queue = await e1.ok("GET", "/review-requests")
-    assert [(q["assignment_id"], q["stage"], q["unit_count"]) for q in queue] == [
-        (second, "peer", 2)
-    ]
-    assert await e2.ok("GET", "/review-requests") == [], "nobody reviews their own units"
+    def summary(queue):
+        return {q["assignment_id"]: (q["relation"], q["opened"], q["unit_count"]) for q in queue}
 
-    async with session_factory()() as db:
-        [request] = list(await db.scalars(select(ReviewRequest)))
-    assert str(request.reviewer_id) == e1.user_id and request.requested_by is None
-    assert request.completed_at is None
+    assert summary(await e1.ok("GET", "/reviews")) == {
+        first: ("author", True, 2),
+        second: ("reviewer", False, 2),
+    }
+    assert summary(await e2.ok("GET", "/reviews")) == {
+        first: ("reviewer", False, 2),
+        second: ("author", True, 2),
+    }
 
+    await e1.ok("POST", f"/assignments/{second}/review/open", 204)
     units = await e1.ok("GET", f"/assignments/{second}/units")
     assert {u["audience"] for u in units} == {"peer"}
     assert units[0]["kind"] == "fragment" and units[0]["patient_words"] == CUE
-    assert all("status" not in u and u["my_decision"] is None for u in units)
+    assert all("status" not in u and u["comments"] == [] for u in units)
     # A peer reads units, not the filing or the raw answers.
     await e1.fails("GET", f"/assignments/{second}/findings", 404, "not_found")
     await e1.fails("GET", f"/assignments/{second}/submission", 404, "not_found")
+    async with session_factory()() as db:
+        [reader] = list(await db.scalars(select(ReviewParticipant)))
+    assert str(reader.expert_id) == e1.user_id and str(reader.assignment_id) == second
 
 
-async def test_a_colleague_who_has_not_answered_yet_is_not_asked():
+async def test_a_colleague_who_has_not_answered_yet_cannot_read_but_a_new_one_can():
     admin = await admin_api()
     e1, e2, e3 = [await expert_api(f"e{i}@example.com") for i in (1, 2, 3)]
     version = await published_version(admin)
-    first, second, _third = await assign(admin, version, e1, e2, e3)
+    first, second, third = await assign(admin, version, e1, e2, e3)
     await answer_and_submit(e1, first)
     await to_units(admin, e1, first, skip=True)
-    await answer_and_submit(e2, second)
-    await to_units(admin, e2, second)
-    async with session_factory()() as db:
-        reviewers = {str(r) for r in await db.scalars(select(ReviewRequest.reviewer_id))}
-    assert reviewers == {e1.user_id}, "e3 still has to form their own reading"
+    assert await e3.ok("GET", "/reviews") == [], "e3 still has to form their own reading"
+    await e3.fails("GET", f"/assignments/{first}", 404, "not_found")
+
+    await answer_and_submit(e3, third)
+    assert [q["assignment_id"] for q in await e3.ok("GET", "/reviews")] == [first]
+    # e2 has not started, and e1's review was already open: someone new joins it all the same.
+    late = await expert_api("late@example.com")
+    assert [q["assignment_id"] for q in await late.ok("GET", "/reviews")] == [first]
+    await e2.fails("GET", f"/assignments/{first}", 404, "not_found")
 
 
-async def test_one_peer_approval_ingests_without_the_admin():
+async def test_the_admin_closes_a_review_whatever_the_reviewers_think():
     admin, e1, e2, first, second = await two_experts()
-    await decide_all(e1, second)
-    assert (await admin.ok("GET", f"/assignments/{second}"))["state"] == "ingesting"
-
-
-async def test_the_admin_can_decide_while_peers_are_still_looking():
-    admin, e1, e2, first, second = await two_experts()
-    queue = await admin.ok("GET", "/review-requests")
-    assert second in [q["assignment_id"] for q in queue], "admins see units in peer review too"
+    await e1.ok("POST", f"/assignments/{second}/review/open", 204)
+    await e1.ok("PUT", f"/assignments/{second}/vote", json={"vote": "decline", "review_round": 1})
     view = await admin.ok("GET", f"/assignments/{second}")
     assert "decide_units" in view["allowed_actions"]
+    queue = await admin.ok("GET", "/reviews", params={"status": "open"})
+    assert second in [q["assignment_id"] for q in queue]
 
     await decide_all(admin, second)
     assert (await admin.ok("GET", f"/assignments/{second}"))["state"] == "ingesting"
-    assert await e1.ok("GET", "/review-requests") == [], "the request is closed"
+    assert await e1.ok("GET", "/reviews", params={"status": "open"}) != [], "his own is still open"
+    assert [
+        q["assignment_id"] for q in await e1.ok("GET", "/reviews", params={"status": "closed"})
+    ] == [second]
     await e1.fails(
         "POST",
         f"/assignments/{second}/unit-decisions",
@@ -403,19 +411,10 @@ async def test_the_admin_can_decide_while_peers_are_still_looking():
     )
 
 
-async def test_the_admin_rejecting_everything_during_peer_review_ends_it():
+async def test_the_admin_rejecting_everything_during_review_ends_it():
     admin, e1, e2, first, second = await two_experts()
     await decide_all(admin, second, "reject")
     assert (await admin.ok("GET", f"/assignments/{second}"))["state"] == "rejected"
-
-
-async def test_a_peer_rejection_hands_the_decision_to_the_admin():
-    admin, e1, e2, first, second = await two_experts()
-    await decide_all(e1, second, "reject")
-    assert (await admin.ok("GET", f"/assignments/{second}"))["state"] == "admin_review"
-    # Peers were used up, so the admin can't ask again: they decide.
-    view = await admin.ok("GET", f"/assignments/{second}")
-    assert "request_peers" not in view["allowed_actions"]
 
 
 # --- ingestion into the RAG tables ---------------------------------------------------------
@@ -611,7 +610,7 @@ async def test_ingesting_the_same_answers_twice_leaves_one_copy(models):
 async def test_colleagues_answering_the_same_vignette_share_its_cue_keys(models):
     admin, e1, e2, first, second = await two_experts()
     await decide_all(admin, first)
-    await decide_all(e1, second)
+    await decide_all(admin, second)
     await run_jobs()
     assert await count("experts") == 2 and await count("elicitation_sessions") == 2
     assert await count("vignettes") == 1

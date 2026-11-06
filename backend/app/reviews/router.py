@@ -1,56 +1,89 @@
+from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query, status
 
 from app.assignments import service as assignments
 from app.assignments.schemas import AssignmentView
-from app.auth.dependencies import AdminUser, CurrentUser
+from app.auth.dependencies import CurrentUser
 from app.core.db import DbSession
 from app.reviews import service
-from app.reviews.schemas import RequestPeersBody, ReviewQueueItem, UnitDecisionsRequest, UnitView
+from app.reviews.schemas import (
+    CommentCreate,
+    CommentView,
+    ReviewItem,
+    UnitDecisionsRequest,
+    UnitView,
+    VoteInput,
+    VotesView,
+)
 
 router = APIRouter(tags=["reviews"])
 
 
-@router.get("/review-requests")
-async def review_queue(db: DbSession, user: CurrentUser) -> list[ReviewQueueItem]:
-    return await service.review_queue(db, user)
+@router.get("/reviews")
+async def list_reviews(
+    db: DbSession,
+    user: CurrentUser,
+    status: Literal["open", "closed"] | None = None,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
+) -> list[ReviewItem]:
+    """The submissions the viewer can follow: open ones wait for the admin's decision."""
+    return await service.list_reviews(db, user, status=status, limit=limit)
+
+
+@router.post("/assignments/{assignment_id}/review/open", status_code=status.HTTP_204_NO_CONTENT)
+async def open_review(assignment_id: UUID, db: DbSession, user: CurrentUser) -> None:
+    """A reviewer agrees to read the submission. From then on they can't be assigned the
+    vignette, because what they read would colour their own answer."""
+    assignment, actor = await assignments.lock(db, assignment_id, user, allow_unopened=True)
+    await service.open_review(db, assignment, actor, user)
+    await db.commit()
 
 
 @router.get("/assignments/{assignment_id}/units")
 async def list_units(
     assignment_id: UUID, db: DbSession, user: CurrentUser, review_round: int | None = None
 ) -> list[UnitView]:
-    """The current round's units; the admin can ask for an earlier round with `review_round`."""
+    """The current round's units. The admin and the author can ask for an earlier round."""
     assignment, actor = await assignments.load(db, assignment_id, user)
     return await service.list_units(db, assignment, actor, user, review_round)
+
+
+@router.post(
+    "/assignments/{assignment_id}/units/{unit_id}/comments", status_code=status.HTTP_201_CREATED
+)
+async def add_comment(
+    assignment_id: UUID, unit_id: UUID, body: CommentCreate, db: DbSession, user: CurrentUser
+) -> CommentView:
+    assignment, actor = await assignments.lock(db, assignment_id, user)
+    comment = await service.add_comment(db, assignment, actor, user, unit_id, body)
+    await db.commit()
+    return comment
+
+
+@router.get("/assignments/{assignment_id}/votes")
+async def get_votes(assignment_id: UUID, db: DbSession, user: CurrentUser) -> VotesView:
+    assignment, actor = await assignments.load(db, assignment_id, user)
+    return await service.votes_view(db, assignment, actor, user)
+
+
+@router.put("/assignments/{assignment_id}/vote")
+async def cast_vote(
+    assignment_id: UUID, body: VoteInput, db: DbSession, user: CurrentUser
+) -> VotesView:
+    assignment, actor = await assignments.lock(db, assignment_id, user)
+    votes = await service.cast_vote(db, assignment, actor, user, body)
+    await db.commit()
+    return votes
 
 
 @router.post("/assignments/{assignment_id}/unit-decisions")
 async def submit_decisions(
     assignment_id: UUID, body: UnitDecisionsRequest, db: DbSession, user: CurrentUser
 ) -> AssignmentView:
+    """The admin's decision on each unit; it closes the review."""
     assignment, actor = await assignments.lock(db, assignment_id, user)
     await service.submit_decisions(db, assignment, actor, user, body.decisions)
     await db.commit()
     return await assignments.build_view(db, assignment, actor, user)
-
-
-@router.post("/assignments/{assignment_id}/reviewers")
-async def request_peers(
-    assignment_id: UUID, body: RequestPeersBody, db: DbSession, admin: AdminUser
-) -> AssignmentView:
-    assignment, actor = await assignments.lock(db, assignment_id, admin)
-    await service.request_peers(
-        db, assignment, actor, admin, body.reviewer_ids, body.required_approvals
-    )
-    await db.commit()
-    return await assignments.build_view(db, assignment, actor, admin)
-
-
-@router.post("/assignments/{assignment_id}/recall-review")
-async def recall_review(assignment_id: UUID, db: DbSession, admin: AdminUser) -> AssignmentView:
-    assignment, actor = await assignments.lock(db, assignment_id, admin)
-    await service.recall_review(db, assignment, actor, admin)
-    await db.commit()
-    return await assignments.build_view(db, assignment, actor, admin)
