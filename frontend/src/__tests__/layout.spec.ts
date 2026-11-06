@@ -30,16 +30,32 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => wrapper?.unmount())
 
 describe('side panel', () => {
-  it('gives an admin only the sections that are built', async () => {
+  it('gives an admin all six sections, including the ones not built yet', async () => {
     const w = await open(admin, '/')
-    expect(navLinks(w).map((a) => a.text())).toEqual(['Home', 'Vignettes', 'Assignments'])
+    expect(navLinks(w).map((a) => a.text())).toEqual([
+      'Home',
+      'Vignettes',
+      'Reviews',
+      'Assignments',
+      'Experts',
+      'Knowledge base',
+    ])
   })
 
-  it("gives an expert two, and opens the expert's own assignments as My cases", async () => {
+  it("gives an expert three, and opens the expert's own assignments as My cases", async () => {
     const w = await open(expert, '/')
     const links = navLinks(w)
-    expect(links.map((a) => a.text())).toEqual(['Home', 'My cases'])
+    expect(links.map((a) => a.text())).toEqual(['Home', 'My cases', 'Reviews'])
     expect(links[1]!.attributes('href')).toBe('/assignments')
+    expect(links[2]!.attributes('href')).toBe('/reviews')
+  })
+
+  it('marks Reviews as the section you are in on the reviews page', async () => {
+    const w = await open(expert, '/reviews')
+    const current = navLinks(w)
+      .filter((a) => a.attributes('aria-current') === 'page')
+      .map((a) => a.text())
+    expect(current).toEqual(['Reviews'])
   })
 
   it('marks the section you are in', async () => {
@@ -86,10 +102,16 @@ describe('sections', () => {
     expect(w.find('[data-testid="trust"]').exists()).toBe(false)
   })
 
-  it('does not offer a section that is not built yet, but still answers its address', async () => {
-    const w = await open(admin, '/knowledge')
-    expect(navLinks(w).map((a) => a.text())).not.toContain('Knowledge base')
-    expect(w.text()).toContain("This section isn't built yet.")
+  it('lists Reviews on the home page for an expert', async () => {
+    const w = await open(expert, '/')
+    const sections = w.get('[data-testid="sections"]')
+    expect(sections.text()).toContain('Reviews')
+    expect(sections.text()).toContain('Check the knowledge units colleagues ask you to review.')
+  })
+
+  it('opens the Reviews page for an expert', async () => {
+    const w = await open(expert, '/reviews')
+    expect(w.get('h1').text()).toBe('Reviews')
   })
 })
 
