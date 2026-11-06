@@ -32,24 +32,31 @@ An expert first sees a list of their vignettes (`/assignments`), and opens one (
 │                                   │ ┌───────────────────────────────┐ │
 ├───────────────────────────────────┤ │ [2] could just as easily…     │ │
 │ Citations                         │ └───────────────────────────────┘ │
-│ [1] "numbers on…"  Away from… Cite│ 12 of 10 different words          │
-│ [2] "I haven't…"   Direction… Cite│                                   │
+│ [1] "numbers on…"  Away from…     │ 12 of 10 different words          │
+│ [2] "I haven't…"   Direction…     │                                   │
 │                                   │ Back                Next question │
 └───────────────────────────────────┴───────────────────────────────────┘
 ```
 
+- **Words on screen.** The code and this document say *citation*, *chip* and *vignette*. The expert
+  reads *marked passage*, *reference* and *case* (`frontend/src/copy.ts`), and the four directions as
+  "Points toward ADHD traits", "Points away from ADHD traits", "Ordinary, no bearing" and "Unclear".
 - **The vignette text and the citations stay on screen for every question.** On a narrow screen the
   columns stack.
 - **Selecting text with the mouse adds a citation** to the table when the button is released. The
   selection grows to whole words and loses spaces at its edges. Selecting the same passage again
-  points at the existing row. On a touch screen or with the keyboard, a "Cite selection" button
+  points at the existing row. On a touch screen or with the keyboard, a "Mark selection" button
   confirms the selection instead.
 - **Nothing is highlighted in the text, except while a citation is hovered or focused:** a row of the
   table, or a chip in an answer. Passages may overlap, because only one is lit at a time.
 - **Each citation has a number and a colour** (8 colours, repeating). The colour follows the number,
   and the number is always shown, so colour is never the only cue.
 - **Each citation needs a direction:** `toward`, `away`, `neutral` or `unclear`.
-- **Answers are free text with chips.** Cite in the table inserts a chip at the cursor. A chip is one
+- **Answers are free text with chips.** Clicking a passage in the table (its number and words are
+  one button, so the keyboard works too) inserts its chip at the cursor and leaves the cursor in the
+  answer. Where there is no answer box on screen (a locked question, Q6, the review), a click only
+  shows the passage in the text. The direction and Remove are separate controls and never insert
+  anything. A chip is one
   unit: backspace removes all of it. Removing a citation takes its chips out of the answers, and moves
   the later citations and their chips up one number, so the numbers are always 1..n.
 - **Soft checks never block.** A citation not cited in any answer is noted on its row and in the

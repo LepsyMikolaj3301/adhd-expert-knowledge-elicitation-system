@@ -474,7 +474,7 @@ onBeforeRouteLeave(async () => {
                   {{ wordCountLabel(currentWords, question.min_words) }}
                 </p>
                 <p v-if="q1Nudge" class="mt-2 text-sm text-ink">
-                  Which passages is this about? Use Cite in the table to add them.
+                  Which passages is this about? Click one to add it here.
                 </p>
               </template>
 

@@ -188,6 +188,7 @@ beforeAll(() => {
   const noRects = () => [] as unknown as DOMRectList
   Range.prototype.getClientRects = noRects
   Element.prototype.getClientRects = noRects
+  Range.prototype.getBoundingClientRect = () => new DOMRect()
 })
 
 beforeEach(async () => {
@@ -797,5 +798,99 @@ describe('the marked passages', () => {
     const header = app().get('header')
     expect(header.text()).toContain('My cases')
     expect(header.text()).toContain('Case V007')
+  })
+})
+
+describe('adding a reference by clicking the passage', () => {
+  const addButton = (index = 0) => rows()[index]!.get('[data-testid="add-reference"]')
+  const q1Editor = () => app().get('.chip-editor')
+
+  it('has no separate Cite button any more', async () => {
+    await open(assignment({ answers: {}, highlights: [citation(1, 'barely slept')] }))
+    expect(
+      app()
+        .findAll('button')
+        .some((b) => b.text() === 'Cite'),
+    ).toBe(false)
+  })
+
+  it('adds the reference to the answer when the passage is clicked, and saves it as such', async () => {
+    vi.useFakeTimers()
+    try {
+      await open(
+        assignment({ answers: { Q1: 'because' }, highlights: [citation(1, 'barely slept')] }),
+      )
+      await addButton().trigger('click')
+      await vi.advanceTimersByTimeAsync(2100)
+
+      expect(q1Editor().find('[data-chip="1"]').exists()).toBe(true)
+      const put = calls.find((c) => c.method === 'PUT')
+      expect(put?.body?.payload.answers.Q1).toBe('because⟦h1⟧ ')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps the cursor in the answer while clicking', async () => {
+    await open(assignment({ answers: {}, highlights: [citation(1, 'barely slept')] }))
+    const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+    addButton().element.dispatchEvent(press)
+    expect(press.defaultPrevented).toBe(true)
+  })
+
+  it('does not add a reference when the direction is chosen or the passage is removed', async () => {
+    await open(
+      assignment({
+        answers: {},
+        highlights: [citation(1, 'barely slept'), citation(2, 'hand starts')],
+      }),
+    )
+    await rows()[0]?.get('select').setValue('away')
+    await rows()[1]
+      ?.findAll('button')
+      .find((b) => b.text() === 'Remove')
+      ?.trigger('click')
+    expect(rows()).toHaveLength(1)
+    expect(q1Editor().find('[data-chip]').exists()).toBe(false)
+  })
+
+  it('tells a screen reader what the click does', async () => {
+    await open(assignment({ answers: {}, highlights: [citation(1, 'barely slept')] }))
+    expect(addButton().attributes('aria-label')).toBe(
+      'Add reference 1 to your answer: “barely slept”',
+    )
+    expect(rows()[0]?.text()).toContain('+ Add to answer')
+    expect(app().text()).toContain('Click a passage to add it to your answer at the cursor.')
+  })
+
+  it('only lights the passage where there is no answer box', async () => {
+    const finished: AnswerPayload = {
+      answers: { ...GATE_ANSWERS, Q5: TEN },
+      highlights: [citation(1, 'barely slept', 'away')],
+      q4: { hypothesis: 'tired not a trait', shift: 0 },
+      rating: 3,
+      insufficient_information: false,
+    }
+    await open(afterGate(finished, 1))
+    expect(app().find('.chip-editor').exists()).toBe(false)
+    expect(addButton().attributes('aria-label')).toBe('Show passage 1 in the text: “barely slept”')
+    expect(rows()[0]?.text()).not.toContain('+ Add to answer')
+    expect(app().text()).toContain('Click a passage to find it in the text.')
+
+    await addButton().trigger('click')
+    expect(marked().text()).toBe('barely slept')
+    expect(calls.filter((c) => c.method === 'PUT')).toHaveLength(0)
+  })
+
+  it('reads the same on a locked question: a click shows the passage, and changes nothing', async () => {
+    const payload = {
+      answers: { ...GATE_ANSWERS, Q1: `⟦h1⟧ ${FIFTEEN}` },
+      highlights: [citation(1, 'barely slept', 'away')],
+    }
+    await open(afterGate(payload, 1))
+    await app().findAll('[data-testid="step"]')[0]?.trigger('click')
+    await addButton().trigger('click')
+    expect(marked().text()).toBe('barely slept')
+    expect(app().find('.chip-editor').exists()).toBe(false)
   })
 })

@@ -26,6 +26,21 @@ const emit = defineEmits<{
 
 const rows = ref<HTMLElement>()
 
+/** The first words of a passage, enough to tell it from the others when it is read out. */
+function shortQuote(text: string): string {
+  const words = text.split(/\s+/)
+  return `“${words.slice(0, 8).join(' ')}${words.length > 8 ? '…' : ''}”`
+}
+
+/**
+ * Clicking a passage puts its reference at the cursor in the answer. Where there is no answer box
+ * (a locked question, the rating, the review) it only shows the passage in the text.
+ */
+function pick(chip: number) {
+  if (props.canInsert) emit('insert', chip)
+  else emit('active', chip)
+}
+
 function isLocked(chip: number): boolean {
   return chip <= props.lockedCount
 }
@@ -53,14 +68,17 @@ watch(
     </p>
     <template v-else>
       <p v-if="editable" class="mt-1 text-sm text-muted">
-        Select more words to mark another passage. Point at a row, or tap its number, to find it in
-        the text.
+        Select more words to mark another passage.
+        <template v-if="canInsert">
+          Click a passage to add it to your answer at the cursor. Point at it to find it in the
+          text.
+        </template>
+        <template v-else>Click a passage to find it in the text.</template>
       </p>
       <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
         <table class="w-full border-collapse text-left text-sm">
           <thead class="sr-only">
             <tr>
-              <th scope="col">Number</th>
               <th scope="col">Passage</th>
               <th scope="col">Direction and actions</th>
             </tr>
@@ -70,7 +88,7 @@ watch(
               v-for="citation in citations"
               :key="citation.chip"
               :data-row="citation.chip"
-              class="border-t border-line align-top"
+              class="group border-t border-line align-top"
               :class="{ 'row-pulse': pulseChip === citation.chip }"
               :style="{ '--ink': inkFor(citation.chip) }"
               data-testid="citation"
@@ -79,24 +97,41 @@ watch(
               @focusin="emit('active', citation.chip)"
               @focusout="emit('active', null)"
             >
-              <td class="w-10 py-1.5 pr-2 text-base">
-                <!-- Focusing this shows the passage on a keyboard or a touch screen. -->
+              <td class="py-1.5 pr-3">
+                <!-- One target: the number and the words. The mouse-down is stopped so that the
+                     cursor stays in the answer and the reference lands where it was. -->
                 <button
                   type="button"
-                  class="chip"
-                  :aria-label="`Show passage ${citation.chip} in the text`"
+                  class="flex w-full cursor-pointer items-start gap-2 rounded-sm text-left"
+                  data-testid="add-reference"
+                  :aria-label="
+                    canInsert
+                      ? `Add reference ${citation.chip} to your answer: ${shortQuote(citation.text)}`
+                      : `Show passage ${citation.chip} in the text: ${shortQuote(citation.text)}`
+                  "
+                  @mousedown.prevent
+                  @click="pick(citation.chip)"
                 >
-                  {{ citation.chip }}
+                  <span class="chip mt-0.5 text-base" aria-hidden="true">{{ citation.chip }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="line-clamp-2 font-serif text-[0.95rem]">
+                      “{{ citation.text }}”
+                    </span>
+                    <span
+                      v-if="editable && uncited.includes(citation.chip)"
+                      class="mt-0.5 block text-xs text-muted"
+                    >
+                      Not mentioned in an answer yet
+                    </span>
+                  </span>
+                  <span
+                    v-if="canInsert"
+                    class="shrink-0 pt-0.5 text-xs whitespace-nowrap text-action opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+                    aria-hidden="true"
+                  >
+                    + Add to answer
+                  </span>
                 </button>
-              </td>
-              <td class="py-1.5 pr-3">
-                <span class="line-clamp-2 font-serif text-[0.95rem]">“{{ citation.text }}”</span>
-                <span
-                  v-if="editable && uncited.includes(citation.chip)"
-                  class="mt-0.5 block text-xs text-muted"
-                >
-                  Not mentioned in an answer yet
-                </span>
               </td>
               <td class="w-32 py-1.5">
                 <select
@@ -113,19 +148,8 @@ watch(
                   </option>
                 </select>
                 <span v-else class="block py-0.5">{{ directionLabel(citation.direction) }}</span>
-                <span v-if="editable" class="mt-0.5 flex gap-3 text-sm">
+                <span v-if="editable && !isLocked(citation.chip)" class="mt-0.5 flex text-sm">
                   <button
-                    type="button"
-                    class="cursor-pointer text-action hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
-                    :disabled="!canInsert"
-                    :aria-label="`Cite passage ${citation.chip} in your answer`"
-                    @mousedown.prevent
-                    @click="emit('insert', citation.chip)"
-                  >
-                    Cite
-                  </button>
-                  <button
-                    v-if="!isLocked(citation.chip)"
                     type="button"
                     class="cursor-pointer text-muted hover:text-danger hover:underline"
                     :aria-label="`Remove passage ${citation.chip}`"
