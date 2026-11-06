@@ -37,7 +37,8 @@ services:
       - key: API_HOST
         sync: false
 
-  # Not deployed yet (the job handlers are stubs). Needs a paid plan.
+  # Not deployed yet: it needs a reachable Ollama (classifier + bge-m3, see docs/deployment.md)
+  # and a paid plan.
   # - type: worker
   #   name: rag-worker
   #   runtime: docker

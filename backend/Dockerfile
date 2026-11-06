@@ -27,6 +27,9 @@ COPY --chown=$USERNAME:$USERNAME backend/pyproject.toml backend/
 RUN uv sync --frozen --package rag-backend --no-default-groups
 
 COPY --chown=$USERNAME:$USERNAME backend backend
+# The worker reads the classifier prompt and the embedding settings (project_root in settings.py).
+COPY --chown=$USERNAME:$USERNAME prompts prompts
+COPY --chown=$USERNAME:$USERNAME config config
 
 WORKDIR /workspace/backend
 EXPOSE 8000

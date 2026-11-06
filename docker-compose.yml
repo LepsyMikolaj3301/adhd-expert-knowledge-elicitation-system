@@ -188,7 +188,8 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  # Runs the background jobs (processing, unit building, ingestion). Stubs for now.
+  # Runs the background jobs: filing the answers (the classifier), building units, ingesting the
+  # approved ones (embeddings). Needs Ollama with the models in .env (CLASSIFIER_MODEL) and bge-m3.
   worker:
     profiles: [app]
     build:
@@ -199,13 +200,19 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
+      OLLAMA_BASE_URL: http://ollama:11434
     volumes:
       - ./backend:/workspace/backend
+      # Next to backend/, where settings.project_root looks for them.
+      - ./prompts:/workspace/prompts:ro
+      - ./config:/workspace/config:ro
     depends_on:
       postgres:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      ollama:
+        condition: service_started
     restart: unless-stopped
 
   # The web app with hot reload: http://localhost:5173. Proxies /api to rag-backend (see

@@ -80,7 +80,10 @@ docker compose --profile preview up -d --build frontend-preview   # http://local
 
 ## Not covered yet
 
-- The background worker (`python -m app.jobs.worker`): the handlers are stubs. A commented block in
-  `render.yaml` is ready; Render workers need a paid plan.
+- The background worker (`python -m app.jobs.worker`). Its handlers are real now, but they call
+  Ollama for the classifier (`CLASSIFIER_MODEL`) and bge-m3, which Render doesn't provide, so the
+  worker needs a reachable Ollama (`OLLAMA_BASE_URL`) before it can be deployed there. A commented
+  block in `render.yaml` is ready; Render workers need a paid plan. Migration `0003` also runs
+  `CREATE EXTENSION vector` (Neon allows it) for the `chips` schema.
 - nginx does not verify the backend's TLS certificate (`proxy_ssl_verify` is off).
 - Ollama and S3 settings are only used by scripts, not by the API, so Render needs neither.

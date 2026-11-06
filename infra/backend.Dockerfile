@@ -32,6 +32,9 @@ ENV PATH="/opt/venv/bin:$PATH" \
 RUN groupadd --system app && useradd --system --gid app --create-home app
 COPY --from=builder /opt/venv /opt/venv
 COPY --chown=app:app backend /workspace/backend
+# Read by the worker (the classifier prompt, the embedding settings), which runs from this image.
+COPY --chown=app:app prompts /workspace/prompts
+COPY --chown=app:app config /workspace/config
 USER app
 WORKDIR /workspace/backend
 # Render sets PORT (default 10000). It terminates TLS, so trust its X-Forwarded-* headers.
