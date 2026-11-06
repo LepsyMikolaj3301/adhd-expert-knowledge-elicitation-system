@@ -58,7 +58,11 @@ async def test_full_path_with_admin_approval_alone():
     assert await run_jobs() == 1
     view = await expert.ok("GET", f"/assignments/{assignment_id}")
     assert view["state"] == "expert_check"
-    assert view["allowed_actions"] == ["complete_expert_check", "skip_expert_check"]
+    assert view["allowed_actions"] == [
+        "complete_expert_check",
+        "correct_findings",
+        "skip_expert_check",
+    ]
 
     await expert.ok("POST", f"/assignments/{assignment_id}/expert-check/complete")
     assert await _state(expert, assignment_id) == "building_units"
@@ -66,10 +70,11 @@ async def test_full_path_with_admin_approval_alone():
     assert await _state(admin, assignment_id) == "admin_review"
 
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
+    assert [(u["kind"], u["direction"]) for u in units] == [("fragment", "toward"), ("case", None)]
+    # Units are cut by citation, and every sentence the expert wrote stays verbatim in one of them.
     answers = FULL_PAYLOAD["answers"]
-    assert [(u["question_id"], u["text"]) for u in units] == [
-        (q, answers[q]) for q in ("Q1", "Q2", "Q3", "Q5")
-    ]
+    assert answers["Q1"] in units[0]["text"]
+    assert all(answers[q] in units[1]["text"] for q in ("Q2", "Q3", "Q5"))
     assert all(u["status"] == "pending" for u in units)
 
     await decide_all(admin, assignment_id)
@@ -104,7 +109,7 @@ async def test_failed_job_retries_then_fails_and_admin_retry_recovers(monkeypatc
     calls = {"n": 0}
     message = "the-answer-text must not be stored"
 
-    async def broken(db, assignment):
+    async def broken(db, assignment, prepared):
         calls["n"] += 1
         raise RuntimeError(message)
 
@@ -134,7 +139,7 @@ async def test_retry_runs_the_job_that_failed(monkeypatch):
     await run_jobs()
     await expert.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
 
-    async def broken(db, assignment):
+    async def broken(db, assignment, prepared):
         raise RuntimeError
 
     monkeypatch.setitem(handlers.HANDLERS, JobKind.BUILD_UNITS, broken)
@@ -152,7 +157,7 @@ async def test_ingestion_failure_and_retry(monkeypatch):
     [assignment_id], _ = await reach_admin_review(admin, expert)
     await decide_all(admin, assignment_id)
 
-    async def broken(db, assignment):
+    async def broken(db, assignment, prepared):
         raise RuntimeError
 
     monkeypatch.setitem(handlers.HANDLERS, JobKind.INGEST, broken)
@@ -170,7 +175,7 @@ async def test_two_workers_never_run_the_same_job(monkeypatch):
     await answer_and_submit(expert, assignment_id)
     calls = {"n": 0}
 
-    async def slow(db, assignment):
+    async def slow(db, assignment, prepared):
         calls["n"] += 1
         await asyncio.sleep(0.2)
 
@@ -313,7 +318,7 @@ async def test_partial_approval_ingests_only_the_approved_units():
     await run_jobs()
     assert await _state(admin, assignment_id) == "ingested"
     after = await admin.ok("GET", f"/assignments/{assignment_id}/units")
-    assert [u["status"] for u in after] == ["ingested", "rejected", "rejected", "rejected"]
+    assert [u["status"] for u in after] == ["ingested", "rejected"]
     assert after[1]["decisions"][0]["comment"] == "too generic"
     assert after[1]["decisions"][0]["stage"] == "admin"
 
@@ -473,7 +478,8 @@ async def test_peer_rejection_returns_to_the_admin_who_decides_with_the_comments
 async def test_admin_can_recall_a_stuck_review():
     admin, _, [peer], assignment_id, _ = await _with_peers("p1@example.com")
     assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["allowed_actions"] == [
-        "recall_review"
+        "decide_units",
+        "recall_review",
     ]
     await peer.fails("POST", f"/assignments/{assignment_id}/recall-review", 403, "forbidden")
     view = await admin.ok("POST", f"/assignments/{assignment_id}/recall-review")
@@ -529,7 +535,7 @@ async def test_approvals_only_count_for_the_reviewed_text():
     assert await _jobs(JobKind.INGEST) == []
     async with session_factory()() as db:
         count = await db.scalar(select(func.count()).select_from(UnitDecision))
-    assert count == 8
+    assert count == 2 * len(await admin.ok("GET", f"/assignments/{assignment_id}/units"))
 
 
 # --- peer eligibility -------------------------------------------------------------------------
@@ -611,7 +617,7 @@ async def test_a_reviewer_must_have_answered_the_vignette_first():
     assert await _state(admin, assignment_id) == "admin_review"
 
 
-async def test_a_reviewer_who_answered_another_version_can_review():
+async def test_a_reviewer_who_answered_another_version_is_asked_automatically():
     admin = await admin_api()
     author, reviewer = await expert_api("a@example.com"), await expert_api("r@example.com")
     _, v1 = await reach_admin_review(admin, reviewer)
@@ -623,10 +629,9 @@ async def test_a_reviewer_who_answered_another_version_can_review():
     await run_jobs()
     await author.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
     await run_jobs()
-    view = await admin.ok(
-        "POST", f"/assignments/{assignment_id}/reviewers", json={"reviewer_ids": [reviewer.user_id]}
-    )
-    assert view["state"] == "peer_review"
+    assert await _state(admin, assignment_id) == "peer_review"
+    [request] = await reviewer.ok("GET", "/review-requests")
+    assert request["assignment_id"] == assignment_id
 
 
 async def test_contamination_covers_other_versions_of_the_vignette():
@@ -867,5 +872,5 @@ async def test_admin_review_queue():
     [item] = await admin.ok("GET", "/review-requests")
     assert item["assignment_id"] == assignment_id
     assert item["stage"] == "admin"
-    assert item["unit_count"] == 4
+    assert item["unit_count"] == 2
     assert await expert.ok("GET", "/review-requests") == []

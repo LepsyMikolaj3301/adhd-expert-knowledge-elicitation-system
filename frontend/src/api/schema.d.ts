@@ -123,6 +123,24 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/v1/assignments/{assignment_id}/findings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Findings */
+    get: operations['get_findings_api_v1_assignments__assignment_id__findings_get']
+    /** Correct Findings */
+    put: operations['correct_findings_api_v1_assignments__assignment_id__findings_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/v1/assignments/{assignment_id}/pass-gate': {
     parameters: {
       query?: never
@@ -266,7 +284,10 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    /** List Units */
+    /**
+     * List Units
+     * @description The current round's units; the admin can ask for an earlier round with `review_round`.
+     */
     get: operations['list_units_api_v1_assignments__assignment_id__units_get']
     put?: never
     post?: never
@@ -589,6 +610,8 @@ export interface components {
       id: string
       /** Required Approvals */
       required_approvals: number
+      /** Review Round */
+      review_round: number
       /** Started At */
       started_at: string | null
       state: components['schemas']['State']
@@ -677,7 +700,7 @@ export interface components {
      * DecisionValue
      * @enum {string}
      */
-    DecisionValue: 'approve' | 'reject'
+    DecisionValue: 'approve' | 'reject' | 'request_changes'
     /** DecisionView */
     DecisionView: {
       /** Comment */
@@ -806,6 +829,8 @@ export interface components {
       id: string
       /** Locked Highlights */
       locked_highlights: number
+      /** Review Round */
+      review_round: number
       /** Started At */
       started_at: string | null
       state: components['schemas']['State']
@@ -837,6 +862,118 @@ export interface components {
       version: number
       /** Word Count */
       word_count: number
+    }
+    /**
+     * FindingFeedback
+     * @description A request for changes made in the last round, without saying who made it.
+     */
+    FindingFeedback: {
+      /**
+       * By
+       * @enum {string}
+       */
+      by: 'reviewer' | 'admin'
+      /** Comment */
+      comment: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'fragment' | 'case'
+      /** Patient Words */
+      patient_words: string | null
+      /** Unit Text */
+      unit_text: string
+    }
+    /** FindingFlag */
+    FindingFlag: {
+      /** Highlight */
+      highlight: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'coverage' | 'direction'
+      /** Message */
+      message: string
+      /** Sentence */
+      sentence?: string | null
+    }
+    /** FindingHighlight */
+    FindingHighlight: {
+      /** Chip */
+      chip: number | null
+      /** Direction */
+      direction: ('toward' | 'away' | 'neutral' | 'unclear') | null
+      /** Id */
+      id: string
+      /**
+       * Origin
+       * @enum {string}
+       */
+      origin: 'expert' | 'implicit'
+      /** Text */
+      text: string
+    }
+    /** FindingSentence */
+    FindingSentence: {
+      /**
+       * Assigned By
+       * @enum {string}
+       */
+      assigned_by: 'chip' | 'quote' | 'llm' | 'expert'
+      /** Id */
+      id: string
+      /** Question Id */
+      question_id: string
+      /** Targets */
+      targets: string[]
+      /** Text */
+      text: string
+    }
+    /**
+     * FindingsCorrection
+     * @description Only what changes: sentence id -> its new targets, highlight id -> its new direction.
+     */
+    FindingsCorrection: {
+      /**
+       * Directions
+       * @default {}
+       */
+      directions: {
+        [key: string]: 'toward' | 'away' | 'neutral' | 'unclear'
+      }
+      /**
+       * Sentences
+       * @default {}
+       */
+      sentences: {
+        [key: string]: string[]
+      }
+      /** Version */
+      version: number
+    }
+    /**
+     * FindingsView
+     * @description For the author and the admin. Peers never see the filing of someone's raw answers.
+     */
+    FindingsView: {
+      /** Check Outcome */
+      check_outcome: ('completed' | 'skipped') | null
+      /** Editable */
+      editable: boolean
+      /** Feedback */
+      feedback: components['schemas']['FindingFeedback'][]
+      /** Flags */
+      flags: components['schemas']['FindingFlag'][]
+      /** Highlights */
+      highlights: components['schemas']['FindingHighlight'][]
+      /** Review Round */
+      review_round: number
+      /** Sentences */
+      sentences: components['schemas']['FindingSentence'][]
+      /** Version */
+      version: number
     }
     /**
      * Highlight
@@ -884,8 +1021,8 @@ export interface components {
       id: string
       /** Ordinal */
       ordinal: number
-      /** Question Id */
-      question_id: string | null
+      /** Review Round */
+      review_round: number
       status: components['schemas']['UnitStatus']
       /** Text */
       text: string
@@ -918,6 +1055,8 @@ export interface components {
        * Format: uuid
        */
       id: string
+      /** Review Round */
+      review_round: number
       state: components['schemas']['State']
       /**
        * Updated At
@@ -1071,15 +1210,21 @@ export interface components {
       content_hash: string
       /** Decisions */
       decisions: components['schemas']['DecisionView'][]
+      /** Direction */
+      direction: string | null
       /**
        * Id
        * Format: uuid
        */
       id: string
+      /** Kind */
+      kind: string | null
       /** Ordinal */
       ordinal: number
-      /** Question Id */
-      question_id: string | null
+      /** Patient Words */
+      patient_words: string | null
+      /** Review Round */
+      review_round: number
       status: components['schemas']['UnitStatus']
       /** Text */
       text: string
@@ -1091,15 +1236,21 @@ export interface components {
        * @enum {string}
        */
       audience: 'author'
+      /** Direction */
+      direction: string | null
       /**
        * Id
        * Format: uuid
        */
       id: string
+      /** Kind */
+      kind: string | null
       /** Ordinal */
       ordinal: number
-      /** Question Id */
-      question_id: string | null
+      /** Patient Words */
+      patient_words: string | null
+      /** Review Round */
+      review_round: number
       status: components['schemas']['UnitStatus']
       /** Text */
       text: string
@@ -1130,16 +1281,22 @@ export interface components {
        * @enum {string}
        */
       audience: 'peer'
+      /** Direction */
+      direction: string | null
       /**
        * Id
        * Format: uuid
        */
       id: string
+      /** Kind */
+      kind: string | null
       my_decision: components['schemas']['DecisionValue'] | null
       /** Ordinal */
       ordinal: number
-      /** Question Id */
-      question_id: string | null
+      /** Patient Words */
+      patient_words: string | null
+      /** Review Round */
+      review_round: number
       /** Text */
       text: string
     }
@@ -1147,7 +1304,7 @@ export interface components {
      * UnitStatus
      * @enum {string}
      */
-    UnitStatus: 'pending' | 'approved' | 'rejected' | 'ingested'
+    UnitStatus: 'pending' | 'approved' | 'rejected' | 'ingested' | 'superseded'
     /** UserCreate */
     UserCreate: {
       /** Display Name */
@@ -1598,6 +1755,72 @@ export interface operations {
       }
     }
   }
+  get_findings_api_v1_assignments__assignment_id__findings_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assignment_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FindingsView']
+        }
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  correct_findings_api_v1_assignments__assignment_id__findings_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assignment_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FindingsCorrection']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FindingsView']
+        }
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   pass_gate_api_v1_assignments__assignment_id__pass_gate_post: {
     parameters: {
       query?: never
@@ -1877,7 +2100,9 @@ export interface operations {
   }
   list_units_api_v1_assignments__assignment_id__units_get: {
     parameters: {
-      query?: never
+      query?: {
+        review_round?: number | null
+      }
       header?: never
       path: {
         assignment_id: string

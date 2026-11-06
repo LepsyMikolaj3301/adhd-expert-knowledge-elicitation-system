@@ -22,8 +22,13 @@ class DecisionView(BaseModel):
 class _UnitBase(BaseModel):
     id: UUID
     ordinal: int
-    question_id: str | None
+    review_round: int
     text: str
+    # Cut by citation: a fragment unit is everything said about one passage of the vignette, the
+    # case unit everything said about the text as a whole.
+    kind: str | None
+    direction: str | None
+    patient_words: str | None
 
 
 class UnitAdminView(_UnitBase):

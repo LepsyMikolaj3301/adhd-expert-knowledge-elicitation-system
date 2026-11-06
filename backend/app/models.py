@@ -4,13 +4,14 @@ from app.assignments.models import AnswerDraft, Assignment, Submission
 from app.audit.models import AuditEvent
 from app.auth.models import AuthSession, Invite
 from app.jobs.models import Job
-from app.knowledge.models import KnowledgeUnit
+from app.knowledge.models import AnswerFindings, KnowledgeUnit
 from app.reviews.models import ReviewRequest, UnitDecision
 from app.users.models import User
 from app.vignettes.models import Vignette, VignetteVersion
 
 __all__ = [
     "AnswerDraft",
+    "AnswerFindings",
     "Assignment",
     "AuditEvent",
     "AuthSession",

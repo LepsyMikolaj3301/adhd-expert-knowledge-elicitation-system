@@ -13,7 +13,7 @@ class KnowledgeUnitListItem(BaseModel):
     vignette_version: int
     expert_pseudonym: str
     ordinal: int
-    question_id: str | None
+    review_round: int
     text: str
     status: UnitStatus
     created_at: datetime

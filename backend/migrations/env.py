@@ -1,4 +1,9 @@
-"""Alembic manages only the `app` schema. `public` (literature RAG) and `chips` are left alone."""
+"""Alembic manages only the `app` schema for autogenerate. `public` (literature RAG) is left alone.
+
+The tables of `chips` (approved answers for retrieval) are created by migration 0003 with plain
+SQL, since they use pgvector types, and are written by `app.knowledge.ingest`. Autogenerate
+ignores them, so changing them takes a hand-written migration.
+"""
 
 import asyncio
 from logging.config import fileConfig

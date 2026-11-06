@@ -9,7 +9,7 @@ from app.assignments.state_machine import check_transition, transition
 from app.assignments.states import Action, Actor, State
 from app.core.db import utcnow
 from app.core.errors import DomainError, invalid
-from app.knowledge.models import KnowledgeUnit, UnitStatus
+from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
 from app.reviews.models import DecisionValue, ReviewRequest, ReviewStage, UnitDecision
 from app.reviews.schemas import (
     DecisionView,
@@ -25,28 +25,43 @@ from app.vignettes.models import Vignette, VignetteVersion
 PRE_SUBMISSION_STATES = (State.ASSIGNED, State.IN_PROGRESS)
 
 
-async def _units(db: AsyncSession, assignment_id: UUID) -> list[KnowledgeUnit]:
+async def _units(
+    db: AsyncSession, assignment: Assignment, review_round: int | None = None
+) -> list[KnowledgeUnit]:
+    """The units of the assignment's current round, or of another one (the admin's history)."""
+    wanted = assignment.review_round if review_round is None else review_round
     return list(
         await db.scalars(
             select(KnowledgeUnit)
-            .where(KnowledgeUnit.assignment_id == assignment_id)
+            .where(
+                KnowledgeUnit.assignment_id == assignment.id,
+                KnowledgeUnit.review_round == wanted,
+            )
             .order_by(KnowledgeUnit.ordinal)
         )
     )
 
 
 async def list_units(
-    db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User
+    db: AsyncSession,
+    assignment: Assignment,
+    actor: Actor,
+    viewer: User,
+    review_round: int | None = None,
 ) -> list[UnitAdminView | UnitPeerView | UnitAuthorView]:
-    units = await _units(db, assignment.id)
+    """The current round's units. Only the admin can ask for an earlier round."""
+    units = await _units(db, assignment, review_round if actor == Actor.ADMIN else None)
     unit_ids = [unit.id for unit in units]
     if actor == Actor.ASSIGNEE:
         return [
             UnitAuthorView(
                 id=unit.id,
                 ordinal=unit.ordinal,
-                question_id=unit.question_id,
+                review_round=unit.review_round,
                 text=unit.text,
+                kind=unit.kind,
+                direction=unit.direction,
+                patient_words=unit.patient_words,
                 status=unit.status,
             )
             for unit in units
@@ -64,8 +79,11 @@ async def list_units(
             UnitPeerView(
                 id=unit.id,
                 ordinal=unit.ordinal,
-                question_id=unit.question_id,
+                review_round=unit.review_round,
                 text=unit.text,
+                kind=unit.kind,
+                direction=unit.direction,
+                patient_words=unit.patient_words,
                 my_decision=mine.get(unit.id),
             )
             for unit in units
@@ -92,8 +110,11 @@ async def list_units(
         UnitAdminView(
             id=unit.id,
             ordinal=unit.ordinal,
-            question_id=unit.question_id,
+            review_round=unit.review_round,
             text=unit.text,
+            kind=unit.kind,
+            direction=unit.direction,
+            patient_words=unit.patient_words,
             status=unit.status,
             content_hash=unit.content_hash,
             decisions=decisions[unit.id],
@@ -104,8 +125,12 @@ async def list_units(
 
 async def review_queue(db: AsyncSession, viewer: User) -> list[ReviewQueueItem]:
     unit_counts = (
-        select(KnowledgeUnit.assignment_id, func.count().label("unit_count"))
-        .group_by(KnowledgeUnit.assignment_id)
+        select(
+            KnowledgeUnit.assignment_id,
+            KnowledgeUnit.review_round,
+            func.count().label("unit_count"),
+        )
+        .group_by(KnowledgeUnit.assignment_id, KnowledgeUnit.review_round)
         .subquery()
     )
     base = (
@@ -117,12 +142,16 @@ async def review_queue(db: AsyncSession, viewer: User) -> list[ReviewQueueItem]:
         )
         .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
         .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-        .outerjoin(unit_counts, unit_counts.c.assignment_id == Assignment.id)
+        .outerjoin(
+            unit_counts,
+            (unit_counts.c.assignment_id == Assignment.id)
+            & (unit_counts.c.review_round == Assignment.review_round),
+        )
     )
     if viewer.role == Role.ADMIN:
         stage = ReviewStage.ADMIN
         requested_at = Assignment.updated_at
-        query = base.where(Assignment.state == State.ADMIN_REVIEW)
+        query = base.where(Assignment.state.in_([State.ADMIN_REVIEW, State.PEER_REVIEW]))
     else:
         stage = ReviewStage.PEER
         requested_at = ReviewRequest.requested_at
@@ -201,6 +230,44 @@ async def _check_reviewers(
         )
 
 
+async def eligible_peers(db: AsyncSession, assignment: Assignment) -> list[UUID]:
+    """Colleagues who may review this assignment's units, by the rules of `_check_reviewers`: an
+    active expert, not the author, who has submitted their own answers to the vignette (any
+    version) and has none still to give."""
+    vignette_id = await db.scalar(
+        select(VignetteVersion.vignette_id).where(
+            VignetteVersion.id == assignment.vignette_version_id
+        )
+    )
+    answered = (
+        select(Assignment.expert_id)
+        .join(Submission, Submission.assignment_id == Assignment.id)
+        .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
+        .where(VignetteVersion.vignette_id == vignette_id)
+    )
+    still_answering = (
+        select(Assignment.expert_id)
+        .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
+        .where(
+            Assignment.state.in_(PRE_SUBMISSION_STATES),
+            VignetteVersion.vignette_id == vignette_id,
+        )
+    )
+    return list(
+        await db.scalars(
+            select(User.id)
+            .where(
+                User.role == Role.EXPERT,
+                User.is_active,
+                User.id != assignment.expert_id,
+                User.id.in_(answered),
+                User.id.not_in(still_answering),
+            )
+            .order_by(User.id)
+        )
+    )
+
+
 async def request_peers(
     db: AsyncSession,
     assignment: Assignment,
@@ -223,7 +290,7 @@ async def request_peers(
             "peers_already_requested",
             "Peers have already seen this assignment, so the admin decides now.",
         )
-    if not await _units(db, assignment.id):
+    if not await _units(db, assignment):
         raise DomainError("no_units", "This assignment has no units to review.")
     unique_ids = list(dict.fromkeys(reviewer_ids))
     if required_approvals > len(unique_ids):
@@ -298,6 +365,40 @@ def _record_decisions(
     )
 
 
+async def _send_back(
+    db: AsyncSession,
+    assignment: Assignment,
+    actor: Actor,
+    viewer: User,
+    units: list[KnowledgeUnit],
+    by_unit: dict[UUID, DecisionValue],
+    changes: int,
+) -> None:
+    """The admin asked for changes: these units become history, the author corrects the filing, and
+    a new round of units is cut and reviewed. Nothing from this round is ingested."""
+    for unit in units:
+        unit.status = UnitStatus.SUPERSEDED
+    assignment.review_round += 1
+    approved = sum(d == DecisionValue.APPROVE for d in by_unit.values())
+    await transition(
+        db,
+        assignment,
+        Action.REQUEST_CHANGES,
+        actor,
+        viewer.id,
+        {
+            "approved": approved,
+            "rejected": len(units) - approved - changes,
+            "changes": changes,
+            "review_round": assignment.review_round,
+        },
+    )
+    await _close_open_requests(db, assignment.id)
+    findings = await db.get(AnswerFindings, assignment.id)
+    if findings is not None:
+        findings.check_outcome = None  # the author approves the (corrected) filing again
+
+
 async def _admin_decides(
     db: AsyncSession,
     assignment: Assignment,
@@ -310,6 +411,9 @@ async def _admin_decides(
     _check_complete(units, decisions)
     _record_decisions(db, units, decisions, viewer, ReviewStage.ADMIN)
     by_unit = {decision.unit_id: decision.decision for decision in decisions}
+    if changes := sum(d == DecisionValue.REQUEST_CHANGES for d in by_unit.values()):
+        await _send_back(db, assignment, actor, viewer, units, by_unit, changes)
+        return
     for unit in units:
         approved = by_unit[unit.id] == DecisionValue.APPROVE
         unit.status = UnitStatus.APPROVED if approved else UnitStatus.REJECTED
@@ -323,6 +427,7 @@ async def _admin_decides(
         viewer.id,
         {"approved": approved_count, "rejected": len(units) - approved_count},
     )
+    await _close_open_requests(db, assignment.id)  # an admin deciding in peer review ends it
 
 
 async def _peer_decides(
@@ -360,8 +465,8 @@ async def _peer_decides(
     for decision in recorded:
         if decision.unit_content_hash != hashes[decision.unit_id]:
             continue
-        if decision.decision == DecisionValue.REJECT:
-            any_rejection = True
+        if decision.decision in (DecisionValue.REJECT, DecisionValue.REQUEST_CHANGES):
+            any_rejection = True  # either way it goes to the admin, who sees the comments
         else:
             approvals[decision.unit_id] += 1
 
@@ -378,6 +483,20 @@ async def _peer_decides(
         await _close_open_requests(db, assignment.id)
 
 
+def _require_comments(decisions: list[UnitDecisionInput]) -> None:
+    """Asking for changes without saying what to change would leave the author guessing."""
+    if missing := [
+        str(d.unit_id)
+        for d in decisions
+        if d.decision == DecisionValue.REQUEST_CHANGES and not (d.comment or "").strip()
+    ]:
+        raise invalid(
+            "comment_required",
+            "Say what should change when asking for changes.",
+            {"unit_ids": missing},
+        )
+
+
 async def submit_decisions(
     db: AsyncSession,
     assignment: Assignment,
@@ -385,7 +504,8 @@ async def submit_decisions(
     viewer: User,
     decisions: list[UnitDecisionInput],
 ) -> None:
-    units = await _units(db, assignment.id)
+    _require_comments(decisions)
+    units = await _units(db, assignment)
     if actor == Actor.REVIEWER:
         await _peer_decides(db, assignment, actor, viewer, units, decisions)
     else:

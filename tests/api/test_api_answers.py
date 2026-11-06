@@ -453,9 +453,9 @@ async def test_reviewers_read_units_with_quotes_instead_of_chip_tokens():
     await expert.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
     await run_jobs()
     units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
-    texts = {unit["question_id"]: unit["text"] for unit in units}
-    assert "⟦" not in str(texts)
-    assert texts["Q5"].startswith("«I reorganised my entire desk instead of starting…» ")
+    text = "\n".join(unit["text"] for unit in units)
+    assert "⟦" not in text
+    assert f"Q5: «I reorganised my entire desk instead of starting…» {Q5_ANSWER}" in text
 
 
 async def test_the_admin_can_list_the_assignments_of_one_version():

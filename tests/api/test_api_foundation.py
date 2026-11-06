@@ -47,12 +47,13 @@ async def test_alembic_only_touches_the_app_schema():
 
 
 def test_downgrade_leaves_other_schemas_alone(migrated_database):
+    """`chips` (the RAG tables, created by migration 0003 and kept by its downgrade) counts too."""
     import asyncio
 
     async def setup():
         c = await asyncpg.connect(TEST_URL)
-        await c.execute("CREATE SCHEMA IF NOT EXISTS chips")
-        await c.execute("CREATE TABLE IF NOT EXISTS chips.keep_me (id int)")
+        await c.execute("CREATE SCHEMA IF NOT EXISTS scratch")
+        await c.execute("CREATE TABLE IF NOT EXISTS scratch.keep_me (id int)")
         await c.execute("CREATE TABLE IF NOT EXISTS public.keep_me (id int)")
         await c.close()
 
@@ -60,14 +61,14 @@ def test_downgrade_leaves_other_schemas_alone(migrated_database):
         c = await asyncpg.connect(TEST_URL)
         rows = await c.fetch(
             "SELECT table_schema, table_name FROM information_schema.tables "
-            "WHERE table_schema IN ('app', 'chips', 'public')"
+            "WHERE table_schema IN ('app', 'chips', 'scratch', 'public')"
         )
         await c.close()
         return {(r["table_schema"], r["table_name"]) for r in rows}
 
     async def cleanup():
         c = await asyncpg.connect(TEST_URL)
-        await c.execute("DROP SCHEMA chips CASCADE")
+        await c.execute("DROP SCHEMA scratch CASCADE")
         await c.execute("DROP TABLE public.keep_me")
         await c.close()
 
@@ -88,6 +89,7 @@ def test_downgrade_leaves_other_schemas_alone(migrated_database):
         before, after, restored = pool.submit(body).result()
 
     others = {t for t in before if t[0] != "app"}
+    assert any(schema == "chips" for schema, _ in others), "migration 0003 creates the RAG tables"
     assert {t for t in after if t[0] != "app"} == others
     assert {t for t in after if t[0] == "app"} == {("app", "alembic_version")}
     assert restored == before

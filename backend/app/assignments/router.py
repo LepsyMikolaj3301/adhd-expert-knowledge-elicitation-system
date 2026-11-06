@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Query, status
 
-from app.assignments import service
+from app.assignments import check, service
 from app.assignments.schemas import (
     AssignmentSummary,
     AssignmentView,
@@ -11,6 +11,8 @@ from app.assignments.schemas import (
     DraftSave,
     DraftSaved,
     EventView,
+    FindingsCorrection,
+    FindingsView,
     SubmissionView,
 )
 from app.assignments.state_machine import transition
@@ -108,12 +110,28 @@ async def submit(assignment_id: UUID, db: DbSession, user: CurrentUser) -> Assig
     return await service.build_view(db, assignment, actor, user)
 
 
+@router.get("/assignments/{assignment_id}/findings")
+async def get_findings(assignment_id: UUID, db: DbSession, user: CurrentUser) -> FindingsView:
+    assignment, actor = await service.load(db, assignment_id, user)
+    return await check.get(db, assignment, actor)
+
+
+@router.put("/assignments/{assignment_id}/findings")
+async def correct_findings(
+    assignment_id: UUID, body: FindingsCorrection, db: DbSession, user: CurrentUser
+) -> FindingsView:
+    assignment, actor = await service.lock(db, assignment_id, user)
+    corrected = await check.correct(db, assignment, actor, user, body)
+    await db.commit()
+    return corrected
+
+
 @router.post("/assignments/{assignment_id}/expert-check/complete")
 async def complete_expert_check(
     assignment_id: UUID, db: DbSession, user: CurrentUser
 ) -> AssignmentView:
     assignment, actor = await service.lock(db, assignment_id, user)
-    await transition(db, assignment, Action.COMPLETE_EXPERT_CHECK, actor, user.id)
+    await check.finish(db, assignment, actor, user, skip=False)
     await db.commit()
     return await service.build_view(db, assignment, actor, user)
 
@@ -123,7 +141,7 @@ async def skip_expert_check(
     assignment_id: UUID, db: DbSession, user: CurrentUser
 ) -> AssignmentView:
     assignment, actor = await service.lock(db, assignment_id, user)
-    await transition(db, assignment, Action.SKIP_EXPERT_CHECK, actor, user.id)
+    await check.finish(db, assignment, actor, user, skip=True)
     await db.commit()
     return await service.build_view(db, assignment, actor, user)
 

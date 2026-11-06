@@ -16,6 +16,8 @@ class ReviewStage(StrEnum):
 class DecisionValue(StrEnum):
     APPROVE = "approve"
     REJECT = "reject"
+    # The unit could be right with another filing: the author is asked to correct it.
+    REQUEST_CHANGES = "request_changes"
 
 
 class ReviewRequest(Base):
@@ -26,7 +28,8 @@ class ReviewRequest(Base):
     assignment_id: Mapped[UUID] = mapped_column(ForeignKey("app.assignments.id"))
     reviewer_id: Mapped[UUID] = mapped_column(ForeignKey("app.users.id"), index=True)
     stage: Mapped[ReviewStage] = mapped_column(enum_column(ReviewStage, "stage"))
-    requested_by: Mapped[UUID] = mapped_column(ForeignKey("app.users.id"))
+    # None: the system asked, when the units were built.
+    requested_by: Mapped[UUID | None] = mapped_column(ForeignKey("app.users.id"))
     requested_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, server_default=func.now()
     )

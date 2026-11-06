@@ -202,3 +202,26 @@ async def decide_all(api: Api, assignment_id: str, decision: str = "approve") ->
         f"/assignments/{assignment_id}/unit-decisions",
         json={"decisions": [{"unit_id": u["id"], "decision": decision} for u in units]},
     )
+
+
+async def to_units(admin, expert, assignment_id, skip=False):
+    """Carry a submitted assignment through processing and the check to its built units."""
+    await run_jobs()
+    verb = "skip" if skip else "complete"
+    await (admin if skip else expert).ok(
+        "POST", f"/assignments/{assignment_id}/expert-check/{verb}"
+    )
+    await run_jobs()
+
+
+async def two_experts():
+    """e1 has finished (admin_review). e2 has finished too, and e1 is asked to review e2's units."""
+    admin = await admin_api()
+    e1, e2 = await expert_api("e1@example.com"), await expert_api("e2@example.com")
+    version = await published_version(admin)
+    first, second = await assign(admin, version, e1, e2)
+    await answer_and_submit(e1, first)
+    await to_units(admin, e1, first, skip=True)
+    await answer_and_submit(e2, second)
+    await to_units(admin, e2, second)
+    return admin, e1, e2, first, second

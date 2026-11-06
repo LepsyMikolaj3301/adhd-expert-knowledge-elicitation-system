@@ -13,7 +13,7 @@ from app.assignments.states import JOB_STATES, TERMINAL_STATES, Action, Actor, S
 from app.core.errors import DomainError
 from app.jobs.models import JobKind
 
-EXPECTED_TABLES = 13
+EXPECTED_TABLES = 14
 A, E, R, S = Actor.ADMIN, Actor.ASSIGNEE, Actor.REVIEWER, Actor.SYSTEM
 
 WORKFLOW = {
@@ -26,6 +26,7 @@ WORKFLOW = {
     (State.EXPERT_CHECK, Action.COMPLETE_EXPERT_CHECK): (State.BUILDING_UNITS, {E}),
     (State.EXPERT_CHECK, Action.SKIP_EXPERT_CHECK): (State.BUILDING_UNITS, {E, A}),
     (State.BUILDING_UNITS, Action.UNITS_BUILT): (State.ADMIN_REVIEW, {S}),
+    (State.BUILDING_UNITS, Action.UNITS_BUILT_FOR_PEERS): (State.PEER_REVIEW, {S}),
     (State.BUILDING_UNITS, Action.UNITS_FAILED): (State.PROCESSING_FAILED, {S}),
     (State.PROCESSING_FAILED, Action.RETRY_PROCESSING): (State.PROCESSING, {A}),
     (State.PROCESSING_FAILED, Action.RETRY_UNITS): (State.BUILDING_UNITS, {A}),
@@ -35,6 +36,12 @@ WORKFLOW = {
     (State.PEER_REVIEW, Action.PEERS_APPROVED): (State.INGESTING, {R}),
     (State.PEER_REVIEW, Action.PEER_REJECTED): (State.ADMIN_REVIEW, {R}),
     (State.PEER_REVIEW, Action.RECALL_REVIEW): (State.ADMIN_REVIEW, {A}),
+    # The admin may decide while the peers are still looking.
+    (State.PEER_REVIEW, Action.APPROVE_UNITS): (State.INGESTING, {A}),
+    (State.PEER_REVIEW, Action.REJECT_ALL_UNITS): (State.REJECTED, {A}),
+    # Only the admin sends units back to the author, from either review state.
+    (State.ADMIN_REVIEW, Action.REQUEST_CHANGES): (State.EXPERT_CHECK, {A}),
+    (State.PEER_REVIEW, Action.REQUEST_CHANGES): (State.EXPERT_CHECK, {A}),
     (State.INGESTING, Action.INGESTION_SUCCEEDED): (State.INGESTED, {S}),
     (State.INGESTING, Action.INGESTION_FAILED): (State.INGESTION_FAILED, {S}),
     (State.INGESTION_FAILED, Action.RETRY_INGESTION): (State.INGESTING, {A}),
@@ -96,7 +103,7 @@ def test_user_action_names_per_role():
     assert user_actions(State.EXPERT_CHECK, E) == {"complete_expert_check", "skip_expert_check"}
     assert user_actions(State.EXPERT_CHECK, A) == {"skip_expert_check"}
     assert user_actions(State.ADMIN_REVIEW, A) == {"decide_units", "request_peers"}
-    assert user_actions(State.PEER_REVIEW, A) == {"recall_review"}
+    assert user_actions(State.PEER_REVIEW, A) == {"decide_units", "recall_review"}
     assert user_actions(State.PEER_REVIEW, R) == {"decide_units"}
     assert user_actions(State.PROCESSING_FAILED, A) == {"retry"}
 

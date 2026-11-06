@@ -48,6 +48,8 @@ class DraftView(BaseModel):
 class _AssignmentBase(BaseModel):
     id: UUID
     state: State
+    # 1 until reviewers' requests for changes have sent the units back to the author.
+    review_round: int
     allowed_actions: list[str]
     updated_at: datetime
 
@@ -150,3 +152,65 @@ class EventAuthorView(BaseModel):
 
 
 EventView = Annotated[EventAdminView | EventAuthorView, Field(discriminator="audience")]
+
+
+# --- the expert check ------------------------------------------------------------------------
+
+FindingDirection = Literal["toward", "away", "neutral", "unclear"]
+
+
+class FindingHighlight(BaseModel):
+    id: str  # h1 (the expert's citation) or i1 (a quote that matched the text, never marked)
+    chip: int | None
+    text: str
+    origin: Literal["expert", "implicit"]
+    direction: FindingDirection | None
+
+
+class FindingSentence(BaseModel):
+    id: str
+    question_id: str
+    text: str  # citations shown as short quotes
+    targets: list[str]  # highlight ids, or "case"
+    assigned_by: Literal["chip", "quote", "llm", "expert"]
+
+
+class FindingFlag(BaseModel):
+    kind: Literal["coverage", "direction"]
+    highlight: str
+    sentence: str | None = None
+    message: str
+
+
+class FindingFeedback(BaseModel):
+    """A request for changes made in the last round, without saying who made it."""
+
+    kind: Literal["fragment", "case"]
+    patient_words: str | None
+    unit_text: str
+    comment: str
+    by: Literal["reviewer", "admin"]
+
+
+class FindingsView(BaseModel):
+    """For the author and the admin. Peers never see the filing of someone's raw answers."""
+
+    version: int
+    review_round: int
+    # What reviewers asked to change in the round before this one; empty in the first.
+    feedback: list[FindingFeedback]
+    editable: bool
+    check_outcome: Literal["completed", "skipped"] | None
+    highlights: list[FindingHighlight]
+    sentences: list[FindingSentence]
+    flags: list[FindingFlag]
+
+
+class FindingsCorrection(BaseModel):
+    """Only what changes: sentence id -> its new targets, highlight id -> its new direction."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version: int = Field(ge=1)
+    sentences: dict[str, list[str]] = Field(default={}, max_length=1_000)
+    directions: dict[str, FindingDirection] = Field(default={}, max_length=200)

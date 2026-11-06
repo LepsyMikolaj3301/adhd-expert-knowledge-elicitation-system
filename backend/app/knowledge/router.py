@@ -43,7 +43,7 @@ async def list_knowledge_units(
             vignette_version=version,
             expert_pseudonym=pseudonym,
             ordinal=unit.ordinal,
-            question_id=unit.question_id,
+            review_round=unit.review_round,
             text=unit.text,
             status=unit.status,
             created_at=unit.created_at,

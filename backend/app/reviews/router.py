@@ -18,9 +18,12 @@ async def review_queue(db: DbSession, user: CurrentUser) -> list[ReviewQueueItem
 
 
 @router.get("/assignments/{assignment_id}/units")
-async def list_units(assignment_id: UUID, db: DbSession, user: CurrentUser) -> list[UnitView]:
+async def list_units(
+    assignment_id: UUID, db: DbSession, user: CurrentUser, review_round: int | None = None
+) -> list[UnitView]:
+    """The current round's units; the admin can ask for an earlier round with `review_round`."""
     assignment, actor = await assignments.load(db, assignment_id, user)
-    return await service.list_units(db, assignment, actor, user)
+    return await service.list_units(db, assignment, actor, user, review_round)
 
 
 @router.post("/assignments/{assignment_id}/unit-decisions")

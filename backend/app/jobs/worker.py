@@ -1,17 +1,18 @@
 """Background worker: python -m app.jobs.worker. Run as many as needed."""
 
 import asyncio
+import contextlib
 import logging
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 import app.models  # noqa: F401  (a worker runs without app.main: every table must be known)
 from app.assignments.state_machine import lock_assignment, transition
 from app.assignments.states import Action, Actor
 from app.core.db import session_factory, utcnow
 from app.core.errors import safe_traceback
-from app.jobs.handlers import HANDLERS, PermanentJobError
+from app.jobs.handlers import HANDLERS, PREPARE, PermanentJobError
 from app.jobs.models import Job, JobKind, JobStatus
 from app.jobs.queue import LEASE, MAX_ATTEMPTS, next_job
 
@@ -48,6 +49,32 @@ async def _current(db, job_id: UUID, attempt: int) -> Job | None:
     return job
 
 
+async def _heartbeat(job_id: UUID, attempt: int) -> None:
+    """Renews the lease while the job runs, so that a long job isn't taken over by another worker
+    but a crashed one still is, one lease later."""
+    factory = session_factory()
+    while True:
+        await asyncio.sleep(LEASE.total_seconds() / 3)
+        try:
+            async with factory() as db:
+                await db.execute(
+                    update(Job)
+                    .where(
+                        Job.id == job_id, Job.status == JobStatus.RUNNING, Job.attempts == attempt
+                    )
+                    .values(locked_until=utcnow() + LEASE)
+                )
+                await db.commit()
+        except Exception as exc:  # a database outage must not end the job's own work
+            logger.error("lease renewal failed\n%s", safe_traceback(exc))
+
+
+async def _stop(task: asyncio.Task) -> None:
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
+
+
 async def run_once() -> bool:
     """Claim and run one job. Returns False when there was nothing to do."""
     factory = session_factory()
@@ -66,19 +93,25 @@ async def run_once() -> bool:
         job_id, kind, assignment_id, attempt = job.id, job.kind, job.assignment_id, job.attempts
         await db.commit()
 
-    # shortcut: the handler runs inside the transaction holding the assignment lock. Fine for the
-    # stubs; real long-running processing should do its work first and lock only to record it.
+    # Slow work (the classifier, embeddings) happens in `prepare`, with no transaction and no row
+    # lock open. Only recording the result takes the assignment lock, for as short as it can.
+    heartbeat = asyncio.create_task(_heartbeat(job_id, attempt))
     try:
-        async with factory() as db:
-            assignment = await lock_assignment(db, assignment_id)
-            job = await _current(db, job_id, attempt)
-            if job is None:
-                return True
-            await HANDLERS[kind](db, assignment)
-            job.status = JobStatus.DONE
-            job.locked_until = None
-            await transition(db, assignment, SUCCESS_ACTION[kind], Actor.SYSTEM, None)
-            await db.commit()
+        try:
+            prepare = PREPARE.get(kind)
+            prepared = await prepare(assignment_id) if prepare else None
+            async with factory() as db:
+                assignment = await lock_assignment(db, assignment_id)
+                job = await _current(db, job_id, attempt)
+                if job is None:
+                    return True
+                action = await HANDLERS[kind](db, assignment, prepared)
+                job.status = JobStatus.DONE
+                job.locked_until = None
+                await transition(db, assignment, action or SUCCESS_ACTION[kind], Actor.SYSTEM, None)
+                await db.commit()
+        finally:
+            await _stop(heartbeat)
     except Exception as exc:
         logger.error(
             "job %s (%s) failed on attempt %d\n%s",

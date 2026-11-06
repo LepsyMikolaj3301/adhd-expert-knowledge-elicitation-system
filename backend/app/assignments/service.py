@@ -63,6 +63,8 @@ def allowed_actions(
         if not gate_is_open:
             names.add("pass_gate")
             names.discard("submit")
+    if state == State.EXPERT_CHECK and actor == Actor.ASSIGNEE:
+        names.add("correct_findings")
     if actor == Actor.REVIEWER and not has_open_request:
         names.discard("decide_units")
     if peers_used:
@@ -177,6 +179,7 @@ async def build_view(
         return ExpertAssignment(
             id=assignment.id,
             state=assignment.state,
+            review_round=assignment.review_round,
             allowed_actions=actions,
             updated_at=assignment.updated_at,
             vignette=ExpertVignette(
@@ -204,6 +207,7 @@ async def build_view(
         return PeerAssignment(
             id=assignment.id,
             state=assignment.state,
+            review_round=assignment.review_round,
             allowed_actions=actions,
             updated_at=assignment.updated_at,
             vignette=PeerVignette(
@@ -219,6 +223,7 @@ async def build_view(
     return AdminAssignment(
         id=assignment.id,
         state=assignment.state,
+        review_round=assignment.review_round,
         allowed_actions=actions,
         updated_at=assignment.updated_at,
         expert_id=assignment.expert_id,

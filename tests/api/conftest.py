@@ -4,10 +4,14 @@ The schema comes from the Alembic migrations, and `app` is emptied before each t
 """
 
 import asyncio
+import hashlib
+import json
 import os
+import re
 from pathlib import Path
 
 import asyncpg
+import numpy as np
 import pytest
 import pytest_asyncio
 from alembic import command
@@ -62,6 +66,55 @@ async def clean_database(migrated_database: str):
     tables = ", ".join(f"app.{table.name}" for table in Base.metadata.sorted_tables)
     async with session_factory()() as session:
         await session.execute(text(f"TRUNCATE {tables} CASCADE"))
+        # The RAG tables that ingestion writes (rag_test only: the name is checked above).
+        await session.execute(
+            text(
+                "TRUNCATE chips.experts, chips.vignettes, chips.elicitation_sessions, "
+                "chips.cue_keys CASCADE"
+            )
+        )
         await session.commit()
     yield
     await engine.dispose()
+
+
+class FakeModels:
+    """Stands in for Ollama: the classifier files every sentence it is asked about under `case`
+    (or wherever `labels` says), and embeddings are deterministic vectors of the text."""
+
+    def __init__(self) -> None:
+        self.classifier_calls: list[str] = []  # the user prompt of each call
+        self.embedded: list[list[str]] = []  # the texts of each call
+        self.labels: dict[str, list[str]] = {}
+        self.classifier_reply: str | None = None  # a raw reply, e.g. garbage
+        self.down = False
+
+    async def ask(self, system, user, seed) -> str:
+        self.classifier_calls.append(user)
+        if self.down:
+            raise ConnectionError("ollama is down")
+        if self.classifier_reply is not None:
+            return self.classifier_reply
+        left = re.search(r"Sentences to file: (.*)", user)
+        ids = [i.strip() for i in left.group(1).split(",")] if left else []
+        return json.dumps({i: self.labels.get(i, ["case"]) for i in ids})
+
+    async def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        self.embedded.append(list(texts))
+        if self.down:
+            raise ConnectionError("ollama is down")
+        return [self.vector(text) for text in texts]
+
+    @staticmethod
+    def vector(text: str) -> list[float]:
+        seed = int.from_bytes(hashlib.sha256(text.encode()).digest()[:4], "big")
+        values = np.random.RandomState(seed).randn(1024)
+        return (values / np.linalg.norm(values)).tolist()
+
+
+@pytest.fixture(autouse=True)
+def models(monkeypatch) -> FakeModels:
+    fake = FakeModels()
+    monkeypatch.setattr("app.knowledge.classifier.ask", fake.ask)
+    monkeypatch.setattr("app.knowledge.embedding.embed_texts", fake.embed_texts)
+    return fake

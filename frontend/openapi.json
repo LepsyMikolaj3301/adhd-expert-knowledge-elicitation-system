@@ -68,6 +68,10 @@
             "title": "Required Approvals",
             "type": "integer"
           },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -117,6 +121,7 @@
         "required": [
           "id",
           "state",
+          "review_round",
           "allowed_actions",
           "updated_at",
           "expert_id",
@@ -296,7 +301,8 @@
       "DecisionValue": {
         "enum": [
           "approve",
-          "reject"
+          "reject",
+          "request_changes"
         ],
         "title": "DecisionValue",
         "type": "string"
@@ -611,6 +617,10 @@
             "title": "Locked Highlights",
             "type": "integer"
           },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -650,6 +660,7 @@
         "required": [
           "id",
           "state",
+          "review_round",
           "allowed_actions",
           "updated_at",
           "vignette",
@@ -711,6 +722,307 @@
           "questions"
         ],
         "title": "ExpertVignette",
+        "type": "object"
+      },
+      "FindingFeedback": {
+        "description": "A request for changes made in the last round, without saying who made it.",
+        "properties": {
+          "by": {
+            "enum": [
+              "reviewer",
+              "admin"
+            ],
+            "title": "By",
+            "type": "string"
+          },
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "fragment",
+              "case"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "patient_words": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Words"
+          },
+          "unit_text": {
+            "title": "Unit Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "patient_words",
+          "unit_text",
+          "comment",
+          "by"
+        ],
+        "title": "FindingFeedback",
+        "type": "object"
+      },
+      "FindingFlag": {
+        "properties": {
+          "highlight": {
+            "title": "Highlight",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "coverage",
+              "direction"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "sentence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentence"
+          }
+        },
+        "required": [
+          "kind",
+          "highlight",
+          "message"
+        ],
+        "title": "FindingFlag",
+        "type": "object"
+      },
+      "FindingHighlight": {
+        "properties": {
+          "chip": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chip"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "enum": [
+                  "toward",
+                  "away",
+                  "neutral",
+                  "unclear"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "expert",
+              "implicit"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "chip",
+          "text",
+          "origin",
+          "direction"
+        ],
+        "title": "FindingHighlight",
+        "type": "object"
+      },
+      "FindingSentence": {
+        "properties": {
+          "assigned_by": {
+            "enum": [
+              "chip",
+              "quote",
+              "llm",
+              "expert"
+            ],
+            "title": "Assigned By",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "targets": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "question_id",
+          "text",
+          "targets",
+          "assigned_by"
+        ],
+        "title": "FindingSentence",
+        "type": "object"
+      },
+      "FindingsCorrection": {
+        "additionalProperties": false,
+        "description": "Only what changes: sentence id -> its new targets, highlight id -> its new direction.",
+        "properties": {
+          "directions": {
+            "additionalProperties": {
+              "enum": [
+                "toward",
+                "away",
+                "neutral",
+                "unclear"
+              ],
+              "type": "string"
+            },
+            "default": {},
+            "maxProperties": 200,
+            "title": "Directions",
+            "type": "object"
+          },
+          "sentences": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "default": {},
+            "maxProperties": 1000,
+            "title": "Sentences",
+            "type": "object"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "FindingsCorrection",
+        "type": "object"
+      },
+      "FindingsView": {
+        "description": "For the author and the admin. Peers never see the filing of someone's raw answers.",
+        "properties": {
+          "check_outcome": {
+            "anyOf": [
+              {
+                "enum": [
+                  "completed",
+                  "skipped"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Check Outcome"
+          },
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "feedback": {
+            "items": {
+              "$ref": "#/components/schemas/FindingFeedback"
+            },
+            "title": "Feedback",
+            "type": "array"
+          },
+          "flags": {
+            "items": {
+              "$ref": "#/components/schemas/FindingFlag"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "highlights": {
+            "items": {
+              "$ref": "#/components/schemas/FindingHighlight"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
+          "sentences": {
+            "items": {
+              "$ref": "#/components/schemas/FindingSentence"
+            },
+            "title": "Sentences",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "review_round",
+          "feedback",
+          "editable",
+          "check_outcome",
+          "highlights",
+          "sentences",
+          "flags"
+        ],
+        "title": "FindingsView",
         "type": "object"
       },
       "Highlight": {
@@ -823,16 +1135,9 @@
             "title": "Ordinal",
             "type": "integer"
           },
-          "question_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Question Id"
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
           },
           "status": {
             "$ref": "#/components/schemas/UnitStatus"
@@ -857,7 +1162,7 @@
           "vignette_version",
           "expert_pseudonym",
           "ordinal",
-          "question_id",
+          "review_round",
           "text",
           "status",
           "created_at"
@@ -906,6 +1211,10 @@
             "title": "Id",
             "type": "string"
           },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
           "state": {
             "$ref": "#/components/schemas/State"
           },
@@ -921,6 +1230,7 @@
         "required": [
           "id",
           "state",
+          "review_round",
           "allowed_actions",
           "updated_at",
           "vignette"
@@ -1251,16 +1561,7 @@
             "title": "Decisions",
             "type": "array"
           },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "ordinal": {
-            "title": "Ordinal",
-            "type": "integer"
-          },
-          "question_id": {
+          "direction": {
             "anyOf": [
               {
                 "type": "string"
@@ -1269,7 +1570,42 @@
                 "type": "null"
               }
             ],
-            "title": "Question Id"
+            "title": "Direction"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "ordinal": {
+            "title": "Ordinal",
+            "type": "integer"
+          },
+          "patient_words": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Words"
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
           },
           "status": {
             "$ref": "#/components/schemas/UnitStatus"
@@ -1282,8 +1618,11 @@
         "required": [
           "id",
           "ordinal",
-          "question_id",
+          "review_round",
           "text",
+          "kind",
+          "direction",
+          "patient_words",
           "status",
           "content_hash",
           "decisions"
@@ -1299,16 +1638,7 @@
             "title": "Audience",
             "type": "string"
           },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "ordinal": {
-            "title": "Ordinal",
-            "type": "integer"
-          },
-          "question_id": {
+          "direction": {
             "anyOf": [
               {
                 "type": "string"
@@ -1317,7 +1647,42 @@
                 "type": "null"
               }
             ],
-            "title": "Question Id"
+            "title": "Direction"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "ordinal": {
+            "title": "Ordinal",
+            "type": "integer"
+          },
+          "patient_words": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Words"
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
           },
           "status": {
             "$ref": "#/components/schemas/UnitStatus"
@@ -1330,8 +1695,11 @@
         "required": [
           "id",
           "ordinal",
-          "question_id",
+          "review_round",
           "text",
+          "kind",
+          "direction",
+          "patient_words",
           "status"
         ],
         "title": "UnitAuthorView",
@@ -1395,10 +1763,32 @@
             "title": "Audience",
             "type": "string"
           },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
           },
           "my_decision": {
             "anyOf": [
@@ -1414,7 +1804,7 @@
             "title": "Ordinal",
             "type": "integer"
           },
-          "question_id": {
+          "patient_words": {
             "anyOf": [
               {
                 "type": "string"
@@ -1423,7 +1813,11 @@
                 "type": "null"
               }
             ],
-            "title": "Question Id"
+            "title": "Patient Words"
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
           },
           "text": {
             "title": "Text",
@@ -1433,8 +1827,11 @@
         "required": [
           "id",
           "ordinal",
-          "question_id",
+          "review_round",
           "text",
+          "kind",
+          "direction",
+          "patient_words",
           "my_decision"
         ],
         "title": "UnitPeerView",
@@ -1445,7 +1842,8 @@
           "pending",
           "approved",
           "rejected",
-          "ingested"
+          "ingested",
+          "superseded"
         ],
         "title": "UnitStatus",
         "type": "string"
@@ -2477,6 +2875,100 @@
         ]
       }
     },
+    "/api/v1/assignments/{assignment_id}/findings": {
+      "get": {
+        "operationId": "get_findings_api_v1_assignments__assignment_id__findings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Get Findings",
+        "tags": [
+          "assignments"
+        ]
+      },
+      "put": {
+        "operationId": "correct_findings_api_v1_assignments__assignment_id__findings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FindingsCorrection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FindingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Correct Findings",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
     "/api/v1/assignments/{assignment_id}/pass-gate": {
       "post": {
         "operationId": "pass_gate_api_v1_assignments__assignment_id__pass_gate_post",
@@ -2976,6 +3468,7 @@
     },
     "/api/v1/assignments/{assignment_id}/units": {
       "get": {
+        "description": "The current round's units; the admin can ask for an earlier round with `review_round`.",
         "operationId": "list_units_api_v1_assignments__assignment_id__units_get",
         "parameters": [
           {
@@ -2986,6 +3479,22 @@
               "format": "uuid",
               "title": "Assignment Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "review_round",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Review Round"
             }
           }
         ],
