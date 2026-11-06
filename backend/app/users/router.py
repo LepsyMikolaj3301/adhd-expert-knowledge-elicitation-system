@@ -6,14 +6,20 @@ from app.auth.dependencies import AdminUser
 from app.auth.service import issue_invite
 from app.core.db import DbSession
 from app.users import service
-from app.users.schemas import InvitedUser, InviteIssued, UserCreate, UserUpdate, UserView
+from app.users.schemas import (
+    InvitedUser,
+    InviteIssued,
+    UserAdminView,
+    UserCreate,
+    UserUpdate,
+)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.get("")
-async def list_users(db: DbSession, _: AdminUser) -> list[UserView]:
-    return [UserView.model_validate(user) for user in await service.list_users(db)]
+async def list_users(db: DbSession, _: AdminUser) -> list[UserAdminView]:
+    return [UserAdminView.model_validate(user) for user in await service.list_users(db)]
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -28,17 +34,19 @@ async def create_user(body: UserCreate, db: DbSession, admin: AdminUser) -> Invi
     )
     invite_path = await issue_invite(db, user, admin.id)
     await db.commit()
-    return InvitedUser(user=UserView.model_validate(user), invite_path=invite_path)
+    return InvitedUser(user=UserAdminView.model_validate(user), invite_path=invite_path)
 
 
 @router.patch("/{user_id}")
-async def update_user(user_id: UUID, body: UserUpdate, db: DbSession, admin: AdminUser) -> UserView:
+async def update_user(
+    user_id: UUID, body: UserUpdate, db: DbSession, admin: AdminUser
+) -> UserAdminView:
     user = await service.get_user(db, user_id)
     await service.update_user(
         db, user, admin, display_name=body.display_name, is_active=body.is_active
     )
     await db.commit()
-    return UserView.model_validate(user)
+    return UserAdminView.model_validate(user)
 
 
 @router.post("/{user_id}/invite")

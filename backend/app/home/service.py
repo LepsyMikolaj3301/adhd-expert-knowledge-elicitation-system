@@ -1,0 +1,243 @@
+"""What the home page shows. Computed when read from the workflow's own records, so nothing is
+stored per user (only when they last looked) and new experts see their feed at once."""
+
+from datetime import datetime
+
+from sqlalchemy import and_, exists, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
+
+from app.assignments.models import Assignment
+from app.assignments.states import Actor, State
+from app.audit.models import AuditEvent
+from app.core.db import utcnow
+from app.home.schemas import ActivityItem, ActivityKind, HomeView, NextAction, NextUpItem, Outcome
+from app.knowledge.models import KnowledgeUnit
+from app.reviews import access
+from app.reviews import service as reviews
+from app.reviews.models import ReviewParticipant, UnitComment
+from app.users.models import Role, User
+from app.vignettes.models import Vignette, VignetteVersion
+
+NEXT_UP = 5
+WAITING = 5
+RECENT = 10
+ACTIVITY = 30
+EXCERPT = 140
+
+EXPERT_ACTIONS: dict[State, NextAction] = {
+    State.ASSIGNED: "start",
+    State.IN_PROGRESS: "continue",
+    State.EXPERT_CHECK: "check",
+}
+ADMIN_ACTIONS: dict[State, NextAction] = {
+    State.PROCESSING_FAILED: "retry",
+    State.INGESTION_FAILED: "retry",
+}
+
+# What each audit event means to the people it reaches.
+REVIEW_OPENED = ("units_built", "units_built_for_peers")
+REVIEW_CLOSED: dict[str, Outcome] = {
+    "approve_units": "accepted",
+    "reject_all_units": "rejected",
+    "request_changes": "sent_back",
+}
+JOB_FAILED = ("processing_failed", "units_failed", "ingestion_failed")
+
+
+async def _next_up(db: AsyncSession, viewer: User) -> tuple[list[NextUpItem], int]:
+    is_admin = viewer.role == Role.ADMIN
+    actions = ADMIN_ACTIONS if is_admin else EXPERT_ACTIONS
+    where = [Assignment.state.in_(list(actions))]
+    if not is_admin:
+        where.append(Assignment.expert_id == viewer.id)
+    total = await db.scalar(select(func.count()).select_from(Assignment).where(*where))
+    rows = await db.execute(
+        select(Assignment, VignetteVersion.version, Vignette.code, User.pseudonym)
+        .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
+        .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
+        .join(User, User.id == Assignment.expert_id)
+        .where(*where)
+        .order_by(Assignment.updated_at.desc(), Assignment.id)
+        .limit(NEXT_UP)
+    )
+    items = [
+        NextUpItem(
+            assignment_id=assignment.id,
+            vignette_code=code,
+            vignette_version=version,
+            state=assignment.state,
+            action=actions[assignment.state],
+            expert_pseudonym=pseudonym if is_admin else None,
+            updated_at=assignment.updated_at,
+        )
+        for assignment, version, code, pseudonym in rows
+    ]
+    return items, total or 0
+
+
+async def _workflow_activity(db: AsyncSession, viewer: User) -> list[tuple[datetime, ActivityItem]]:
+    """Events of the workflow that concern the viewer. Their own actions are left out."""
+    own = Assignment.expert_id == viewer.id
+    if viewer.role == Role.ADMIN:
+        wanted = or_(
+            AuditEvent.action.in_(REVIEW_OPENED),
+            AuditEvent.action.in_(list(REVIEW_CLOSED)),
+            AuditEvent.action.in_(JOB_FAILED),
+        )
+    else:
+        blocked = await access.blocked_vignettes(db, viewer.id)
+        took_part = exists().where(
+            ReviewParticipant.assignment_id == Assignment.id,
+            ReviewParticipant.expert_id == viewer.id,
+        )
+        wanted = or_(
+            and_(own, AuditEvent.action.in_(("assigned", "processing_succeeded"))),
+            and_(
+                AuditEvent.action.in_(REVIEW_OPENED),
+                or_(own, VignetteVersion.vignette_id.not_in(blocked)),
+            ),
+            and_(AuditEvent.action.in_(list(REVIEW_CLOSED)), or_(own, took_part)),
+        )
+    rows = await db.execute(
+        select(AuditEvent, Vignette.code, Assignment.id)
+        .join(Assignment, Assignment.id == AuditEvent.entity_id)
+        .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
+        .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
+        .where(
+            AuditEvent.entity_type == "assignment",
+            or_(AuditEvent.actor_id.is_(None), AuditEvent.actor_id != viewer.id),
+            wanted,
+        )
+        .order_by(AuditEvent.at.desc())
+        .limit(ACTIVITY)
+    )
+    items = []
+    for event, code, assignment_id in rows:
+        kind: ActivityKind
+        outcome: Outcome | None = None
+        if event.action in REVIEW_CLOSED:
+            kind, outcome = "review_closed", REVIEW_CLOSED[event.action]
+        elif event.action in REVIEW_OPENED:
+            kind = "review_opened"
+        elif event.action in JOB_FAILED:
+            kind = "job_failed"
+        else:
+            kind = "case_assigned" if event.action == "assigned" else "check_ready"
+        items.append(
+            (
+                event.at,
+                ActivityItem(
+                    kind=kind,
+                    assignment_id=assignment_id,
+                    vignette_code=code,
+                    at=event.at,
+                    unread=False,
+                    outcome=outcome,
+                ),
+            )
+        )
+    return items
+
+
+async def _comment_activity(db: AsyncSession, viewer: User) -> list[tuple[datetime, ActivityItem]]:
+    """Comments on the viewer's own case, and replies in threads they took part in."""
+    other = aliased(UnitComment)
+    in_my_thread = and_(
+        UnitComment.parent_id.is_not(None),
+        exists().where(
+            or_(other.id == UnitComment.parent_id, other.parent_id == UnitComment.parent_id),
+            other.author_id == viewer.id,
+            other.id != UnitComment.id,
+        ),
+    )
+    rows = await db.execute(
+        select(
+            UnitComment,
+            KnowledgeUnit.ordinal,
+            Assignment,
+            Vignette.code,
+            User.role,
+            User.pseudonym,
+            in_my_thread,
+        )
+        .join(KnowledgeUnit, KnowledgeUnit.id == UnitComment.unit_id)
+        .join(Assignment, Assignment.id == KnowledgeUnit.assignment_id)
+        .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
+        .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
+        .join(User, User.id == UnitComment.author_id)
+        .where(
+            UnitComment.author_id != viewer.id,
+            or_(Assignment.expert_id == viewer.id, in_my_thread),
+        )
+        .order_by(UnitComment.created_at.desc())
+        .limit(ACTIVITY)
+    )
+    as_actor = Actor.ADMIN if viewer.role == Role.ADMIN else Actor.REVIEWER
+    items = []
+    for comment, ordinal, assignment, code, role, pseudonym, in_thread in rows:
+        body = comment.body.strip()
+        items.append(
+            (
+                comment.created_at,
+                ActivityItem(
+                    kind="reply" if in_thread else "comment_on_mine",
+                    assignment_id=assignment.id,
+                    vignette_code=code,
+                    at=comment.created_at,
+                    unread=False,
+                    unit_id=comment.unit_id,
+                    unit_ordinal=ordinal,
+                    comment_id=comment.id,
+                    speaker=reviews.speaker_for(
+                        assignment,
+                        as_actor,
+                        user_id=comment.author_id,
+                        role=role,
+                        pseudonym=pseudonym,
+                    ),
+                    excerpt=body if len(body) <= EXCERPT else body[: EXCERPT - 1] + "…",
+                ),
+            )
+        )
+    return items
+
+
+async def _activity(db: AsyncSession, viewer: User) -> list[ActivityItem]:
+    merged = await _workflow_activity(db, viewer) + await _comment_activity(db, viewer)
+    merged.sort(key=lambda pair: pair[0], reverse=True)
+    seen = viewer.activity_seen_at
+    return [
+        item.model_copy(update={"unread": seen is None or item.at > seen})
+        for _, item in merged[:ACTIVITY]
+    ]
+
+
+async def home(db: AsyncSession, viewer: User) -> HomeView:
+    next_up, total = await _next_up(db, viewer)
+    open_reviews = await reviews.list_reviews(db, viewer, status="open")
+    waiting = [
+        item
+        for item in open_reviews
+        if viewer.role == Role.ADMIN or (item.relation == "reviewer" and item.my_vote is None)
+    ]
+    activity = await _activity(db, viewer)
+    return HomeView(
+        next_up=next_up,
+        next_up_total=total,
+        reviews_waiting=waiting[:WAITING],
+        recent_reviews=await reviews.list_reviews(db, viewer, limit=RECENT),
+        activity=activity,
+        unread_activity=sum(item.unread for item in activity),
+    )
+
+
+def mark_seen(viewer: User, until: datetime | None) -> None:
+    """Never moves backwards, and never into the future."""
+    now = utcnow()
+    stamp = now if until is None else min(until, now)
+    if viewer.activity_seen_at is None or stamp > viewer.activity_seen_at:
+        viewer.activity_seen_at = stamp
+
+
+__all__ = ["home", "mark_seen"]

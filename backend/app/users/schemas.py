@@ -20,6 +20,23 @@ class UserView(BaseModel):
     created_at: datetime
 
 
+class UserAdminView(UserView):
+    """What the admin sees: also whether the person has yet to accept their invite."""
+
+    invite_pending: bool
+
+    @model_validator(mode="before")
+    @classmethod
+    def _from_user(cls, value: object) -> object:
+        # Built from a User row, which has the password hash instead of the flag.
+        if hasattr(value, "password_hash"):
+            return {
+                **{name: getattr(value, name) for name in UserView.model_fields},
+                "invite_pending": value.password_hash is None,
+            }
+        return value
+
+
 class UserCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -43,7 +60,7 @@ class UserUpdate(BaseModel):
 
 
 class InvitedUser(BaseModel):
-    user: UserView
+    user: UserAdminView
     # One-time path to hand to the user, e.g. /invite/abc. Never retrievable again.
     invite_path: str
 

@@ -3,6 +3,7 @@ from fastapi import APIRouter, FastAPI
 from app.assignments.router import router as assignments_router
 from app.auth.router import router as auth_router
 from app.core.errors import ErrorResponse, install_error_handlers
+from app.home.router import router as home_router
 from app.knowledge.router import router as knowledge_router
 from app.reviews.router import router as reviews_router
 from app.users.router import router as users_router
@@ -33,6 +34,7 @@ def create_app() -> FastAPI:
         assignments_router,
         reviews_router,
         knowledge_router,
+        home_router,
     ):
         api.include_router(router)
     app.include_router(api)
