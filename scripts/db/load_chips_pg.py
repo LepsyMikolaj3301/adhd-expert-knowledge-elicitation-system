@@ -1,7 +1,7 @@
 # ruff: noqa: E501  (long SQL strings)
 """Load built chip units into Postgres, schema `chips` (docs/new-chips-knowledge.md "Storage").
 
-Usage: python scripts/db/load_chips_pg.py --tier silver [--classifier qwen3.5:9b] [--schema chips]
+Usage: python scripts/db/load_chips_pg.py --tier silver [--classifier qwen3.5:9b] [--schema chips_eval]
        python scripts/db/load_chips_pg.py --tier bronze
        python scripts/db/load_chips_pg.py --check --tier silver     # row counts vs the JSON
 
@@ -9,7 +9,8 @@ Reads what build_chip_units.py wrote (units.json + embeddings.npz) and the chip 
 the tables from chips_schema.sql, replaces the rows of this tier (a reload is idempotent), then
 refits BM25 separately for the units (I1 and I3 each) and for the cue keys, over everything in the
 schema. Ids carry the tier (`silver/DOC-SYN-0001`) because the tiers reuse session and expert ids.
-Synthetic data: nothing here touches public.chunks or backend/db/init.sql.
+Synthetic data: nothing here touches public.chunks or backend/db/init.sql, and it refuses the
+schema `chips`, which is where the web application ingests approved answers.
 """
 
 import argparse
@@ -215,16 +216,29 @@ async def check(args) -> int:
         await conn.close()
 
 
-def main(argv=None) -> int:
+APP_SCHEMA = "chips"  # approved answers of the web application (backend/app/knowledge/ingest.py)
+
+
+def parse_args(argv=None) -> argparse.Namespace:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver"])
     ap.add_argument("--classifier", default="qwen3.5:9b")
     ap.add_argument("--tag", help="default: derived from the classifier")
-    ap.add_argument("--schema", default="chips")
+    ap.add_argument("--schema", default="chips_eval")
     ap.add_argument("--fixtures", type=Path, default=FIXTURES)
     ap.add_argument("--out", type=Path, default=UNITS)
     ap.add_argument("--check", action="store_true", help="compare row counts and one query")
     args = ap.parse_args(argv)
+    if args.schema == APP_SCHEMA:
+        ap.error(
+            f"schema {APP_SCHEMA!r} holds the application's approved answers, not test data: "
+            "use another schema (the default is chips_eval)"
+        )
+    return args
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
     if args.check:
         return asyncio.run(check(args))
     asyncio.run(load(args))

@@ -30,7 +30,7 @@ Sonnet agents, judged by Claude Sonnet agents. They are development numbers, not
 | Silver answers | 2 simulated experts x 14 = 28 responses, written by Sonnet agents with `Synthetic_expert_answer.v4` (highlights, toggles, `⟦hN⟧` chips, free text). Arm B of the pair was answered by separate agents |
 | Bronze answers | 37 of 42 responses from qwen3.6:35b-a3b (plumbing only, no accuracy numbers) |
 | Steps 2 to 7 | `chip_findings.py` (sentence split, chip and quote assignment, checks, units, I1/I3 text); `classify_sentence_targets.py` for the sentences without a chip |
-| Embedding | bge-m3, in the order I1, I2, I3; units also loaded into a separate Postgres schema `chips` |
+| Embedding | bge-m3, in the order I1, I2, I3; units also loaded into a separate Postgres schema (`chips` then; `chips_eval` now) |
 | Evaluation | 40 clinician questions and pooled relevance labels by Sonnet agents; chips vs B1 on the same questions and the same 253 reference claims; two independent Sonnet judge passes |
 
 B1 was run on the same sessions with the chips rendered back as full quotes, so it gets the best input its
@@ -225,7 +225,7 @@ Sonnet judge passes (`j1`, `j2`), blind, one reply per answer.
 | Built units and embeddings | `data/expert_units_chips/synthetic/<tier>/<classifier>/` |
 | Retrieval report | `data/eval/chip_units/latest.json` |
 | Generation runs, judgments | `data/eval/expert_runs/20261104-chips-silver/` and `…-silver-35b/` |
-| Postgres | schema `chips` (synthetic only; `public.chunks` untouched) |
+| Postgres | schema `chips` at the time, synthetic only, `public.chunks` untouched. On 2026-11-05 `chips` became the application's schema (migration `0003`) and these rows were taken out: a binary backup is in `data/backup/chips_synthetic_2026-11-05/` (`scripts/db/chips_backup.py restore`), and `scripts/db/load_chips_pg.py` now loads into `chips_eval`. The `.json` and `.npz` files under `data/expert_units_chips/` are the source and were not touched |
 | Code | `scripts/elicitation/` (`chips_schema`, `make_chip_fixtures`, `classify_sentence_targets`, `chip_findings`, `build_chip_units`), `scripts/rag/` (`chip_retrieval`, `eval_chip_units`, `eval_chip_generation`), `scripts/db/` (`chips_schema.sql`, `load_chips_pg`) |
 | Prompts | `Persona_claude.v2`, `Synthetic_expert_answer.v4`, `Expert_sentence_targets.v1` |
 
