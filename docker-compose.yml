@@ -227,6 +227,20 @@ services:
       - rag-backend
     restart: unless-stopped
 
+  # Headless browser for Claude Code (Playwright MCP over HTTP). Drives the app through the compose
+  # network: http://frontend:5173. Start: docker compose --profile app --profile browser up -d
+  # Register once, inside the dev container: claude mcp add --transport http playwright http://playwright:8931/mcp
+  playwright:
+    profiles: [browser]
+    image: mcr.microsoft.com/playwright/mcp:latest
+    # The image's entrypoint already passes --headless --browser chromium --no-sandbox.
+    command: ["--host", "0.0.0.0", "--port", "8931", "--allowed-hosts", "*"]
+    # Only the dev container needs it; it is not published to the host (anyone reaching it can drive a browser).
+    expose:
+      - "8931"
+    init: true
+    restart: unless-stopped
+
   # The production image, run locally the way Render runs it: http://localhost:8080. It looks the
   # backend up per request, so start the backend first (--profile app); nothing orders them here.
   # Start: docker compose --profile preview up -d --build frontend-preview

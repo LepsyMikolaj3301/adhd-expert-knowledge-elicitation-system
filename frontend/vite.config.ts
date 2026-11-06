@@ -17,6 +17,8 @@ export default defineConfig({
     // Listen on all interfaces so the devcontainer's forwarded port reaches it.
     host: true,
     port: 5173,
+    // The `playwright` container opens http://frontend:5173; Vite rejects other Host headers.
+    allowedHosts: ['frontend'],
     proxy: {
       // Same path in dev and production (FastAPI serves /api/v1), and same origin: no CORS setup.
       '/api': {
