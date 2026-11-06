@@ -18,12 +18,30 @@ const EMPTY_PAYLOAD: AnswerPayload = {
   insufficient_information: false,
 }
 
-export type SaveStatus = 'saved' | 'unsaved' | 'saving' | 'failed' | 'conflict'
+/**
+ * `failed`: the server can't be reached, so it tries again. `rejected`: the server refused this
+ * draft, so trying again would only repeat the refusal (the reason is in `saveProblem`). `signin`:
+ * the session ended, so saving waits for `resume()`. `conflict`: another tab saved since.
+ */
+export type SaveStatus =
+  'saved' | 'unsaved' | 'saving' | 'failed' | 'rejected' | 'signin' | 'conflict'
+
+/** A refusal that a retry can't fix. A timeout or "slow down" can be retried, the rest can't. */
+function isRefusal(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.status >= 400 &&
+    error.status < 500 &&
+    error.status !== 408 &&
+    error.status !== 429
+  )
+}
 
 export function useAnswerDraft(id: string) {
   const view = ref<ExpertAssignment | null>(null)
   const payload = ref<AnswerPayload>(EMPTY_PAYLOAD)
   const status = ref<SaveStatus>('saved')
+  const saveProblem = ref<ApiError | null>(null)
   const editable = computed(() => view.value?.allowed_actions.includes('save_draft') ?? false)
 
   const path = { params: { path: { assignment_id: id } } }
@@ -54,6 +72,7 @@ export function useAnswerDraft(id: string) {
     clearTimeout(timer)
     dirty = false
     status.value = 'saved'
+    saveProblem.value = null
     let current = await fetchExpertView()
     if (current.allowed_actions.includes('start')) {
       await api.POST('/api/v1/assignments/{assignment_id}/start', path)
@@ -81,8 +100,14 @@ export function useAnswerDraft(id: string) {
       if (!dirty) status.value = 'saved'
     } catch (error) {
       dirty = true
+      saveProblem.value = null
       if (error instanceof ApiError && error.code === 'draft_conflict') {
         status.value = 'conflict'
+      } else if (error instanceof ApiError && error.status === 401) {
+        status.value = 'signin'
+      } else if (isRefusal(error)) {
+        status.value = 'rejected'
+        saveProblem.value = error
       } else {
         status.value = 'failed'
         if (!stopped) timer = setTimeout(() => void flush().catch(() => {}), RETRY_AFTER_MS)
@@ -104,6 +129,14 @@ export function useAnswerDraft(id: string) {
         }),
       )
     }
+    if (status.value === 'signin') {
+      return Promise.reject(
+        new ApiError(401, {
+          code: 'not_authenticated',
+          message: 'Please sign in again to save your changes.',
+        }),
+      )
+    }
     running = saveOnce().finally(() => {
       running = null
     })
@@ -113,10 +146,18 @@ export function useAnswerDraft(id: string) {
   /** Call after every edit of `payload`. */
   function changed(): void {
     dirty = true
-    if (status.value === 'conflict') return
+    if (status.value === 'conflict' || status.value === 'signin') return
+    saveProblem.value = null
     if (!running) status.value = 'unsaved'
     clearTimeout(timer)
     timer = setTimeout(() => void flush().catch(() => {}), SAVE_AFTER_MS)
+  }
+
+  /** After signing in again: save what was written while the session was over. */
+  async function resume(): Promise<void> {
+    if (status.value !== 'signin') return
+    status.value = dirty ? 'unsaved' : 'saved'
+    await flush().catch(() => {})
   }
 
   async function passGate(): Promise<void> {
@@ -136,5 +177,18 @@ export function useAnswerDraft(id: string) {
     clearTimeout(timer)
   }
 
-  return { view, payload, status, editable, load, changed, flush, passGate, submit, stop }
+  return {
+    view,
+    payload,
+    status,
+    saveProblem,
+    editable,
+    load,
+    changed,
+    flush,
+    resume,
+    passGate,
+    submit,
+    stop,
+  }
 }

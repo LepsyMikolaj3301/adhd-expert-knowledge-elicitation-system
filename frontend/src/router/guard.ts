@@ -11,6 +11,8 @@ declare module 'vue-router' {
     title?: string
     /** Uses the full width of the page, for screens with two columns. */
     wide?: boolean
+    /** When the session ends, stay on the page and ask for the password over it. */
+    keepOnExpiry?: boolean
   }
 }
 

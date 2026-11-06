@@ -6,6 +6,8 @@ import { useAnswerDraft } from '@/answering/useAnswerDraft'
 
 import { jsonResponse, urlOf } from './helpers'
 
+const ROUND = { review_round: 1 }
+
 const FIFTEEN = 'one two three four five six seven eight nine ten eleven twelve thirteen four15 x15'
 const TEN = 'one two three four five six seven eight nine ten'
 
@@ -30,6 +32,8 @@ const LATER: QuestionView[] = [
 function assignment(overrides: Partial<ExpertAssignment> = {}): ExpertAssignment {
   return {
     audience: 'expert',
+    // Spread, not written out: the field only exists in newer API types, and this builds with both.
+    ...ROUND,
     id: 'a1',
     state: 'in_progress',
     allowed_actions: ['pass_gate', 'save_draft'],
@@ -341,6 +345,78 @@ describe('useAnswerDraft', () => {
     await draft.load()
     expect(draft.status.value).toBe('saved')
     expect(draft.payload.value.answers).toEqual({ Q1: 'saved' })
+  })
+
+  it('stops retrying when the server refuses the draft, and keeps the reason', async () => {
+    const draft = useAnswerDraft('a1')
+    await draft.load()
+    answer = () =>
+      jsonResponse(422, { code: 'not_editable', message: 'No.', details: { state: 'cancelled' } })
+    draft.payload.value.answers = { Q1: 'mine' }
+    draft.changed()
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(draft.status.value).toBe('rejected')
+    expect(draft.saveProblem.value?.code).toBe('not_editable')
+
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(writes()).toHaveLength(1)
+
+    // A new edit is a new attempt.
+    draft.changed()
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(writes()).toHaveLength(2)
+    draft.stop()
+  })
+
+  it('keeps trying when the network is down', async () => {
+    const draft = useAnswerDraft('a1')
+    await draft.load()
+    const replies: (() => Response)[] = [
+      () => {
+        throw new TypeError('Failed to fetch')
+      },
+      () => jsonResponse(200, { version: 5, updated_at: 'now' }),
+    ]
+    answer = () => (replies.shift() as () => Response)()
+    draft.payload.value.answers = { Q1: 'mine' }
+    draft.changed()
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(draft.status.value).toBe('failed')
+    expect(draft.saveProblem.value).toBeNull()
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(draft.status.value).toBe('saved')
+  })
+
+  it('waits for a new sign-in after a 401, then saves what was written', async () => {
+    const draft = useAnswerDraft('a1')
+    await draft.load()
+    answer = () => jsonResponse(401, { code: 'not_authenticated', message: 'Please log in.' })
+    draft.payload.value.answers = { Q1: 'mine' }
+    draft.changed()
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(draft.status.value).toBe('signin')
+
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(writes()).toHaveLength(1)
+    draft.changed()
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(writes()).toHaveLength(1)
+
+    answer = () => jsonResponse(200, { version: 5, updated_at: 'now' })
+    await draft.resume()
+    expect(writes()).toHaveLength(2)
+    expect(writes()[1]?.body?.payload.answers).toEqual({ Q1: 'mine' })
+    expect(draft.status.value).toBe('saved')
+  })
+
+  it('refuses to leave a conflict or a lost sign-in as if everything were saved', async () => {
+    const draft = useAnswerDraft('a1')
+    await draft.load()
+    answer = () => jsonResponse(401, { code: 'not_authenticated', message: 'Please log in.' })
+    draft.payload.value.answers = { Q1: 'mine' }
+    draft.changed()
+    await vi.advanceTimersByTimeAsync(2000)
+    await expect(draft.flush()).rejects.toThrow('sign in again')
   })
 
   it('reads a submitted vignette from the submission', async () => {

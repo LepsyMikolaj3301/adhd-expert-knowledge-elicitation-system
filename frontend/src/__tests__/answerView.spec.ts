@@ -1,13 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import App from '@/App.vue'
 import type { AnswerPayload, Citation, ExpertAssignment, QuestionView } from '@/api/client'
 import router from '@/router'
+import { installSessionHandler } from '@/session'
 import { useAuthStore } from '@/stores/auth'
 
 import { expert, jsonResponse, urlOf } from './helpers'
+
+const ROUND = { review_round: 1 }
 
 const TEXT = 'I have barely slept since the move. My hand starts shaking slightly.'
 const FIFTEEN = 'one two three four five six seven eight nine ten eleven twelve thirteen a15 b15'
@@ -65,6 +68,8 @@ function assignment(
   }
   return {
     audience: 'expert',
+    // Spread, not written out: the field only exists in newer API types, and this builds with both.
+    ...ROUND,
     id: 'a1',
     state: 'in_progress',
     allowed_actions: ['pass_gate', 'save_draft'],
@@ -178,8 +183,16 @@ async function selectInText(text: string) {
   await flushPromises()
 }
 
+// jsdom has no layout, and focusing an editor scrolls the cursor into view.
+beforeAll(() => {
+  const noRects = () => [] as unknown as DOMRectList
+  Range.prototype.getClientRects = noRects
+  Element.prototype.getClientRects = noRects
+})
+
 beforeEach(async () => {
   setActivePinia(createPinia())
+  installSessionHandler(router)
   const auth = useAuthStore()
   auth.user = expert
   auth.loaded = true
@@ -603,5 +616,132 @@ describe('submitting', () => {
     ).toBe(false)
     await rows()[0]?.trigger('mouseenter')
     expect(marked().text()).toBe('barely slept')
+  })
+})
+
+describe('when saving does not work', () => {
+  /** Answers every save with `reply`, and every other call as before. Counts the saves. */
+  function answerSavesWith(reply: () => Response, login?: () => Response) {
+    const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
+    const original = fetchMock.getMockImplementation() as (i: Request) => Promise<Response>
+    const saves = { count: 0 }
+    fetchMock.mockImplementation(async (input: Request) => {
+      if (input.method === 'PUT') {
+        saves.count++
+        return reply()
+      }
+      if (login && urlOf(input).endsWith('/auth/login')) return login()
+      return original(input)
+    })
+    return saves
+  }
+
+  afterEach(() => {
+    vi.useRealTimers()
+    Reflect.deleteProperty(navigator, 'clipboard')
+  })
+
+  async function editAndWaitForSave() {
+    await selectInText('barely slept')
+    await vi.advanceTimersByTimeAsync(2100)
+  }
+
+  it('says why a refused save cannot work, stops retrying, and offers to copy the text', async () => {
+    vi.useFakeTimers()
+    await open(assignment({ answers: { Q1: FIFTEEN }, highlights: [] }))
+    const saves = answerSavesWith(() =>
+      jsonResponse(422, { code: 'not_editable', message: 'x', details: { state: 'cancelled' } }),
+    )
+    await editAndWaitForSave()
+
+    const problem = app().get('[data-testid="save-problem"]')
+    expect(problem.text()).toContain("couldn't be saved")
+    expect(problem.text()).toContain('cancelled this case')
+    expect(buttonNamed('Copy my text')).toBeTruthy()
+    expect(app().get('[data-testid="save-status"]').text()).toBe('Not saved')
+
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(saves.count).toBe(1)
+  })
+
+  it('copies what was written, word for word, with references as [n]', async () => {
+    vi.useFakeTimers()
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    await open(
+      assignment({ answers: { Q1: `⟦h1⟧ ${FIFTEEN}` }, highlights: [citation(1, 'hand starts')] }),
+    )
+    answerSavesWith(() => jsonResponse(422, { code: 'not_editable', message: 'x' }))
+    await editAndWaitForSave()
+
+    await buttonNamed('Copy my text').trigger('click')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(writeText).toHaveBeenCalledWith(`Q1\n[1] ${FIFTEEN}`)
+    expect(app().get('[data-testid="save-problem"]').text()).toContain('Copied.')
+  })
+
+  it('shows the unsaved text before it offers the saved version, after a change in another tab', async () => {
+    vi.useFakeTimers()
+    await open(assignment({ answers: { Q1: FIFTEEN }, highlights: [] }))
+    answerSavesWith(() =>
+      jsonResponse(409, { code: 'draft_conflict', message: 'Saved elsewhere.' }),
+    )
+    await editAndWaitForSave()
+
+    const conflict = app().get('[data-testid="conflict"]')
+    expect(conflict.text()).toContain('changed in another tab or device')
+    expect(conflict.get('textarea').element.value).toContain(FIFTEEN)
+    expect(conflict.get('textarea').attributes('readonly')).toBeDefined()
+    expect(buttonNamed('Copy my text')).toBeTruthy()
+    expect(buttonNamed('Load saved version')).toBeTruthy()
+  })
+
+  it('keeps the page and the text when the session ends, and saves after signing in again', async () => {
+    vi.useFakeTimers()
+    await open(assignment({ answers: { Q1: FIFTEEN }, highlights: [] }))
+    let signedIn = false
+    const saves = answerSavesWith(
+      () =>
+        signedIn
+          ? jsonResponse(200, { version: 2, updated_at: 'now' })
+          : jsonResponse(401, { code: 'not_authenticated', message: 'Please log in.' }),
+      () => {
+        signedIn = true
+        return jsonResponse(200, expert)
+      },
+    )
+    await editAndWaitForSave()
+
+    const dialog = app().get('dialog[open]')
+    expect(dialog.text()).toContain('Please sign in again')
+    expect(dialog.text()).toContain(expert.email)
+    expect(router.currentRoute.value.path).toBe('/assignments/a1')
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(saves.count).toBe(1)
+
+    await dialog.get('input[type="password"]').setValue('secret-password')
+    await dialog.get('form').trigger('submit')
+    await vi.advanceTimersByTimeAsync(50)
+
+    expect(app().find('dialog[open]').exists()).toBe(false)
+    expect(saves.count).toBe(2)
+    expect(app().get('[data-testid="save-status"]').text()).toBe('Saved')
+  })
+
+  it('shows the reason when signing in again fails, and keeps the dialog', async () => {
+    vi.useFakeTimers()
+    await open(assignment({ answers: { Q1: FIFTEEN }, highlights: [] }))
+    answerSavesWith(
+      () => jsonResponse(401, { code: 'not_authenticated', message: 'Please log in.' }),
+      () => jsonResponse(401, { code: 'invalid_credentials', message: 'Wrong email or password.' }),
+    )
+    await editAndWaitForSave()
+
+    const dialog = app().get('dialog[open]')
+    await dialog.get('input[type="password"]').setValue('wrong')
+    await dialog.get('form').trigger('submit')
+    await vi.advanceTimersByTimeAsync(50)
+    expect(dialog.get('[role="alert"]').text()).toBe('Wrong email or password.')
+    expect(app().find('dialog[open]').exists()).toBe(true)
   })
 })

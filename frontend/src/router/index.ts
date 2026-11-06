@@ -38,7 +38,7 @@ const router = createRouter({
           name: 'assignment',
           component: () => import('@/views/AnswerView.vue'),
           props: true,
-          meta: { wide: true, roles: ['expert'] },
+          meta: { wide: true, roles: ['expert'], keepOnExpiry: true },
         },
         {
           path: 'reviews',

@@ -6,6 +6,8 @@ import { api, ApiError, type User } from '@/api/client'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const loaded = ref(false)
+  /** The server ended the session while the user was on a page that must not be left. */
+  const sessionEnded = ref(false)
   const isLoggedIn = computed(() => user.value !== null)
 
   /** Ask the server who is logged in. The cookie is HttpOnly, so this is the only way to know. */
@@ -26,6 +28,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { data } = await api.POST('/api/v1/auth/login', { body: { email, password } })
     user.value = data ?? null
     loaded.value = true
+    sessionEnded.value = false
   }
 
   async function acceptInvite(token: string, password: string): Promise<void> {
@@ -37,13 +40,31 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout(): Promise<void> {
     await api.POST('/api/v1/auth/logout')
     user.value = null
+    sessionEnded.value = false
   }
 
   /** The session has ended on the server. */
   function clear(): void {
     user.value = null
     loaded.value = true
+    sessionEnded.value = false
   }
 
-  return { user, loaded, isLoggedIn, load, login, acceptInvite, logout, clear }
+  /** Like `clear`, but the page stays: the user is asked to sign in again over it. */
+  function endSession(): void {
+    sessionEnded.value = true
+  }
+
+  return {
+    user,
+    loaded,
+    sessionEnded,
+    isLoggedIn,
+    load,
+    login,
+    acceptInvite,
+    logout,
+    clear,
+    endSession,
+  }
 })

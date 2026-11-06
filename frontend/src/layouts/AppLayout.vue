@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
+import SignInAgainDialog from '@/components/SignInAgainDialog.vue'
 import { navFor } from '@/navigation'
 import { SITE_NAME } from '@/site'
 import { useAuthStore } from '@/stores/auth'
@@ -88,5 +89,7 @@ function tabClass(active: boolean): string {
         <RouterView />
       </div>
     </main>
+
+    <SignInAgainDialog v-if="auth.sessionEnded" />
   </div>
 </template>

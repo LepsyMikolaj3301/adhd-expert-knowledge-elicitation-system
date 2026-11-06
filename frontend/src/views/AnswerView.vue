@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, RouterLink, useRouter } from 'vue-router'
 
 import {
@@ -18,6 +18,7 @@ import {
   wordCountLabel,
   type StepId,
 } from '@/answering/steps'
+import { plainText } from '@/answering/plainText'
 import { useAnswerDraft } from '@/answering/useAnswerDraft'
 import { ApiError, type Citation, type Direction, type Q4Answer } from '@/api/client'
 import ChipEditor from '@/components/answering/ChipEditor.vue'
@@ -28,7 +29,10 @@ import Q4Step from '@/components/answering/Q4Step.vue'
 import RatingStep from '@/components/answering/RatingStep.vue'
 import ReviewStep from '@/components/answering/ReviewStep.vue'
 import StepRail, { type RailStep } from '@/components/answering/StepRail.vue'
+import UnsavedText from '@/components/answering/UnsavedText.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
+import { saveRefusal } from '@/copy'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: string }>()
 
@@ -42,8 +46,9 @@ const Q1_NUDGE_WORDS = 60
 const LATER_IDS = ['Q4', 'Q5', 'Q6']
 
 const router = useRouter()
+const auth = useAuthStore()
 const draft = useAnswerDraft(props.id)
-const { view, payload, status, editable } = draft
+const { view, payload, status, saveProblem, editable } = draft
 
 const loading = ref(true)
 const loadError = ref('')
@@ -160,10 +165,15 @@ const saveLabel = computed(() => {
     saved: 'Saved',
     unsaved: 'Not saved yet',
     saving: 'Saving…',
-    failed: 'Not saved. Trying again…',
+    failed: "Can't reach the server. Your text is still here, and we keep trying.",
+    rejected: 'Not saved',
+    signin: 'Not saved. Please sign in again.',
     conflict: 'Not saved',
   }[status.value]
 })
+
+/** Everything written so far, to keep when it can't be saved. */
+const myText = computed(() => plainText(payload.value, questions.value))
 
 function edited() {
   actionError.value = ''
@@ -303,6 +313,16 @@ function warnBeforeClosing(event: BeforeUnloadEvent) {
   if (status.value !== 'saved') event.preventDefault()
 }
 
+// After signing in again over this page: carry on where the session ended.
+watch(
+  () => auth.sessionEnded,
+  (ended, was) => {
+    if (!was || ended || !auth.user) return
+    if (loadError.value) void load()
+    else void draft.resume()
+  },
+)
+
 onMounted(() => {
   void load()
   window.addEventListener('beforeunload', warnBeforeClosing)
@@ -353,9 +373,25 @@ onBeforeRouteLeave(async () => {
         </p>
       </header>
 
-      <div v-if="status === 'conflict'" class="alert mt-3 flex items-center gap-4" role="alert">
-        <span class="flex-1">This draft was saved in another tab. Reload it to continue here.</span>
-        <button type="button" class="btn-quiet" @click="load">Reload</button>
+      <div v-if="status === 'conflict'" class="alert mt-3" role="alert" data-testid="conflict">
+        <p>
+          <strong>This case was changed in another tab or device.</strong>
+          Copy anything you want to keep, then load the saved version.
+        </p>
+        <div class="mt-3 flex flex-wrap items-start gap-x-6 gap-y-2">
+          <UnsavedText :text="myText" class="min-w-0 flex-1" />
+          <button type="button" class="btn" @click="load">Load saved version</button>
+        </div>
+      </div>
+
+      <div
+        v-else-if="status === 'rejected' && saveProblem"
+        class="alert mt-3"
+        role="alert"
+        data-testid="save-problem"
+      >
+        <p>This change couldn't be saved. {{ saveRefusal(saveProblem) }}</p>
+        <UnsavedText :text="myText" class="mt-3" />
       </div>
 
       <div
