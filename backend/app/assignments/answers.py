@@ -13,7 +13,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.errors import invalid
-from app.vignettes.questions import GATE, HYPOTHESIS_MIN_WORDS, QUESTIONS, QuestionId
+from app.vignettes.questions import GATE, QUESTIONS, QuestionId
 
 # 2: citations (`highlights`, `⟦hN⟧` chips) replace `quoted_fragments`, and Q1 has its new wording.
 PAYLOAD_FORMAT = 2
@@ -161,22 +161,6 @@ def render_chips(answer: str, highlights: list[dict[str, Any]]) -> str:
     return CHIP_RE.sub(quote, answer)
 
 
-def _require_words(*checks: tuple[str, str, int | None]) -> None:
-    """Each check is (what is being answered, the answer, its minimum)."""
-    short = [
-        {"question_id": name, "words": count_words(text), "min_words": minimum}
-        for name, text, minimum in checks
-        if minimum is not None and count_words(text) < minimum
-    ]
-    if short:
-        names = ", ".join(str(item["question_id"]) for item in short)
-        raise invalid(
-            "answer_too_short",
-            f"{names}: please write a bit more. Each answer needs a minimum of different words.",
-            {"answers": short},
-        )
-
-
 def _missing_gate_answers(payload: AnswerPayload, question_ids: list[str]) -> list[str]:
     return [q for q in gate_questions(question_ids) if not payload.answers.get(q, "").strip()]
 
@@ -189,12 +173,6 @@ def check_gate_answers(payload: AnswerPayload, question_ids: list[str]) -> None:
             f"{', '.join(missing)} need answers before the next questions.",
             {"missing": missing},
         )
-    _require_words(
-        *(
-            (q, payload.answers.get(q, ""), QUESTIONS[q].min_words)
-            for q in gate_questions(question_ids)
-        )
-    )
     _check_citations_complete(payload)
 
 
@@ -223,10 +201,6 @@ def _clean_q4(payload: AnswerPayload, question_ids: list[str]) -> Q4Answer | Non
         raise _incomplete("Q4: choose a direction.")
     if q4.shift != 0 and not why:
         raise _incomplete("Q4: explain why.")
-    _require_words(
-        ("Q4 hypothesis", hypothesis, HYPOTHESIS_MIN_WORDS),
-        ("Q4", why, QUESTIONS["Q4"].min_words if q4.shift != 0 else None),
-    )
     return Q4Answer(
         hypothesis=hypothesis, shift=q4.shift, toward=q4.toward, other_explanation=other or None
     )
@@ -243,14 +217,11 @@ def clean_submission(payload: AnswerPayload, question_ids: list[str], text: str)
         if answer.strip():
             answers[question_id] = answer.strip()
 
-    # Open questions after the gate. Q1-Q3 passed their check at the gate, and are locked since: a
-    # minimum raised later must not leave an expert stuck on answers they can no longer change.
+    # Open questions after the gate must have an answer. How long it is, is the expert's call.
     for question_id in question_ids:
-        question = QUESTIONS[question_id]
-        if question.kind == "open" and question_id not in GATE:
-            if question_id not in answers:
-                raise invalid("empty_answer", f"{question_id} needs an answer.")
-            _require_words((question_id, answers[question_id], question.min_words))
+        is_open = QUESTIONS[question_id].kind == "open"
+        if is_open and question_id not in GATE and question_id not in answers:
+            raise invalid("empty_answer", f"{question_id} needs an answer.")
 
     _check_highlights(payload.highlights, text)
     _check_citations_complete(payload)

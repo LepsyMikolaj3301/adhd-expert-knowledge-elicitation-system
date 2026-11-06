@@ -1,5 +1,4 @@
 import asyncio
-from dataclasses import replace
 
 import pytest
 from alembic import command
@@ -29,7 +28,6 @@ from sqlalchemy import select, text
 from app.assignments.answers import count_words, render_chips
 from app.assignments.models import Submission
 from app.core.db import session_factory
-from app.vignettes.questions import QUESTIONS
 
 
 async def _started(**version_overrides):
@@ -71,8 +69,8 @@ async def test_all_questions_are_sent_after_the_gate_with_exact_wording():
         f"Given your hypothesis about this person so far: how would it change if {WHATIF}?"
     )
     assert questions["Q4"]["wording"]["shift_labels"]["0"] == "is unchanged"
-    assert [q["min_words"] for q in questions.values()] == [15, 10, 10, 5, 10, None]
-    assert questions["Q4"]["wording"]["hypothesis_min_words"] == 3
+    assert all("min_words" not in q for q in questions.values()), "length is nobody's gate"
+    assert "hypothesis_min_words" not in questions["Q4"]["wording"]
     assert view["gate_passed_at"]
     assert view["allowed_actions"] == ["save_draft", "submit"]
     assert DESIGN_SECRET not in str(view)
@@ -360,14 +358,6 @@ async def test_the_gate_refuses_a_chip_without_a_citation():
     assert body["details"] == {"question_id": "Q2", "chip": 7}
 
 
-async def test_chips_do_not_count_towards_the_word_minimum():
-    assert count_words("⟦h1⟧ ⟦h2⟧ ⟦h3⟧ word") == 1
-    _, expert, assignment_id = await _started()
-    chips_only = " ".join(f"⟦h{n}⟧" for n in range(1, 21))
-    await save(expert, assignment_id, {"answers": {**GATE_ANSWERS, "Q1": chips_only}})
-    await expert.fails("POST", f"/assignments/{assignment_id}/pass-gate", 422, "answer_too_short")
-
-
 async def _past_gate_with_citation():
     admin, expert, assignment_id = await _started()
     await save(expert, assignment_id, {"answers": GATE_ANSWERS, "highlights": [highlight(1)]})
@@ -510,49 +500,35 @@ def _with_answers(**answers):
     return {**FULL_PAYLOAD, "answers": {**FULL_PAYLOAD["answers"], **answers}}
 
 
-@pytest.mark.parametrize(
-    ("payload", "code", "question"),
-    [
-        (_with_answers(Q5="   "), "empty_answer", None),
-        (_with_answers(Q5="Too short to count."), "answer_too_short", "Q5"),
-        (_with_answers(Q5="test " * 40), "answer_too_short", "Q5"),
-        (_with_answers(Q5=". " * 40), "answer_too_short", "Q5"),
-        (_with_answers(Q4="Exam."), "answer_too_short", "Q4"),
-        (
-            {**FULL_PAYLOAD, "q4": {"hypothesis": "tired", "shift": 1, "toward": "less_adhd"}},
-            "answer_too_short",
-            "Q4 hypothesis",
-        ),
-    ],
-)
-async def test_poorly_filled_answers_cannot_be_submitted(payload, code, question):
+async def test_an_empty_answer_cannot_be_submitted():
     _, expert, assignment_id = await _past_gate()
-    await save(expert, assignment_id, payload)
-    body = await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, code)
-    if question:
-        assert body["details"]["answers"][0]["question_id"] == question
+    await save(expert, assignment_id, _with_answers(Q5="   "))
+    await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, "empty_answer")
     assert (await expert.ok("GET", f"/assignments/{assignment_id}"))["state"] == "in_progress"
 
 
-async def test_short_gate_answers_are_stopped_at_the_gate_where_they_can_still_be_fixed():
+async def test_short_answers_are_accepted_at_the_gate_and_on_submit():
     _, expert, assignment_id = await _started()
-    await save(expert, assignment_id, {"answers": {**GATE_ANSWERS, "Q2": "Sleep.", "Q3": "No."}})
-    body = await expert.fails(
-        "POST", f"/assignments/{assignment_id}/pass-gate", 422, "answer_too_short"
-    )
-    assert [a["question_id"] for a in body["details"]["answers"]] == ["Q2", "Q3"]
-    assert body["details"]["answers"][0] == {"question_id": "Q2", "words": 1, "min_words": 10}
+    short = {"Q1": "Sleep.", "Q2": "Mood.", "Q3": "No."}
+    await save(expert, assignment_id, {"answers": short})
+    await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
+    payload = {
+        **FULL_PAYLOAD,
+        "answers": {**FULL_PAYLOAD["answers"], **short, "Q4": "Exam.", "Q5": "Over-reading."},
+        "q4": {"hypothesis": "tired", "shift": 1, "toward": "less_adhd"},
+    }
+    await save(expert, assignment_id, payload)
+    await expert.ok("POST", f"/assignments/{assignment_id}/submit")
+
+
+async def test_the_gate_still_needs_an_answer_to_each_of_q1_to_q3():
+    _, expert, assignment_id = await _started()
+    await save(expert, assignment_id, {"answers": {**GATE_ANSWERS, "Q2": "  "}})
+    await expert.fails("POST", f"/assignments/{assignment_id}/pass-gate", 422, "gate_not_passed")
     view = await expert.ok("GET", f"/assignments/{assignment_id}")
     assert view["gate_passed_at"] is None, "the answers must stay editable"
     await save(expert, assignment_id, {"answers": GATE_ANSWERS})
     await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
-
-
-async def test_a_raised_minimum_does_not_strand_answers_already_locked(monkeypatch):
-    _, expert, assignment_id = await _past_gate()
-    await save(expert, assignment_id, FULL_PAYLOAD)
-    monkeypatch.setitem(QUESTIONS, "Q1", replace(QUESTIONS["Q1"], min_words=1000))
-    await expert.ok("POST", f"/assignments/{assignment_id}/submit")
 
 
 async def test_a_vignette_asking_only_q5_cannot_be_submitted_empty():
@@ -564,6 +540,7 @@ def test_count_words_counts_different_words():
     assert count_words("test Test TEST, test!") == 1
     assert count_words("... --- !!!") == 0
     assert count_words("Pacjent nie śpi dobrze") == 4
+    assert count_words("⟦h1⟧ ⟦h2⟧ ⟦h3⟧ word") == 1
 
 
 async def test_submitting_freezes_the_answers():

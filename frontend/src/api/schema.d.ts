@@ -974,8 +974,6 @@ export interface components {
        * @enum {string}
        */
       kind: 'open' | 'shift' | 'rating_1_5'
-      /** Min Words */
-      min_words?: number | null
       /** Text */
       text: string
       /** Wording */

@@ -117,7 +117,6 @@ def _visible_questions(version: VignetteVersion, is_open: bool) -> list[Question
                 id=question.id,
                 kind=question.kind,
                 text=render_question(question, version.q4_whatif),
-                min_words=question.min_words,
                 wording=Q4_WORDING if question.id == "Q4" else None,
             )
         )

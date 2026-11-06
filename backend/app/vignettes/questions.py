@@ -13,7 +13,8 @@ class Question:
     id: str
     kind: QuestionKind
     text: str
-    # Different words the answer must have to be accepted. For Q4, this is its "why".
+    # Different words an answer should have. Only scripts/elicitation uses it: the API neither sends
+    # nor enforces it, so the screen never stops anyone for writing too little.
     min_words: int | None = None
 
 
@@ -66,11 +67,11 @@ QUESTIONS: dict[str, Question] = {
 # Answered before anything else is shown. Passing the gate locks these answers.
 GATE: tuple[str, ...] = ("Q1", "Q2", "Q3")
 
+# Like min_words, used by scripts/elicitation only.
 HYPOTHESIS_MIN_WORDS = 3
 
 Q4_WORDING = {
     "hypothesis": "Your working hypothesis, in one sentence",
-    "hypothesis_min_words": HYPOTHESIS_MIN_WORDS,
     "shift_lead": "With this, my hypothesis…",
     "shift_labels": {
         "-2": "is strongly reinforced",

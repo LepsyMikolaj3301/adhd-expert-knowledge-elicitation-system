@@ -1071,17 +1071,6 @@
             "title": "Kind",
             "type": "string"
           },
-          "min_words": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Min Words"
-          },
           "text": {
             "title": "Text",
             "type": "string"

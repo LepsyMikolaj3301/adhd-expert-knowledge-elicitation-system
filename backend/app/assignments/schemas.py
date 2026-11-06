@@ -16,8 +16,6 @@ class QuestionView(BaseModel):
     id: str
     kind: QuestionKind
     text: str
-    # Different words needed to be accepted, so the screen can show a counter. For Q4: its "why".
-    min_words: int | None = None
     # Q4 only: the exact wording of its parts.
     wording: dict[str, Any] | None = None
 
