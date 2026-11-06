@@ -18,7 +18,7 @@ const EXPERT: NavItem[] = [
   {
     label: 'Reviews',
     to: '/reviews',
-    blurb: 'Check the knowledge units colleagues ask you to review.',
+    blurb: "Read colleagues' submissions, discuss them and give your advice.",
   },
 ]
 
@@ -32,7 +32,7 @@ const ADMIN: NavItem[] = [
   {
     label: 'Reviews',
     to: '/reviews',
-    blurb: 'Decide which knowledge units enter the knowledge base.',
+    blurb: 'Follow the discussions and decide what enters the knowledge base.',
   },
   {
     label: 'Assignments',

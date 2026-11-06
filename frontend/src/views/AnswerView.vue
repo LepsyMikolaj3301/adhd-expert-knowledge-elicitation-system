@@ -25,6 +25,7 @@ import type { Citation, Direction, Q4Answer } from '@/api/client'
 import ChipEditor from '@/components/answering/ChipEditor.vue'
 import ChipText from '@/components/answering/ChipText.vue'
 import CitationTable from '@/components/answering/CitationTable.vue'
+import ExpertCheck from '@/components/answering/ExpertCheck.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import Q4Step from '@/components/answering/Q4Step.vue'
 import RatingStep from '@/components/answering/RatingStep.vue'
@@ -432,7 +433,13 @@ onBeforeRouteLeave(async () => {
         </div>
 
         <section class="min-w-0">
-          <template v-if="step === REVIEW">
+          <ExpertCheck
+            v-if="view?.state === 'expert_check'"
+            :id="id"
+            :can-skip="view.allowed_actions.includes('skip_expert_check')"
+            @done="load"
+          />
+          <template v-else-if="step === REVIEW">
             <h1 class="text-2xl" data-testid="question">
               {{ editable ? 'Review your answers' : 'Your answers' }}
             </h1>

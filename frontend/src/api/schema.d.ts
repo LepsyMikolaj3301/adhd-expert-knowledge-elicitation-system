@@ -158,23 +158,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/assignments/{assignment_id}/recall-review': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Recall Review */
-    post: operations['recall_review_api_v1_assignments__assignment_id__recall_review_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/api/v1/assignments/{assignment_id}/retry': {
     parameters: {
       query?: never
@@ -192,7 +175,7 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/assignments/{assignment_id}/reviewers': {
+  '/api/v1/assignments/{assignment_id}/review/open': {
     parameters: {
       query?: never
       header?: never
@@ -201,8 +184,12 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** Request Peers */
-    post: operations['request_peers_api_v1_assignments__assignment_id__reviewers_post']
+    /**
+     * Open Review
+     * @description A reviewer agrees to read the submission. From then on they can't be assigned the
+     *     vignette, because what they read would colour their own answer.
+     */
+    post: operations['open_review_api_v1_assignments__assignment_id__review_open_post']
     delete?: never
     options?: never
     head?: never
@@ -269,7 +256,10 @@ export interface paths {
     }
     get?: never
     put?: never
-    /** Submit Decisions */
+    /**
+     * Submit Decisions
+     * @description The admin's decision on each unit; it closes the review.
+     */
     post: operations['submit_decisions_api_v1_assignments__assignment_id__unit_decisions_post']
     delete?: never
     options?: never
@@ -286,9 +276,60 @@ export interface paths {
     }
     /**
      * List Units
-     * @description The current round's units; the admin can ask for an earlier round with `review_round`.
+     * @description The current round's units. The admin and the author can ask for an earlier round.
      */
     get: operations['list_units_api_v1_assignments__assignment_id__units_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/assignments/{assignment_id}/units/{unit_id}/comments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Add Comment */
+    post: operations['add_comment_api_v1_assignments__assignment_id__units__unit_id__comments_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/assignments/{assignment_id}/vote': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    /** Cast Vote */
+    put: operations['cast_vote_api_v1_assignments__assignment_id__vote_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/assignments/{assignment_id}/votes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Votes */
+    get: operations['get_votes_api_v1_assignments__assignment_id__votes_get']
     put?: never
     post?: never
     delete?: never
@@ -399,15 +440,52 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/v1/review-requests': {
+  '/api/v1/me/activity/seen': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    /** Review Queue */
-    get: operations['review_queue_api_v1_review_requests_get']
+    get?: never
+    put?: never
+    /** Activity Seen */
+    post: operations['activity_seen_api_v1_me_activity_seen_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/me/home': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Home */
+    get: operations['home_api_v1_me_home_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/v1/reviews': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * List Reviews
+     * @description The submissions the viewer can follow: open ones wait for the admin's decision.
+     */
+    get: operations['list_reviews_api_v1_reviews_get']
     put?: never
     post?: never
     delete?: never
@@ -585,6 +663,51 @@ export interface components {
       /** Token */
       token: string
     }
+    /** ActivityItem */
+    ActivityItem: {
+      /**
+       * Assignment Id
+       * Format: uuid
+       */
+      assignment_id: string
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      /** Comment Id */
+      comment_id?: string | null
+      /** Excerpt */
+      excerpt?: string | null
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind:
+        | 'case_assigned'
+        | 'check_ready'
+        | 'review_opened'
+        | 'review_closed'
+        | 'comment_on_mine'
+        | 'reply'
+        | 'job_failed'
+      /** Outcome */
+      outcome?: ('accepted' | 'rejected' | 'sent_back') | null
+      speaker?: components['schemas']['Speaker'] | null
+      /** Unit Id */
+      unit_id?: string | null
+      /** Unit Ordinal */
+      unit_ordinal?: number | null
+      /** Unread */
+      unread: boolean
+      /** Vignette Code */
+      vignette_code: string
+    }
+    /** ActivitySeen */
+    ActivitySeen: {
+      /** Until */
+      until?: string | null
+    }
     /** AdminAssignment */
     AdminAssignment: {
       /** Allowed Actions */
@@ -608,8 +731,6 @@ export interface components {
        * Format: uuid
        */
       id: string
-      /** Required Approvals */
-      required_approvals: number
       /** Review Round */
       review_round: number
       /** Started At */
@@ -688,6 +809,40 @@ export interface components {
        * Format: uuid
        */
       vignette_version_id: string
+    }
+    /** CommentCreate */
+    CommentCreate: {
+      /** Body */
+      body: string
+      /** Parent Id */
+      parent_id?: string | null
+      stance?: components['schemas']['Stance'] | null
+    }
+    /** CommentView */
+    CommentView: {
+      /** Body */
+      body: string
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Is Mine */
+      is_mine: boolean
+      /** Parent Id */
+      parent_id: string | null
+      speaker: components['schemas']['Speaker']
+      stance: components['schemas']['Stance'] | null
+      /**
+       * Unit Id
+       * Format: uuid
+       */
+      unit_id: string
     }
     /** Confounder */
     Confounder: {
@@ -989,6 +1144,21 @@ export interface components {
       /** Text */
       text: string
     }
+    /** HomeView */
+    HomeView: {
+      /** Activity */
+      activity: components['schemas']['ActivityItem'][]
+      /** Next Up */
+      next_up: components['schemas']['NextUpItem'][]
+      /** Next Up Total */
+      next_up_total: number
+      /** Recent Reviews */
+      recent_reviews: components['schemas']['ReviewItem'][]
+      /** Reviews Waiting */
+      reviews_waiting: components['schemas']['ReviewItem'][]
+      /** Unread Activity */
+      unread_activity: number
+    }
     /** InviteIssued */
     InviteIssued: {
       /** Invite Path */
@@ -998,7 +1168,7 @@ export interface components {
     InvitedUser: {
       /** Invite Path */
       invite_path: string
-      user: components['schemas']['UserView']
+      user: components['schemas']['UserAdminView']
     }
     /** KnowledgeUnitListItem */
     KnowledgeUnitListItem: {
@@ -1040,6 +1210,35 @@ export interface components {
       email: string
       /** Password */
       password: string
+    }
+    /**
+     * NextUpItem
+     * @description Something waiting for the viewer. `action` is decided here, so the page has no copy of the
+     *     workflow's rules.
+     */
+    NextUpItem: {
+      /**
+       * Action
+       * @enum {string}
+       */
+      action: 'start' | 'continue' | 'check' | 'retry'
+      /**
+       * Assignment Id
+       * Format: uuid
+       */
+      assignment_id: string
+      /** Expert Pseudonym */
+      expert_pseudonym: string | null
+      state: components['schemas']['State']
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string
+      /** Vignette Code */
+      vignette_code: string
+      /** Vignette Version */
+      vignette_version: number
     }
     /** PeerAssignment */
     PeerAssignment: {
@@ -1120,31 +1319,39 @@ export interface components {
         [key: string]: unknown
       } | null
     }
-    /** RequestPeersBody */
-    RequestPeersBody: {
-      /**
-       * Required Approvals
-       * @default 1
-       */
-      required_approvals: number
-      /** Reviewer Ids */
-      reviewer_ids: string[]
-    }
-    /** ReviewQueueItem */
-    ReviewQueueItem: {
+    /** ReviewItem */
+    ReviewItem: {
+      /** Accepts */
+      accepts: number
       /**
        * Assignment Id
        * Format: uuid
        */
       assignment_id: string
+      /** Author Pseudonym */
+      author_pseudonym: string | null
+      /** Comment Count */
+      comment_count: number
+      /** Declines */
+      declines: number
+      my_vote: components['schemas']['Vote'] | null
+      /** Opened */
+      opened: boolean
       /**
-       * Requested At
-       * Format: date-time
+       * Relation
+       * @enum {string}
        */
-      requested_at: string
-      stage: components['schemas']['ReviewStage']
+      relation: 'reviewer' | 'author' | 'admin'
+      /** Review Round */
+      review_round: number
+      state: components['schemas']['State']
       /** Unit Count */
       unit_count: number
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string
       /** Vignette Code */
       vignette_code: string
       /** Vignette Version */
@@ -1161,6 +1368,26 @@ export interface components {
      */
     Role: 'admin' | 'expert'
     /**
+     * Speaker
+     * @description Who said it. A reviewer is told by pseudonym; the author and the admin are only a role,
+     *     unless the viewer is the admin, who sees every pseudonym.
+     */
+    Speaker: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'author' | 'reviewer' | 'admin'
+      /** Pseudonym */
+      pseudonym: string | null
+    }
+    /**
+     * Stance
+     * @description How a reviewer's comment sits with the unit it is under.
+     * @enum {string}
+     */
+    Stance: 'support' | 'challenge' | 'question'
+    /**
      * State
      * @enum {string}
      */
@@ -1171,7 +1398,6 @@ export interface components {
       | 'processing_failed'
       | 'expert_check'
       | 'building_units'
-      | 'admin_review'
       | 'peer_review'
       | 'ingesting'
       | 'ingestion_failed'
@@ -1206,6 +1432,8 @@ export interface components {
        * @enum {string}
        */
       audience: 'admin'
+      /** Comments */
+      comments: components['schemas']['CommentView'][]
       /** Content Hash */
       content_hash: string
       /** Decisions */
@@ -1236,6 +1464,8 @@ export interface components {
        * @enum {string}
        */
       audience: 'author'
+      /** Comments */
+      comments: components['schemas']['CommentView'][]
       /** Direction */
       direction: string | null
       /**
@@ -1271,16 +1501,15 @@ export interface components {
       /** Decisions */
       decisions: components['schemas']['UnitDecisionInput'][]
     }
-    /**
-     * UnitPeerView
-     * @description Only the reviewer's own decision: peers judge independently.
-     */
+    /** UnitPeerView */
     UnitPeerView: {
       /**
        * @description discriminator enum property added by openapi-typescript
        * @enum {string}
        */
       audience: 'peer'
+      /** Comments */
+      comments: components['schemas']['CommentView'][]
       /** Direction */
       direction: string | null
       /**
@@ -1290,7 +1519,6 @@ export interface components {
       id: string
       /** Kind */
       kind: string | null
-      my_decision: components['schemas']['DecisionValue'] | null
       /** Ordinal */
       ordinal: number
       /** Patient Words */
@@ -1305,6 +1533,35 @@ export interface components {
      * @enum {string}
      */
     UnitStatus: 'pending' | 'approved' | 'rejected' | 'ingested' | 'superseded'
+    /**
+     * UserAdminView
+     * @description What the admin sees: also whether the person has yet to accept their invite.
+     */
+    UserAdminView: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string
+      /** Display Name */
+      display_name: string
+      /** Email */
+      email: string
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string
+      /** Invite Pending */
+      invite_pending: boolean
+      /** Is Active */
+      is_active: boolean
+      /** Is Synthetic */
+      is_synthetic: boolean
+      /** Pseudonym */
+      pseudonym: string
+      role: components['schemas']['Role']
+    }
     /** UserCreate */
     UserCreate: {
       /** Display Name */
@@ -1507,6 +1764,39 @@ export interface components {
        * @enum {string}
        */
       track: 'general' | 'text_analysis'
+    }
+    /**
+     * Vote
+     * @enum {string}
+     */
+    Vote: 'accept' | 'decline'
+    /** VoteEntry */
+    VoteEntry: {
+      /**
+       * At
+       * Format: date-time
+       */
+      at: string
+      speaker: components['schemas']['Speaker']
+      vote: components['schemas']['Vote']
+    }
+    /** VoteInput */
+    VoteInput: {
+      /** Review Round */
+      review_round: number
+      vote: components['schemas']['Vote']
+    }
+    /** VotesView */
+    VotesView: {
+      /** Accepts */
+      accepts: number
+      /** Declines */
+      declines: number
+      my_vote: components['schemas']['Vote'] | null
+      /** Review Round */
+      review_round: number
+      /** Votes */
+      votes: components['schemas']['VoteEntry'][]
     }
   }
   responses: never
@@ -1855,40 +2145,6 @@ export interface operations {
       }
     }
   }
-  recall_review_api_v1_assignments__assignment_id__recall_review_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
   retry_api_v1_assignments__assignment_id__retry_post: {
     parameters: {
       query?: never
@@ -1923,7 +2179,7 @@ export interface operations {
       }
     }
   }
-  request_peers_api_v1_assignments__assignment_id__reviewers_post: {
+  open_review_api_v1_assignments__assignment_id__review_open_post: {
     parameters: {
       query?: never
       header?: never
@@ -1932,23 +2188,14 @@ export interface operations {
       }
       cookie?: never
     }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RequestPeersBody']
-      }
-    }
+    requestBody?: never
     responses: {
       /** @description Successful Response */
-      200: {
+      204: {
         headers: {
           [name: string]: unknown
         }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
+        content?: never
       }
       /** @description Client Error */
       '4XX': {
@@ -2122,6 +2369,108 @@ export interface operations {
             | components['schemas']['UnitPeerView']
             | components['schemas']['UnitAuthorView']
           )[]
+        }
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  add_comment_api_v1_assignments__assignment_id__units__unit_id__comments_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assignment_id: string
+        unit_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CommentCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CommentView']
+        }
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cast_vote_api_v1_assignments__assignment_id__vote_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assignment_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VoteInput']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['VotesView']
+        }
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  get_votes_api_v1_assignments__assignment_id__votes_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assignment_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['VotesView']
         }
       }
       /** @description Client Error */
@@ -2321,7 +2670,38 @@ export interface operations {
       }
     }
   }
-  review_queue_api_v1_review_requests_get: {
+  activity_seen_api_v1_me_activity_seen_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ActivitySeen'] | null
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  home_api_v1_me_home_get: {
     parameters: {
       query?: never
       header?: never
@@ -2336,7 +2716,39 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['ReviewQueueItem'][]
+          'application/json': components['schemas']['HomeView']
+        }
+      }
+      /** @description Client Error */
+      '4XX': {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_reviews_api_v1_reviews_get: {
+    parameters: {
+      query?: {
+        status?: ('open' | 'closed') | null
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ReviewItem'][]
         }
       }
       /** @description Client Error */
@@ -2365,7 +2777,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['UserView'][]
+          'application/json': components['schemas']['UserAdminView'][]
         }
       }
       /** @description Client Error */
@@ -2433,7 +2845,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['UserView']
+          'application/json': components['schemas']['UserAdminView']
         }
       }
       /** @description Client Error */

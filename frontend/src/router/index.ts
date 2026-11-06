@@ -43,8 +43,14 @@ const router = createRouter({
         {
           path: 'reviews',
           name: 'reviews',
-          component: PlaceholderView,
-          meta: { title: 'Reviews' },
+          component: () => import('@/views/ReviewsView.vue'),
+        },
+        {
+          path: 'reviews/:id',
+          name: 'review',
+          component: () => import('@/views/ReviewView.vue'),
+          props: true,
+          meta: { wide: true, keepOnExpiry: true },
         },
         {
           path: 'vignettes',
@@ -68,8 +74,8 @@ const router = createRouter({
         {
           path: 'experts',
           name: 'experts',
-          component: PlaceholderView,
-          meta: { title: 'Experts', roles: ['admin'] },
+          component: () => import('@/views/ExpertsView.vue'),
+          meta: { roles: ['admin'] },
         },
         {
           path: 'knowledge',

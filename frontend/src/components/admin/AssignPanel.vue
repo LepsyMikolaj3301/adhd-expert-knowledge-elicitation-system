@@ -17,8 +17,7 @@ const STATE_LABELS: Partial<Record<AssignmentSummary['state'], string>> = {
   processing_failed: 'Processing failed',
   expert_check: 'Submitted, waiting for the expert check',
   building_units: 'Submitted, processing',
-  admin_review: 'Waiting for your review',
-  peer_review: 'In peer review',
+  peer_review: 'In review, waiting for your decision',
   ingesting: 'Entering the knowledge base',
   ingestion_failed: 'Entering the knowledge base failed',
   ingested: 'In the knowledge base',
@@ -88,6 +87,17 @@ async function assign() {
   await load()
 }
 
+/** Skip the author's check, or run a failed job again. */
+async function run(call: () => Promise<unknown>) {
+  error.value = ''
+  try {
+    await call()
+  } catch (e) {
+    error.value = explain(e)
+  }
+  await load()
+}
+
 async function cancel() {
   const assignment = cancelling.value
   cancelling.value = null
@@ -124,6 +134,34 @@ watch(() => props.versionId, load)
         >
           <span class="flex-1 font-medium">{{ nameOf(assignment.expert_pseudonym) }}</span>
           <span class="text-muted">{{ STATE_LABELS[assignment.state] ?? assignment.state }}</span>
+          <button
+            v-if="assignment.allowed_actions.includes('skip_expert_check')"
+            type="button"
+            class="btn-quiet !px-3 !py-1"
+            @click="
+              run(() =>
+                api.POST('/api/v1/assignments/{assignment_id}/expert-check/skip', {
+                  params: { path: { assignment_id: assignment.id } },
+                }),
+              )
+            "
+          >
+            Skip the expert check
+          </button>
+          <button
+            v-if="assignment.allowed_actions.includes('retry')"
+            type="button"
+            class="btn-quiet !px-3 !py-1"
+            @click="
+              run(() =>
+                api.POST('/api/v1/assignments/{assignment_id}/retry', {
+                  params: { path: { assignment_id: assignment.id } },
+                }),
+              )
+            "
+          >
+            Retry
+          </button>
           <button
             v-if="assignment.allowed_actions.includes('cancel')"
             type="button"

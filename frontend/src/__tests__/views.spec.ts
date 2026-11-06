@@ -45,7 +45,7 @@ describe('AssignmentsView', () => {
     ['assigned', ['start'], 'Not started', 'Start'],
     ['in_progress', ['pass_gate', 'save_draft'], 'In progress', 'Continue'],
     ['processing', [], 'Submitted', 'View'],
-    ['expert_check', ['complete_expert_check', 'skip_expert_check'], 'Submitted', 'View'],
+    ['expert_check', ['complete_expert_check', 'skip_expert_check'], 'Ready to check', 'Check'],
     ['ingested', [], 'Submitted', 'View'],
   ] as const)(
     'shows an expert %s in plain words, with a link',
@@ -140,7 +140,7 @@ describe('AssignmentsView', () => {
     logIn(expert)
     const pages = [summary({ job_running: true }), summary({ job_running: true })]
     const fetchMock = stubFetch(() =>
-      jsonResponse(200, [pages.shift() ?? summary({ state: 'expert_check' })]),
+      jsonResponse(200, [pages.shift() ?? summary({ state: 'peer_review' })]),
     )
 
     const wrapper = mountView(AssignmentsView)

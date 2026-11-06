@@ -24,6 +24,7 @@ function expertStatus(state: AssignmentSummary['state']): string {
   if (state === 'assigned') return 'Not started'
   if (state === 'in_progress') return 'In progress'
   if (state === 'cancelled') return 'Cancelled'
+  if (state === 'expert_check') return 'Ready to check'
   return 'Submitted'
 }
 
@@ -31,6 +32,7 @@ function openLabel(state: AssignmentSummary['state']): string | null {
   if (state === 'assigned') return 'Start'
   if (state === 'in_progress') return 'Continue'
   if (state === 'cancelled') return null
+  if (state === 'expert_check') return 'Check'
   return 'View'
 }
 

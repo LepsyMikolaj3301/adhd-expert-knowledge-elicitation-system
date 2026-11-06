@@ -26,7 +26,26 @@ async function open(user: User, path: string) {
 
 const navLinks = (w: VueWrapper) => w.findAll('nav[aria-label="Main"] a')
 
-beforeEach(() => setActivePinia(createPinia()))
+beforeEach(() => {
+  setActivePinia(createPinia())
+  stubFetch((url) =>
+    jsonResponse(
+      200,
+      url.endsWith('/me/home')
+        ? {
+            next_up: [],
+            next_up_total: 0,
+            reviews_waiting: [],
+            recent_reviews: [],
+            activity: [],
+            unread_activity: 0,
+          }
+        : url.endsWith('/assignments') || url.includes('/reviews')
+          ? []
+          : {},
+    ),
+  )
+})
 afterEach(() => wrapper?.unmount())
 
 describe('side panel', () => {
@@ -77,8 +96,8 @@ describe('side panel', () => {
 
 describe('sections', () => {
   it('shows a placeholder for a section that is not built yet', async () => {
-    const w = await open(admin, '/experts')
-    expect(w.get('h1').text()).toBe('Experts')
+    const w = await open(admin, '/knowledge')
+    expect(w.get('h1').text()).toBe('Knowledge base')
     expect(w.text()).toContain("This section isn't built yet.")
   })
 
@@ -89,7 +108,7 @@ describe('sections', () => {
 
   it('lists the other sections on the home page', async () => {
     const w = await open(expert, '/')
-    expect(w.get('[data-testid="sections"]').text()).toContain('Answer the cases assigned to you.')
+    expect(w.get('[data-testid="sections"]').text()).toContain('My cases')
   })
 
   it('says on the home page what happens with the answers, to an expert', async () => {
@@ -106,7 +125,7 @@ describe('sections', () => {
     const w = await open(expert, '/')
     const sections = w.get('[data-testid="sections"]')
     expect(sections.text()).toContain('Reviews')
-    expect(sections.text()).toContain('Check the knowledge units colleagues ask you to review.')
+    expect(sections.html()).toContain('Read colleagues')
   })
 
   it('opens the Reviews page for an expert', async () => {
@@ -142,7 +161,9 @@ describe('account page', () => {
     await w.get('button').trigger('click')
     await flushPromises()
 
-    expect(fetchMock.mock.calls.map(([input]) => String((input as Request).url))).toEqual([
+    const urls = fetchMock.mock.calls.map(([input]) => String((input as Request).url))
+    // The side panel also asks for the counts on its badges.
+    expect(urls.filter((u) => !u.endsWith('/me/home'))).toEqual([
       expect.stringMatching(/\/api\/v1\/auth\/logout$/),
     ])
     expect(useAuthStore().user).toBeNull()

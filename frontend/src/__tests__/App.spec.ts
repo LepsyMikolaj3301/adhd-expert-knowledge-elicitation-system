@@ -37,7 +37,21 @@ describe('App', () => {
   })
 
   it('welcomes a logged-in user inside the side panel', async () => {
-    stubFetch(() => jsonResponse(200, expert))
+    stubFetch((url) =>
+      jsonResponse(
+        200,
+        url.endsWith('/me/home')
+          ? {
+              next_up: [],
+              next_up_total: 0,
+              reviews_waiting: [],
+              recent_reviews: [],
+              activity: [],
+              unread_activity: 0,
+            }
+          : expert,
+      ),
+    )
 
     await router.push('/')
     const wrapper = mount(App, { global: { plugins: [router] } })

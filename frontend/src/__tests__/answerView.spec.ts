@@ -606,7 +606,7 @@ describe('submitting', () => {
   it('shows a submitted vignette read-only, and hovering still lights the text', async () => {
     const submitted = {
       ...afterGate(finished, 1),
-      state: 'expert_check' as const,
+      state: 'processing' as const,
       allowed_actions: [],
       submitted_at: 'now',
     }
@@ -646,7 +646,7 @@ describe('submitting', () => {
   it('does not look locked once submitted', async () => {
     const submitted = {
       ...afterGate(finished, 1),
-      state: 'expert_check' as const,
+      state: 'processing' as const,
       allowed_actions: [],
       submitted_at: 'now',
     }

@@ -4,7 +4,13 @@
  * messages use the old terms, so what an expert sees for an error comes from here, by its stable
  * `code`. The questions themselves are not here: they come from the API, worded the same for all.
  */
-import { ApiError, type Direction } from '@/api/client'
+import {
+  ApiError,
+  type ActivityItem,
+  type Direction,
+  type ReviewItem,
+  type Speaker,
+} from '@/api/client'
 
 /** Says what happens to the answers. Keep it true: check it against the consent text. */
 export const TRUST_SENTENCE =
@@ -92,6 +98,18 @@ export function describeError(error: unknown): string {
         "A reference in your answer doesn't match a marked passage. Please check your answers. " +
         `If it continues, contact ${STUDY_TEAM}.`
       )
+    case 'review_closed':
+      return 'The study team has already decided on this case, so this can no longer be added. What you typed is still here.'
+    case 'stale_round':
+      return 'The statements changed while you were reading. We have loaded the new ones, so please look again.'
+    case 'comment_required':
+      return 'Please say what should change.'
+    case 'findings_conflict':
+      return 'This was changed in another tab or device. Please reload to see the latest.'
+    case 'email_taken':
+      return 'Someone already has an account with this email.'
+    case 'cannot_deactivate_self':
+      return "You can't deactivate your own account."
     case 'not_found':
       return "We can't find this case in your list. It may have been reassigned."
     case 'unavailable':
@@ -104,4 +122,53 @@ export function describeError(error: unknown): string {
 /** Why a save was refused. The same words as any other error. */
 export function saveRefusal(error: ApiError): string {
   return describeError(error)
+}
+
+/** The word experts read for what the API calls a unit. */
+export const STATEMENT = 'statement'
+
+/** The tally is advice for the study team, never a verdict. */
+export function tallyLabel(accepts: number, declines: number): string {
+  return `${accepts} accept, ${declines} decline`
+}
+
+export function speakerLabel(speaker: Speaker | null | undefined): string {
+  if (!speaker) return ''
+  if (speaker.pseudonym) return speaker.pseudonym
+  return { author: 'Author', admin: 'Admin', reviewer: 'A reviewer' }[speaker.kind]
+}
+
+export const STANCES = { support: 'Supports', challenge: 'Challenges', question: 'Asks' } as const
+
+/** What the study team did with a submission, as the page of a closed review says it. */
+export function reviewOutcome(state: ReviewItem['state'], round: number): string | null {
+  if (state === 'peer_review') return null
+  if (state === 'expert_check')
+    return `Sent back to the author for changes. A new round (${round}) follows.`
+  if (state === 'rejected') return 'Closed: the study team rejected these statements.'
+  return 'Closed: the study team decided. Approved statements go into the knowledge base.'
+}
+
+/** One sentence per kind of change in the home feed. */
+export function activityText(a: ActivityItem): string {
+  const who = speakerLabel(a.speaker)
+  const where = `${STATEMENT} ${a.unit_ordinal ?? ''} of case ${a.vignette_code}`.replace('  ', ' ')
+  switch (a.kind) {
+    case 'case_assigned':
+      return `Case ${a.vignette_code} was assigned to you.`
+    case 'check_ready':
+      return `Case ${a.vignette_code} is ready for you to check.`
+    case 'review_opened':
+      return `Case ${a.vignette_code} is open for review.`
+    case 'review_closed':
+      return a.outcome === 'sent_back'
+        ? `Case ${a.vignette_code} was sent back for changes.`
+        : `The review of case ${a.vignette_code} is closed${a.outcome ? `: ${a.outcome}` : ''}.`
+    case 'comment_on_mine':
+      return `${who} commented on ${where}.`
+    case 'reply':
+      return `${who} replied in the discussion of ${where}.`
+    case 'job_failed':
+      return `Processing case ${a.vignette_code} failed.`
+  }
 }

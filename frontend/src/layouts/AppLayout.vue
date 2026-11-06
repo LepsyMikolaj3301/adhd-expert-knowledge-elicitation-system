@@ -1,14 +1,44 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import SignInAgainDialog from '@/components/SignInAgainDialog.vue'
 import { navFor } from '@/navigation'
 import { SITE_NAME } from '@/site'
 import { useAuthStore } from '@/stores/auth'
+import { useHomeStore } from '@/stores/home'
 
 const auth = useAuthStore()
 const route = useRoute()
+const home = useHomeStore()
+const REFRESH_MS = 60_000
+let timer: ReturnType<typeof setInterval> | undefined
+
+/** The dot on Home and the count on Reviews, from the same answer as the home page. */
+function badge(to: string): string {
+  const d = home.data
+  if (to === '/') return d?.unread_activity ? '●' : ''
+  const waiting = d?.reviews_waiting?.length ?? 0
+  if (to !== '/reviews' || !waiting) return ''
+  return waiting >= 5 ? '5+' : String(waiting)
+}
+const badgeLabel = (to: string) =>
+  to === '/' ? 'new updates' : `${badge(to)} reviews waiting for you`
+
+const refresh = () => document.visibilityState === 'visible' && auth.user && void home.load()
+onMounted(() => {
+  refresh()
+  timer = setInterval(refresh, REFRESH_MS)
+})
+onUnmounted(() => clearInterval(timer))
+// A different person signing in must not see the last one's counts.
+watch(
+  () => auth.user?.id,
+  () => {
+    home.data = null
+    refresh()
+  },
+)
 const items = computed(() => (auth.user ? navFor(auth.user.role) : []))
 
 /** A section stays current on the pages under it, such as one vignette under Vignettes. */
@@ -77,6 +107,9 @@ function tabClass(active: boolean): string {
             @click="navigate"
           >
             {{ item.label }}
+            <span v-if="badge(item.to)" class="text-xs" :aria-label="badgeLabel(item.to)">{{
+              badge(item.to)
+            }}</span>
           </a>
         </RouterLink>
       </nav>

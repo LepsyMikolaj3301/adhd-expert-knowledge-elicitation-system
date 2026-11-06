@@ -23,6 +23,141 @@
         "title": "AcceptInviteRequest",
         "type": "object"
       },
+      "ActivityItem": {
+        "properties": {
+          "assignment_id": {
+            "format": "uuid",
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "comment_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment Id"
+          },
+          "excerpt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excerpt"
+          },
+          "kind": {
+            "enum": [
+              "case_assigned",
+              "check_ready",
+              "review_opened",
+              "review_closed",
+              "comment_on_mine",
+              "reply",
+              "job_failed"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "enum": [
+                  "accepted",
+                  "rejected",
+                  "sent_back"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "speaker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Speaker"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Id"
+          },
+          "unit_ordinal": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Ordinal"
+          },
+          "unread": {
+            "title": "Unread",
+            "type": "boolean"
+          },
+          "vignette_code": {
+            "title": "Vignette Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "assignment_id",
+          "vignette_code",
+          "at",
+          "unread"
+        ],
+        "title": "ActivityItem",
+        "type": "object"
+      },
+      "ActivitySeen": {
+        "additionalProperties": false,
+        "properties": {
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "title": "ActivitySeen",
+        "type": "object"
+      },
       "AdminAssignment": {
         "properties": {
           "allowed_actions": {
@@ -63,10 +198,6 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
-          },
-          "required_approvals": {
-            "title": "Required Approvals",
-            "type": "integer"
           },
           "review_round": {
             "title": "Review Round",
@@ -129,7 +260,6 @@
           "vignette_code",
           "vignette_version",
           "vignette_version_id",
-          "required_approvals",
           "gate_passed_at",
           "started_at",
           "submitted_at"
@@ -276,6 +406,108 @@
           "updated_at"
         ],
         "title": "AssignmentSummary",
+        "type": "object"
+      },
+      "CommentCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "stance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Stance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "CommentCreate",
+        "type": "object"
+      },
+      "CommentView": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_mine": {
+            "title": "Is Mine",
+            "type": "boolean"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "speaker": {
+            "$ref": "#/components/schemas/Speaker"
+          },
+          "stance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Stance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit_id": {
+            "format": "uuid",
+            "title": "Unit Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "unit_id",
+          "parent_id",
+          "stance",
+          "body",
+          "created_at",
+          "speaker",
+          "is_mine"
+        ],
+        "title": "CommentView",
         "type": "object"
       },
       "Confounder": {
@@ -1080,6 +1312,56 @@
         "title": "Highlight",
         "type": "object"
       },
+      "HomeView": {
+        "properties": {
+          "activity": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityItem"
+            },
+            "title": "Activity",
+            "type": "array"
+          },
+          "next_up": {
+            "items": {
+              "$ref": "#/components/schemas/NextUpItem"
+            },
+            "title": "Next Up",
+            "type": "array"
+          },
+          "next_up_total": {
+            "title": "Next Up Total",
+            "type": "integer"
+          },
+          "recent_reviews": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewItem"
+            },
+            "title": "Recent Reviews",
+            "type": "array"
+          },
+          "reviews_waiting": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewItem"
+            },
+            "title": "Reviews Waiting",
+            "type": "array"
+          },
+          "unread_activity": {
+            "title": "Unread Activity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "next_up",
+          "next_up_total",
+          "reviews_waiting",
+          "recent_reviews",
+          "activity",
+          "unread_activity"
+        ],
+        "title": "HomeView",
+        "type": "object"
+      },
       "InviteIssued": {
         "properties": {
           "invite_path": {
@@ -1100,7 +1382,7 @@
             "type": "string"
           },
           "user": {
-            "$ref": "#/components/schemas/UserView"
+            "$ref": "#/components/schemas/UserAdminView"
           }
         },
         "required": [
@@ -1189,6 +1471,64 @@
           "password"
         ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "NextUpItem": {
+        "description": "Something waiting for the viewer. `action` is decided here, so the page has no copy of the\nworkflow's rules.",
+        "properties": {
+          "action": {
+            "enum": [
+              "start",
+              "continue",
+              "check",
+              "retry"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "assignment_id": {
+            "format": "uuid",
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "expert_pseudonym": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expert Pseudonym"
+          },
+          "state": {
+            "$ref": "#/components/schemas/State"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "vignette_code": {
+            "title": "Vignette Code",
+            "type": "string"
+          },
+          "vignette_version": {
+            "title": "Vignette Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "assignment_id",
+          "vignette_code",
+          "vignette_version",
+          "state",
+          "action",
+          "expert_pseudonym",
+          "updated_at"
+        ],
+        "title": "NextUpItem",
         "type": "object"
       },
       "PeerAssignment": {
@@ -1406,50 +1746,74 @@
         "title": "QuestionView",
         "type": "object"
       },
-      "RequestPeersBody": {
-        "additionalProperties": false,
+      "ReviewItem": {
         "properties": {
-          "required_approvals": {
-            "default": 1,
-            "minimum": 1.0,
-            "title": "Required Approvals",
+          "accepts": {
+            "title": "Accepts",
             "type": "integer"
           },
-          "reviewer_ids": {
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "maxItems": 50,
-            "minItems": 1,
-            "title": "Reviewer Ids",
-            "type": "array"
-          }
-        },
-        "required": [
-          "reviewer_ids"
-        ],
-        "title": "RequestPeersBody",
-        "type": "object"
-      },
-      "ReviewQueueItem": {
-        "properties": {
           "assignment_id": {
             "format": "uuid",
             "title": "Assignment Id",
             "type": "string"
           },
-          "requested_at": {
-            "format": "date-time",
-            "title": "Requested At",
+          "author_pseudonym": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Pseudonym"
+          },
+          "comment_count": {
+            "title": "Comment Count",
+            "type": "integer"
+          },
+          "declines": {
+            "title": "Declines",
+            "type": "integer"
+          },
+          "my_vote": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Vote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "opened": {
+            "title": "Opened",
+            "type": "boolean"
+          },
+          "relation": {
+            "enum": [
+              "reviewer",
+              "author",
+              "admin"
+            ],
+            "title": "Relation",
             "type": "string"
           },
-          "stage": {
-            "$ref": "#/components/schemas/ReviewStage"
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
+          "state": {
+            "$ref": "#/components/schemas/State"
           },
           "unit_count": {
             "title": "Unit Count",
             "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
           },
           "vignette_code": {
             "title": "Vignette Code",
@@ -1462,13 +1826,21 @@
         },
         "required": [
           "assignment_id",
-          "stage",
           "vignette_code",
           "vignette_version",
+          "review_round",
+          "state",
+          "relation",
+          "opened",
           "unit_count",
-          "requested_at"
+          "accepts",
+          "declines",
+          "comment_count",
+          "my_vote",
+          "updated_at",
+          "author_pseudonym"
         ],
-        "title": "ReviewQueueItem",
+        "title": "ReviewItem",
         "type": "object"
       },
       "ReviewStage": {
@@ -1487,6 +1859,47 @@
         "title": "Role",
         "type": "string"
       },
+      "Speaker": {
+        "description": "Who said it. A reviewer is told by pseudonym; the author and the admin are only a role,\nunless the viewer is the admin, who sees every pseudonym.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "author",
+              "reviewer",
+              "admin"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "pseudonym": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pseudonym"
+          }
+        },
+        "required": [
+          "kind",
+          "pseudonym"
+        ],
+        "title": "Speaker",
+        "type": "object"
+      },
+      "Stance": {
+        "description": "How a reviewer's comment sits with the unit it is under.",
+        "enum": [
+          "support",
+          "challenge",
+          "question"
+        ],
+        "title": "Stance",
+        "type": "string"
+      },
       "State": {
         "enum": [
           "assigned",
@@ -1495,7 +1908,6 @@
           "processing_failed",
           "expert_check",
           "building_units",
-          "admin_review",
           "peer_review",
           "ingesting",
           "ingestion_failed",
@@ -1549,6 +1961,13 @@
             "default": "admin",
             "title": "Audience",
             "type": "string"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommentView"
+            },
+            "title": "Comments",
+            "type": "array"
           },
           "content_hash": {
             "title": "Content Hash",
@@ -1623,6 +2042,7 @@
           "kind",
           "direction",
           "patient_words",
+          "comments",
           "status",
           "content_hash",
           "decisions"
@@ -1637,6 +2057,13 @@
             "default": "author",
             "title": "Audience",
             "type": "string"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommentView"
+            },
+            "title": "Comments",
+            "type": "array"
           },
           "direction": {
             "anyOf": [
@@ -1700,6 +2127,7 @@
           "kind",
           "direction",
           "patient_words",
+          "comments",
           "status"
         ],
         "title": "UnitAuthorView",
@@ -1755,13 +2183,19 @@
         "type": "object"
       },
       "UnitPeerView": {
-        "description": "Only the reviewer's own decision: peers judge independently.",
         "properties": {
           "audience": {
             "const": "peer",
             "default": "peer",
             "title": "Audience",
             "type": "string"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommentView"
+            },
+            "title": "Comments",
+            "type": "array"
           },
           "direction": {
             "anyOf": [
@@ -1789,16 +2223,6 @@
               }
             ],
             "title": "Kind"
-          },
-          "my_decision": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/DecisionValue"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "ordinal": {
             "title": "Ordinal",
@@ -1832,7 +2256,7 @@
           "kind",
           "direction",
           "patient_words",
-          "my_decision"
+          "comments"
         ],
         "title": "UnitPeerView",
         "type": "object"
@@ -1847,6 +2271,61 @@
         ],
         "title": "UnitStatus",
         "type": "string"
+      },
+      "UserAdminView": {
+        "description": "What the admin sees: also whether the person has yet to accept their invite.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_pending": {
+            "title": "Invite Pending",
+            "type": "boolean"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_synthetic": {
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "pseudonym": {
+            "title": "Pseudonym",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "display_name",
+          "role",
+          "pseudonym",
+          "is_synthetic",
+          "is_active",
+          "created_at",
+          "invite_pending"
+        ],
+        "title": "UserAdminView",
+        "type": "object"
       },
       "UserCreate": {
         "additionalProperties": false,
@@ -2410,6 +2889,97 @@
           "purpose"
         ],
         "title": "VignetteDesign",
+        "type": "object"
+      },
+      "Vote": {
+        "enum": [
+          "accept",
+          "decline"
+        ],
+        "title": "Vote",
+        "type": "string"
+      },
+      "VoteEntry": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "speaker": {
+            "$ref": "#/components/schemas/Speaker"
+          },
+          "vote": {
+            "$ref": "#/components/schemas/Vote"
+          }
+        },
+        "required": [
+          "speaker",
+          "vote",
+          "at"
+        ],
+        "title": "VoteEntry",
+        "type": "object"
+      },
+      "VoteInput": {
+        "additionalProperties": false,
+        "properties": {
+          "review_round": {
+            "minimum": 1.0,
+            "title": "Review Round",
+            "type": "integer"
+          },
+          "vote": {
+            "$ref": "#/components/schemas/Vote"
+          }
+        },
+        "required": [
+          "vote",
+          "review_round"
+        ],
+        "title": "VoteInput",
+        "type": "object"
+      },
+      "VotesView": {
+        "properties": {
+          "accepts": {
+            "title": "Accepts",
+            "type": "integer"
+          },
+          "declines": {
+            "title": "Declines",
+            "type": "integer"
+          },
+          "my_vote": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Vote"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
+          "votes": {
+            "items": {
+              "$ref": "#/components/schemas/VoteEntry"
+            },
+            "title": "Votes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "review_round",
+          "accepts",
+          "declines",
+          "my_vote",
+          "votes"
+        ],
+        "title": "VotesView",
         "type": "object"
       }
     }
@@ -3031,68 +3601,6 @@
         ]
       }
     },
-    "/api/v1/assignments/{assignment_id}/recall-review": {
-      "post": {
-        "operationId": "recall_review_api_v1_assignments__assignment_id__recall_review_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "discriminator": {
-                    "mapping": {
-                      "admin": "#/components/schemas/AdminAssignment",
-                      "expert": "#/components/schemas/ExpertAssignment",
-                      "peer": "#/components/schemas/PeerAssignment"
-                    },
-                    "propertyName": "audience"
-                  },
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpertAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/PeerAssignment"
-                    }
-                  ],
-                  "title": "Response Recall Review Api V1 Assignments  Assignment Id  Recall Review Post"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Recall Review",
-        "tags": [
-          "reviews"
-        ]
-      }
-    },
     "/api/v1/assignments/{assignment_id}/retry": {
       "post": {
         "operationId": "retry_api_v1_assignments__assignment_id__retry_post",
@@ -3155,9 +3663,10 @@
         ]
       }
     },
-    "/api/v1/assignments/{assignment_id}/reviewers": {
+    "/api/v1/assignments/{assignment_id}/review/open": {
       "post": {
-        "operationId": "request_peers_api_v1_assignments__assignment_id__reviewers_post",
+        "description": "A reviewer agrees to read the submission. From then on they can't be assigned the\nvignette, because what they read would colour their own answer.",
+        "operationId": "open_review_api_v1_assignments__assignment_id__review_open_post",
         "parameters": [
           {
             "in": "path",
@@ -3170,44 +3679,8 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestPeersBody"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "discriminator": {
-                    "mapping": {
-                      "admin": "#/components/schemas/AdminAssignment",
-                      "expert": "#/components/schemas/ExpertAssignment",
-                      "peer": "#/components/schemas/PeerAssignment"
-                    },
-                    "propertyName": "audience"
-                  },
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpertAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/PeerAssignment"
-                    }
-                  ],
-                  "title": "Response Request Peers Api V1 Assignments  Assignment Id  Reviewers Post"
-                }
-              }
-            },
+          "204": {
             "description": "Successful Response"
           },
           "4XX": {
@@ -3221,7 +3694,7 @@
             "description": "Client Error"
           }
         },
-        "summary": "Request Peers",
+        "summary": "Open Review",
         "tags": [
           "reviews"
         ]
@@ -3396,6 +3869,7 @@
     },
     "/api/v1/assignments/{assignment_id}/unit-decisions": {
       "post": {
+        "description": "The admin's decision on each unit; it closes the review.",
         "operationId": "submit_decisions_api_v1_assignments__assignment_id__unit_decisions_post",
         "parameters": [
           {
@@ -3468,7 +3942,7 @@
     },
     "/api/v1/assignments/{assignment_id}/units": {
       "get": {
-        "description": "The current round's units; the admin can ask for an earlier round with `review_round`.",
+        "description": "The current round's units. The admin and the author can ask for an earlier round.",
         "operationId": "list_units_api_v1_assignments__assignment_id__units_get",
         "parameters": [
           {
@@ -3543,6 +4017,165 @@
           }
         },
         "summary": "List Units",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/units/{unit_id}/comments": {
+      "post": {
+        "operationId": "add_comment_api_v1_assignments__assignment_id__units__unit_id__comments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unit_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Unit Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Add Comment",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/vote": {
+      "put": {
+        "operationId": "cast_vote_api_v1_assignments__assignment_id__vote_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VotesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Cast Vote",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/votes": {
+      "get": {
+        "operationId": "get_votes_api_v1_assignments__assignment_id__votes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VotesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Get Votes",
         "tags": [
           "reviews"
         ]
@@ -3796,18 +4429,125 @@
         ]
       }
     },
-    "/api/v1/review-requests": {
+    "/api/v1/me/activity/seen": {
+      "post": {
+        "operationId": "activity_seen_api_v1_me_activity_seen_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ActivitySeen"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Activity Seen",
+        "tags": [
+          "home"
+        ]
+      }
+    },
+    "/api/v1/me/home": {
       "get": {
-        "operationId": "review_queue_api_v1_review_requests_get",
+        "operationId": "home_api_v1_me_home_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Home",
+        "tags": [
+          "home"
+        ]
+      }
+    },
+    "/api/v1/reviews": {
+      "get": {
+        "description": "The submissions the viewer can follow: open ones wait for the admin's decision.",
+        "operationId": "list_reviews_api_v1_reviews_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "open",
+                    "closed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/ReviewQueueItem"
+                    "$ref": "#/components/schemas/ReviewItem"
                   },
-                  "title": "Response Review Queue Api V1 Review Requests Get",
+                  "title": "Response List Reviews Api V1 Reviews Get",
                   "type": "array"
                 }
               }
@@ -3825,7 +4565,7 @@
             "description": "Client Error"
           }
         },
-        "summary": "Review Queue",
+        "summary": "List Reviews",
         "tags": [
           "reviews"
         ]
@@ -3840,7 +4580,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/UserView"
+                    "$ref": "#/components/schemas/UserAdminView"
                   },
                   "title": "Response List Users Api V1 Users Get",
                   "type": "array"
@@ -3935,7 +4675,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserView"
+                  "$ref": "#/components/schemas/UserAdminView"
                 }
               }
             },
