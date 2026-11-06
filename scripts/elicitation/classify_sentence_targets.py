@@ -24,66 +24,17 @@ from pathlib import Path
 import chip_findings as cf
 from chips_schema import ChipDocument, ChipResponse, render_chips
 from llm_clients import CachedGenerator, GenRequest, ModelRefused, OllamaGenerator
-from make_fixtures import Rejected, fixture_dir, parse_json, write_json
-from prompt_loader import load_prompt
+from make_fixtures import Rejected, fixture_dir, write_json
+
+from app.knowledge.classifier import OPTIONS, PROMPT, check_labels, prompt_for
 
 ROOT = Path(__file__).resolve().parents[2]
 UNITS = ROOT / "data/expert_units_chips/synthetic"
 FIXTURES = ROOT / "data/fixtures_chips"
-PROMPT = "Expert_sentence_targets.v1"
-OPTIONS = {"temperature": 0.2, "num_predict": 600, "num_ctx": 8192}
 
 
 def model_tag(model: str) -> str:
     return re.sub(r"[^A-Za-z0-9.]+", "-", model).strip("-")
-
-
-def prompt_for(vignette: str, highlights: list[dict], sentences: list[dict], left: list[str]):
-    numbered = "\n".join(
-        f"[{n}] {vignette[a:b].strip()}" for n, (a, b) in enumerate(cf.split_sentences(vignette), 1)
-    )
-    marks = []
-    for h in highlights:
-        note = (
-            "" if h["origin"] == "expert" else " (quoted in the answers, not marked as a highlight)"
-        )
-        marks.append(f'{h["id"]}: "{h["text"]}"{note}')
-    lines = []
-    for s in sentences:
-        known = f" -> {', '.join(s['targets'])}" if s["targets"] else ""
-        lines.append(f"{s['id']}{known}  {' '.join(s['text'].split())}")
-    return load_prompt(PROMPT).fill(
-        VIGNETTE=numbered, HIGHLIGHTS="\n".join(marks), SENTENCES="\n".join(lines),
-        UNRESOLVED=", ".join(left),
-    )  # fmt: skip
-
-
-def check_labels(
-    raw: str, sentences: list[dict], left: list[str], allowed: set[str]
-) -> tuple[dict[str, list[str]], list[str]]:
-    """(valid entries, errors). A valid entry is a non-empty list of allowed ids; `prev` alone and
-    never for the first sentence of an answer."""
-    data = parse_json(raw)
-    first = {
-        s["id"]
-        for i, s in enumerate(sentences)
-        if not i or sentences[i - 1]["question_id"] != s["question_id"]
-    }
-    good, errors = {}, []
-    for sid in left:
-        value = data.get(sid)
-        if not isinstance(value, list) or not value or not all(isinstance(x, str) for x in value):
-            errors.append(f"{sid}: missing or not a list of ids")
-            continue
-        ids = [x.strip().lower() for x in value]
-        unknown = [x for x in ids if x not in allowed]
-        if unknown:
-            errors.append(f"{sid}: unknown ids {unknown}")
-        elif "prev" in ids and (len(ids) > 1 or sid in first):
-            errors.append(f"{sid}: 'prev' must be alone and not on the first sentence")
-        else:
-            good[sid] = list(dict.fromkeys(ids))
-    return good, errors
 
 
 def classify(

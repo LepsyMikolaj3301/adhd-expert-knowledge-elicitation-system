@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings
@@ -9,6 +10,13 @@ class Settings(BaseSettings):
     # uses this instead of database_url.
     database_url_unpooled: str | None = None
     ollama_base_url: str = "http://localhost:11434"
+    # The model that files sentences that carry no citation (prompts/Expert_sentence_targets.v1.md).
+    # The chip test found the 35b model no better at this and far slower to load.
+    classifier_model: str = "qwen3.5:9b"
+    # One reply can include loading the model.
+    ollama_request_timeout: float = 600
+    # The folder with prompts/ and config/. The images copy both next to backend/.
+    project_root: Path = Path(__file__).resolve().parents[2]
     # S3 (MinIO locally). Set s3_endpoint_url to an empty string to target real AWS S3.
     s3_endpoint_url: str | None = "http://localhost:9000"
     s3_access_key_id: str = "rag-app"
