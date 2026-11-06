@@ -1,8 +1,6 @@
 /** What each step needs before the expert can move on. The server checks the same rules again. */
 import type { AnswerPayload, QuestionView } from '@/api/client'
 
-import { countWords } from './highlights'
-
 /** A question id, or the page at the end. */
 export type StepId = string
 export const REVIEW: StepId = 'review'
@@ -11,7 +9,6 @@ export const GATE_IDS = ['Q1', 'Q2', 'Q3']
 /** The Q4 wording the API sends, which it types only as a dictionary. */
 export interface Q4Wording {
   hypothesis: string
-  hypothesis_min_words: number
   shift_lead: string
   shift_labels: Record<string, string>
   toward: string
@@ -23,23 +20,15 @@ export function q4Wording(question: QuestionView): Q4Wording {
   return question.wording as unknown as Q4Wording
 }
 
-/** The counter under an answer. Once there are enough words, the target stops mattering. */
-export function wordCountLabel(words: number, minimum: number | null | undefined): string {
-  return minimum && words < minimum
-    ? `${words} of ${minimum} different words`
-    : `${words} different words`
+/** The counter under an answer. There is no target to reach: it only shows how much is written. */
+export function wordCountLabel(words: number): string {
+  return `${words} different ${words === 1 ? 'word' : 'words'}`
 }
 
-function tooFewWords(label: string, text: string, minimum: number): string | null {
-  const words = countWords(text)
-  return words < minimum ? `${label} has ${words} of ${minimum} different words.` : null
-}
-
-function q4Problem(question: QuestionView, payload: AnswerPayload): string | null {
+function q4Problem(payload: AnswerPayload): string | null {
   const q4 = payload.q4
-  const hypothesisMinimum = (question.wording?.hypothesis_min_words as number | undefined) ?? 1
-  if (countWords(q4?.hypothesis ?? '') < hypothesisMinimum) return 'Write your working hypothesis.'
-  if (q4?.shift === null || q4?.shift === undefined) return 'Pick a point on the scale.'
+  if (!q4?.hypothesis?.trim()) return 'Write your working hypothesis.'
+  if (q4.shift === null || q4.shift === undefined) return 'Pick a point on the scale.'
   if (q4.shift === 0) return null
   if (q4.shift > 0) {
     if (!q4.toward) return 'Choose a direction.'
@@ -47,16 +36,27 @@ function q4Problem(question: QuestionView, payload: AnswerPayload): string | nul
       return 'Name the other explanation.'
     }
   }
-  return tooFewWords('Why?', payload.answers.Q4 ?? '', question.min_words ?? 1)
+  return payload.answers.Q4?.trim() ? null : 'Explain why.'
 }
 
-/** The first thing stopping the expert from leaving this step, in words they can act on. */
+/** The first thing missing from this step, in words they can act on. Length never counts. */
 export function stepProblem(question: QuestionView, payload: AnswerPayload): string | null {
-  if (question.kind === 'shift') return q4Problem(question, payload)
+  if (question.kind === 'shift') return q4Problem(payload)
   if (question.kind === 'rating_1_5') {
     return payload.rating || payload.insufficient_information ? null : 'Choose a rating.'
   }
-  return tooFewWords(question.id, payload.answers[question.id] ?? '', question.min_words ?? 1)
+  return payload.answers[question.id]?.trim() ? null : `${question.id} needs an answer.`
+}
+
+/** What stops the expert from locking in Q1 to Q3. Moving between them is never stopped. */
+export function gateProblem(questions: QuestionView[], payload: AnswerPayload): string | null {
+  for (const question of questions) {
+    if (GATE_IDS.includes(question.id)) {
+      const problem = stepProblem(question, payload)
+      if (problem) return problem
+    }
+  }
+  return null
 }
 
 /** Where to open a vignette. Before the gate that is at most Q3, which holds the lock-in button. */

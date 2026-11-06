@@ -12,7 +12,7 @@ covers structure and behaviour, not a framework. The API and the workflow around
 | Field | What | Notes |
 |---|---|---|
 | `vignette` | `code`, `version`, `text`, `framing`, `word_count`, `content_hash` | Never the hidden `design` block: it holds the planted cues and is what the answers are scored against. A/B variant information isn't sent either. |
-| `vignette.questions[]` | `id`, `kind`, `text`, `min_words` | Only the questions the expert may see now, in order, with the text as shown (Q4's what-if is filled in). `kind` is `open`, `shift` (Q4) or `rating_1_5` (Q6). `min_words` is the minimum of different words, for a counter. |
+| `vignette.questions[]` | `id`, `kind`, `text` | Only the questions the expert may see now, in order, with the text as shown (Q4's what-if is filled in). `kind` is `open`, `shift` (Q4) or `rating_1_5` (Q6). |
 | `vignette.questions[].wording` | The wording of the Q4 step | Use these strings rather than rewording them, so all answers are given to the same item. |
 | `draft` | `version`, `payload` | The saved answers and citations. |
 | `locked_highlights` | How many citations were made before the lock-in | The first this many can't change. |
@@ -32,7 +32,7 @@ An expert first sees a list of their vignettes (`/assignments`), and opens one (
 │                                   │ ┌───────────────────────────────┐ │
 ├───────────────────────────────────┤ │ [2] could just as easily…     │ │
 │ Citations                         │ └───────────────────────────────┘ │
-│ [1] "numbers on…"  Away from…     │ 12 of 10 different words          │
+│ [1] "numbers on…"  Away from…     │ 12 different words               │
 │ [2] "I haven't…"   Direction…     │                                   │
 │                                   │ Back                Next question │
 └───────────────────────────────────┴───────────────────────────────────┘
@@ -91,9 +91,12 @@ stateDiagram-v2
 
 ### Phase 1: Q1–Q3, the gate
 
-- Q1, Q2 and Q3 are open questions. **Each needs an answer with at least `min_words` different words**
-  before Next moves on. Chips aren't words. The check is here because these answers can't be corrected
-  once the gate is passed. **Every citation also needs a direction** before the lock-in.
+- Q1, Q2 and Q3 are open questions. **They can be visited in any order, and nothing about their length
+  stops anyone.** Only the lock-in needs all three answered, because these answers can't be corrected
+  once the gate is passed. **Every citation also needs a direction** before the lock-in. The
+  screen shows how many different words an answer has, without a target.
+- Each question is headed "Question N" above its text; the step rail keeps the short "Q1".
+- Once the case is submitted, answers are shown read-only without any "Locked" wording.
 - **Q4–Q6 are not rendered, and not even sent to the client, until all three are answered.** The
   answers to Q1–Q3 are the expert's reading of the text before they see the what-if or the rating.
 - **Passing the gate locks Q1–Q3 and the citations made so far.** Q3's button is "Lock in results",
@@ -145,7 +148,7 @@ the expert moves the slider from +2 to 0, hide "Towards…" and "Why?". The scre
 contents in case the slider moves back, but they must be left out of what it saves: the server
 submits the saved draft exactly as it is, and refuses leftovers (see §5 and §6).
 
-**Q5** is an open question, and needs at least `min_words` different words. **Q6** is a choice of
+**Q5** is an open question, and needs an answer. **Q6** is a choice of
 1–5 or *insufficient information*; the two are exclusive, and an answer is required.
 
 ### Review
@@ -174,14 +177,14 @@ What the draft's `payload` holds when it is submitted:
 
 | UI control | Field | Rule |
 |---|---|---|
-| Q1, Q2, Q3, Q5 text | `answers["Q1"]` … | The server trims them. All required, each with at least its `min_words`. |
+| Q1, Q2, Q3, Q5 text | `answers["Q1"]` … | The server trims them. All required; their length is not checked. |
 | Citations | `highlights[]` | `{chip, text, span, direction}`. `chip` is numbered 1..n, `span` is `[start, end)` in characters (code points, so an emoji is one, not the browser's two), and `text` must equal that slice of the vignette. `direction` may be `null` in a draft only. |
 | Chips in the answers | `⟦hN⟧` inside `answers[…]` | `N` is a citation's `chip`. |
-| Q4 hypothesis line | `q4.hypothesis` | Required, at least `wording.hypothesis_min_words` different words. |
+| Q4 hypothesis line | `q4.hypothesis` | Required. |
 | Q4 slider | `q4.shift` | Integer −2…2. Required whenever Q4 was asked and the vignette is submitted. |
 | Q4 towards | `q4.toward` | `more_adhd` / `less_adhd` / `other`; required with shift +1/+2, else `null`. |
 | Q4 "which explanation" | `q4.other_explanation` | Required with `toward = "other"`, else `null`. |
-| Q4 why | `answers["Q4"]` | Required with shift ≠ 0, at least Q4's `min_words` different words; must be absent at 0. |
+| Q4 why | `answers["Q4"]` | Required with shift ≠ 0; must be absent at 0. |
 | Q6 | `rating` (1–5) or `insufficient_information: true` | Exclusive. |
 
 The server adds the rest when it freezes the submission: the vignette's code, version and hash, the
@@ -211,7 +214,6 @@ message and keep the draft.
 | `gate_not_passed` | Q4–Q6 answered while a Q1–Q3 answer is missing | "Q1–Q3 need answers first." |
 | `gate_locked` | A Q1–Q3 answer or a locked citation changed after the gate | Keep them read-only after the gate. |
 | `submission_incomplete` | A required Q4 part or Q6 is missing | Name the missing part. |
-| `answer_too_short` | Below the minimum of different words; `details.answers` lists which | Show a counter, and keep Next disabled until it is met. |
 | `draft_conflict` | Another tab has saved since | Reload the draft. |
 | `q4_why_without_shift` | A Q4 why with shift 0 or no shift | Drop the why at 0. |
 | `toward_without_change` | A direction with shift ≤ 0 | Clear `toward` when the slider goes ≤ 0. |

@@ -17,19 +17,17 @@ const FIFTEEN = 'one two three four five six seven eight nine ten eleven twelve 
 const TEN = 'one two three four five six seven eight nine ten'
 
 const GATE: QuestionView[] = [
-  { id: 'Q1', kind: 'open', text: 'Which fragments matter?', min_words: 15 },
-  { id: 'Q2', kind: 'open', text: 'Which could be something else?', min_words: 10 },
-  { id: 'Q3', kind: 'open', text: 'What is missing?', min_words: 10 },
+  { id: 'Q1', kind: 'open', text: 'Which fragments matter?' },
+  { id: 'Q2', kind: 'open', text: 'Which could be something else?' },
+  { id: 'Q3', kind: 'open', text: 'What is missing?' },
 ]
 const LATER: QuestionView[] = [
   {
     id: 'Q4',
     kind: 'shift',
     text: 'Given your hypothesis: how would it change if the writer had an exam?',
-    min_words: 5,
     wording: {
       hypothesis: 'Your working hypothesis, in one sentence',
-      hypothesis_min_words: 3,
       shift_lead: 'With this, my hypothesis…',
       shift_labels: {
         '-2': 'is strongly reinforced',
@@ -47,7 +45,7 @@ const LATER: QuestionView[] = [
       why: 'Why?',
     },
   },
-  { id: 'Q5', kind: 'open', text: 'What would a junior clinician misread?', min_words: 10 },
+  { id: 'Q5', kind: 'open', text: 'What would a junior clinician misread?' },
   { id: 'Q6', kind: 'rating_1_5', text: 'Overall, how strongly?' },
 ]
 
@@ -304,11 +302,33 @@ describe('moving through the questions', () => {
     ).toBe(false)
   })
 
-  it('keeps Next disabled until the answer is long enough, and says why', async () => {
+  it('lets Q1 to Q3 be visited in any order, however little is written', async () => {
     await open(assignment({ answers: { Q1: 'too short' }, highlights: [] }))
-    const next = buttonNamed('Next question')
-    expect(next.attributes('disabled')).toBeDefined()
-    expect(app().text()).toContain('2 of 15 different words')
+    const steps = app().findAll('[data-testid="step"]')
+    await steps[0]?.trigger('click')
+    expect(buttonNamed('Next question').attributes('disabled')).toBeUndefined()
+    expect(app().text()).toContain('2 different words')
+    expect(steps.slice(0, 3).map((s) => s.attributes('disabled'))).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ])
+    await steps[2]?.trigger('click')
+    expect(heading()).toContain('What is missing?')
+    await steps[1]?.trigger('click')
+    expect(heading()).toContain('Which could be something else?')
+  })
+
+  it('only asks for all three answers when locking in', async () => {
+    await open(assignment({ answers: { Q1: 'short', Q3: 'also short' }, highlights: [] }))
+    await app().findAll('[data-testid="step"]')[2]?.trigger('click')
+    expect(buttonNamed('Lock in results').attributes('disabled')).toBeDefined()
+    expect(app().text()).toContain('Q2 needs an answer.')
+  })
+
+  it('heads each question with "Question N", not the short id', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    expect(heading()).toMatch(/^Question 1\s*Which fragments matter\?/)
   })
 
   it('counts plainly once the answer is long enough', async () => {
@@ -418,9 +438,9 @@ describe('locking in', () => {
     fetchMock.mockImplementation(async (input: Request) =>
       urlOf(input).endsWith('/pass-gate')
         ? jsonResponse(422, {
-            code: 'answer_too_short',
-            message: 'Q3: please write a bit more.',
-            details: { answers: ['Q3'] },
+            code: 'gate_not_passed',
+            message: 'Q3 needs an answer.',
+            details: { missing: ['Q3'] },
           })
         : (original as (i: Request) => Promise<Response>)(input),
     )
@@ -431,7 +451,7 @@ describe('locking in', () => {
       .find((b) => b.text() === 'Lock in results')
       ?.trigger('click')
     await flushPromises()
-    expect(app().get('[role="alert"]').text()).toBe('Question 3 needs a little more.')
+    expect(app().get('[role="alert"]').text()).toBe('Please answer questions 1–3 first.')
     expect(heading()).toContain('What is missing?')
   })
 })
@@ -621,6 +641,18 @@ describe('submitting', () => {
     ).toBe(false)
     await rows()[0]?.trigger('mouseenter')
     expect(marked().text()).toBe('barely slept')
+  })
+
+  it('does not look locked once submitted', async () => {
+    const submitted = {
+      ...afterGate(finished, 1),
+      state: 'expert_check' as const,
+      allowed_actions: [],
+      submitted_at: 'now',
+    }
+    await open(submitted)
+    expect(app().text()).not.toContain('Locked')
+    expect(app().text()).not.toContain('locked')
   })
 })
 
@@ -820,6 +852,7 @@ describe('adding a reference by clicking the passage', () => {
       await open(
         assignment({ answers: { Q1: 'because' }, highlights: [citation(1, 'barely slept')] }),
       )
+      await app().findAll('[data-testid="step"]')[0]?.trigger('click')
       await addButton().trigger('click')
       await vi.advanceTimersByTimeAsync(2100)
 

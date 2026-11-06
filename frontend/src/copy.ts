@@ -41,6 +41,11 @@ export function markedPassages(count: number): string {
   return count === 1 ? 'marked passage' : `${count} marked passages`
 }
 
+/** "Q3" on the screen's heading reads "Question 3". The step rail keeps the short form. */
+export function questionLabel(id: string): string {
+  return id.replace(/^Q(\d+)$/i, 'Question $1')
+}
+
 const STUDY_TEAM = 'the study team'
 const SAFE_FALLBACK = `Something went wrong. Your text is safe. Please try again, or contact ${STUDY_TEAM}.`
 
@@ -69,7 +74,6 @@ export function describeError(error: unknown): string {
       return "Part 1 is already locked, so this can't change."
     case 'submission_incomplete':
       return "Something's still missing. Please look through your answers and try again."
-    case 'answer_too_short':
     case 'empty_answer': {
       const questions = questionNumbers(error.details?.answers)
       if (!questions.length) return 'An answer needs a little more.'

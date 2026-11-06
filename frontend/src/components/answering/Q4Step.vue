@@ -71,11 +71,12 @@ defineExpose({
           <!-- The line between the stops. No stop looks chosen until the expert chooses one. -->
           <span
             aria-hidden="true"
-            class="absolute top-[0.56rem] right-1/2 hidden h-px w-full bg-line group-first:hidden sm:block"
+            class="absolute top-[calc(0.625rem-0.5px)] right-1/2 hidden h-px w-full bg-line group-first:hidden sm:block"
           />
+          <!-- z-10: the next stop's line runs into this dot's centre and must stay behind it. -->
           <span
             aria-hidden="true"
-            class="relative h-5 w-5 shrink-0 rounded-full border-2 border-line bg-surface group-hover:border-action peer-checked:border-action peer-checked:bg-action peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action"
+            class="relative z-10 h-5 w-5 shrink-0 rounded-full border-2 border-line bg-surface group-hover:border-action peer-checked:border-action peer-checked:bg-action peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action"
           />
           <span class="text-sm leading-tight peer-checked:font-semibold peer-checked:text-ink">
             <span class="sm:block">{{ signed(stop) }}</span>
@@ -121,7 +122,7 @@ defineExpose({
         @active="emit('active', $event)"
       />
       <p class="mt-1 text-sm text-muted" aria-live="polite">
-        {{ wordCountLabel(whyWords, question.min_words) }}
+        {{ wordCountLabel(whyWords) }}
       </p>
     </div>
   </div>

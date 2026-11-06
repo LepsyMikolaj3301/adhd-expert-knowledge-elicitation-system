@@ -2,6 +2,8 @@
 import { GATE_IDS, q4Wording } from '@/answering/steps'
 import type { AnswerPayload, QuestionView } from '@/api/client'
 
+import { questionLabel } from '@/copy'
+
 import ChipText from './ChipText.vue'
 
 const props = defineProps<{
@@ -36,7 +38,10 @@ function scaleLine(question: QuestionView): string {
     <li v-for="question in questions" :key="question.id" class="py-4" data-testid="review-answer">
       <div class="flex items-baseline justify-between gap-4">
         <h2 class="text-base">
-          <span class="text-muted">{{ question.id }}</span> {{ question.text }}
+          <span class="mb-0.5 block text-sm font-semibold tracking-wide text-action uppercase">
+            {{ questionLabel(question.id) }}
+          </span>
+          {{ question.text }}
         </h2>
         <button
           v-if="editableIds.includes(question.id)"
@@ -46,7 +51,10 @@ function scaleLine(question: QuestionView): string {
         >
           Edit
         </button>
-        <span v-else-if="GATE_IDS.includes(question.id)" class="shrink-0 text-sm text-muted">
+        <span
+          v-else-if="editableIds.length && GATE_IDS.includes(question.id)"
+          class="shrink-0 text-sm text-muted"
+        >
           Locked
         </span>
       </div>

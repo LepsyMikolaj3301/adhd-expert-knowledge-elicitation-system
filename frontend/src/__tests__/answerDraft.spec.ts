@@ -12,20 +12,19 @@ const FIFTEEN = 'one two three four five six seven eight nine ten eleven twelve 
 const TEN = 'one two three four five six seven eight nine ten'
 
 const GATE: QuestionView[] = [
-  { id: 'Q1', kind: 'open', text: 'First?', min_words: 15 },
-  { id: 'Q2', kind: 'open', text: 'Second?', min_words: 10 },
-  { id: 'Q3', kind: 'open', text: 'Third?', min_words: 10 },
+  { id: 'Q1', kind: 'open', text: 'First?' },
+  { id: 'Q2', kind: 'open', text: 'Second?' },
+  { id: 'Q3', kind: 'open', text: 'Third?' },
 ]
 const Q4: QuestionView = {
   id: 'Q4',
   kind: 'shift',
   text: 'How would it change if the writer had an exam?',
-  min_words: 5,
-  wording: { hypothesis_min_words: 3 },
+  wording: {},
 }
 const LATER: QuestionView[] = [
   Q4,
-  { id: 'Q5', kind: 'open', text: 'Fifth?', min_words: 10 },
+  { id: 'Q5', kind: 'open', text: 'Fifth?' },
   { id: 'Q6', kind: 'rating_1_5', text: 'Sixth?' },
 ]
 
@@ -65,11 +64,10 @@ function view(answers: Record<string, string>, extra: Partial<AnswerPayload> = {
 }
 
 describe('stepProblem', () => {
-  it('asks for more words on an open question, not counting chips', () => {
+  it('needs an open question to be answered, however short the answer', () => {
     const q2 = GATE[1] as QuestionView
-    expect(stepProblem(q2, view({ Q2: '⟦h1⟧ ⟦h2⟧ two words' }))).toBe(
-      'Q2 has 2 of 10 different words.',
-    )
+    expect(stepProblem(q2, view({ Q2: '   ' }))).toBe('Q2 needs an answer.')
+    expect(stepProblem(q2, view({ Q2: 'two words' }))).toBeNull()
     expect(stepProblem(q2, view({ Q2: TEN }))).toBeNull()
   })
 
@@ -84,7 +82,7 @@ describe('stepProblem', () => {
       'Name the other explanation.',
     )
     expect(stepProblem(Q4, view({}, { q4: { ...shifted, toward: 'less_adhd' } }))).toBe(
-      'Why? has 0 of 5 different words.',
+      'Explain why.',
     )
     expect(
       stepProblem(

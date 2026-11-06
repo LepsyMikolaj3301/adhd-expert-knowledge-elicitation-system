@@ -14,6 +14,7 @@ import {
   forSaving,
   GATE_IDS,
   REVIEW,
+  gateProblem,
   stepProblem,
   wordCountLabel,
   type StepId,
@@ -31,7 +32,14 @@ import ReviewStep from '@/components/answering/ReviewStep.vue'
 import StepRail, { type RailStep } from '@/components/answering/StepRail.vue'
 import UnsavedText from '@/components/answering/UnsavedText.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
-import { describeError, directionNeeded, markedPassages, notMentioned, saveRefusal } from '@/copy'
+import {
+  describeError,
+  directionNeeded,
+  markedPassages,
+  notMentioned,
+  questionLabel,
+  saveRefusal,
+} from '@/copy'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: string }>()
@@ -77,6 +85,10 @@ const question = computed(() => questions.value.find((q) => q.id === step.value)
 const stepIndex = computed(() => questions.value.findIndex((q) => q.id === step.value))
 const isLockedQuestion = computed(
   () => !editable.value || (gatePassed.value && GATE_IDS.includes(step.value)),
+)
+/** Q1 to Q3 once locked in. A submitted case is just read-only, and does not look locked. */
+const gateLocked = computed(
+  () => editable.value && gatePassed.value && GATE_IDS.includes(step.value),
 )
 const isLockStep = computed(
   () => editable.value && !gatePassed.value && step.value === lastGateId.value,
@@ -127,13 +139,13 @@ function directionProblem(): string | null {
 const blocker = computed<string | null>(() => {
   if (step.value === REVIEW) return directionProblem()
   if (isLockedQuestion.value || !question.value) return null
-  return (
-    stepProblem(question.value, payload.value) ?? (isLockStep.value ? directionProblem() : null)
-  )
-})
-const blockerToShow = computed(() => {
-  const isWordCount = question.value?.kind === 'open' && stepProblem(question.value, payload.value)
-  return isWordCount ? null : blocker.value
+  // Q1 to Q3 are free to visit in any order; only locking them in needs all three answered.
+  if (GATE_IDS.includes(question.value.id)) {
+    return isLockStep.value
+      ? (gateProblem(questions.value, payload.value) ?? directionProblem())
+      : null
+  }
+  return stepProblem(question.value, payload.value)
 })
 
 const railSteps = computed<RailStep[]>(() => {
@@ -141,9 +153,7 @@ const railSteps = computed<RailStep[]>(() => {
   let open = true
   for (const q of questions.value) {
     steps.push({ id: q.id, label: q.id, reachable: open })
-    if (!GATE_IDS.includes(q.id) || !gatePassed.value) {
-      open = open && !stepProblem(q, payload.value)
-    }
+    if (!GATE_IDS.includes(q.id)) open = open && !stepProblem(q, payload.value)
   }
   if (!gatePassed.value) {
     // Named, but not sent by the server yet: the rail shows there is more without showing what.
@@ -445,15 +455,17 @@ onBeforeRouteLeave(async () => {
 
           <template v-else-if="question">
             <h1 class="text-[1.375rem] leading-snug tracking-normal" data-testid="question">
-              <span class="text-muted">{{ question.id }}</span>
-              {{ ' ' }}{{ heading.before
+              <span class="mb-1 block text-sm font-semibold tracking-wide text-action uppercase">
+                {{ questionLabel(question.id) }}
+              </span>
+              {{ heading.before
               }}<strong v-if="heading.whatIf" class="font-semibold">{{ heading.whatIf }}</strong
               >{{ heading.after }}
             </h1>
 
             <div class="mt-5">
               <template v-if="question.kind === 'open' && isLockedQuestion">
-                <p class="text-sm text-muted">
+                <p v-if="gateLocked" class="text-sm text-muted">
                   Locked. This keeps your first reading as you wrote it.
                 </p>
                 <p class="mt-2 leading-relaxed">
@@ -471,7 +483,7 @@ onBeforeRouteLeave(async () => {
                   @active="activeChip = $event"
                 />
                 <p class="mt-1 text-sm text-muted" aria-live="polite" data-testid="word-count">
-                  {{ wordCountLabel(currentWords, question.min_words) }}
+                  {{ wordCountLabel(currentWords) }}
                 </p>
                 <p v-if="q1Nudge" class="mt-2 text-sm text-ink">
                   Which passages is this about? Click one to add it here.
@@ -514,8 +526,8 @@ onBeforeRouteLeave(async () => {
           <p v-if="actionError" class="alert mt-4" role="alert">{{ actionError }}</p>
 
           <footer v-if="editable" class="mt-6">
-            <p v-if="blockerToShow" class="mb-2 text-right text-sm text-muted">
-              {{ blockerToShow }}
+            <p v-if="blocker" class="mb-2 text-right text-sm text-muted">
+              {{ blocker }}
             </p>
             <div class="flex items-center justify-between gap-4">
               <button

@@ -4,9 +4,9 @@ import { plainText } from '@/answering/plainText'
 import type { AnswerPayload, QuestionView } from '@/api/client'
 
 const QUESTIONS: QuestionView[] = [
-  { id: 'Q1', kind: 'open', text: 'First?', min_words: 1 },
-  { id: 'Q2', kind: 'open', text: 'Second?', min_words: 1 },
-  { id: 'Q4', kind: 'shift', text: 'Fourth?', min_words: 1 },
+  { id: 'Q1', kind: 'open', text: 'First?' },
+  { id: 'Q2', kind: 'open', text: 'Second?' },
+  { id: 'Q4', kind: 'shift', text: 'Fourth?' },
   { id: 'Q6', kind: 'rating_1_5', text: 'Sixth?' },
 ]
 
