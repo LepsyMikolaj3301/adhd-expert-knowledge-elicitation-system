@@ -36,7 +36,12 @@ def vignette(vid: str = "V001", **overrides) -> Vignette:
 
 def citation(chip: int, quote: str = CUE, direction: str | None = "toward") -> dict:
     start = TEXT.index(quote)
-    return {"chip": chip, "text": quote, "span": [start, start + len(quote)], "direction": direction}
+    return {
+        "chip": chip,
+        "text": quote,
+        "span": [start, start + len(quote)],
+        "direction": direction,
+    }
 
 
 def entry(**overrides) -> dict:
@@ -156,7 +161,10 @@ def test_q4_names_what_is_missing(q4, why, problem):
 
 def test_q6_needs_a_rating_or_insufficient_information():
     v = vignette()
-    assert ca.step_problem(v, entry(), "Q6") == "Pick a rating from 1 to 5, or “Insufficient information”."
+    assert (
+        ca.step_problem(v, entry(), "Q6")
+        == "Pick a rating from 1 to 5, or “Insufficient information”."
+    )
     assert ca.step_problem(v, entry(rating=3), "Q6") is None
     assert ca.step_problem(v, entry(rating=None, insufficient=True), "Q6") is None
 

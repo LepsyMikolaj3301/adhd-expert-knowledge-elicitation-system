@@ -2,9 +2,7 @@
 
 from app.core.db import is_pooled, to_async_url
 
-NEON_DIRECT = (
-    "postgresql://u:p@ep-cool-1234.eu-central-1.aws.neon.tech/rag?sslmode=require&channel_binding=require"
-)
+NEON_DIRECT = "postgresql://u:p@ep-cool-1234.eu-central-1.aws.neon.tech/rag?sslmode=require&channel_binding=require"
 NEON_POOLED = NEON_DIRECT.replace("ep-cool-1234", "ep-cool-1234-pooler")
 
 
