@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # HTTPS-only session cookie. Always on in production; this turns it on elsewhere too.
     cookie_secure: bool = False
     session_ttl_hours: int = 12
+    # Collect answers and nothing else: no reviews, knowledge base or home feed, and no worker to
+    # follow a submission up. Submitting still files the answers and queues the job, which then
+    # waits in the database for a worker started later, on a copy of the data.
+    answers_only: bool = False
 
 
 settings = Settings()

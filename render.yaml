@@ -8,6 +8,8 @@ services:
     name: rag-backend
     runtime: docker
     plan: free
+    # The answers-only build: see docs/deployment.md, "An answers-only round".
+    branch: answers-only
     dockerfilePath: ./infra/backend.Dockerfile
     dockerContext: .
     healthCheckPath: /api/v1/health
@@ -17,6 +19,9 @@ services:
         value: production
       - key: SESSION_TTL_HOURS
         value: "12"
+      # Reviews, the knowledge base and the home feed are switched off, and no job is reported running.
+      - key: ANSWERS_ONLY
+        value: "true"
       # Neon's POOLED connection string (host has -pooler). Set it in the dashboard.
       - key: DATABASE_URL
         sync: false
@@ -25,6 +30,7 @@ services:
     name: rag-frontend
     runtime: docker
     plan: free
+    branch: answers-only
     dockerfilePath: ./infra/frontend.Dockerfile
     dockerContext: ./frontend
     healthCheckPath: /healthz

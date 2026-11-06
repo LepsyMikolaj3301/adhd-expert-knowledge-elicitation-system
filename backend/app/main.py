@@ -6,6 +6,7 @@ from app.core.errors import ErrorResponse, install_error_handlers
 from app.home.router import router as home_router
 from app.knowledge.router import router as knowledge_router
 from app.reviews.router import router as reviews_router
+from app.settings import settings
 from app.users.router import router as users_router
 from app.vignettes.router import router as vignettes_router
 
@@ -27,15 +28,10 @@ def create_app() -> FastAPI:
     async def health() -> dict[str, str]:
         return {"status": "ok"}
 
-    for router in (
-        auth_router,
-        users_router,
-        vignettes_router,
-        assignments_router,
-        reviews_router,
-        knowledge_router,
-        home_router,
-    ):
+    routers = [auth_router, users_router, vignettes_router, assignments_router]
+    if not settings.answers_only:
+        routers += [reviews_router, knowledge_router, home_router]
+    for router in routers:
         api.include_router(router)
     app.include_router(api)
     return app

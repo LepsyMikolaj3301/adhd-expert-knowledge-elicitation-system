@@ -28,53 +28,21 @@ const navLinks = (w: VueWrapper) => w.findAll('nav[aria-label="Main"] a')
 
 beforeEach(() => {
   setActivePinia(createPinia())
-  stubFetch((url) =>
-    jsonResponse(
-      200,
-      url.endsWith('/me/home')
-        ? {
-            next_up: [],
-            next_up_total: 0,
-            reviews_waiting: [],
-            recent_reviews: [],
-            activity: [],
-            unread_activity: 0,
-          }
-        : url.endsWith('/assignments') || url.includes('/reviews')
-          ? []
-          : {},
-    ),
-  )
+  stubFetch((url) => jsonResponse(200, url.endsWith('/assignments') ? [] : {}))
 })
 afterEach(() => wrapper?.unmount())
 
 describe('side panel', () => {
-  it('gives an admin all six sections, including the ones not built yet', async () => {
-    const w = await open(admin, '/')
-    expect(navLinks(w).map((a) => a.text())).toEqual([
-      'Home',
-      'Vignettes',
-      'Reviews',
-      'Assignments',
-      'Experts',
-      'Knowledge base',
-    ])
+  it('gives an admin the three sections that collect answers', async () => {
+    const w = await open(admin, '/vignettes')
+    expect(navLinks(w).map((a) => a.text())).toEqual(['Vignettes', 'Assignments', 'Experts'])
   })
 
-  it("gives an expert three, and opens the expert's own assignments as My cases", async () => {
-    const w = await open(expert, '/')
+  it("gives an expert one, and opens the expert's own assignments as My cases", async () => {
+    const w = await open(expert, '/assignments')
     const links = navLinks(w)
-    expect(links.map((a) => a.text())).toEqual(['Home', 'My cases', 'Reviews'])
-    expect(links[1]!.attributes('href')).toBe('/assignments')
-    expect(links[2]!.attributes('href')).toBe('/reviews')
-  })
-
-  it('marks Reviews as the section you are in on the reviews page', async () => {
-    const w = await open(expert, '/reviews')
-    const current = navLinks(w)
-      .filter((a) => a.attributes('aria-current') === 'page')
-      .map((a) => a.text())
-    expect(current).toEqual(['Reviews'])
+    expect(links.map((a) => a.text())).toEqual(['My cases'])
+    expect(links[0]!.attributes('href')).toBe('/assignments')
   })
 
   it('marks the section you are in', async () => {
@@ -86,53 +54,43 @@ describe('side panel', () => {
   })
 
   it('shows who is logged in, linked to the account page', async () => {
-    const w = await open(expert, '/')
+    const w = await open(expert, '/assignments')
     const account = w.get('[data-testid="account-link"]')
     expect(account.text()).toContain(expert.display_name)
     expect(account.text()).toContain('expert')
     expect(account.attributes('href')).toBe('/account')
     expect(account.find('svg[aria-hidden="true"]').exists()).toBe(true)
   })
+
+  it('does not ask for the home counts: this build has no reviews to count', async () => {
+    const fetchMock = stubFetch((url) => jsonResponse(200, url.endsWith('/assignments') ? [] : {}))
+    await open(expert, '/assignments')
+    const urls = fetchMock.mock.calls.map(([input]) => String((input as Request).url))
+    expect(urls.some((u) => u.endsWith('/me/home'))).toBe(false)
+  })
 })
 
 describe('sections', () => {
-  it('shows a placeholder for a section that is not built yet', async () => {
-    const w = await open(admin, '/knowledge')
-    expect(w.get('h1').text()).toBe('Knowledge base')
-    expect(w.text()).toContain("This section isn't built yet.")
+  it('leaves the site name and the root address leading to the expert cases', async () => {
+    const w = await open(expert, '/')
+    expect(router.currentRoute.value.name).toBe('assignments')
+    expect(w.get('h1').text()).toBe('My cases')
   })
 
   it('sends an expert home from an admin-only section', async () => {
     await open(expert, '/vignettes')
-    expect(router.currentRoute.value.name).toBe('home')
+    // Home is the list of cases in this build.
+    expect(router.currentRoute.value.name).toBe('assignments')
   })
 
-  it('lists the other sections on the home page', async () => {
-    const w = await open(expert, '/')
-    expect(w.get('[data-testid="sections"]').text()).toContain('My cases')
-  })
-
-  it('says on the home page what happens with the answers, to an expert', async () => {
-    const w = await open(expert, '/')
-    expect(w.get('[data-testid="trust"]').text()).toBe(TRUST_SENTENCE)
-  })
-
-  it('does not tell an admin that their answers are kept', async () => {
-    const w = await open(admin, '/')
-    expect(w.find('[data-testid="trust"]').exists()).toBe(false)
-  })
-
-  it('lists Reviews on the home page for an expert', async () => {
-    const w = await open(expert, '/')
-    const sections = w.get('[data-testid="sections"]')
-    expect(sections.text()).toContain('Reviews')
-    expect(sections.html()).toContain('Read colleagues')
-  })
-
-  it('opens the Reviews page for an expert', async () => {
-    const w = await open(expert, '/reviews')
-    expect(w.get('h1').text()).toBe('Reviews')
-  })
+  it.each(['/reviews', '/reviews/some-id', '/knowledge'])(
+    'has no page at %s: the review and knowledge sections are not in this build',
+    async (path) => {
+      const w = await open(admin, path)
+      expect(router.currentRoute.value.name).toBe('not-found')
+      expect(w.get('h1').text()).toBe("We can't find that page.")
+    },
+  )
 })
 
 describe('a page that does not exist', () => {
@@ -163,10 +121,7 @@ describe('account page', () => {
     await flushPromises()
 
     const urls = fetchMock.mock.calls.map(([input]) => String((input as Request).url))
-    // The side panel also asks for the counts on its badges.
-    expect(urls.filter((u) => !u.endsWith('/me/home'))).toEqual([
-      expect.stringMatching(/\/api\/v1\/auth\/logout$/),
-    ])
+    expect(urls).toEqual([expect.stringMatching(/\/api\/v1\/auth\/logout$/)])
     expect(useAuthStore().user).toBeNull()
     // The login page is a lazy chunk, so the navigation can take longer than flushPromises.
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('login'))

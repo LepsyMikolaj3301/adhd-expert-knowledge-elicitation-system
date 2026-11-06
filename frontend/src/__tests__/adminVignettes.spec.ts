@@ -482,6 +482,7 @@ describe('permissions in the browser', () => {
     useAuthStore().user = expert
     serve({ 'GET /assignments': () => jsonResponse(200, []) })
     await open('/vignettes/new')
-    expect(router.currentRoute.value.name).toBe('home')
+    // Sent home, and this build's home is the expert's list of cases.
+    expect(router.currentRoute.value.name).toBe('assignments')
   })
 })

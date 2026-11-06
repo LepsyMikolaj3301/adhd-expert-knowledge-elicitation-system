@@ -13,7 +13,7 @@ const props = defineProps<{
 const STATE_LABELS: Partial<Record<AssignmentSummary['state'], string>> = {
   assigned: 'Not started',
   in_progress: 'In progress',
-  processing: 'Submitted, processing',
+  processing: 'Submitted',
   processing_failed: 'Processing failed',
   expert_check: 'Submitted, waiting for the expert check',
   building_units: 'Submitted, processing',

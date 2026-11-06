@@ -40,6 +40,7 @@ from app.core.errors import DomainError, invalid, not_found
 from app.jobs.models import Job, JobKind, JobStatus
 from app.reviews import access
 from app.reviews.models import ReviewParticipant
+from app.settings import settings
 from app.users.models import Role, User
 from app.vignettes.models import VersionStatus, Vignette, VignetteVersion
 from app.vignettes.questions import GATE, Q4_WORDING, QUESTIONS, render_question
@@ -257,7 +258,8 @@ async def list_assignments(
             allowed_actions=allowed_actions(
                 assignment.state, actor, gate_is_open=gate_open(assignment, version)
             ),
-            job_running=assignment.state in JOB_STATES,
+            # No worker means the job never ends: say none is running, or the page polls forever.
+            job_running=assignment.state in JOB_STATES and not settings.answers_only,
             vignette_code=code,
             vignette_version=version.version,
             vignette_version_id=version.id,

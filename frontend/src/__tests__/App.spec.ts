@@ -36,30 +36,17 @@ describe('App', () => {
     expect(wrapper.find('nav').exists()).toBe(false)
   })
 
-  it('welcomes a logged-in user inside the side panel', async () => {
-    stubFetch((url) =>
-      jsonResponse(
-        200,
-        url.endsWith('/me/home')
-          ? {
-              next_up: [],
-              next_up_total: 0,
-              reviews_waiting: [],
-              recent_reviews: [],
-              activity: [],
-              unread_activity: 0,
-            }
-          : expert,
-      ),
-    )
+  it('opens a logged-in expert on their cases, inside the side panel', async () => {
+    stubFetch((url) => jsonResponse(200, url.endsWith('/assignments') ? [] : expert))
 
     await router.push('/')
     const wrapper = mount(App, { global: { plugins: [router] } })
     await flushPromises()
 
-    expect(router.currentRoute.value.name).toBe('home')
+    // This build has no home page: '/' leads to the list of cases.
+    expect(router.currentRoute.value.name).toBe('assignments')
     expect(wrapper.get('[data-testid="site-name"]').text()).toBe(SITE_NAME)
-    expect(wrapper.get('h1').text()).toBe(`Welcome, ${expert.display_name}`)
+    expect(wrapper.get('h1').text()).toBe('My cases')
     expect(wrapper.find('nav').exists()).toBe(true)
   })
 })

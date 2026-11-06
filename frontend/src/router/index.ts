@@ -2,8 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
-import HomeView from '@/views/HomeView.vue'
-import PlaceholderView from '@/views/PlaceholderView.vue'
 
 import { guardRoute } from './guard'
 
@@ -27,7 +25,8 @@ const router = createRouter({
       component: AppLayout,
       meta: { requiresAuth: true },
       children: [
-        { path: '', name: 'home', component: HomeView },
+        // No home page in this build: the guard and the site name still send people to 'home'.
+        { path: '', name: 'home', redirect: '/assignments' },
         {
           path: 'assignments',
           name: 'assignments',
@@ -39,18 +38,6 @@ const router = createRouter({
           component: () => import('@/views/AnswerView.vue'),
           props: true,
           meta: { wide: true, roles: ['expert'], keepOnExpiry: true },
-        },
-        {
-          path: 'reviews',
-          name: 'reviews',
-          component: () => import('@/views/ReviewsView.vue'),
-        },
-        {
-          path: 'reviews/:id',
-          name: 'review',
-          component: () => import('@/views/ReviewView.vue'),
-          props: true,
-          meta: { wide: true, keepOnExpiry: true },
         },
         {
           path: 'vignettes',
@@ -76,12 +63,6 @@ const router = createRouter({
           name: 'experts',
           component: () => import('@/views/ExpertsView.vue'),
           meta: { roles: ['admin'] },
-        },
-        {
-          path: 'knowledge',
-          name: 'knowledge',
-          component: PlaceholderView,
-          meta: { title: 'Knowledge base', roles: ['admin'] },
         },
         {
           path: 'account',
