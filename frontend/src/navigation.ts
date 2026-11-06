@@ -9,15 +9,12 @@ export interface NavItem {
 
 const HOME: NavItem = { label: 'Home', to: '/', blurb: '' }
 
+// Only sections that exist are listed. Reviews, Experts and the Knowledge base are not built yet:
+// their addresses answer with a placeholder, but nobody is led there.
 const EXPERT: NavItem[] = [
   HOME,
   // Experts can't list vignettes (admin only in the API): theirs are the ones assigned to them.
-  { label: 'Vignettes', to: '/assignments', blurb: 'Answer the vignettes assigned to you.' },
-  {
-    label: 'Reviews',
-    to: '/reviews',
-    blurb: 'Check the knowledge units colleagues ask you to review.',
-  },
+  { label: 'My cases', to: '/assignments', blurb: 'Answer the cases assigned to you.' },
 ]
 
 const ADMIN: NavItem[] = [
@@ -28,17 +25,10 @@ const ADMIN: NavItem[] = [
     blurb: 'Write vignettes, publish them and assign them to experts.',
   },
   {
-    label: 'Reviews',
-    to: '/reviews',
-    blurb: 'Decide which knowledge units enter the knowledge base.',
-  },
-  {
     label: 'Assignments',
     to: '/assignments',
     blurb: "Follow each expert's progress and assign vignettes.",
   },
-  { label: 'Experts', to: '/experts', blurb: 'Invite experts and manage their accounts.' },
-  { label: 'Knowledge base', to: '/knowledge', blurb: 'Browse the accepted knowledge units.' },
 ]
 
 /** What the side panel and the home page list. The API still enforces every permission. */

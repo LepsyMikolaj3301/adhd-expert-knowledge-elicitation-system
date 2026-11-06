@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import { TRUST_SENTENCE } from '@/copy'
 import { navFor } from '@/navigation'
 import { useAuthStore } from '@/stores/auth'
 
@@ -20,5 +21,12 @@ const sections = computed(() =>
         <p class="mt-1 text-muted">{{ item.blurb }}</p>
       </li>
     </ul>
+    <p
+      v-if="auth.user?.role === 'expert'"
+      class="mt-8 max-w-xl text-sm text-muted"
+      data-testid="trust"
+    >
+      {{ TRUST_SENTENCE }}
+    </p>
   </div>
 </template>

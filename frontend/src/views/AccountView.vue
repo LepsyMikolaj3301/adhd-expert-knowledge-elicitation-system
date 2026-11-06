@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
+import { TRUST_SENTENCE } from '@/copy'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -18,7 +19,7 @@ async function logout() {
     await auth.logout()
     await router.push({ name: 'login' })
   } catch (e) {
-    error.value = e instanceof ApiError ? e.message : 'Could not log out. Please try again.'
+    error.value = e instanceof ApiError ? e.message : 'Could not sign out. Please try again.'
   } finally {
     busy.value = false
   }
@@ -41,7 +42,14 @@ async function logout() {
       </template>
     </dl>
 
+    <template v-if="auth.user?.role === 'expert'">
+      <p v-if="auth.user.pseudonym" class="mt-6 max-w-md text-sm">
+        Your answers are stored under this pseudonym.
+      </p>
+      <p class="mt-2 max-w-md text-sm text-muted" data-testid="trust">{{ TRUST_SENTENCE }}</p>
+    </template>
+
     <p v-if="error" class="alert mt-6 max-w-md" role="alert">{{ error }}</p>
-    <button type="button" class="btn-quiet mt-8" :disabled="busy" @click="logout">Log out</button>
+    <button type="button" class="btn-quiet mt-8" :disabled="busy" @click="logout">Sign out</button>
   </div>
 </template>

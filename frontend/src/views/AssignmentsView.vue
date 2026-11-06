@@ -61,14 +61,20 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <!-- The nav calls an expert's assignments "Vignettes": they only ever see their own. -->
-    <h1>{{ isAdmin ? 'Assignments' : 'Vignettes' }}</h1>
+    <!-- The nav calls an expert's assignments "My cases": they only ever see their own. -->
+    <h1>{{ isAdmin ? 'Assignments' : 'My cases' }}</h1>
 
-    <p v-if="justSubmitted" class="mt-4 text-ink" role="status">{{ justSubmitted }} submitted.</p>
+    <p v-if="justSubmitted" class="mt-4 text-ink" role="status">
+      Case {{ justSubmitted }} submitted. Thank you.
+    </p>
     <p v-if="error" class="alert mt-6" role="alert">{{ error }}</p>
     <p v-if="loading" class="mt-6 text-muted">Loading…</p>
     <p v-else-if="!assignments.length && !error" class="mt-6 text-muted" data-testid="empty">
-      {{ isAdmin ? 'No assignments yet.' : 'Nothing is assigned to you yet.' }}
+      {{
+        isAdmin
+          ? 'No assignments yet.'
+          : "No cases yet. You'll see them here once the study team assigns them."
+      }}
     </p>
 
     <table
@@ -109,7 +115,7 @@ onUnmounted(() => {
         class="flex items-center gap-4 py-3"
         data-testid="assignment"
       >
-        <span class="flex-1 font-serif text-xl text-ink">{{ assignment.vignette_code }}</span>
+        <span class="flex-1 font-serif text-xl text-ink">Case {{ assignment.vignette_code }}</span>
         <span class="text-sm text-muted" data-testid="state">
           {{ expertStatus(assignment.state) }}
         </span>

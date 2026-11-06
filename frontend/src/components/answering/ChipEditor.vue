@@ -31,7 +31,7 @@ const Chip = Node.create({
         renderHTML: (attributes) => ({
           'data-chip': attributes.n,
           style: `--ink: ${inkFor(attributes.n)}`,
-          'aria-label': `citation ${attributes.n}`,
+          'aria-label': `reference ${attributes.n}`,
         }),
       },
     }

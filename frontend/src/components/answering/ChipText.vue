@@ -28,7 +28,7 @@ const parts = computed(() => {
         class="chip"
         :data-chip="part.chip"
         :style="{ '--ink': inkFor(part.chip) }"
-        :aria-label="`citation ${part.chip}`"
+        :aria-label="`reference ${part.chip}`"
         @mouseover="emit('active', part.chip)"
         @mouseout="emit('active', null)"
         >{{ part.text }}</span

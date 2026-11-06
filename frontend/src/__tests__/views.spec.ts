@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import type { AssignmentSummary, User } from '@/api/client'
+import { TRUST_SENTENCE } from '@/copy'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import AssignmentsView from '@/views/AssignmentsView.vue'
@@ -66,6 +67,19 @@ describe('AssignmentsView', () => {
     },
   )
 
+  it("calls an expert's list My cases, and each row a case", async () => {
+    logIn(expert)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse(200, [summary()])),
+    )
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('My cases')
+    expect(wrapper.get('[data-testid="assignment"]').text()).toContain('Case V001')
+    wrapper.unmount()
+  })
+
   it('offers nothing to open on a cancelled assignment', async () => {
     logIn(expert)
     vi.stubGlobal(
@@ -88,7 +102,7 @@ describe('AssignmentsView', () => {
     await router.push({ path: '/assignments', query: { submitted: 'V001' } })
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
-    expect(wrapper.get('[role="status"]').text()).toBe('V001 submitted.')
+    expect(wrapper.get('[role="status"]').text()).toBe('Case V001 submitted. Thank you.')
     wrapper.unmount()
     await router.push('/assignments')
   })
@@ -115,7 +129,9 @@ describe('AssignmentsView', () => {
     )
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
-    expect(wrapper.find('[data-testid="empty"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="empty"]').text()).toBe(
+      "No cases yet. You'll see them here once the study team assigns them.",
+    )
     wrapper.unmount()
   })
 
@@ -155,6 +171,14 @@ describe('AssignmentsView', () => {
 })
 
 describe('LoginView', () => {
+  it('says what happens with the answers before anyone signs in', async () => {
+    useAuthStore().loaded = true
+    const wrapper = mountView(LoginView)
+    expect(wrapper.get('h1').text()).toBe('Sign in')
+    expect(wrapper.get('button[type="submit"]').text()).toBe('Sign in')
+    expect(wrapper.get('[data-testid="trust"]').text()).toBe(TRUST_SENTENCE)
+  })
+
   it('shows the message from the API when logging in fails', async () => {
     useAuthStore().loaded = true
     stubFetch(() =>

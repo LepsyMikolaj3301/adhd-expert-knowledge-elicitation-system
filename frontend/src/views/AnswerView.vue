@@ -20,7 +20,7 @@ import {
 } from '@/answering/steps'
 import { plainText } from '@/answering/plainText'
 import { useAnswerDraft } from '@/answering/useAnswerDraft'
-import { ApiError, type Citation, type Direction, type Q4Answer } from '@/api/client'
+import type { Citation, Direction, Q4Answer } from '@/api/client'
 import ChipEditor from '@/components/answering/ChipEditor.vue'
 import ChipText from '@/components/answering/ChipText.vue'
 import CitationTable from '@/components/answering/CitationTable.vue'
@@ -31,7 +31,7 @@ import ReviewStep from '@/components/answering/ReviewStep.vue'
 import StepRail, { type RailStep } from '@/components/answering/StepRail.vue'
 import UnsavedText from '@/components/answering/UnsavedText.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
-import { saveRefusal } from '@/copy'
+import { describeError, directionNeeded, markedPassages, notMentioned, saveRefusal } from '@/copy'
 import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: string }>()
@@ -120,11 +120,7 @@ const q1Nudge = computed(
 )
 
 function directionProblem(): string | null {
-  const missing = undirected.value
-  if (!missing.length) return null
-  return missing.length === 1
-    ? `Choose a direction for citation ${missing[0]}.`
-    : `Choose a direction for citations ${missing.join(', ')}.`
+  return undirected.value.length ? directionNeeded(undirected.value) : null
 }
 
 /** Why the main button can't be pressed. Word counts for open questions show under the answer. */
@@ -211,7 +207,7 @@ function onCite(start: number, end: number) {
   } else if (result.kind === 'duplicate') {
     pulse(result.chip)
   } else if (result.kind === 'too_long') {
-    notice.value = 'That selection is too long for one citation. Select a shorter passage.'
+    notice.value = "That's too long for one passage. Please select less."
   }
 }
 
@@ -261,7 +257,7 @@ function goNext() {
 }
 
 function explain(error: unknown): string {
-  return error instanceof ApiError ? error.message : 'Something went wrong. Please try again.'
+  return describeError(error)
 }
 
 async function lockIn() {
@@ -349,15 +345,15 @@ onBeforeRouteLeave(async () => {
     <p v-if="loading" class="text-muted">Loading…</p>
     <div v-else-if="loadError">
       <p class="alert" role="alert">{{ loadError }}</p>
-      <RouterLink to="/assignments" class="mt-4 inline-block">Back to your vignettes</RouterLink>
+      <RouterLink to="/assignments" class="mt-4 inline-block">Back to My cases</RouterLink>
     </div>
 
     <template v-else-if="vignette">
       <header class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <p class="text-sm">
-          <RouterLink to="/assignments">Vignettes</RouterLink>
+          <RouterLink to="/assignments">My cases</RouterLink>
           <span class="px-1.5 text-muted">/</span>
-          <span class="font-medium text-ink">{{ vignette.code }}</span>
+          <span class="font-medium text-ink">Case {{ vignette.code }}</span>
           <span class="pl-3 text-muted">{{ FRAMING[vignette.framing] }}</span>
         </p>
         <StepRail
@@ -443,8 +439,7 @@ onBeforeRouteLeave(async () => {
               />
             </div>
             <p v-if="editable && uncited.length" class="mt-4 text-sm text-muted">
-              {{ uncited.length === 1 ? 'Citation' : 'Citations' }} {{ uncited.join(', ') }}
-              {{ uncited.length === 1 ? 'is' : 'are' }} not cited in any answer.
+              {{ notMentioned(uncited, 'in any answer') }}
             </p>
           </template>
 
@@ -459,7 +454,7 @@ onBeforeRouteLeave(async () => {
             <div class="mt-5">
               <template v-if="question.kind === 'open' && isLockedQuestion">
                 <p class="text-sm text-muted">
-                  Locked: you have seen the questions after this one.
+                  Locked. This keeps your first reading as you wrote it.
                 </p>
                 <p class="mt-2 leading-relaxed">
                   <ChipText :text="currentAnswer" @active="activeChip = $event" />
@@ -479,7 +474,7 @@ onBeforeRouteLeave(async () => {
                   {{ wordCountLabel(currentWords, question.min_words) }}
                 </p>
                 <p v-if="q1Nudge" class="mt-2 text-sm text-ink">
-                  Which fragments is this about? Use Cite in the table to link them.
+                  Which passages is this about? Use Cite in the table to add them.
                 </p>
               </template>
 
@@ -569,16 +564,16 @@ onBeforeRouteLeave(async () => {
       >
         <p>
           You won't be able to change your answers to Q1 to Q3, or the
-          {{ citations.length === 1 ? 'citation' : `${citations.length} citations` }} you have made,
-          including {{ citations.length === 1 ? 'its direction' : 'their directions' }}.
+          {{ markedPassages(citations.length) }} you have made, including
+          {{ citations.length === 1 ? 'its direction' : 'their directions' }}.
         </p>
-        <p>The remaining questions open next. You can still add new citations there.</p>
+        <p>The remaining questions open next. You can still mark new passages there.</p>
         <p v-if="!citations.length" class="font-medium">
-          You have no citations. Some texts have nothing to cite, but check this is what you meant.
+          You haven't marked any passages. Some texts have nothing to mark, so that's fine if it's
+          what you intended.
         </p>
         <p v-else-if="uncited.length" class="font-medium">
-          {{ uncited.length === 1 ? 'Citation' : 'Citations' }} {{ uncited.join(', ') }}
-          {{ uncited.length === 1 ? 'is' : 'are' }} not cited in any answer yet.
+          {{ notMentioned(uncited, 'in an answer yet') }}
         </p>
       </ConfirmDialog>
 
@@ -590,25 +585,25 @@ onBeforeRouteLeave(async () => {
         @confirm="submit"
         @cancel="dialog = null"
       >
-        <p>You won't be able to change them after this.</p>
+        <p>You won't be able to change your answers afterward.</p>
+        <p>
+          They're kept word for word under your pseudonym and reviewed before an AI assistant can
+          cite them.
+        </p>
         <p v-if="uncited.length" class="font-medium">
-          {{ uncited.length === 1 ? 'Citation' : 'Citations' }} {{ uncited.join(', ') }}
-          {{ uncited.length === 1 ? 'is' : 'are' }} not cited in any answer.
+          {{ notMentioned(uncited, 'in any answer') }}
         </p>
       </ConfirmDialog>
 
       <ConfirmDialog
         v-if="removing !== null"
-        :title="`Remove citation ${removing}?`"
-        confirm-label="Remove citation"
+        :title="`Remove passage ${removing}?`"
+        confirm-label="Remove passage"
         cancel-label="Keep it"
         @confirm="removeNow(removing as number)"
         @cancel="removing = null"
       >
-        <p>
-          It will also be taken out of the answers that cite it, and the citations after it move up
-          one number.
-        </p>
+        <p>It will also be removed from your answers, and later passages move up one number.</p>
       </ConfirmDialog>
     </template>
   </div>

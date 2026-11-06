@@ -82,6 +82,12 @@ const router = createRouter({
           name: 'account',
           component: () => import('@/views/AccountView.vue'),
         },
+        {
+          // Last: an address that matches nothing above.
+          path: ':pathMatch(.*)*',
+          name: 'not-found',
+          component: () => import('@/views/NotFoundView.vue'),
+        },
       ],
     },
   ],

@@ -3,6 +3,7 @@ import { nextTick, ref, watch } from 'vue'
 
 import { inkFor } from '@/answering/highlights'
 import type { Citation, Direction } from '@/api/client'
+import { DIRECTIONS, directionLabel } from '@/copy'
 
 const props = defineProps<{
   citations: Citation[]
@@ -23,18 +24,7 @@ const emit = defineEmits<{
   remove: [chip: number]
 }>()
 
-const DIRECTIONS: { value: Direction; label: string }[] = [
-  { value: 'toward', label: 'Toward traits' },
-  { value: 'away', label: 'Away from traits' },
-  { value: 'neutral', label: 'Neutral' },
-  { value: 'unclear', label: 'Unclear' },
-]
-
 const rows = ref<HTMLElement>()
-
-function labelOf(direction: Citation['direction']): string {
-  return DIRECTIONS.find((d) => d.value === direction)?.label ?? ''
-}
 
 function isLocked(chip: number): boolean {
   return chip <= props.lockedCount
@@ -56,14 +46,15 @@ watch(
 
 <template>
   <section aria-labelledby="citations-heading" class="flex min-h-0 flex-col">
-    <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Citations</h2>
+    <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Marked passages</h2>
     <p v-if="!citations.length" class="mt-2 text-sm text-muted" data-testid="no-citations">
-      <template v-if="editable">Select words in the text to cite them.</template>
-      <template v-else>No citations.</template>
+      <template v-if="editable">Select the words your answer is about.</template>
+      <template v-else>No marked passages.</template>
     </p>
     <template v-else>
       <p v-if="editable" class="mt-1 text-sm text-muted">
-        Select more words to add a citation. Hover a row, or tap its number, to see the passage.
+        Select more words to mark another passage. Point at a row, or tap its number, to find it in
+        the text.
       </p>
       <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
         <table class="w-full border-collapse text-left text-sm">
@@ -93,7 +84,7 @@ watch(
                 <button
                   type="button"
                   class="chip"
-                  :aria-label="`Show the passage of citation ${citation.chip}`"
+                  :aria-label="`Show passage ${citation.chip} in the text`"
                 >
                   {{ citation.chip }}
                 </button>
@@ -104,7 +95,7 @@ watch(
                   v-if="editable && uncited.includes(citation.chip)"
                   class="mt-0.5 block text-xs text-muted"
                 >
-                  Not cited in an answer yet
+                  Not mentioned in an answer yet
                 </span>
               </td>
               <td class="w-32 py-1.5">
@@ -113,15 +104,15 @@ watch(
                   class="w-full rounded-sm border bg-surface px-1 py-0.5 text-sm"
                   :class="citation.direction ? 'border-line' : 'border-action'"
                   :value="citation.direction ?? ''"
-                  :aria-label="`Direction of citation ${citation.chip}, relative to ADHD-related traits`"
+                  :aria-label="`Direction of passage ${citation.chip}`"
                   @change="onDirection(citation.chip, $event)"
                 >
-                  <option value="" disabled>Direction…</option>
+                  <option value="" disabled>Direction needed</option>
                   <option v-for="d in DIRECTIONS" :key="d.value" :value="d.value">
                     {{ d.label }}
                   </option>
                 </select>
-                <span v-else class="block py-0.5">{{ labelOf(citation.direction) }}</span>
+                <span v-else class="block py-0.5">{{ directionLabel(citation.direction) }}</span>
                 <span v-if="editable" class="mt-0.5 flex gap-3 text-sm">
                   <button
                     type="button"
@@ -137,6 +128,7 @@ watch(
                     v-if="!isLocked(citation.chip)"
                     type="button"
                     class="cursor-pointer text-muted hover:text-danger hover:underline"
+                    :aria-label="`Remove passage ${citation.chip}`"
                     @click="emit('remove', citation.chip)"
                   >
                     Remove

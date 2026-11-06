@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
+import { TRUST_SENTENCE } from '@/copy'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import { safeNextPath } from '@/router/guard'
 import { useAuthStore } from '@/stores/auth'
@@ -32,7 +33,7 @@ async function submit() {
 
 <template>
   <AuthLayout>
-    <h1>Log in</h1>
+    <h1>Sign in</h1>
     <form class="mt-8 space-y-5" @submit.prevent="submit">
       <label class="block text-sm font-medium text-ink">
         Email
@@ -49,7 +50,8 @@ async function submit() {
         />
       </label>
       <p v-if="error" class="alert" role="alert">{{ error }}</p>
-      <button type="submit" class="btn w-full" :disabled="busy">Log in</button>
+      <button type="submit" class="btn w-full" :disabled="busy">Sign in</button>
     </form>
+    <p class="mt-8 text-sm text-muted" data-testid="trust">{{ TRUST_SENTENCE }}</p>
   </AuthLayout>
 </template>

@@ -283,10 +283,10 @@ describe('the vignette text', () => {
 })
 
 describe('the side panel', () => {
-  it('keeps Vignettes marked as the current section inside a vignette', async () => {
+  it('keeps My cases marked as the current section inside a case', async () => {
     await open(assignment({}))
     const current = app().get('nav[aria-label="Main"] a[aria-current="page"]')
-    expect(current.text()).toBe('Vignettes')
+    expect(current.text()).toBe('My cases')
   })
 })
 
@@ -346,7 +346,7 @@ describe('locking in', () => {
   it('needs a direction on every citation', async () => {
     await open(assignment({ answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept')] }))
     expect(buttonNamed('Lock in results').attributes('disabled')).toBeDefined()
-    expect(app().text()).toContain('Choose a direction for citation 1.')
+    expect(app().text()).toContain('Choose a direction for passage 1.')
     await rows()[0]?.get('select').setValue('away')
     expect(buttonNamed('Lock in results').attributes('disabled')).toBeUndefined()
   })
@@ -356,7 +356,7 @@ describe('locking in', () => {
     await rows()[0]?.get('select').setValue('away')
     await buttonNamed('Lock in results').trigger('click')
     expect(calls.filter((c) => c.url.endsWith('/pass-gate'))).toHaveLength(0)
-    expect(app().get('dialog[open]').text()).toContain('not cited')
+    expect(app().get('dialog[open]').text()).toContain('not mentioned')
 
     await app()
       .get('dialog[open]')
@@ -373,7 +373,7 @@ describe('locking in', () => {
   it('warns about no citations at all, without blocking', async () => {
     await open(assignment({ answers: GATE_ANSWERS, highlights: [] }))
     await buttonNamed('Lock in results').trigger('click')
-    expect(app().get('dialog[open]').text()).toContain('no citations')
+    expect(app().get('dialog[open]').text()).toContain("haven't marked any passages")
   })
 
   it('shows locked questions read-only, with their chips', async () => {
@@ -416,7 +416,11 @@ describe('locking in', () => {
     const original = fetchMock.getMockImplementation()
     fetchMock.mockImplementation(async (input: Request) =>
       urlOf(input).endsWith('/pass-gate')
-        ? jsonResponse(422, { code: 'answer_too_short', message: 'Q3: please write a bit more.' })
+        ? jsonResponse(422, {
+            code: 'answer_too_short',
+            message: 'Q3: please write a bit more.',
+            details: { answers: ['Q3'] },
+          })
         : (original as (i: Request) => Promise<Response>)(input),
     )
     await buttonNamed('Lock in results').trigger('click')
@@ -426,7 +430,7 @@ describe('locking in', () => {
       .find((b) => b.text() === 'Lock in results')
       ?.trigger('click')
     await flushPromises()
-    expect(app().get('[role="alert"]').text()).toBe('Q3: please write a bit more.')
+    expect(app().get('[role="alert"]').text()).toBe('Question 3 needs a little more.')
     expect(heading()).toContain('What is missing?')
   })
 })
@@ -447,7 +451,7 @@ describe('removing a citation', () => {
     await app()
       .get('dialog[open]')
       .findAll('button')
-      .find((b) => b.text() === 'Remove citation')
+      .find((b) => b.text() === 'Remove passage')
       ?.trigger('click')
     await flushPromises()
     expect(rows()).toHaveLength(1)
@@ -564,7 +568,7 @@ describe('submitting', () => {
         1,
       ),
     )
-    expect(app().text()).toContain('is not cited in any answer')
+    expect(app().text()).toContain('is not mentioned in any answer')
   })
 
   it('needs a direction on citations added after the lock-in', async () => {
@@ -575,7 +579,7 @@ describe('submitting', () => {
       ),
     )
     expect(buttonNamed('Submit answers').attributes('disabled')).toBeDefined()
-    expect(app().text()).toContain('Choose a direction for citation 2.')
+    expect(app().text()).toContain('Choose a direction for passage 2.')
   })
 
   it('shows a submitted vignette read-only, and hovering still lights the text', async () => {
@@ -743,5 +747,55 @@ describe('when saving does not work', () => {
     await vi.advanceTimersByTimeAsync(50)
     expect(dialog.get('[role="alert"]').text()).toBe('Wrong email or password.')
     expect(app().find('dialog[open]').exists()).toBe(true)
+  })
+})
+
+describe('the marked passages', () => {
+  it('names them in clinical words, and spells the direction out', async () => {
+    await open(
+      assignment({
+        answers: {},
+        highlights: [citation(1, 'barely slept'), citation(2, 'hand starts', 'away')],
+      }),
+    )
+    expect(app().get('#citations-heading').text()).toBe('Marked passages')
+    expect(
+      rows()[0]
+        ?.findAll('option')
+        .map((o) => o.text()),
+    ).toEqual([
+      'Direction needed',
+      'Points toward ADHD traits',
+      'Points away from ADHD traits',
+      'Ordinary, no bearing',
+      'Unclear',
+    ])
+    expect(rows()[0]?.get('select').attributes('aria-label')).toBe('Direction of passage 1')
+    expect((rows()[1]!.get('select').element as HTMLSelectElement).value).toBe('away')
+  })
+
+  it('asks for the words the answer is about when nothing is marked yet', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    expect(app().get('[data-testid="no-citations"]').text()).toBe(
+      'Select the words your answer is about.',
+    )
+  })
+
+  it('says a passage is not mentioned in an answer yet', async () => {
+    await open(assignment({ answers: {}, highlights: [citation(1, 'barely slept')] }))
+    expect(rows()[0]?.text()).toContain('Not mentioned in an answer yet')
+  })
+
+  it('spells out the direction of a locked passage', async () => {
+    const payload = { answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept', 'neutral')] }
+    await open(afterGate(payload, 1))
+    expect(rows()[0]?.text()).toContain('Ordinary, no bearing')
+  })
+
+  it('calls the list of cases My cases, and the case a case', async () => {
+    await open(assignment({}))
+    const header = app().get('header')
+    expect(header.text()).toContain('My cases')
+    expect(header.text()).toContain('Case V007')
   })
 })

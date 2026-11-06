@@ -101,7 +101,7 @@ watch(shown, async (citation) => {
       data-testid="cite-selection"
       @click="citeSelection"
     >
-      Cite selection
+      Mark selection
     </button>
   </div>
 </template>

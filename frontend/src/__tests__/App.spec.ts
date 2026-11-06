@@ -20,7 +20,7 @@ describe('App', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('login')
-    expect(wrapper.text()).toContain('Log in')
+    expect(wrapper.text()).toContain('Sign in')
   })
 
   it('sends an anonymous visitor to the login page, without the side panel', async () => {
@@ -31,7 +31,7 @@ describe('App', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.name).toBe('login')
-    expect(wrapper.text()).toContain('Log in')
+    expect(wrapper.text()).toContain('Sign in')
     expect(wrapper.text()).toContain(SITE_NAME)
     expect(wrapper.find('nav').exists()).toBe(false)
   })
