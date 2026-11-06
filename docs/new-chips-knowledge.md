@@ -1,8 +1,12 @@
 # Expert findings: free text with citation chips
 
 How expert answers to vignettes become retrievable knowledge when the expert writes free text but links
-each point to the fragments it is about. The expert's input (step 1 of the flow below) is built, see
-[frontend-vignettes.md](frontend-vignettes.md); the rest is a design, not code. It replaces
+each point to the fragments it is about. **Status:** the expert's input (step 1 of the flow below) is
+built, see [frontend-vignettes.md](frontend-vignettes.md). Steps 2 to 7 run in the web application's
+worker (`backend/app/knowledge/`, how it works: [backend-workflow.md](backend-workflow.md)), and the
+approved units are written to the Postgres schema `chips`. The review screen of step 5 has its API
+(`/assignments/{id}/findings`) but no screen yet. Steps 8 and 9 (retrieval and packing) still only
+exist in `scripts/rag/` over files, not over the database. It replaces
 the regex segmentation of B1 ([expert-knowledge.md](expert-knowledge.md)) and is a lighter alternative
 to LLM-extracted atoms ([expert-atoms.md](expert-atoms.md)). B1 stays shipped until this wins on the
 same harness (see *Decision rule*).
@@ -416,6 +420,37 @@ U-h3 and U-h1 share Q2.1 and Q5.1, so they are merged:
    ask which fragments matter, in either direction.
 8. **The 9B generator remains the limit.** Nothing here touches generation except the unit shape and
    the direction labels.
+
+## To review: the unit structure
+
+`# TODO(unit-structure)` in `backend/app/knowledge/models.py` points here. The structure of units
+(one fragment unit per citation plus a case unit, built from sentences and shared between units)
+was implemented as designed above, but there are reasons to look again before relying on it:
+
+1. **The chip test did not show it to be better.** Question retrieval was better than B1 only
+   under the pooled labels, patient-text retrieval showed no clear gain and the cue-key route was
+   worse, and generation was within noise
+   ([chips-test-findings.md](chips-test-findings.md)). It was built because it keeps the expert's
+   own links, not because it won.
+2. **A sentence shared by two units is stored twice**, and survives in `chips` if either of the
+   units is approved. A reviewer who rejects the case unit but approves a fragment unit that shares
+   one of its sentences has not rejected that sentence. Is the unit the right thing to approve, or
+   should the decision be per sentence?
+3. **Reviewers can approve or reject a unit, not fix it.** One bad sentence in a fragment unit
+   means rejecting all of it, or accepting it. A reviewer can ask for changes, which sends all the
+   units back to the author for another cut, but the author can only re-file sentences and change
+   directions, and there is no way to split or merge units.
+4. **Q4 is in no unit.** The what-if, the hypothesis and the shift are in the frozen submission only.
+   Should it be part of a unit, for example in the case unit?
+5. **Units are bigger than B1's** (about 187 against 156 tokens in the test). A 500-token budget
+   fits about three of them.
+6. **Hedging preambles and generic case answers** (problems 3 and 4 above) were not tested and
+   are now stored as they are.
+7. **Experts have no role**, so every header says "Clinician". The test headers had a persona.
+8. **Rebuilding.** Units are cut once, when the expert approves. Improving the classifier or the
+   cutting rules later has no path yet for re-cutting what is already ingested (the session's rows
+   can be replaced, but nothing triggers it).
+9. **BM25 is refitted over all of `chips` at every ingestion.** Fine for hundreds of units.
 
 ## Before testing: silver fixes
 
