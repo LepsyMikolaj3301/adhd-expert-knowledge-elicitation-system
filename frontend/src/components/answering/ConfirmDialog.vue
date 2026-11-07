@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-defineProps<{ title: string; confirmLabel: string; cancelLabel: string }>()
+defineProps<{ title: string; confirmLabel: string; cancelLabel: string; danger?: boolean }>()
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
 const dialog = ref<HTMLDialogElement>()
@@ -24,7 +24,9 @@ onBeforeUnmount(() => dialog.value?.close())
     </div>
     <div class="mt-6 flex justify-end gap-3">
       <button type="button" class="btn-quiet" @click="emit('cancel')">{{ cancelLabel }}</button>
-      <button type="button" class="btn" @click="emit('confirm')">{{ confirmLabel }}</button>
+      <button type="button" :class="danger ? 'btn-danger' : 'btn'" @click="emit('confirm')">
+        {{ confirmLabel }}
+      </button>
     </div>
   </dialog>
 </template>

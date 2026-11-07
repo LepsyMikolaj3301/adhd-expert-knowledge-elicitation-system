@@ -7,13 +7,15 @@
  */
 import type { Citation } from '@/api/client'
 
+import { listMarker } from './listLines'
+
 export const CHIP_RE = /⟦h(\d+)⟧/g
 export const INK_COUNT = 8
 /** The API's limit on the length of a citation. */
 const MAX_CITATION_LENGTH = 2000
 
 const WORD_CHARACTER = /[\p{L}\p{N}\p{M}_'’-]/u
-const WORD = /[\p{L}\p{N}_]+/gu
+const WORD = /[\p{L}\p{N}\p{M}_]+(?:['’-][\p{L}\p{N}\p{M}_]+)*/gu
 const SPACE = /\s/
 
 export type Answers = Record<string, string | undefined>
@@ -114,10 +116,27 @@ export function removeCitation(
   }
 }
 
-/** Different words, like the server's count: chips are not words. */
+/**
+ * Every word, for the counter under an answer. Chips and list numbers are not words. The server's
+ * `count_words` counts different words instead, because the elicitation scripts check their minimums
+ * with it.
+ */
 export function countWords(text: string): number {
-  const words = text.replace(CHIP_RE, ' ').toLowerCase().match(WORD) ?? []
-  return new Set(words).size
+  const lines = text.split('\n').map((line) => line.slice(listMarker(line)?.length ?? 0))
+  return (lines.join(' ').replace(CHIP_RE, ' ').match(WORD) ?? []).length
+}
+
+/** How many times each citation is referred to, across all answers. */
+export function citationCounts(citations: Citation[], answers: Answers): Record<number, number> {
+  const counts: Record<number, number> = {}
+  for (const citation of citations) counts[citation.chip] = 0
+  for (const answer of Object.values(answers)) {
+    for (const match of (answer ?? '').matchAll(CHIP_RE)) {
+      const chip = Number(match[1])
+      if (chip in counts) counts[chip] = (counts[chip] ?? 0) + 1
+    }
+  }
+  return counts
 }
 
 export function citedChips(answers: Answers): Set<number> {

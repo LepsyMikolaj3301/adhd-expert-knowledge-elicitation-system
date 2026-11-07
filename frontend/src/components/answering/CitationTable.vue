@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { inkFor } from '@/answering/highlights'
 import type { Citation, Direction } from '@/api/client'
-import { DIRECTIONS, directionLabel } from '@/copy'
+import { citedTimes, DIRECTIONS, directionLabel } from '@/copy'
 
 const props = defineProps<{
   citations: Citation[]
@@ -13,7 +13,8 @@ const props = defineProps<{
   editable: boolean
   /** Whether there is an answer box on screen to insert a chip into. */
   canInsert: boolean
-  uncited: number[]
+  /** How many times each one is referred to in the answers, by chip. */
+  counts: Record<number, number>
   pulseChip: number | null
 }>()
 
@@ -25,16 +26,19 @@ const emit = defineEmits<{
 }>()
 
 const rows = ref<HTMLElement>()
+const helpOpen = ref(false)
+const helpRoot = ref<HTMLElement>()
+const helpButton = ref<HTMLButtonElement>()
 
-/** The first words of a passage, enough to tell it from the others when it is read out. */
+/** The first words of a quote, enough to tell it from the others when it is read out. */
 function shortQuote(text: string): string {
   const words = text.split(/\s+/)
   return `“${words.slice(0, 8).join(' ')}${words.length > 8 ? '…' : ''}”`
 }
 
 /**
- * Clicking a passage puts its reference at the cursor in the answer. Where there is no answer box
- * (a locked question, the rating, the review) it only shows the passage in the text.
+ * Clicking a quote puts its reference at the cursor in the answer. Where there is no answer box
+ * (the review, or nothing left to write in) it only shows the quote in the text.
  */
 function pick(chip: number) {
   if (props.canInsert) emit('insert', chip)
@@ -49,6 +53,26 @@ function onDirection(chip: number, event: Event) {
   emit('direction', chip, (event.target as HTMLSelectElement).value as Direction)
 }
 
+function closeHelpOutside(event: Event) {
+  if (helpOpen.value && !helpRoot.value?.contains(event.target as Node)) helpOpen.value = false
+}
+
+function closeHelpOnEscape(event: KeyboardEvent) {
+  if (event.key !== 'Escape' || !helpOpen.value) return
+  helpOpen.value = false
+  helpButton.value?.focus()
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', closeHelpOutside)
+  document.addEventListener('keydown', closeHelpOnEscape)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', closeHelpOutside)
+  document.removeEventListener('keydown', closeHelpOnEscape)
+})
+
 watch(
   () => props.pulseChip,
   async (chip) => {
@@ -60,26 +84,60 @@ watch(
 </script>
 
 <template>
-  <section aria-labelledby="citations-heading" class="flex min-h-0 flex-col">
-    <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Marked passages</h2>
+  <section aria-labelledby="citations-heading" class="relative flex min-h-0 flex-col">
+    <div class="flex items-center justify-between gap-3">
+      <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Quotes</h2>
+      <div
+        v-if="citations.length"
+        ref="helpRoot"
+        class="flex w-32 items-center gap-1.5 text-sm text-muted"
+      >
+        <span>Direction</span>
+        <button
+          ref="helpButton"
+          type="button"
+          class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-xs font-semibold text-action hover:border-action"
+          aria-label="What the directions mean"
+          aria-controls="direction-help"
+          :aria-expanded="helpOpen"
+          data-testid="direction-help-button"
+          @click="helpOpen = !helpOpen"
+        >
+          ?
+        </button>
+        <div
+          v-if="helpOpen"
+          id="direction-help"
+          class="absolute right-0 bottom-full z-20 mb-1 w-[min(20rem,100%)] rounded-sm border border-line bg-surface p-3 text-sm text-text shadow-md"
+          data-testid="direction-help"
+        >
+          <p class="font-medium text-ink">What does this quote do to your reading?</p>
+          <dl class="mt-2 space-y-2">
+            <div v-for="d in DIRECTIONS" :key="d.value">
+              <dt class="font-medium">{{ d.label }}</dt>
+              <dd class="text-muted">{{ d.help }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
     <p v-if="!citations.length" class="mt-2 text-sm text-muted" data-testid="no-citations">
       <template v-if="editable">Select the words your answer is about.</template>
-      <template v-else>No marked passages.</template>
+      <template v-else>No quotes.</template>
     </p>
     <template v-else>
       <p v-if="editable" class="mt-1 text-sm text-muted">
-        Select more words to mark another passage.
+        Select more words to add another quote.
         <template v-if="canInsert">
-          Click a passage to add it to your answer at the cursor. Point at it to find it in the
-          text.
+          Click a quote to add it to your answer at the cursor. Point at it to find it in the text.
         </template>
-        <template v-else>Click a passage to find it in the text.</template>
+        <template v-else>Click a quote to find it in the text.</template>
       </p>
       <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
         <table class="w-full border-collapse text-left text-sm">
           <thead class="sr-only">
             <tr>
-              <th scope="col">Passage</th>
+              <th scope="col">Quote</th>
               <th scope="col">Direction and actions</th>
             </tr>
           </thead>
@@ -107,7 +165,7 @@ watch(
                   :aria-label="
                     canInsert
                       ? `Add reference ${citation.chip} to your answer: ${shortQuote(citation.text)}`
-                      : `Show passage ${citation.chip} in the text: ${shortQuote(citation.text)}`
+                      : `Show quote ${citation.chip} in the text: ${shortQuote(citation.text)}`
                   "
                   @mousedown.prevent
                   @click="pick(citation.chip)"
@@ -118,15 +176,16 @@ watch(
                       “{{ citation.text }}”
                     </span>
                     <span
-                      v-if="editable && uncited.includes(citation.chip)"
+                      v-if="editable"
                       class="mt-0.5 block text-xs text-muted"
+                      data-testid="cited-times"
                     >
-                      Not mentioned in an answer yet
+                      {{ citedTimes(counts[citation.chip] ?? 0) }}
                     </span>
                   </span>
                   <span
                     v-if="canInsert"
-                    class="shrink-0 pt-0.5 text-xs whitespace-nowrap text-action opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+                    class="shrink-0 pt-0.5 text-xs whitespace-nowrap text-action"
                     aria-hidden="true"
                   >
                     + Add to answer
@@ -139,10 +198,10 @@ watch(
                   class="w-full rounded-sm border bg-surface px-1 py-0.5 text-sm"
                   :class="citation.direction ? 'border-line' : 'border-action'"
                   :value="citation.direction ?? ''"
-                  :aria-label="`Direction of passage ${citation.chip}`"
+                  :aria-label="`Direction of quote ${citation.chip}`"
                   @change="onDirection(citation.chip, $event)"
                 >
-                  <option value="" disabled>Direction needed</option>
+                  <option value="" disabled>-</option>
                   <option v-for="d in DIRECTIONS" :key="d.value" :value="d.value">
                     {{ d.label }}
                   </option>
@@ -151,10 +210,25 @@ watch(
                 <span v-if="editable && !isLocked(citation.chip)" class="mt-0.5 flex text-sm">
                   <button
                     type="button"
-                    class="cursor-pointer text-muted hover:text-danger hover:underline"
-                    :aria-label="`Remove passage ${citation.chip}`"
+                    class="flex cursor-pointer items-center gap-1 text-muted hover:text-danger hover:underline"
+                    :aria-label="`Remove quote ${citation.chip}`"
                     @click="emit('remove', citation.chip)"
                   >
+                    <svg
+                      viewBox="0 0 16 16"
+                      width="13"
+                      height="13"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2.5 4h11M6.5 4V2.5h3V4M4 4l.7 9.5h6.6L12 4M6.75 6.75v4M9.25 6.75v4"
+                      />
+                    </svg>
                     Remove
                   </button>
                 </span>

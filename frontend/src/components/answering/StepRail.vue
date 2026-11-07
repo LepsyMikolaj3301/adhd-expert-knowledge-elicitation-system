@@ -8,9 +8,8 @@ export interface RailStep {
 defineProps<{
   steps: RailStep[]
   current: string
-  /** The gate sits after this step, shown as a padlock. */
+  /** A thin line after this step separates the questions that get locked from the rest. */
   gateAfter: string
-  gatePassed: boolean
 }>()
 
 defineEmits<{ go: [id: string] }>()
@@ -37,30 +36,12 @@ defineEmits<{ go: [id: string] }>()
             {{ step.label }}
           </button>
         </li>
-        <li v-if="step.id === gateAfter" class="px-1 text-muted">
-          <svg
-            viewBox="0 0 16 16"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            role="img"
-            :aria-label="
-              gatePassed ? 'Questions before this are locked' : 'Locks when you continue'
-            "
-          >
-            <rect
-              x="3"
-              y="7"
-              width="10"
-              height="7"
-              rx="1"
-              :fill="gatePassed ? 'currentColor' : 'none'"
-            />
-            <path :d="gatePassed ? 'M5 7V5a3 3 0 0 1 6 0v2' : 'M5 7V5a3 3 0 0 1 5.6-1.5'" />
-          </svg>
-        </li>
+        <li
+          v-if="step.id === gateAfter"
+          class="mx-1 h-4 w-px bg-line"
+          aria-hidden="true"
+          data-testid="gate-divider"
+        />
       </template>
     </ol>
   </nav>

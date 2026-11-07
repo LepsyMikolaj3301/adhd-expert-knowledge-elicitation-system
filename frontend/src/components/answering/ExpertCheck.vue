@@ -10,7 +10,7 @@ const emit = defineEmits<{ done: [] }>()
 const DIRECTIONS = {
   toward: 'Points toward',
   away: 'Points away',
-  neutral: 'Ordinary',
+  neutral: 'No bearing',
   unclear: 'Unclear',
 } as const
 
@@ -97,7 +97,7 @@ onMounted(load)
   <div data-testid="expert-check">
     <h1 class="text-2xl">Check how your answers were filed</h1>
     <p class="mt-2 text-muted">
-      Each sentence of your answers was filed under the passages it is about, or under the case as a
+      Each sentence of your answers was filed under the quotes it is about, or under the case as a
       whole. Correct anything that is wrong, then approve.
     </p>
     <p v-if="error" class="alert mt-4" role="alert">{{ error }}</p>
@@ -121,7 +121,7 @@ onMounted(load)
       </ul>
 
       <section v-if="findings.highlights.length" class="mt-5">
-        <h2>Passages</h2>
+        <h2>Quotes</h2>
         <ul class="mt-2 space-y-2 text-sm">
           <li
             v-for="h in findings.highlights"
@@ -138,7 +138,7 @@ onMounted(load)
               v-model="directions[h.id]"
               class="field !mt-0 !w-auto"
               :disabled="!findings.editable"
-              :aria-label="`Direction of passage ${h.chip}`"
+              :aria-label="`Direction of quote ${h.chip}`"
             >
               <option v-for="(label, value) in DIRECTIONS" :key="value" :value="value">
                 {{ label }}
@@ -161,7 +161,7 @@ onMounted(load)
                   :disabled="!findings.editable"
                   @change="toggle(s.id, h.id)"
                 />
-                Passage {{ h.chip }}
+                Quote {{ h.chip }}
               </label>
               <label class="flex items-center gap-1.5">
                 <input

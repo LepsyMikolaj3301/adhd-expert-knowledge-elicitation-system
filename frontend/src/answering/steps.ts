@@ -22,7 +22,7 @@ export function q4Wording(question: QuestionView): Q4Wording {
 
 /** The counter under an answer. There is no target to reach: it only shows how much is written. */
 export function wordCountLabel(words: number): string {
-  return `${words} different ${words === 1 ? 'word' : 'words'}`
+  return `${words} ${words === 1 ? 'word' : 'words'}`
 }
 
 function q4Problem(payload: AnswerPayload): string | null {

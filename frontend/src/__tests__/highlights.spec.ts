@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { Citation } from '@/api/client'
 import {
   addCitation,
+  citationCounts,
   codePointToUtf16,
   countWords,
   citedChips,
@@ -130,14 +131,37 @@ describe('removeCitation', () => {
 })
 
 describe('countWords', () => {
-  it('counts different words like the server', () => {
-    expect(countWords('test Test TEST, test!')).toBe(1)
+  it('counts every word, repeated or not', () => {
+    expect(countWords('test Test TEST, test!')).toBe(4)
     expect(countWords('... --- !!!')).toBe(0)
     expect(countWords('Pacjent nie śpi dobrze')).toBe(4)
   })
 
+  it('does not count list numbers, but does count numbers in the text', () => {
+    expect(countWords('1. first\n2) second\n- third')).toBe(3)
+    expect(countWords('slept 2 hours')).toBe(3)
+  })
+
+  it('counts a word with an apostrophe or a hyphen as one', () => {
+    expect(countWords("don't well-being")).toBe(2)
+    expect(countWords('don’t - stop')).toBe(2)
+  })
+
   it('ignores chips', () => {
     expect(countWords('⟦h1⟧ ⟦h2⟧ ⟦h3⟧ word')).toBe(1)
+  })
+})
+
+describe('citationCounts', () => {
+  const all = [citation(1, 'barely slept'), citation(2, 'the move'), citation(3, 'hand')]
+
+  it('counts every reference across all answers', () => {
+    const answers = { Q1: '⟦h1⟧ and ⟦h1⟧ again, ⟦h2⟧', Q2: 'also ⟦h1⟧', Q3: undefined }
+    expect(citationCounts(all, answers)).toEqual({ 1: 3, 2: 1, 3: 0 })
+  })
+
+  it('does not count references to a number that has no citation', () => {
+    expect(citationCounts(all, { Q1: '⟦h9⟧' })).toEqual({ 1: 0, 2: 0, 3: 0 })
   })
 })
 

@@ -91,6 +91,7 @@ describe('side panel', () => {
     expect(account.text()).toContain(expert.display_name)
     expect(account.text()).toContain('expert')
     expect(account.attributes('href')).toBe('/account')
+    expect(account.find('svg[aria-hidden="true"]').exists()).toBe(true)
   })
 })
 

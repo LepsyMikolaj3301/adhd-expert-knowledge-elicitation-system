@@ -1,6 +1,6 @@
 /**
- * Wording the expert reads, in one place. Clinical words, not engineering ones: "marked passage",
- * not "highlight" or "citation"; "reference", not "chip"; "case", not "vignette". The API's own
+ * Wording the expert reads, in one place. Clinical words, not engineering ones: "quote", not
+ * "highlight" or "citation"; "reference", not "chip"; "case", not "vignette". The API's own
  * messages use the old terms, so what an expert sees for an error comes from here, by its stable
  * `code`. The questions themselves are not here: they come from the API, worded the same for all.
  */
@@ -17,11 +17,27 @@ export const TRUST_SENTENCE =
   'Your answers are kept word for word under a pseudonym and, after review, an AI assistant can cite them as clinician opinion.'
 
 /** The stored values are `toward`/`away`/`neutral`/`unclear`; this is what the expert reads. */
-export const DIRECTIONS: { value: Direction; label: string }[] = [
-  { value: 'toward', label: 'Points toward ADHD traits' },
-  { value: 'away', label: 'Points away from ADHD traits' },
-  { value: 'neutral', label: 'Ordinary, no bearing' },
-  { value: 'unclear', label: 'Unclear' },
+export const DIRECTIONS: { value: Direction; label: string; help: string }[] = [
+  {
+    value: 'toward',
+    label: 'Points toward ADHD traits',
+    help: 'This quote makes ADHD-related traits more likely in your reading.',
+  },
+  {
+    value: 'away',
+    label: 'Points away from ADHD traits',
+    help: 'This quote makes them less likely, or better explained by something else.',
+  },
+  {
+    value: 'neutral',
+    label: 'No bearing',
+    help: 'An ordinary detail that says nothing either way.',
+  },
+  {
+    value: 'unclear',
+    label: 'Unclear',
+    help: "It could go either way, or you can't tell from the text.",
+  },
 ]
 
 export function directionLabel(direction: Direction | null | undefined): string {
@@ -32,19 +48,38 @@ function list(items: (string | number)[]): string {
   return items.join(', ')
 }
 
-/** "Choose a direction for passage 2." / "…for passages 2, 4." */
+/** "Choose a direction for quote 2." / "…for quotes 2, 4." */
 export function directionNeeded(chips: number[]): string {
-  return `Choose a direction for ${chips.length === 1 ? 'passage' : 'passages'} ${list(chips)}.`
+  return `Choose a direction for ${chips.length === 1 ? 'quote' : 'quotes'} ${list(chips)}.`
 }
 
-/** "Passage 2 is not mentioned in any answer." Only a note: it never stops anyone. */
+/** "Quote 2 is not mentioned in any answer." Only a note: it never stops anyone. */
 export function notMentioned(chips: number[], where: 'in any answer' | 'in an answer yet'): string {
   const one = chips.length === 1
-  return `${one ? 'Passage' : 'Passages'} ${list(chips)} ${one ? 'is' : 'are'} not mentioned ${where}.`
+  return `${one ? 'Quote' : 'Quotes'} ${list(chips)} ${one ? 'is' : 'are'} not mentioned ${where}.`
 }
 
-export function markedPassages(count: number): string {
-  return count === 1 ? 'marked passage' : `${count} marked passages`
+export function quoteCount(count: number): string {
+  return count === 1 ? '1 quote' : `${count} quotes`
+}
+
+/** "Cited 2 times", on a quote's row. */
+export function citedTimes(count: number): string {
+  return `Cited ${count} ${count === 1 ? 'time' : 'times'}`
+}
+
+/** What removing a quote does to the answers. */
+export function removalNote(count: number): string {
+  if (!count) return "It isn't cited in any answer yet."
+  const times = count === 1 ? 'once' : `${count} times`
+  return `It is cited ${times}. Removing it also takes it out of your answers.`
+}
+
+/** What removing a quote does to the numbers of the ones after it. Null if there are none. */
+export function renumberNote(chip: number, total: number): string | null {
+  if (chip >= total) return null
+  if (chip + 1 === total) return `Quote ${total} will become quote ${chip}.`
+  return `Quotes ${chip + 1}–${total} will be renumbered ${chip}–${total - 1}.`
 }
 
 /** "Q3" on the screen's heading reads "Question 3". The step rail keeps the short form. */
@@ -89,13 +124,13 @@ export function describeError(error: unknown): string {
     }
     case 'highlight_no_direction': {
       const chips = numbers(error.details?.chips)
-      return chips.length ? directionNeeded(chips) : 'Choose a direction for each marked passage.'
+      return chips.length ? directionNeeded(chips) : 'Choose a direction for each quote.'
     }
     case 'unknown_chip':
     case 'chip_numbers':
     case 'highlight_not_in_vignette':
       return (
-        "A reference in your answer doesn't match a marked passage. Please check your answers. " +
+        "A reference in your answer doesn't match a quote. Please check your answers. " +
         `If it continues, contact ${STUDY_TEAM}.`
       )
     case 'review_closed':

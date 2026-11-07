@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import {
+  computed,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+  type ComponentPublicInstance,
+} from 'vue'
 import { onBeforeRouteLeave, RouterLink, useRouter } from 'vue-router'
 
 import {
   addCitation,
-  countWords,
+  citationCounts,
   removeCitation,
   uncitedChips,
   type Answers,
@@ -16,19 +24,15 @@ import {
   REVIEW,
   gateProblem,
   stepProblem,
-  wordCountLabel,
   type StepId,
 } from '@/answering/steps'
 import { plainText } from '@/answering/plainText'
 import { useAnswerDraft } from '@/answering/useAnswerDraft'
-import type { Citation, Direction, Q4Answer } from '@/api/client'
-import ChipEditor from '@/components/answering/ChipEditor.vue'
-import ChipText from '@/components/answering/ChipText.vue'
+import type { Citation, Direction, Q4Answer, QuestionView } from '@/api/client'
 import CitationTable from '@/components/answering/CitationTable.vue'
 import ExpertCheck from '@/components/answering/ExpertCheck.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
-import Q4Step from '@/components/answering/Q4Step.vue'
-import RatingStep from '@/components/answering/RatingStep.vue'
+import QuestionBlock from '@/components/answering/QuestionBlock.vue'
 import ReviewStep from '@/components/answering/ReviewStep.vue'
 import StepRail, { type RailStep } from '@/components/answering/StepRail.vue'
 import UnsavedText from '@/components/answering/UnsavedText.vue'
@@ -36,9 +40,10 @@ import VignetteText from '@/components/answering/VignetteText.vue'
 import {
   describeError,
   directionNeeded,
-  markedPassages,
   notMentioned,
-  questionLabel,
+  quoteCount,
+  removalNote,
+  renumberNote,
   saveRefusal,
 } from '@/copy'
 import { useAuthStore } from '@/stores/auth'
@@ -50,8 +55,6 @@ const FRAMING: Record<string, string> = {
   personal_journal: 'Personal journal',
   email: 'Email',
 }
-/** How long an answer to Q1 can run with no chips before asking which fragments it is about. */
-const Q1_NUDGE_WORDS = 60
 const LATER_IDS = ['Q4', 'Q5', 'Q6']
 
 const router = useRouter()
@@ -71,8 +74,8 @@ const removing = ref<number | null>(null)
 const busy = ref(false)
 let pulseTimer: ReturnType<typeof setTimeout> | undefined
 
-const answerBox = ref<InstanceType<typeof ChipEditor> | null>(null)
-const q4Box = ref<InstanceType<typeof Q4Step> | null>(null)
+const column = ref<HTMLElement>()
+const blocks = new Map<string, InstanceType<typeof QuestionBlock>>()
 
 const vignette = computed(() => view.value?.vignette ?? null)
 const questions = computed(() => vignette.value?.questions ?? [])
@@ -82,21 +85,13 @@ const gatePassed = computed(() => Boolean(view.value?.gate_passed_at))
 const lockedCount = computed(() => view.value?.locked_highlights ?? 0)
 const submitted = computed(() => Boolean(view.value?.submitted_at))
 
-const question = computed(() => questions.value.find((q) => q.id === step.value) ?? null)
-const stepIndex = computed(() => questions.value.findIndex((q) => q.id === step.value))
-const isLockedQuestion = computed(
-  () => !editable.value || (gatePassed.value && GATE_IDS.includes(step.value)),
-)
-/** Q1 to Q3 once locked in. A submitted case is just read-only, and does not look locked. */
-const gateLocked = computed(
-  () => editable.value && gatePassed.value && GATE_IDS.includes(step.value),
-)
-const isLockStep = computed(
-  () => editable.value && !gatePassed.value && step.value === lastGateId.value,
-)
 const lastGateId = computed(
   () => questions.value.filter((q) => GATE_IDS.includes(q.id)).slice(-1)[0]?.id ?? '',
 )
+
+function isLocked(id: string): boolean {
+  return gatePassed.value && GATE_IDS.includes(id)
+}
 
 const activeCitation = computed(
   () => citations.value.find((c) => c.chip === activeChip.value) ?? null,
@@ -106,62 +101,52 @@ const submittable = computed(() => forSaving(payload.value))
 const uncited = computed(() => uncitedChips(citations.value, submittable.value.answers))
 const undirected = computed(() => citations.value.filter((c) => !c.direction).map((c) => c.chip))
 
-const canInsert = computed(() => {
-  if (!editable.value || isLockedQuestion.value) return false
-  if (question.value?.kind === 'open') return true
-  return question.value?.kind === 'shift' && Boolean(q4Box.value?.canInsert)
+const counts = computed(() => citationCounts(citations.value, submittable.value.answers))
+
+/** Whether a question has a box on screen that a reference can go into. */
+function hasAnswerBox(question: QuestionView): boolean {
+  if (!editable.value || isLocked(question.id)) return false
+  if (question.kind === 'open') return true
+  return question.kind === 'shift' && Boolean(payload.value.q4?.shift)
+}
+
+/** The box a clicked quote goes into: the question being worked on, or else the first with a box. */
+const insertTarget = computed(() => {
+  if (step.value === REVIEW) return null
+  const open = questions.value.filter(hasAnswerBox)
+  return (open.find((q) => q.id === step.value) ?? open[0])?.id ?? null
 })
+const canInsert = computed(() => insertTarget.value !== null)
 
-const currentAnswer = computed(() => answers.value[step.value] ?? '')
-const currentWords = computed(() => countWords(currentAnswer.value))
-
-/** Q4's question, with the what-if picked out as the thing to weigh. */
-const heading = computed(() => {
-  const text = question.value?.text ?? ''
-  const match = question.value?.kind === 'shift' ? /^(.* change if )(.+)(\?)$/.exec(text) : null
-  return match
-    ? { before: match[1], whatIf: match[2], after: match[3] }
-    : { before: text, whatIf: '', after: '' }
+/** The first thing missing from Q4 to Q6. */
+const laterProblem = computed(() => {
+  for (const question of questions.value) {
+    if (GATE_IDS.includes(question.id)) continue
+    const problem = stepProblem(question, payload.value)
+    if (problem) return problem
+  }
+  return null
 })
-
-const q1Nudge = computed(
-  () =>
-    step.value === 'Q1' &&
-    !isLockedQuestion.value &&
-    currentAnswer.value.split(/\s+/).length > Q1_NUDGE_WORDS &&
-    !currentAnswer.value.includes('⟦h'),
-)
 
 function directionProblem(): string | null {
   return undirected.value.length ? directionNeeded(undirected.value) : null
 }
 
-/** Why the main button can't be pressed. Word counts for open questions show under the answer. */
+/** Why the main button can't be pressed. */
 const blocker = computed<string | null>(() => {
   if (step.value === REVIEW) return directionProblem()
-  if (isLockedQuestion.value || !question.value) return null
-  // Q1 to Q3 are free to visit in any order; only locking them in needs all three answered.
-  if (GATE_IDS.includes(question.value.id)) {
-    return isLockStep.value
-      ? (gateProblem(questions.value, payload.value) ?? directionProblem())
-      : null
-  }
-  return stepProblem(question.value, payload.value)
+  if (!gatePassed.value) return gateProblem(questions.value, payload.value) ?? directionProblem()
+  return laterProblem.value
 })
 
 const railSteps = computed<RailStep[]>(() => {
-  const steps: RailStep[] = []
-  let open = true
-  for (const q of questions.value) {
-    steps.push({ id: q.id, label: q.id, reachable: open })
-    if (!GATE_IDS.includes(q.id)) open = open && !stepProblem(q, payload.value)
-  }
+  const steps: RailStep[] = questions.value.map((q) => ({ id: q.id, label: q.id, reachable: true }))
   if (!gatePassed.value) {
     // Named, but not sent by the server yet: the rail shows there is more without showing what.
     for (const id of LATER_IDS) steps.push({ id, label: id, reachable: false })
     steps.push({ id: REVIEW, label: 'Review', reachable: false })
   } else {
-    steps.push({ id: REVIEW, label: 'Review', reachable: open })
+    steps.push({ id: REVIEW, label: 'Review', reachable: !laterProblem.value })
   }
   return steps
 })
@@ -218,7 +203,7 @@ function onCite(start: number, end: number) {
   } else if (result.kind === 'duplicate') {
     pulse(result.chip)
   } else if (result.kind === 'too_long') {
-    notice.value = "That's too long for one passage. Please select less."
+    notice.value = "That's too long for one quote. Please select less."
   }
 }
 
@@ -228,13 +213,12 @@ function onDirection(chip: number, direction: Direction) {
 }
 
 function insertChip(chip: number) {
-  const box = question.value?.kind === 'shift' ? q4Box.value : answerBox.value
-  box?.insertChip(chip)
+  if (insertTarget.value) blocks.get(insertTarget.value)?.insertChip(chip)
 }
 
-function askToRemove(chip: number) {
-  if (uncited.value.includes(chip)) removeNow(chip)
-  else removing.value = chip
+function setBlock(id: string, block: Element | ComponentPublicInstance | null) {
+  if (block) blocks.set(id, block as InstanceType<typeof QuestionBlock>)
+  else blocks.delete(id)
 }
 
 function removeNow(chip: number) {
@@ -250,21 +234,35 @@ function saveQuietly() {
   void draft.flush().catch(() => {})
 }
 
+async function showStep(id: StepId) {
+  await nextTick()
+  if (id === REVIEW) column.value?.scrollTo?.(0, 0)
+  else column.value?.querySelector(`[data-question="${id}"]`)?.scrollIntoView?.({ block: 'start' })
+}
+
 function go(id: StepId) {
   actionError.value = ''
   activeChip.value = null
   saveQuietly()
   step.value = id
+  void showStep(id)
 }
 
 function goBack() {
-  const index = step.value === REVIEW ? questions.value.length : stepIndex.value
-  const previous = questions.value[index - 1]
-  if (previous) go(previous.id)
+  const last = questions.value[questions.value.length - 1]
+  if (last) go(last.id)
 }
 
-function goNext() {
-  go(questions.value[stepIndex.value + 1]?.id ?? REVIEW)
+function setRating(rating: number) {
+  payload.value.rating = rating
+  payload.value.insufficient_information = false
+  edited()
+}
+
+function setInsufficient() {
+  payload.value.rating = null
+  payload.value.insufficient_information = true
+  edited()
 }
 
 function explain(error: unknown): string {
@@ -314,6 +312,10 @@ async function load() {
   } finally {
     loading.value = false
   }
+  // Only where the questions scroll by themselves: on a narrow screen they come after the case text,
+  // and opening the page must not jump past it.
+  await nextTick()
+  if (column.value && getComputedStyle(column.value).overflowY === 'auto') void showStep(step.value)
 }
 
 function warnBeforeClosing(event: BeforeUnloadEvent) {
@@ -372,7 +374,6 @@ onBeforeRouteLeave(async () => {
           :steps="railSteps"
           :current="step"
           :gate-after="lastGateId"
-          :gate-passed="gatePassed"
           @go="go"
         />
         <p class="text-sm text-muted" aria-live="polite" data-testid="save-status">
@@ -423,126 +424,92 @@ onBeforeRouteLeave(async () => {
             :locked-count="lockedCount"
             :editable="editable"
             :can-insert="canInsert"
-            :uncited="uncited"
+            :counts="counts"
             :pulse-chip="pulseChip"
             @active="activeChip = $event"
             @direction="onDirection"
             @insert="insertChip"
-            @remove="askToRemove"
+            @remove="removing = $event"
           />
         </div>
 
-        <section class="min-w-0">
-          <ExpertCheck
-            v-if="view?.state === 'expert_check'"
-            :id="id"
-            :can-skip="view.allowed_actions.includes('skip_expert_check')"
-            @done="load"
-          />
-          <template v-else-if="step === REVIEW">
-            <h1 class="text-2xl" data-testid="question">
-              {{ editable ? 'Review your answers' : 'Your answers' }}
-            </h1>
-            <p v-if="view?.state === 'cancelled'" class="mt-2 text-muted">
-              This assignment was cancelled, so these answers were not submitted.
-            </p>
-            <div class="mt-5">
-              <ReviewStep
-                :questions="questions"
-                :payload="submittable"
-                :editable-ids="editable ? LATER_IDS : []"
-                @edit="go"
-                @active="activeChip = $event"
-              />
-            </div>
-            <p v-if="editable && uncited.length" class="mt-4 text-sm text-muted">
-              {{ notMentioned(uncited, 'in any answer') }}
-            </p>
-          </template>
-
-          <template v-else-if="question">
-            <h1 class="text-[1.375rem] leading-snug tracking-normal" data-testid="question">
-              <span class="mb-1 block text-sm font-semibold tracking-wide text-action uppercase">
-                {{ questionLabel(question.id) }}
-              </span>
-              {{ heading.before
-              }}<strong v-if="heading.whatIf" class="font-semibold">{{ heading.whatIf }}</strong
-              >{{ heading.after }}
-            </h1>
-
-            <div class="mt-5">
-              <template v-if="question.kind === 'open' && isLockedQuestion">
-                <p v-if="gateLocked" class="text-sm text-muted">
-                  Locked. This keeps your first reading as you wrote it.
-                </p>
-                <p class="mt-2 leading-relaxed">
-                  <ChipText :text="currentAnswer" @active="activeChip = $event" />
-                </p>
-              </template>
-
-              <template v-else-if="question.kind === 'open'">
-                <ChipEditor
-                  :key="step"
-                  ref="answerBox"
-                  :model-value="currentAnswer"
-                  :label="`Your answer to ${question.id}`"
-                  @update:model-value="setAnswer(step, $event)"
+        <section class="flex min-w-0 flex-col lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
+          <!-- Scrolls by itself, so that the lock-in or review button below stays in view. Relative,
+               because the hidden radio inputs are positioned: otherwise they would escape this box
+               and make the whole page scroll. -->
+          <div
+            ref="column"
+            class="relative min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1 lg:pb-2"
+            data-testid="question-column"
+          >
+            <ExpertCheck
+              v-if="view?.state === 'expert_check'"
+              :id="id"
+              :can-skip="view.allowed_actions.includes('skip_expert_check')"
+              @done="load"
+            />
+            <template v-else-if="step === REVIEW">
+              <h1 class="text-2xl" data-testid="question">
+                {{ editable ? 'Review your answers' : 'Your answers' }}
+              </h1>
+              <p v-if="view?.state === 'cancelled'" class="mt-2 text-muted">
+                This assignment was cancelled, so these answers were not submitted.
+              </p>
+              <div class="mt-5">
+                <ReviewStep
+                  :questions="questions"
+                  :payload="submittable"
+                  :editable-ids="editable ? LATER_IDS : []"
+                  @edit="go"
                   @active="activeChip = $event"
                 />
-                <p class="mt-1 text-sm text-muted" aria-live="polite" data-testid="word-count">
-                  {{ wordCountLabel(currentWords) }}
-                </p>
-                <p v-if="q1Nudge" class="mt-2 text-sm text-ink">
-                  Which passages is this about? Click one to add it here.
-                </p>
-              </template>
+              </div>
+              <p v-if="editable && uncited.length" class="mt-4 text-sm text-muted">
+                {{ notMentioned(uncited, 'in any answer') }}
+              </p>
+            </template>
 
-              <Q4Step
-                v-else-if="question.kind === 'shift'"
-                ref="q4Box"
-                :question="question"
-                :q4="payload.q4 ?? null"
-                :why="answers.Q4 ?? ''"
-                @update:q4="setQ4"
-                @update:why="setAnswer('Q4', $event)"
-                @active="activeChip = $event"
-              />
+            <template v-else>
+              <p
+                class="mb-6 rounded-sm border-l-2 border-action bg-surface px-3 py-2 text-sm text-muted"
+                data-testid="gate-note"
+              >
+                <template v-if="gatePassed">
+                  Questions 1 to 3 are locked. This keeps your first reading as you wrote it.
+                </template>
+                <template v-else>
+                  Answer these three together. Once you lock them in, you can't change them, and the
+                  next questions open.
+                </template>
+              </p>
+              <div class="divide-y divide-line">
+                <QuestionBlock
+                  v-for="q in questions"
+                  :key="q.id"
+                  :ref="(block) => setBlock(q.id, block)"
+                  :data-question="q.id"
+                  :question="q"
+                  :payload="payload"
+                  :locked="isLocked(q.id)"
+                  @focusin="step = q.id"
+                  @answer="setAnswer(q.id, $event)"
+                  @q4="setQ4"
+                  @rate="setRating"
+                  @insufficient="setInsufficient"
+                  @active="activeChip = $event"
+                />
+              </div>
+            </template>
 
-              <RatingStep
-                v-else
-                :rating="payload.rating"
-                :insufficient="payload.insufficient_information"
-                @rate="
-                  (value) => {
-                    payload.rating = value
-                    payload.insufficient_information = false
-                    edited()
-                  }
-                "
-                @insufficient="
-                  () => {
-                    payload.rating = null
-                    payload.insufficient_information = true
-                    edited()
-                  }
-                "
-              />
-            </div>
-          </template>
+            <p v-if="actionError" class="alert mt-4" role="alert">{{ actionError }}</p>
+          </div>
 
-          <p v-if="actionError" class="alert mt-4" role="alert">{{ actionError }}</p>
-
-          <footer v-if="editable" class="mt-6">
+          <footer v-if="editable" class="mt-4">
             <p v-if="blocker" class="mb-2 text-right text-sm text-muted">
               {{ blocker }}
             </p>
             <div class="flex items-center justify-between gap-4">
-              <button
-                v-if="step === REVIEW || stepIndex > 0"
-                type="button"
-                class="btn-quiet"
-                @click="goBack"
-              >
+              <button v-if="step === REVIEW" type="button" class="btn-quiet" @click="goBack">
                 Back
               </button>
               <span v-else />
@@ -557,7 +524,7 @@ onBeforeRouteLeave(async () => {
                 Submit answers
               </button>
               <button
-                v-else-if="isLockStep"
+                v-else-if="!gatePassed"
                 type="button"
                 class="btn"
                 :disabled="Boolean(blocker) || busy"
@@ -565,8 +532,14 @@ onBeforeRouteLeave(async () => {
               >
                 Lock in results
               </button>
-              <button v-else type="button" class="btn" :disabled="Boolean(blocker)" @click="goNext">
-                {{ stepIndex === questions.length - 1 ? 'Review answers' : 'Next question' }}
+              <button
+                v-else
+                type="button"
+                class="btn"
+                :disabled="Boolean(blocker)"
+                @click="go(REVIEW)"
+              >
+                Review answers
               </button>
             </div>
           </footer>
@@ -583,12 +556,12 @@ onBeforeRouteLeave(async () => {
       >
         <p>
           You won't be able to change your answers to Q1 to Q3, or the
-          {{ markedPassages(citations.length) }} you have made, including
+          {{ quoteCount(citations.length) }} you have made, including
           {{ citations.length === 1 ? 'its direction' : 'their directions' }}.
         </p>
-        <p>The remaining questions open next. You can still mark new passages there.</p>
+        <p>The remaining questions open next. You can still add new quotes there.</p>
         <p v-if="!citations.length" class="font-medium">
-          You haven't marked any passages. Some texts have nothing to mark, so that's fine if it's
+          You haven't added any quotes. Some texts have nothing to quote, so that's fine if it's
           what you intended.
         </p>
         <p v-else-if="uncited.length" class="font-medium">
@@ -616,13 +589,35 @@ onBeforeRouteLeave(async () => {
 
       <ConfirmDialog
         v-if="removing !== null"
-        :title="`Remove passage ${removing}?`"
-        confirm-label="Remove passage"
+        :title="`Remove quote ${removing}?`"
+        confirm-label="Remove quote"
         cancel-label="Keep it"
+        danger
         @confirm="removeNow(removing as number)"
         @cancel="removing = null"
       >
-        <p>It will also be removed from your answers, and later passages move up one number.</p>
+        <p>{{ removalNote(counts[removing] ?? 0) }}</p>
+        <p
+          v-if="renumberNote(removing, citations.length)"
+          class="alert flex items-start gap-2"
+          data-testid="renumber-note"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="mt-px shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M8 2 1.5 13.5h13L8 2ZM8 6.5v3.25M8 11.75v.01" />
+          </svg>
+          {{ renumberNote(removing, citations.length) }}
+        </p>
       </ConfirmDialog>
     </template>
   </div>

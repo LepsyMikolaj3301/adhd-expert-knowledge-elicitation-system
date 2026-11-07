@@ -78,14 +78,27 @@ function tabClass(active: boolean): string {
           :href="href"
           data-testid="account-link"
           :aria-current="isActive ? 'page' : undefined"
-          :class="[
-            tabClass(isActive),
-            'mr-2 md:order-last md:mr-0 md:mb-4 md:flex-col md:items-start md:gap-0',
-          ]"
+          :class="[tabClass(isActive), 'mr-2 md:order-last md:mr-0 md:mb-4']"
           @click="navigate"
         >
-          <span class="font-medium">{{ auth.user.display_name }}</span>
-          <span class="text-xs capitalize opacity-80">{{ auth.user.role }}</span>
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            class="shrink-0"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+          </svg>
+          <span class="flex items-center gap-2 md:flex-col md:items-start md:gap-0">
+            <span class="font-medium">{{ auth.user.display_name }}</span>
+            <span class="text-xs capitalize opacity-80">{{ auth.user.role }}</span>
+          </span>
         </a>
       </RouterLink>
 

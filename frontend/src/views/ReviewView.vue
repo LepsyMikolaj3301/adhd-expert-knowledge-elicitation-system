@@ -263,7 +263,7 @@ onUnmounted(() => clearInterval(timer))
               <span v-if="'status' in u" class="ml-2 text-muted normal-case">{{ u.status }}</span>
             </p>
             <p v-if="u.patient_words" class="mt-2 text-sm text-muted">
-              Marked passage: “{{ u.patient_words }}”
+              Quote: “{{ u.patient_words }}”
             </p>
             <p v-if="u.direction" class="text-sm text-muted">
               {{ directionLabel(u.direction as never) }}
