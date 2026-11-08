@@ -58,7 +58,8 @@ describe('the instruction page', () => {
 
     const other = await show('//evil.example')
     await other.get('[data-testid="intro-continue"]').trigger('click')
-    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/'))
+    // Home, which one build redirects to My cases. Never the other site.
+    await vi.waitFor(() => expect(['/', '/assignments']).toContain(router.currentRoute.value.path))
   })
 
   it('is shown again next session unless "don\'t show again" is ticked', async () => {
