@@ -65,6 +65,11 @@ onUnmounted(() => {
   <div>
     <!-- The nav calls an expert's assignments "My cases": they only ever see their own. -->
     <h1>{{ isAdmin ? 'Assignments' : 'My cases' }}</h1>
+    <p v-if="!isAdmin" class="mt-1 text-sm">
+      <RouterLink to="/instructions" data-testid="instructions-link"
+        >Read the instructions</RouterLink
+      >
+    </p>
 
     <p v-if="justSubmitted" class="mt-4 text-ink" role="status">
       Case {{ justSubmitted }} submitted. Thank you.

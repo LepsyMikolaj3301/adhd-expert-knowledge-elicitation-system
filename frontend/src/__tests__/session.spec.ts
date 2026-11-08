@@ -4,6 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { api, ApiError } from '@/api/client'
 import router from '@/router'
 import { installSessionHandler } from '@/session'
+import { acknowledgeIntro } from '@/intro'
 import { useAuthStore } from '@/stores/auth'
 
 import { expert, jsonResponse, stubFetch } from './helpers'
@@ -14,6 +15,8 @@ beforeEach(() => {
   const auth = useAuthStore()
   auth.user = expert
   auth.loaded = true
+  // These tests are about the case, not the instructions that come before it.
+  acknowledgeIntro(expert.id, true)
   stubFetch(() => jsonResponse(401, { code: 'not_authenticated', message: 'Please log in.' }))
 })
 

@@ -72,6 +72,9 @@ const pulseChip = ref<number | null>(null)
 const dialog = ref<'lock' | 'submit' | null>(null)
 const removing = ref<number | null>(null)
 const busy = ref(false)
+/** The expert pressed the main button with something missing: from then on, show what and where. */
+const attempted = ref(false)
+const flashKey = ref(0)
 let pulseTimer: ReturnType<typeof setTimeout> | undefined
 
 const column = ref<HTMLElement>()
@@ -139,8 +142,30 @@ const blocker = computed<string | null>(() => {
   return laterProblem.value
 })
 
+/** What is missing, by question, for the questions that can still be changed. */
+const stepProblems = computed<Record<string, string>>(() => {
+  const found: Record<string, string> = {}
+  if (!editable.value) return found
+  for (const q of questions.value) {
+    if (isLocked(q.id)) continue
+    const problem = stepProblem(q, payload.value)
+    if (problem) found[q.id] = problem
+  }
+  return found
+})
+
+/** What to show on a question once the expert has tried to go on without it. */
+function shownProblem(id: string): string | null {
+  return attempted.value ? (stepProblems.value[id] ?? null) : null
+}
+
 const railSteps = computed<RailStep[]>(() => {
-  const steps: RailStep[] = questions.value.map((q) => ({ id: q.id, label: q.id, reachable: true }))
+  const steps: RailStep[] = questions.value.map((q) => ({
+    id: q.id,
+    label: q.id,
+    reachable: true,
+    problem: shownProblem(q.id),
+  }))
   if (!gatePassed.value) {
     // Named, but not sent by the server yet: the rail shows there is more without showing what.
     for (const id of LATER_IDS) steps.push({ id, label: id, reachable: false })
@@ -248,6 +273,22 @@ function go(id: StepId) {
   void showStep(id)
 }
 
+/**
+ * The main button, pressed while something is missing. It does not go on: it marks what is missing
+ * and takes the expert to the first of it. The marks stay until each thing is put right.
+ */
+function attempt() {
+  if (!blocker.value) return
+  attempted.value = true
+  flashKey.value += 1
+  const first = questions.value.find((q) => stepProblems.value[q.id])
+  if (first) go(first.id)
+  else
+    void nextTick(() =>
+      document.querySelector('[data-missing="true"]')?.scrollIntoView?.({ block: 'nearest' }),
+    )
+}
+
 function goBack() {
   const last = questions.value[questions.value.length - 1]
   if (last) go(last.id)
@@ -322,6 +363,12 @@ function warnBeforeClosing(event: BeforeUnloadEvent) {
   if (status.value !== 'saved') event.preventDefault()
 }
 
+// The marks belong to one stage: locking in, or reaching the review, starts clean.
+watch(gatePassed, () => (attempted.value = false))
+watch(step, (now) => {
+  if (now === REVIEW) attempted.value = false
+})
+
 // After signing in again over this page: carry on where the session ended.
 watch(
   () => auth.sessionEnded,
@@ -374,6 +421,7 @@ onBeforeRouteLeave(async () => {
           :steps="railSteps"
           :current="step"
           :gate-after="lastGateId"
+          :flash-key="flashKey"
           @go="go"
         />
         <p class="text-sm text-muted" aria-live="polite" data-testid="save-status">
@@ -426,6 +474,8 @@ onBeforeRouteLeave(async () => {
             :can-insert="canInsert"
             :counts="counts"
             :pulse-chip="pulseChip"
+            :marked="attempted"
+            :flash-key="flashKey"
             @active="activeChip = $event"
             @direction="onDirection"
             @insert="insertChip"
@@ -491,6 +541,8 @@ onBeforeRouteLeave(async () => {
                   :question="q"
                   :payload="payload"
                   :locked="isLocked(q.id)"
+                  :problem="shownProblem(q.id)"
+                  :flash-key="flashKey"
                   @focusin="step = q.id"
                   @answer="setAnswer(q.id, $event)"
                   @q4="setQ4"
@@ -505,7 +557,13 @@ onBeforeRouteLeave(async () => {
           </div>
 
           <footer v-if="editable" class="mt-4">
-            <p v-if="blocker" class="mb-2 text-right text-sm text-muted">
+            <p
+              v-if="blocker"
+              class="mb-2 text-right text-sm"
+              :class="attempted ? 'font-medium text-danger' : 'text-muted'"
+              :role="attempted ? 'alert' : undefined"
+              data-testid="blocker"
+            >
               {{ blocker }}
             </p>
             <div class="flex items-center justify-between gap-4">
@@ -518,8 +576,10 @@ onBeforeRouteLeave(async () => {
                 v-if="step === REVIEW"
                 type="button"
                 class="btn"
-                :disabled="Boolean(blocker) || busy"
-                @click="dialog = 'submit'"
+                :class="blocker ? 'opacity-60' : ''"
+                :aria-disabled="blocker ? 'true' : undefined"
+                :disabled="busy"
+                @click="blocker ? attempt() : (dialog = 'submit')"
               >
                 Submit answers
               </button>
@@ -527,8 +587,10 @@ onBeforeRouteLeave(async () => {
                 v-else-if="!gatePassed"
                 type="button"
                 class="btn"
-                :disabled="Boolean(blocker) || busy"
-                @click="dialog = 'lock'"
+                :class="blocker ? 'opacity-60' : ''"
+                :aria-disabled="blocker ? 'true' : undefined"
+                :disabled="busy"
+                @click="blocker ? attempt() : (dialog = 'lock')"
               >
                 Lock in results
               </button>
@@ -536,8 +598,9 @@ onBeforeRouteLeave(async () => {
                 v-else
                 type="button"
                 class="btn"
-                :disabled="Boolean(blocker)"
-                @click="go(REVIEW)"
+                :class="blocker ? 'opacity-60' : ''"
+                :aria-disabled="blocker ? 'true' : undefined"
+                @click="blocker ? attempt() : go(REVIEW)"
               >
                 Review answers
               </button>

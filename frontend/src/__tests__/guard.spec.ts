@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import type { RouteMeta } from 'vue-router'
 
+import { acknowledgeIntro } from '@/intro'
 import { guardRoute, safeNextPath } from '@/router/guard'
 
 import { admin, expert } from './helpers'
@@ -32,6 +33,51 @@ describe('guardRoute', () => {
   it('skips the login page when already logged in', () => {
     expect(guardRoute(to({ guestOnly: true }), expert)).toEqual({ name: 'home' })
     expect(guardRoute(to({ guestOnly: true }), null)).toBe(true)
+  })
+})
+
+describe('the instructions', () => {
+  const meta: RouteMeta = { requiresAuth: true, roles: ['expert'], needsIntro: true }
+
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
+  it('come first, and remember where the expert was going', () => {
+    expect(guardRoute(to(meta, '/assignments/a1'), expert)).toEqual({
+      name: 'instructions',
+      query: { next: '/assignments/a1' },
+    })
+  })
+
+  it('stop coming once read for good', () => {
+    acknowledgeIntro(expert.id, true)
+    expect(guardRoute(to(meta), expert)).toBe(true)
+    sessionStorage.clear()
+    expect(guardRoute(to(meta), expert)).toBe(true)
+  })
+
+  it('come back next session when read without "don\'t show again"', () => {
+    acknowledgeIntro(expert.id, false)
+    expect(guardRoute(to(meta), expert)).toBe(true)
+    sessionStorage.clear()
+    expect(guardRoute(to(meta), expert)).toEqual({
+      name: 'instructions',
+      query: { next: '/target' },
+    })
+  })
+
+  it('are remembered per user', () => {
+    acknowledgeIntro('someone-else', true)
+    expect(guardRoute(to(meta), expert)).toEqual({
+      name: 'instructions',
+      query: { next: '/target' },
+    })
+  })
+
+  it('are not in the way of the routes that do not ask for them', () => {
+    expect(guardRoute(to({ requiresAuth: true }), expert)).toBe(true)
   })
 })
 

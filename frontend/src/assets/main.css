@@ -100,6 +100,17 @@
     animation: row-pulse 900ms ease-out;
   }
 
+  /* Something is missing: a red wash that fades, and a short shake that draws the eye. */
+  .flag-flash {
+    animation: flag-flash 1100ms ease-out;
+  }
+
+  .flag-shake {
+    animation:
+      flag-flash 1100ms ease-out,
+      flag-shake 360ms ease-in-out;
+  }
+
   .chip-editor {
     @apply block min-h-44 w-full rounded-sm border border-line bg-surface px-4 py-3 text-base leading-relaxed text-text;
     white-space: pre-wrap;
@@ -138,10 +149,32 @@
   }
 }
 
+@keyframes flag-flash {
+  from {
+    background-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  }
+}
+
+@keyframes flag-shake {
+  20%,
+  60% {
+    translate: -3px 0;
+  }
+  40%,
+  80% {
+    translate: 3px 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ink-mark,
   .row-pulse {
     animation: none;
+  }
+
+  /* The colour change stays: it is the message. Only the shake goes. */
+  .flag-shake {
+    animation: flag-flash 1100ms ease-out;
   }
 }
 

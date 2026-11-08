@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { inkFor } from '@/answering/highlights'
 import type { Citation, Direction } from '@/api/client'
@@ -16,6 +16,10 @@ const props = defineProps<{
   /** How many times each one is referred to in the answers, by chip. */
   counts: Record<number, number>
   pulseChip: number | null
+  /** The expert tried to go on with something missing: say which quotes still need a direction. */
+  marked?: boolean
+  /** Counts up on every such attempt, so the flash plays again. */
+  flashKey?: number
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +30,12 @@ const emit = defineEmits<{
 }>()
 
 const rows = ref<HTMLElement>()
+/** Quotes the expert can still give a direction that have none. */
+const needsDirection = (chip: number): boolean => {
+  const c = props.citations.find((x) => x.chip === chip)
+  return Boolean(props.editable && c && !c.direction && !isLocked(chip))
+}
+const anyMissing = computed(() => props.citations.some((c) => needsDirection(c.chip)))
 const helpOpen = ref(false)
 const helpRoot = ref<HTMLElement>()
 const helpButton = ref<HTMLButtonElement>()
@@ -85,42 +95,7 @@ watch(
 
 <template>
   <section aria-labelledby="citations-heading" class="relative flex min-h-0 flex-col">
-    <div class="flex items-center justify-between gap-3">
-      <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Quotes</h2>
-      <div
-        v-if="citations.length"
-        ref="helpRoot"
-        class="flex w-32 items-center gap-1.5 text-sm text-muted"
-      >
-        <span>Direction</span>
-        <button
-          ref="helpButton"
-          type="button"
-          class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-xs font-semibold text-action hover:border-action"
-          aria-label="What the directions mean"
-          aria-controls="direction-help"
-          :aria-expanded="helpOpen"
-          data-testid="direction-help-button"
-          @click="helpOpen = !helpOpen"
-        >
-          ?
-        </button>
-        <div
-          v-if="helpOpen"
-          id="direction-help"
-          class="absolute right-0 bottom-full z-20 mb-1 w-[min(20rem,100%)] rounded-sm border border-line bg-surface p-3 text-sm text-text shadow-md"
-          data-testid="direction-help"
-        >
-          <p class="font-medium text-ink">What does this quote do to your reading?</p>
-          <dl class="mt-2 space-y-2">
-            <div v-for="d in DIRECTIONS" :key="d.value">
-              <dt class="font-medium">{{ d.label }}</dt>
-              <dd class="text-muted">{{ d.help }}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-    </div>
+    <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Quotes</h2>
     <p v-if="!citations.length" class="mt-2 text-sm text-muted" data-testid="no-citations">
       <template v-if="editable">Select the words your answer is about.</template>
       <template v-else>No quotes.</template>
@@ -135,10 +110,48 @@ watch(
       </p>
       <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
         <table class="w-full border-collapse text-left text-sm">
-          <thead class="sr-only">
-            <tr>
-              <th scope="col">Quote</th>
-              <th scope="col">Direction and actions</th>
+          <thead>
+            <tr class="text-xs font-medium tracking-wide text-muted uppercase">
+              <th scope="col" class="pb-1 pr-4 font-medium">Quote</th>
+              <th scope="col" class="w-52 border-l border-line pb-1 pl-3 font-medium xl:w-60">
+                <div ref="helpRoot" class="relative flex items-center gap-1.5">
+                  <span :class="marked && anyMissing ? 'text-danger' : ''">Direction</span>
+                  <span
+                    v-if="marked && anyMissing"
+                    class="text-danger"
+                    data-testid="direction-missing"
+                    aria-hidden="true"
+                  >
+                    ●
+                  </span>
+                  <button
+                    ref="helpButton"
+                    type="button"
+                    class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border border-line bg-surface text-xs font-semibold text-action normal-case hover:border-action"
+                    aria-label="What the directions mean"
+                    aria-controls="direction-help"
+                    :aria-expanded="helpOpen"
+                    data-testid="direction-help-button"
+                    @click="helpOpen = !helpOpen"
+                  >
+                    ?
+                  </button>
+                  <div
+                    v-if="helpOpen"
+                    id="direction-help"
+                    class="absolute right-0 bottom-full z-20 mb-1 w-80 max-w-[85vw] rounded-sm border border-line bg-surface p-3 text-sm font-normal tracking-normal text-text normal-case shadow-md"
+                    data-testid="direction-help"
+                  >
+                    <p class="font-medium text-ink">What does this quote do to your reading?</p>
+                    <dl class="mt-2 space-y-2">
+                      <div v-for="d in DIRECTIONS" :key="d.value">
+                        <dt class="font-medium">{{ d.label }}</dt>
+                        <dd class="text-muted">{{ d.help }}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -155,7 +168,7 @@ watch(
               @focusin="emit('active', citation.chip)"
               @focusout="emit('active', null)"
             >
-              <td class="py-1.5 pr-3">
+              <td class="py-1.5 pr-4">
                 <!-- One target: the number and the words. The mouse-down is stopped so that the
                      cursor stays in the answer and the reference lands where it was. -->
                 <button
@@ -185,29 +198,13 @@ watch(
                   </span>
                   <span
                     v-if="canInsert"
-                    class="shrink-0 pt-0.5 text-xs whitespace-nowrap text-action"
+                    class="hidden shrink-0 pt-0.5 text-xs whitespace-nowrap text-action xl:block"
                     aria-hidden="true"
                   >
                     + Add to answer
                   </span>
                 </button>
-              </td>
-              <td class="w-32 py-1.5">
-                <select
-                  v-if="editable && !isLocked(citation.chip)"
-                  class="w-full rounded-sm border bg-surface px-1 py-0.5 text-sm"
-                  :class="citation.direction ? 'border-line' : 'border-action'"
-                  :value="citation.direction ?? ''"
-                  :aria-label="`Direction of quote ${citation.chip}`"
-                  @change="onDirection(citation.chip, $event)"
-                >
-                  <option value="" disabled>-</option>
-                  <option v-for="d in DIRECTIONS" :key="d.value" :value="d.value">
-                    {{ d.label }}
-                  </option>
-                </select>
-                <span v-else class="block py-0.5">{{ directionLabel(citation.direction) }}</span>
-                <span v-if="editable && !isLocked(citation.chip)" class="mt-0.5 flex text-sm">
+                <span v-if="editable && !isLocked(citation.chip)" class="mt-0.5 flex pl-8 text-sm">
                   <button
                     type="button"
                     class="flex cursor-pointer items-center gap-1 text-muted hover:text-danger hover:underline"
@@ -232,6 +229,31 @@ watch(
                     Remove
                   </button>
                 </span>
+              </td>
+              <td class="w-52 border-l border-line py-1.5 pl-3 xl:w-60">
+                <select
+                  v-if="editable && !isLocked(citation.chip)"
+                  :key="`direction-${citation.chip}-${flashKey ?? 0}`"
+                  class="w-full rounded-sm border bg-surface px-1 py-0.5 text-sm"
+                  :class="[
+                    citation.direction
+                      ? 'border-line'
+                      : marked
+                        ? 'border-danger flag-flash'
+                        : 'border-action',
+                  ]"
+                  :data-missing="!citation.direction && marked ? 'true' : undefined"
+                  :value="citation.direction ?? ''"
+                  :aria-label="`Direction of quote ${citation.chip}`"
+                  :title="directionLabel(citation.direction) || undefined"
+                  @change="onDirection(citation.chip, $event)"
+                >
+                  <option value="" disabled>-</option>
+                  <option v-for="d in DIRECTIONS" :key="d.value" :value="d.value">
+                    {{ d.label }}
+                  </option>
+                </select>
+                <span v-else class="block py-0.5">{{ directionLabel(citation.direction) }}</span>
               </td>
             </tr>
           </tbody>

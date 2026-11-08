@@ -40,6 +40,75 @@ export const DIRECTIONS: { value: Direction; label: string; help: string }[] = [
   },
 ]
 
+/**
+ * The instruction page experts see before their first case. Plain words, short sentences. The
+ * study team should read this once: it promises things about how the questionnaire works.
+ */
+export const INTRO = {
+  title: 'Before you begin',
+  lead: 'A few minutes here saves you trouble later. You can open these instructions again from My cases.',
+  what: {
+    heading: 'What this is',
+    text: [
+      'Each case is a short text written by a real person: a forum post, a journal entry or an email. You read it and answer a few questions about what in it matters, and what it suggests to you as a clinician.',
+      'There are no right answers. We want your own reading.',
+    ],
+  },
+  aim: {
+    heading: 'What we are asking of you',
+    items: [
+      {
+        term: 'Clear quotes',
+        text: 'Point to the exact words your reading rests on. A short, specific quote is more useful than a long one.',
+      },
+      {
+        term: 'Your reasoning',
+        text: 'Say why those words matter, in your own words. A verdict alone is not enough.',
+      },
+      {
+        term: 'Clinical language',
+        text: 'Write as you would in a case note. Use the terms you would normally use.',
+      },
+    ],
+  },
+  structure: {
+    heading: 'How it is structured',
+    lead: 'Each case has two stages, and the first one is locked once you finish it.',
+    steps: [
+      {
+        term: 'Stage 1: Q1 to Q3',
+        text: 'You answer these three together, from your first reading of the text.',
+      },
+      {
+        term: 'Lock in',
+        text: "When you lock in, you can't change your answers to Q1 to Q3 or the quotes you have made so far, including their directions. This keeps your first reading as you wrote it.",
+      },
+      {
+        term: 'Stage 2: Q4 to Q6',
+        text: 'The remaining questions open. You can still add new quotes here.',
+      },
+      {
+        term: 'Review and submit',
+        text: 'You check all your answers, then submit. After you submit, nothing can be changed.',
+      },
+    ],
+    flow: ['Stage 1', 'Lock in', 'Stage 2', 'Review', 'Submit'],
+    save: 'Your work is saved as you go, so you can leave and come back to a case.',
+  },
+  hints: {
+    heading: 'Setting quotes and directions',
+    items: [
+      'To make a quote, select words in the text. The selection snaps to whole words.',
+      'Click a quote in the list to put a reference to it in your answer, where your cursor is.',
+      'Every quote needs a direction: what it does to your reading. If something is missing when you try to go on, it is marked in red.',
+      "Not every text has something worth quoting. If that's your reading, that's fine.",
+    ],
+    directionsLead: 'The four directions',
+  },
+  hideAgain: "Don't show this again",
+  continue: 'I understand, continue',
+} as const
+
 export function directionLabel(direction: Direction | null | undefined): string {
   return DIRECTIONS.find((d) => d.value === direction)?.label ?? ''
 }
