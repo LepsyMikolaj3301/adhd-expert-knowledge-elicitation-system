@@ -37,7 +37,13 @@ const router = createRouter({
           name: 'assignment',
           component: () => import('@/views/AnswerView.vue'),
           props: true,
-          meta: { wide: true, roles: ['expert'], keepOnExpiry: true },
+          meta: { wide: true, roles: ['expert'], keepOnExpiry: true, needsIntro: true },
+        },
+        {
+          path: 'instructions',
+          name: 'instructions',
+          component: () => import('@/views/IntroView.vue'),
+          meta: { roles: ['expert'], title: 'Instructions' },
         },
         {
           path: 'vignettes',

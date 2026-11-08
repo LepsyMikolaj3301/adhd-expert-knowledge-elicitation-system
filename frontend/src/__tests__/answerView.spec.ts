@@ -4,8 +4,10 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import App from '@/App.vue'
 import type { AnswerPayload, Citation, ExpertAssignment, QuestionView } from '@/api/client'
+import ChipEditor from '@/components/answering/ChipEditor.vue'
 import router from '@/router'
 import { installSessionHandler } from '@/session'
+import { acknowledgeIntro } from '@/intro'
 import { useAuthStore } from '@/stores/auth'
 
 import { expert, jsonResponse, urlOf } from './helpers'
@@ -161,8 +163,9 @@ const rows = () => app().findAll('[data-testid="citation"]')
 const step = (label: string) =>
   app()
     .findAll('[data-testid="step"]')
-    .find((s) => s.text() === label)!
-const currentStep = () => app().get('[data-testid="step"][aria-current="step"]').text()
+    .find((s) => s.text().replace('●', '').trim() === label)!
+const currentStep = () =>
+  app().get('[data-testid="step"][aria-current="step"]').text().replace('●', '').trim()
 
 async function confirmRemoval() {
   await app()
@@ -210,6 +213,8 @@ beforeEach(async () => {
   const auth = useAuthStore()
   auth.user = expert
   auth.loaded = true
+  // These tests are about the case, not the instructions that come before it.
+  acknowledgeIntro(expert.id, true)
   calls = []
   window.getSelection()?.removeAllRanges()
   // jsdom doesn't implement dialogs.
@@ -367,8 +372,36 @@ describe('moving through the questions', () => {
 
   it('only asks for all three answers when locking in', async () => {
     await open(assignment({ answers: { Q1: 'short', Q3: 'also short' }, highlights: [] }))
-    expect(buttonNamed('Lock in results').attributes('disabled')).toBeDefined()
+    expect(buttonNamed('Lock in results').attributes('aria-disabled')).toBe('true')
     expect(app().text()).toContain('Q2 needs an answer.')
+  })
+
+  it('shows nothing red until the button has been pressed', async () => {
+    await open(assignment({ answers: { Q1: 'short', Q3: 'also short' }, highlights: [] }))
+    expect(app().find('[data-problem="true"]').exists()).toBe(false)
+    expect(app().get('[data-testid="blocker"]').classes()).not.toContain('text-danger')
+  })
+
+  it('marks what is missing when the button is pressed, and goes nowhere', async () => {
+    await open(assignment({ answers: { Q1: FIFTEEN, Q3: FIFTEEN }, highlights: [] }))
+    await buttonNamed('Lock in results').trigger('click')
+    expect(app().find('dialog[open]').exists()).toBe(false)
+    expect(app().get('[data-testid="blocker"]').classes()).toContain('text-danger')
+    expect(step('Q2').attributes('data-problem')).toBe('true')
+    expect(step('Q1').attributes('data-problem')).toBeUndefined()
+    expect(block('Q2').get('[data-testid="problem"]').text()).toBe('Q2 needs an answer.')
+    expect(block('Q1').find('[data-testid="problem"]').exists()).toBe(false)
+  })
+
+  it('clears the mark on a question as soon as it is answered', async () => {
+    await open(assignment({ answers: { Q1: FIFTEEN, Q3: FIFTEEN }, highlights: [] }))
+    await buttonNamed('Lock in results').trigger('click')
+    expect(step('Q2').attributes('data-problem')).toBe('true')
+    // The second box is Q2's.
+    app().findAllComponents(ChipEditor)[1]?.vm.$emit('update:modelValue', FIFTEEN)
+    await flushPromises()
+    expect(step('Q2').attributes('data-problem')).toBeUndefined()
+    expect(block('Q2').find('[data-testid="problem"]').exists()).toBe(false)
   })
 
   it('heads each question with "Question N", not the short id', async () => {
@@ -398,10 +431,22 @@ describe('moving through the questions', () => {
 describe('locking in', () => {
   it('needs a direction on every citation', async () => {
     await open(assignment({ answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept')] }))
-    expect(buttonNamed('Lock in results').attributes('disabled')).toBeDefined()
+    expect(buttonNamed('Lock in results').attributes('aria-disabled')).toBe('true')
     expect(app().text()).toContain('Choose a direction for quote 1.')
     await rows()[0]?.get('select').setValue('away')
-    expect(buttonNamed('Lock in results').attributes('disabled')).toBeUndefined()
+    expect(buttonNamed('Lock in results').attributes('aria-disabled')).toBeUndefined()
+  })
+
+  it('marks a quote without a direction once the button is pressed, then clears it', async () => {
+    await open(assignment({ answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept')] }))
+    expect(rows()[0]?.get('select').attributes('data-missing')).toBeUndefined()
+    await buttonNamed('Lock in results').trigger('click')
+    expect(app().find('dialog[open]').exists()).toBe(false)
+    expect(rows()[0]?.get('select').attributes('data-missing')).toBe('true')
+    expect(app().find('[data-testid="direction-missing"]').exists()).toBe(true)
+    await rows()[0]?.get('select').setValue('away')
+    expect(rows()[0]?.get('select').attributes('data-missing')).toBeUndefined()
+    expect(app().find('[data-testid="direction-missing"]').exists()).toBe(false)
   })
 
   it('asks first, then saves, then passes the gate and shows Q4', async () => {
@@ -689,7 +734,7 @@ describe('submitting', () => {
         1,
       ),
     )
-    expect(buttonNamed('Submit answers').attributes('disabled')).toBeDefined()
+    expect(buttonNamed('Submit answers').attributes('aria-disabled')).toBe('true')
     expect(app().text()).toContain('Choose a direction for quote 2.')
   })
 

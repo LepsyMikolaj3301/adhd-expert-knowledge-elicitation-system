@@ -1,6 +1,7 @@
 import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router'
 
 import type { User } from '@/api/client'
+import { introNeeded } from '@/intro'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -13,6 +14,8 @@ declare module 'vue-router' {
     wide?: boolean
     /** When the session ends, stay on the page and ask for the password over it. */
     keepOnExpiry?: boolean
+    /** Sends an expert to the instructions first, until they have read them. */
+    needsIntro?: boolean
   }
 }
 
@@ -32,6 +35,9 @@ export function guardRoute(
   }
   if (to.meta.guestOnly && user) {
     return { name: 'home' }
+  }
+  if (to.meta.needsIntro && user && introNeeded(user.id)) {
+    return { name: 'instructions', query: { next: to.fullPath } }
   }
   return true
 }

@@ -19,6 +19,10 @@ const props = defineProps<{
   payload: AnswerPayload
   /** Shows the answer as it is, with no way to change it. */
   locked: boolean
+  /** What is missing, once the expert has tried to go on without it. Null shows nothing. */
+  problem?: string | null
+  /** Counts up on every such attempt, so the flash plays again. */
+  flashKey?: number
 }>()
 
 const emit = defineEmits<{
@@ -67,7 +71,18 @@ defineExpose({
       >{{ heading.after }}
     </h1>
 
-    <div class="mt-5">
+    <div
+      class="relative mt-5 rounded-sm"
+      :class="problem ? 'ring-2 ring-inset ring-danger/70' : ''"
+      :data-problem="problem ? 'true' : undefined"
+    >
+      <!-- Its own element, so the flash can play again without rebuilding the editor. -->
+      <div
+        v-if="problem"
+        :key="flashKey ?? 0"
+        class="flag-flash pointer-events-none absolute inset-0 rounded-sm"
+        aria-hidden="true"
+      />
       <p v-if="question.kind === 'open' && locked" class="leading-relaxed">
         <ChipText :text="answer" @active="emit('active', $event)" />
       </p>
@@ -107,5 +122,6 @@ defineExpose({
         @insufficient="emit('insufficient')"
       />
     </div>
+    <p v-if="problem" class="mt-3 text-sm text-danger" data-testid="problem">{{ problem }}</p>
   </section>
 </template>
