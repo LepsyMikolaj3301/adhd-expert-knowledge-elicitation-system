@@ -39,6 +39,26 @@ const anyMissing = computed(() => props.citations.some((c) => needsDirection(c.c
 const helpOpen = ref(false)
 const helpRoot = ref<HTMLElement>()
 const helpButton = ref<HTMLButtonElement>()
+const helpPanel = ref<HTMLElement>()
+/** Where the help sits on screen. It is taken out of the scrolling table, which would cut it off. */
+const helpPos = ref<Record<string, string>>({})
+
+function openHelp() {
+  if (helpOpen.value) {
+    helpOpen.value = false
+    return
+  }
+  const r = helpButton.value?.getBoundingClientRect()
+  if (r) {
+    const right = `${Math.max(8, window.innerWidth - r.right)}px`
+    // Below the button, unless there is no room and there is more above it.
+    helpPos.value =
+      window.innerHeight - r.bottom < 320 && r.top > window.innerHeight - r.bottom
+        ? { right, bottom: `${window.innerHeight - r.top + 4}px` }
+        : { right, top: `${r.bottom + 4}px` }
+  }
+  helpOpen.value = true
+}
 
 /** The first words of a quote, enough to tell it from the others when it is read out. */
 function shortQuote(text: string): string {
@@ -64,7 +84,13 @@ function onDirection(chip: number, event: Event) {
 }
 
 function closeHelpOutside(event: Event) {
-  if (helpOpen.value && !helpRoot.value?.contains(event.target as Node)) helpOpen.value = false
+  const inside = [helpRoot.value, helpPanel.value].some((el) => el?.contains(event.target as Node))
+  if (helpOpen.value && !inside) helpOpen.value = false
+}
+
+/** The panel is placed once, so it must not be left behind when the page moves under it. */
+function closeHelp() {
+  helpOpen.value = false
 }
 
 function closeHelpOnEscape(event: KeyboardEvent) {
@@ -76,11 +102,15 @@ function closeHelpOnEscape(event: KeyboardEvent) {
 onMounted(() => {
   document.addEventListener('pointerdown', closeHelpOutside)
   document.addEventListener('keydown', closeHelpOnEscape)
+  window.addEventListener('resize', closeHelp)
+  window.addEventListener('scroll', closeHelp, true)
 })
 
 onUnmounted(() => {
   document.removeEventListener('pointerdown', closeHelpOutside)
   document.removeEventListener('keydown', closeHelpOnEscape)
+  window.removeEventListener('resize', closeHelp)
+  window.removeEventListener('scroll', closeHelp, true)
 })
 
 watch(
@@ -132,24 +162,28 @@ watch(
                     aria-controls="direction-help"
                     :aria-expanded="helpOpen"
                     data-testid="direction-help-button"
-                    @click="helpOpen = !helpOpen"
+                    @click="openHelp"
                   >
                     ?
                   </button>
-                  <div
-                    v-if="helpOpen"
-                    id="direction-help"
-                    class="absolute right-0 bottom-full z-20 mb-1 w-80 max-w-[85vw] rounded-sm border border-line bg-surface p-3 text-sm font-normal tracking-normal text-text normal-case shadow-md"
-                    data-testid="direction-help"
-                  >
-                    <p class="font-medium text-ink">What does this quote do to your reading?</p>
-                    <dl class="mt-2 space-y-2">
-                      <div v-for="d in DIRECTIONS" :key="d.value">
-                        <dt class="font-medium">{{ d.label }}</dt>
-                        <dd class="text-muted">{{ d.help }}</dd>
-                      </div>
-                    </dl>
-                  </div>
+                  <Teleport to="body">
+                    <div
+                      v-if="helpOpen"
+                      id="direction-help"
+                      ref="helpPanel"
+                      class="fixed z-50 w-80 max-w-[85vw] rounded-sm border border-line bg-surface p-3 text-sm font-normal tracking-normal text-text normal-case shadow-md"
+                      :style="helpPos"
+                      data-testid="direction-help"
+                    >
+                      <p class="font-medium text-ink">What does this quote do to your reading?</p>
+                      <dl class="mt-2 space-y-2">
+                        <div v-for="d in DIRECTIONS" :key="d.value">
+                          <dt class="font-medium">{{ d.label }}</dt>
+                          <dd class="text-muted">{{ d.help }}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </Teleport>
                 </div>
               </th>
             </tr>

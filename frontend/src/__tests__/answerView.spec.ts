@@ -951,7 +951,11 @@ describe('the quotes', () => {
 
   it('explains the directions when the help is opened, and closes it again', async () => {
     await open(assignment({ answers: {}, highlights: [citation(1, 'barely slept')] }))
-    const help = () => app().find('[data-testid="direction-help"]')
+    // The help is placed on the body, outside the scrolling table, so it is not inside the app.
+    const help = () => ({
+      exists: () => document.querySelector('[data-testid="direction-help"]') !== null,
+      text: () => document.querySelector('[data-testid="direction-help"]')?.textContent ?? '',
+    })
     const button = app().get('[data-testid="direction-help-button"]')
     expect(help().exists()).toBe(false)
     expect(button.attributes('aria-expanded')).toBe('false')
