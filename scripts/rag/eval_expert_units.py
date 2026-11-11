@@ -30,6 +30,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from expert_metrics import BUDGETS, bootstrap, paired_bootstrap, score_query, tokens
@@ -111,7 +112,7 @@ def column(rows: list[dict], key: str) -> list[float]:
 
 
 def summarise(scores, indexes) -> dict:
-    out = {}
+    out: dict[str, dict[str, Any]] = {}
     for label, rows in scores.items():
         item_tokens = np.mean([tokens(it.shown) for it in indexes[parse(label)[0]]])
         out[label] = {"queries": len([r for r in rows if r]), "tokens_per_item": float(item_tokens)}

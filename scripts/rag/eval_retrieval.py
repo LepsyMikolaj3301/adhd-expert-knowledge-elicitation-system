@@ -22,6 +22,7 @@ import statistics
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from rag_common import (
     CANDIDATES,
@@ -105,7 +106,7 @@ async def run(args: argparse.Namespace) -> None:
     conn = await connect()
     try:
         snapshot = await corpus_snapshot(conn)
-        results = []
+        results: list[dict[str, Any]] = []
         for item in dataset:
             chunks = await retrieve(
                 conn, embedder, item["question"], args.k, args.retrieval, sparse_config
@@ -125,8 +126,8 @@ async def run(args: argparse.Namespace) -> None:
     finally:
         await conn.close()
 
-    by_source = defaultdict(list)
-    by_type = defaultdict(list)
+    by_source: defaultdict[str, list[dict]] = defaultdict(list)
+    by_type: defaultdict[str, list[dict]] = defaultdict(list)
     for r in results:
         by_type[r["type"]].append(r["metrics"])
         for s in r["sources"]:

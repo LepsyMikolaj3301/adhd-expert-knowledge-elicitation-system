@@ -5,7 +5,14 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from app.elicitation.schema import ElicitationDocument, Response, Vignette, VignetteDesign
+from app.elicitation.schema import (
+    ElicitationDocument,
+    QuestionId,
+    Response,
+    Vignette,
+    VignetteDesign,
+    content_hash,
+)
 from app.elicitation.units import anchor_quote, build_units, expand_shorthand, render_unit, segment
 
 TEXT = (
@@ -31,12 +38,13 @@ WHATIF = "the writer had a night shift before writing this"
 Q4 = {"hypothesis": "tired, not much trait-like", "shift": 1, "toward": "less_adhd"}
 
 
-def make_doc(answers: dict[str, str], q4: dict | None = Q4) -> ElicitationDocument:
+def make_doc(answers: dict[QuestionId, str], q4: dict | None = Q4) -> ElicitationDocument:
     """One response to a vignette that asks the gate questions answered here, then Q4-Q6."""
     v = Vignette(
         id="V001",
         version=1,
         text=TEXT,
+        content_hash=content_hash(TEXT),
         framing="email",
         question_ids=[q for q in ("Q1", "Q2", "Q3") if q in answers] + ["Q4", "Q5", "Q6"],
         q4_whatif=WHATIF,
@@ -158,7 +166,7 @@ def test_key_check_rejects_names_from_the_vignette():
 
 def test_q4_needs_whatif_not_tied_to_text():
     v = make_doc({"Q1": PROSE}).vignettes[0]
-    assert v.q4_whatif not in v.text  # a what-if is not a quote
+    assert v.q4_whatif is not None and v.q4_whatif not in v.text  # a what-if is not a quote
     with pytest.raises(ValidationError, match="q4_without_whatif"):
         Vignette(**(v.model_dump() | {"q4_whatif": None}))
     with pytest.raises(ValidationError, match="extra"):
@@ -193,7 +201,7 @@ def test_shift_answer_rules(q4, code):
 
 
 def test_q4_why_needs_a_nonzero_shift():
-    answers = {"Q1": PROSE, "Q4": "Because the night shift explains it."}
+    answers: dict[QuestionId, str] = {"Q1": PROSE, "Q4": "Because the night shift explains it."}
     make_doc(answers)  # +1 with a why: fine
     make_doc({"Q1": PROSE}, q4={"shift": 0})  # 0 without a why: fine
     for q4 in ({"shift": 0}, None):

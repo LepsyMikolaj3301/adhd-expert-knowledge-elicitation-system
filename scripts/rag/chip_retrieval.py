@@ -26,12 +26,14 @@ from make_unit_keys import role_for  # noqa: E402
 from rag_common import RRF_K  # noqa: E402
 
 from app.elicitation.units import build_units  # noqa: E402
+from expert_knowledge_core.retrieval import (  # noqa: E402
+    CONTEXT_BONUS,
+    NEAR_DUPLICATE,
+    PATIENT_TOP_CUES,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "data/fixtures_chips"
-NEAR_DUPLICATE = 0.9  # cosine of two case units that count as the same generic answer
-PATIENT_TOP_CUES = 10  # cue keys kept per patient sentence
-CONTEXT_BONUS = 0.5  # weight of a matching co-cited highlight
 
 
 # --- fixtures ----------------------------------------------------------------------------------

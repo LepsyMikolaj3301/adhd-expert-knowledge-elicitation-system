@@ -5,7 +5,9 @@ from fastapi import APIRouter, status
 from app.auth.dependencies import AdminUser
 from app.core.db import DbSession
 from app.vignettes import service
+from app.vignettes.questions import QUESTIONS
 from app.vignettes.schemas import (
+    QuestionTemplate,
     VersionAdminView,
     VersionContent,
     VersionUpdate,
@@ -14,6 +16,12 @@ from app.vignettes.schemas import (
 )
 
 router = APIRouter(tags=["vignettes"])
+
+
+@router.get("/vignettes/questions")
+async def list_questions(_: AdminUser) -> list[QuestionTemplate]:
+    """The six questions every vignette asks. Q4 keeps its `{whatif}` placeholder."""
+    return [QuestionTemplate(id=q.id, kind=q.kind, text=q.text) for q in QUESTIONS.values()]
 
 
 @router.get("/vignettes")

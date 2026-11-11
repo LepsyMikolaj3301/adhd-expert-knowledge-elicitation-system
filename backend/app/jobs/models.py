@@ -9,8 +9,8 @@ from app.core.db import Base, enum_column, utcnow
 
 
 class JobKind(StrEnum):
+    PROOFREAD = "proofread"
     PROCESS = "process"
-    BUILD_UNITS = "build_units"
     INGEST = "ingest"
 
 

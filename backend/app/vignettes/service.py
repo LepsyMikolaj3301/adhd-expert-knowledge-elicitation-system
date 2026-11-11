@@ -26,6 +26,12 @@ _CONSTRUCT_TERMS = re.compile(
 _ADD_UPPERCASE = re.compile(r"\bADD\b")  # uppercase only: the verb "add" is ordinary
 
 
+def opening_words(text: str, count: int = 40) -> str:
+    """The first words of a text, for a preview."""
+    words = text.split()
+    return " ".join(words[:count]) + ("…" if len(words) > count else "")
+
+
 def validate_content(content: VersionContent) -> None:
     """Rules that span fields. Errors carry stable codes that the admin screens can name."""
     design = content.design
@@ -54,14 +60,15 @@ def _new_version(vignette_id: UUID, number: int, content: VersionContent) -> Vig
         framing=content.framing,
         question_ids=list(QUESTION_IDS),
         q4_whatif=content.q4_whatif,
+        patient_summary=content.patient_summary,
         variant=content.variant.model_dump(mode="json") if content.variant else None,
         design=content.design.model_dump(mode="json"),
     )
 
 
-def check_construct_words(text: str, whatif: str | None) -> None:
+def check_construct_words(text: str, whatif: str | None, summary: str = "") -> None:
     """Publishing only: a draft may still be unfinished. Reports the first term found."""
-    for field, value in (("text", text), ("q4_whatif", whatif or "")):
+    for field, value in (("text", text), ("q4_whatif", whatif or ""), ("patient_summary", summary)):
         found = _CONSTRUCT_TERMS.search(value) or _ADD_UPPERCASE.search(value)
         if found:
             term = found.group(0)
@@ -141,6 +148,7 @@ async def update_version(
         "text": version.text,
         "framing": version.framing,
         "q4_whatif": version.q4_whatif,
+        "patient_summary": version.patient_summary,
         "variant": version.variant,
         "design": version.design,
     }
@@ -157,6 +165,7 @@ async def update_version(
     version.content_hash = content_hash(merged.text)
     version.framing = merged.framing
     version.q4_whatif = merged.q4_whatif
+    version.patient_summary = merged.patient_summary
     version.variant = merged.variant.model_dump(mode="json") if merged.variant else None
     version.design = merged.design.model_dump(mode="json")
     return version
@@ -173,7 +182,9 @@ async def publish_version(db: AsyncSession, version_id: UUID, admin: User) -> Vi
             f"The text must be {MIN_WORDS}-{MAX_WORDS} words; it has {words}.",
             {"words": words},
         )
-    check_construct_words(version.text, version.q4_whatif)
+    if not version.patient_summary.strip():
+        raise invalid("summary_missing", "Add a short description of the patient.")
+    check_construct_words(version.text, version.q4_whatif, version.patient_summary)
     version.status = VersionStatus.PUBLISHED
     version.published_at = utcnow()
     record_event(

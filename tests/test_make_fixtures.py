@@ -1,6 +1,7 @@
 """The generator end to end with a fake model: no network, no Ollama."""
 
 import json
+from typing import Any
 
 import make_fixtures
 from llm_clients import GenRequest
@@ -8,7 +9,7 @@ from llm_clients import GenRequest
 from app.elicitation.schema import ElicitationDocument, Vignette
 
 CUE = "tomorrow turns into the next week"
-FAKE_VIGNETTE = {
+FAKE_VIGNETTE: dict[str, Any] = {
     "text": make_fixtures.EDGE_TEXT,
     "planted_cues": [{"quote": CUE, "trait": "task_initiation", "strength": "moderate"}],
     "confounders": [

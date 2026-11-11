@@ -33,31 +33,31 @@ TRANSITIONS: dict[tuple[State, Action], Rule] = {
     (State.ASSIGNED, Action.START): _rule(State.IN_PROGRESS, Actor.ASSIGNEE),
     (State.ASSIGNED, Action.CANCEL): _rule(State.CANCELLED, Actor.ADMIN),
     (State.IN_PROGRESS, Action.CANCEL): _rule(State.CANCELLED, Actor.ADMIN),
-    (State.IN_PROGRESS, Action.SUBMIT): _rule(State.PROCESSING, Actor.ASSIGNEE),
-    (State.PROCESSING, Action.PROCESSING_SUCCEEDED): _rule(State.EXPERT_CHECK, Actor.SYSTEM),
+    (State.IN_PROGRESS, Action.SUBMIT): _rule(State.PROOFREADING, Actor.ASSIGNEE),
+    (State.PROOFREADING, Action.PROOFREAD_SUCCEEDED): _rule(State.PROOFREAD_CHECK, Actor.SYSTEM),
+    (State.PROOFREADING, Action.PROOFREAD_FAILED): _rule(State.PROCESSING_FAILED, Actor.SYSTEM),
+    # Every colleague who may read it can see the answers at once; see reviews/access.py.
+    (State.PROOFREAD_CHECK, Action.CANCEL): _rule(State.CANCELLED, Actor.ADMIN),
+    (State.PROOFREAD_CHECK, Action.SUBMIT_FOR_REVIEW): _rule(State.PEER_REVIEW, Actor.ASSIGNEE),
+    # Peers discuss and vote, but only the admin closes a review. Only the admin sends answers
+    # back to the author, who edits them for a new round.
+    (State.PEER_REVIEW, Action.CANCEL): _rule(State.CANCELLED, Actor.ADMIN),
+    (State.PEER_REVIEW, Action.APPROVE_ANSWERS): _rule(State.PROCESSING, Actor.ADMIN),
+    (State.PEER_REVIEW, Action.REJECT_ALL_ANSWERS): _rule(State.REJECTED, Actor.ADMIN),
+    (State.PEER_REVIEW, Action.REQUEST_CHANGES): _rule(State.PROOFREAD_CHECK, Actor.ADMIN),
+    (State.PROCESSING, Action.PROCESSING_SUCCEEDED): _rule(State.INGESTING, Actor.SYSTEM),
     (State.PROCESSING, Action.PROCESSING_FAILED): _rule(State.PROCESSING_FAILED, Actor.SYSTEM),
-    (State.EXPERT_CHECK, Action.COMPLETE_EXPERT_CHECK): _rule(State.BUILDING_UNITS, Actor.ASSIGNEE),
-    (State.EXPERT_CHECK, Action.SKIP_EXPERT_CHECK): _rule(
-        State.BUILDING_UNITS, Actor.ASSIGNEE, Actor.ADMIN
-    ),
-    # Every colleague who may read it can see the units at once; see reviews/access.py.
-    (State.BUILDING_UNITS, Action.UNITS_BUILT): _rule(State.PEER_REVIEW, Actor.SYSTEM),
-    (State.BUILDING_UNITS, Action.UNITS_FAILED): _rule(State.PROCESSING_FAILED, Actor.SYSTEM),
+    # `processing_failed` is shared by two jobs: `retry` runs the one that failed again.
+    (State.PROCESSING_FAILED, Action.RETRY_PROOFREAD): _rule(State.PROOFREADING, Actor.ADMIN),
     (State.PROCESSING_FAILED, Action.RETRY_PROCESSING): _rule(State.PROCESSING, Actor.ADMIN),
-    (State.PROCESSING_FAILED, Action.RETRY_UNITS): _rule(State.BUILDING_UNITS, Actor.ADMIN),
-    # Peers discuss and vote, but only the admin closes a review. Only the admin sends units back
-    # to the author, who corrects the filing for a new round.
-    (State.PEER_REVIEW, Action.APPROVE_UNITS): _rule(State.INGESTING, Actor.ADMIN),
-    (State.PEER_REVIEW, Action.REJECT_ALL_UNITS): _rule(State.REJECTED, Actor.ADMIN),
-    (State.PEER_REVIEW, Action.REQUEST_CHANGES): _rule(State.EXPERT_CHECK, Actor.ADMIN),
     (State.INGESTING, Action.INGESTION_SUCCEEDED): _rule(State.INGESTED, Actor.SYSTEM),
     (State.INGESTING, Action.INGESTION_FAILED): _rule(State.INGESTION_FAILED, Actor.SYSTEM),
     (State.INGESTION_FAILED, Action.RETRY_INGESTION): _rule(State.INGESTING, Actor.ADMIN),
 }
 
 JOB_ON_ENTRY: dict[State, JobKind] = {
+    State.PROOFREADING: JobKind.PROOFREAD,
     State.PROCESSING: JobKind.PROCESS,
-    State.BUILDING_UNITS: JobKind.BUILD_UNITS,
     State.INGESTING: JobKind.INGEST,
 }
 
@@ -66,14 +66,13 @@ USER_ACTION_NAMES: dict[Action, str] = {
     Action.START: "start",
     Action.CANCEL: "cancel",
     Action.SUBMIT: "submit",
-    Action.COMPLETE_EXPERT_CHECK: "complete_expert_check",
-    Action.SKIP_EXPERT_CHECK: "skip_expert_check",
+    Action.SUBMIT_FOR_REVIEW: "submit_for_review",
+    Action.RETRY_PROOFREAD: "retry",
     Action.RETRY_PROCESSING: "retry",
-    Action.RETRY_UNITS: "retry",
     Action.RETRY_INGESTION: "retry",
-    Action.APPROVE_UNITS: "decide_units",
-    Action.REJECT_ALL_UNITS: "decide_units",
-    Action.REQUEST_CHANGES: "decide_units",
+    Action.APPROVE_ANSWERS: "decide_answers",
+    Action.REJECT_ALL_ANSWERS: "decide_answers",
+    Action.REQUEST_CHANGES: "decide_answers",
 }
 
 

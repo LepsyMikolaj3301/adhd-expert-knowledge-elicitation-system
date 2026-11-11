@@ -159,10 +159,10 @@ export function inkFor(chip: number): string {
 
 export function segmentsFor(
   text: string,
-  active: Citation | null,
+  active: { span: readonly number[] } | null,
 ): { before: string; marked: string; after: string } {
   if (!active) return { before: text, marked: '', after: '' }
-  const start = codePointToUtf16(text, active.span[0])
-  const end = codePointToUtf16(text, active.span[1])
+  const start = codePointToUtf16(text, active.span[0] as number)
+  const end = codePointToUtf16(text, active.span[1] as number)
   return { before: text.slice(0, start), marked: text.slice(start, end), after: text.slice(end) }
 }

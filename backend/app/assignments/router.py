@@ -11,7 +11,6 @@ from app.assignments.schemas import (
     DraftSave,
     DraftSaved,
     EventView,
-    FindingsCorrection,
     FindingsView,
     SubmissionView,
 )
@@ -19,6 +18,8 @@ from app.assignments.state_machine import transition
 from app.assignments.states import Action, State
 from app.auth.dependencies import AdminUser, CurrentUser
 from app.core.db import DbSession
+from app.proofread import service as proofread
+from app.proofread.schemas import ProofreadSave, ProofreadView
 
 router = APIRouter(tags=["assignments"])
 
@@ -94,14 +95,6 @@ async def save_draft(
     return saved
 
 
-@router.post("/assignments/{assignment_id}/pass-gate")
-async def pass_gate(assignment_id: UUID, db: DbSession, user: CurrentUser) -> AssignmentView:
-    assignment, actor = await service.lock(db, assignment_id, user)
-    await service.pass_gate(db, assignment, actor, user)
-    await db.commit()
-    return await service.build_view(db, assignment, actor, user)
-
-
 @router.post("/assignments/{assignment_id}/submit")
 async def submit(assignment_id: UUID, db: DbSession, user: CurrentUser) -> AssignmentView:
     assignment, actor = await service.lock(db, assignment_id, user)
@@ -116,32 +109,31 @@ async def get_findings(assignment_id: UUID, db: DbSession, user: CurrentUser) ->
     return await check.get(db, assignment, actor)
 
 
-@router.put("/assignments/{assignment_id}/findings")
-async def correct_findings(
-    assignment_id: UUID, body: FindingsCorrection, db: DbSession, user: CurrentUser
-) -> FindingsView:
+@router.get("/assignments/{assignment_id}/proofread")
+async def get_proofread(
+    assignment_id: UUID, db: DbSession, user: CurrentUser, review_round: int | None = None
+) -> ProofreadView:
+    """The proofread answers of the current round (the admin and the author: any round)."""
+    assignment, actor = await service.load(db, assignment_id, user)
+    return await proofread.view(db, assignment, actor, review_round)
+
+
+@router.put("/assignments/{assignment_id}/proofread")
+async def save_proofread(
+    assignment_id: UUID, body: ProofreadSave, db: DbSession, user: CurrentUser
+) -> ProofreadView:
     assignment, actor = await service.lock(db, assignment_id, user)
-    corrected = await check.correct(db, assignment, actor, user, body)
+    saved = await proofread.save(db, assignment, actor, body)
     await db.commit()
-    return corrected
+    return saved
 
 
-@router.post("/assignments/{assignment_id}/expert-check/complete")
-async def complete_expert_check(
+@router.post("/assignments/{assignment_id}/submit-for-review")
+async def submit_for_review(
     assignment_id: UUID, db: DbSession, user: CurrentUser
 ) -> AssignmentView:
     assignment, actor = await service.lock(db, assignment_id, user)
-    await check.finish(db, assignment, actor, user, skip=False)
-    await db.commit()
-    return await service.build_view(db, assignment, actor, user)
-
-
-@router.post("/assignments/{assignment_id}/expert-check/skip")
-async def skip_expert_check(
-    assignment_id: UUID, db: DbSession, user: CurrentUser
-) -> AssignmentView:
-    assignment, actor = await service.lock(db, assignment_id, user)
-    await check.finish(db, assignment, actor, user, skip=True)
+    await proofread.submit_for_review(db, assignment, actor, user)
     await db.commit()
     return await service.build_view(db, assignment, actor, user)
 

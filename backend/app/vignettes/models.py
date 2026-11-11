@@ -42,6 +42,8 @@ class VignetteVersion(Base):
     framing: Mapped[str] = mapped_column(String(32))
     question_ids: Mapped[list[str]] = mapped_column(ARRAY(String(8)))
     q4_whatif: Mapped[str | None] = mapped_column(Text)
+    # A short description of the patient, shown to experts above the text.
+    patient_summary: Mapped[str] = mapped_column(Text, default="", server_default="")
     variant: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     # Planted cues and scoring notes. Never reaches experts or peers; see the view schemas.
     design: Mapped[dict[str, Any]] = mapped_column(JSONB)

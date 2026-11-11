@@ -15,12 +15,17 @@ function summary(overrides: Partial<AssignmentSummary> = {}): AssignmentSummary 
   return {
     id: 'a1',
     state: 'in_progress',
-    allowed_actions: ['pass_gate', 'save_draft'],
+    allowed_actions: ['save_draft', 'submit'],
     job_running: false,
     vignette_code: 'V001',
     vignette_version: 1,
     vignette_version_id: 'v1',
+    expert_id: 'e7',
     expert_pseudonym: 'E07',
+    patient_summary: 'A student.',
+    framing: 'email',
+    word_count: 130,
+    opening: 'one two three…',
     updated_at: '2026-11-04T10:00:00Z',
     ...overrides,
   }
@@ -37,16 +42,34 @@ function logIn(user: User) {
   auth.loaded = true
 }
 
+function mockDialog() {
+  HTMLDialogElement.prototype.showModal = function () {
+    this.setAttribute('open', '')
+  }
+  HTMLDialogElement.prototype.close = function () {
+    this.removeAttribute('open')
+  }
+}
+
+/** The paths of the writes a stubbed fetch has seen. */
+function posts(mock: ReturnType<typeof stubFetch>) {
+  return mock.mock.calls
+    .map(([input]) => input as Request)
+    .filter((r) => r.method !== 'GET')
+    .map((r) => new URL(r.url).pathname)
+}
+
 beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => vi.useRealTimers())
 
 describe('AssignmentsView', () => {
   it.each([
     ['assigned', ['start'], 'Not started', 'Start'],
-    ['in_progress', ['pass_gate', 'save_draft'], 'In progress', 'Continue'],
-    ['processing', [], 'Submitted', 'View'],
-    ['expert_check', ['complete_expert_check', 'skip_expert_check'], 'Ready to check', 'Check'],
-    ['ingested', [], 'Submitted', 'View'],
+    ['in_progress', ['save_draft', 'submit'], 'In progress', 'Continue'],
+    ['proofreading', [], 'Proofreading…', 'View'],
+    ['proofread_check', ['submit_for_review'], 'Ready to check', 'Check'],
+    ['peer_review', [], 'In review', 'View'],
+    ['ingested', [], 'In review', 'View'],
   ] as const)(
     'shows an expert %s in plain words, with a link',
     async (state, actions, label, link) => {
@@ -97,27 +120,179 @@ describe('AssignmentsView', () => {
     logIn(expert)
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => jsonResponse(200, [summary({ state: 'processing' })])),
+      vi.fn(async () => jsonResponse(200, [summary({ state: 'proofreading' })])),
     )
     await router.push({ path: '/assignments', query: { submitted: 'V001' } })
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
-    expect(wrapper.get('[role="status"]').text()).toBe('Case V001 submitted. Thank you.')
+    const status = wrapper.get('[role="status"]').text()
+    expect(status).toContain('Case V001 submitted for proofreading.')
+    expect(status).toContain('submit it for review')
     wrapper.unmount()
     await router.push('/assignments')
   })
 
-  it('shows admins the expert and the workflow state', async () => {
-    logIn(admin)
+  it('confirms answers just sent for review', async () => {
+    logIn(expert)
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => jsonResponse(200, [summary()])),
+      vi.fn(async () => jsonResponse(200, [summary({ state: 'peer_review' })])),
+    )
+    await router.push({ path: '/assignments', query: { sent: 'V001' } })
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    expect(wrapper.get('[role="status"]').text()).toBe('Case V001 sent for review. Thank you.')
+    wrapper.unmount()
+    await router.push('/assignments')
+  })
+
+  it('shows a loading circle while a case is proofread', async () => {
+    logIn(expert)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse(200, [summary({ state: 'proofreading', job_running: true })])),
     )
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
-    expect(wrapper.text()).toContain('E07')
-    expect(wrapper.get('[data-testid="state"]').text()).toBe('in_progress')
-    expect(wrapper.get('[data-testid="actions"]').text()).toBe('pass_gate, save_draft')
+    const state = wrapper.get('[data-testid="state"]')
+    expect(state.find('[data-testid="spinner"]').exists()).toBe(true)
+    expect(state.text()).toBe('Proofreading…')
+    wrapper.unmount()
+  })
+
+  it('shows admins the expert, a plain status and only the buttons they can use', async () => {
+    logIn(admin)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        jsonResponse(200, [
+          summary({
+            state: 'peer_review',
+            allowed_actions: ['cancel', 'comment', 'decide_answers'],
+          }),
+        ]),
+      ),
+    )
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="pseudonym"]').text()).toBe('E07')
+    expect(wrapper.get('[data-testid="state"]').text()).toBe('In review, waiting for your decision')
+    const actions = wrapper.get('[data-testid="actions"]')
+    expect(actions.get('[data-testid="decide"]').attributes('href')).toBe('/reviews/a1')
+    expect(actions.find('[data-testid="cancel"]').exists()).toBe(true)
+    expect(actions.text()).not.toContain('comment')
+    wrapper.unmount()
+  })
+
+  it('shows a dash when the admin has nothing to do on a row', async () => {
+    logIn(admin)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse(200, [summary({ state: 'ingested', allowed_actions: [] })])),
+    )
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="actions"]').text()).toBe('—')
+    wrapper.unmount()
+  })
+
+  it('asks before the admin cancels, then cancels', async () => {
+    logIn(admin)
+    mockDialog()
+    const fetchMock = stubFetch((url) =>
+      jsonResponse(200, url.endsWith('/cancel') ? {} : [summary({ allowed_actions: ['cancel'] })]),
+    )
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    await wrapper.get('[data-testid="cancel"]').trigger('click')
+    expect(posts(fetchMock)).toHaveLength(0)
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text() === 'Cancel assignment')!
+      .trigger('click')
+    await flushPromises()
+    expect(posts(fetchMock)).toEqual(['/api/v1/assignments/a1/cancel'])
+    wrapper.unmount()
+  })
+
+  it('creates an assignment from an expert and a case', async () => {
+    logIn(admin)
+    mockDialog()
+    const version = {
+      id: 'v1',
+      version: 1,
+      status: 'published',
+      text: 'one two three',
+      patient_summary: 'A student.',
+      framing: 'email',
+      word_count: 3,
+    }
+    const fetchMock = stubFetch((url) => {
+      if (url.endsWith('/users')) {
+        return jsonResponse(200, [{ ...expert, id: 'e2', display_name: 'Finn', pseudonym: 'E02' }])
+      }
+      if (url.endsWith('/vignettes')) {
+        return jsonResponse(200, [
+          { id: 'vig1', code: 'V001', created_at: 'now', versions: [version] },
+        ])
+      }
+      return jsonResponse(
+        url.endsWith('/assignments') && url.includes('vignette-versions') ? 201 : 200,
+        [],
+      )
+    })
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    await wrapper.get('[data-testid="create-assignment"]').trigger('click')
+    await flushPromises()
+    const assign = () => wrapper.findAll('button').find((b) => b.text() === 'Assign')!
+
+    await assign().trigger('click')
+    expect(wrapper.text()).toContain('Pick an expert and a case.')
+    expect(posts(fetchMock)).toHaveLength(0)
+
+    await wrapper.get('[data-testid="expert"]').setValue('e2')
+    await wrapper.get('[data-testid="case-option"] input').setValue()
+    await assign().trigger('click')
+    await flushPromises()
+    expect(posts(fetchMock)).toEqual(['/api/v1/vignette-versions/v1/assignments'])
+    const request = fetchMock.mock.calls.find(
+      ([r]) => (r as Request).method === 'POST',
+    )![0] as Request
+    expect(await request.clone().json()).toEqual({ expert_ids: ['e2'] })
+    wrapper.unmount()
+  })
+
+  it('will not offer a case the chosen expert already has', async () => {
+    logIn(admin)
+    mockDialog()
+    stubFetch((url) => {
+      if (url.endsWith('/users'))
+        return jsonResponse(200, [{ ...expert, id: 'e7', pseudonym: 'E07' }])
+      if (url.endsWith('/vignettes')) {
+        const version = {
+          id: 'v1',
+          version: 1,
+          status: 'published',
+          text: 'x',
+          patient_summary: '',
+          framing: 'email',
+          word_count: 1,
+        }
+        return jsonResponse(200, [
+          { id: 'vig1', code: 'V001', created_at: 'now', versions: [version] },
+        ])
+      }
+      return jsonResponse(200, [summary()])
+    })
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    await wrapper.get('[data-testid="create-assignment"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="expert"]').setValue('e7')
+    const option = wrapper.get('[data-testid="case-option"]')
+    expect(option.get('input').attributes('disabled')).toBeDefined()
+    expect(option.text()).toContain('already assigned')
     wrapper.unmount()
   })
 
@@ -138,9 +313,12 @@ describe('AssignmentsView', () => {
   it('polls only while a job is running, and stops when it leaves', async () => {
     vi.useFakeTimers()
     logIn(expert)
-    const pages = [summary({ job_running: true }), summary({ job_running: true })]
+    const pages = [
+      summary({ state: 'proofreading', job_running: true }),
+      summary({ state: 'proofreading', job_running: true }),
+    ]
     const fetchMock = stubFetch(() =>
-      jsonResponse(200, [pages.shift() ?? summary({ state: 'peer_review' })]),
+      jsonResponse(200, [pages.shift() ?? summary({ state: 'proofread_check' })]),
     )
 
     const wrapper = mountView(AssignmentsView)
@@ -151,7 +329,7 @@ describe('AssignmentsView', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
     await vi.advanceTimersByTimeAsync(10_000)
     expect(fetchMock).toHaveBeenCalledTimes(3)
-    expect(wrapper.get('[data-testid="state"]').text()).toBe('Submitted')
+    expect(wrapper.get('[data-testid="state"]').text()).toBe('Ready to check')
 
     await vi.advanceTimersByTimeAsync(60_000)
     expect(fetchMock).toHaveBeenCalledTimes(3)

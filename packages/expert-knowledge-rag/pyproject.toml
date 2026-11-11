@@ -1,0 +1,37 @@
+[project]
+name = "expert-knowledge-rag"
+version = "0.1.0"
+description = "LangChain retrievers and chains over the expert knowledge database (Postgres schema `chips`, pgvector)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "expert-knowledge-core",
+    "langchain-core>=1.0,<2",
+    "psycopg[binary]>=3.2",
+    "numpy>=2.0",
+]
+
+[project.optional-dependencies]
+# default_embeddings(): bge-m3 through Ollama, the model the stored vectors were made with
+ollama = ["langchain-ollama>=1.0"]
+# a psycopg connection pool to pass as `ExpertKnowledgeStore(pool=...)`
+pool = ["psycopg-pool>=3.2"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "langchain-tests>=1.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/expert_knowledge_rag"]
+
+[tool.uv.sources]
+expert-knowledge-core = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["integration: needs the Postgres of DATABASE_URL (pgvector); skipped when unreachable"]

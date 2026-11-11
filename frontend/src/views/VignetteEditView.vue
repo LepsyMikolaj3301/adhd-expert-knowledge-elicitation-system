@@ -16,20 +16,17 @@ import {
   api,
   ApiError,
   type VersionAdminView,
+  type QuestionTemplate,
   type VignetteAdminView,
   type VignetteDesign,
 } from '@/api/client'
-import AssignPanel from '@/components/admin/AssignPanel.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
+import { FRAMING_LABELS } from '@/copy'
 
 const props = defineProps<{ id?: string }>()
 
 type Framing = VersionAdminView['framing']
-const FRAMINGS: { value: Framing; label: string }[] = [
-  { value: 'forum_post', label: 'Forum post' },
-  { value: 'personal_journal', label: 'Personal journal' },
-  { value: 'email', label: 'Email' },
-]
+const FRAMINGS = Object.keys(FRAMING_LABELS) as Framing[]
 const STATUS = { draft: 'Draft', published: 'Published', retired: 'Retired' }
 const INPUT = 'field disabled:bg-page disabled:text-muted'
 
@@ -49,11 +46,10 @@ const code = ref('')
 const text = ref('')
 const framing = ref<Framing>('personal_journal')
 const whatIf = ref('')
+const summary = ref('')
+const questions = ref<QuestionTemplate[]>([])
 const design = ref<VignetteDesign>(emptyDesign())
 const baseline = ref('')
-
-const textArea = ref<HTMLTextAreaElement>()
-const quoteHint = ref('')
 
 const current = computed(
   () => vignette.value?.versions.find((v) => v.id === versionId.value) ?? null,
@@ -64,9 +60,7 @@ const words = computed(() => countTextWords(text.value))
 const wordsOk = computed(() => words.value >= MIN_WORDS && words.value <= MAX_WORDS)
 
 const canSave = computed(
-  () =>
-    /^V\d{3,}$/.test(code.value) &&
-    Boolean(text.value.trim() && whatIf.value.trim() && design.value.purpose.trim()),
+  () => /^V\d{3,}$/.test(code.value) && Boolean(text.value.trim() && whatIf.value.trim()),
 )
 
 function content() {
@@ -74,6 +68,7 @@ function content() {
     text: text.value,
     framing: framing.value,
     q4_whatif: whatIf.value,
+    patient_summary: summary.value,
     design: designForSaving(design.value),
   }
 }
@@ -85,6 +80,7 @@ function show(version: VersionAdminView) {
   text.value = version.text
   framing.value = version.framing
   whatIf.value = version.q4_whatif ?? ''
+  summary.value = version.patient_summary
   // A copy, not `structuredClone`: this is a reactive object, which can't be cloned that way.
   design.value = { ...emptyDesign(), ...JSON.parse(JSON.stringify(version.design)) }
   baseline.value = JSON.stringify(content())
@@ -172,7 +168,7 @@ async function publish() {
     })
     await load(id)
   })
-  if (done) notice.value = 'Published. You can now assign it to experts.'
+  if (done) notice.value = 'Published. Assign it to experts from the Assignments page.'
 }
 
 async function retire() {
@@ -199,6 +195,7 @@ async function newVersion() {
         text: from.text,
         framing: from.framing,
         q4_whatif: from.q4_whatif,
+        patient_summary: from.patient_summary,
         variant: from.variant,
         design: from.design,
       },
@@ -208,33 +205,11 @@ async function newVersion() {
   if (done) notice.value = 'New draft version made from this one.'
 }
 
-function selectedQuote(): string | null {
-  const area = textArea.value
-  if (!area) return null
-  const quote = area.value.slice(area.selectionStart, area.selectionEnd).trim()
-  if (!quote) quoteHint.value = 'Select words in the patient text first.'
-  else quoteHint.value = ''
-  return quote || null
-}
-
-function addCue() {
-  const quote = selectedQuote()
-  if (quote) design.value.planted_cues.push({ quote, trait: '', strength: 'moderate' })
-}
-
-function addConfounder() {
-  const quote = selectedQuote()
-  if (quote) design.value.confounders.push({ quote, alternative_explanation: '' })
-}
-
-function inText(quote: string): boolean {
-  return text.value.includes(quote)
-}
-
 async function open() {
   loading.value = true
   try {
-    await load()
+    const [, asked] = await Promise.all([load(), api.GET('/api/v1/vignettes/questions')])
+    questions.value = asked.data ?? []
   } catch (error) {
     report(error)
   } finally {
@@ -247,9 +222,18 @@ onMounted(open)
 watch(text, () => {
   fieldErrors.value = { ...fieldErrors.value, text: undefined }
 })
+watch(summary, () => {
+  fieldErrors.value = { ...fieldErrors.value, patient_summary: undefined }
+})
 watch(whatIf, () => {
   fieldErrors.value = { ...fieldErrors.value, q4_whatif: undefined }
 })
+/** Q4 is worded around the what-if, so its text is cut where the what-if goes. */
+function around(question: QuestionTemplate): [string, string] {
+  const [before, after = ''] = question.text.split('{whatif}')
+  return [before ?? '', after]
+}
+
 // The router reuses this screen from one vignette to the next, and from "new" to the saved draft.
 watch(() => props.id, open)
 </script>
@@ -294,7 +278,7 @@ watch(() => props.id, open)
       <p v-if="notice" class="mt-5 text-ink" role="status">{{ notice }}</p>
 
       <form class="mt-6 space-y-8" @submit.prevent>
-        <div class="grid gap-6 sm:grid-cols-[10rem_1fr]">
+        <div class="grid gap-6 sm:grid-cols-[10rem_1fr_1fr]">
           <label class="block">
             <span class="text-sm font-medium text-ink">Code</span>
             <input
@@ -311,15 +295,41 @@ watch(() => props.id, open)
           <label class="block">
             <span class="text-sm font-medium text-ink">Where it was written</span>
             <select v-model="framing" :class="INPUT" :disabled="readOnly">
-              <option v-for="f in FRAMINGS" :key="f.value" :value="f.value">{{ f.label }}</option>
+              <option v-for="f in FRAMINGS" :key="f" :value="f">{{ FRAMING_LABELS[f] }}</option>
             </select>
+          </label>
+          <label class="block">
+            <span class="text-sm font-medium text-ink">Population</span>
+            <input v-model="design.population" :class="INPUT" :disabled="readOnly" maxlength="64" />
           </label>
         </div>
 
         <label class="block">
+          <span class="text-sm font-medium text-ink">Patient summary</span>
+          <span class="mt-1 block text-sm text-muted">
+            A short description of the patient, in your own words. Experts read it above the text.
+          </span>
+          <textarea
+            v-model="summary"
+            :class="INPUT"
+            class="mt-1"
+            data-testid="summary"
+            maxlength="600"
+            rows="3"
+            :disabled="readOnly"
+          />
+          <span
+            v-if="fieldErrors.patient_summary"
+            class="mt-1 block text-sm text-danger"
+            data-error="patient_summary"
+          >
+            {{ fieldErrors.patient_summary }}
+          </span>
+        </label>
+
+        <label class="block">
           <span class="text-sm font-medium text-ink">Patient text</span>
           <textarea
-            ref="textArea"
             v-model="text"
             class="patient-text mt-1 block min-h-80 w-full max-w-none rounded-sm border border-line bg-surface px-5 py-4 disabled:bg-page"
             data-testid="text"
@@ -339,175 +349,54 @@ watch(() => props.id, open)
           </span>
         </label>
 
-        <label class="block">
-          <span class="text-sm font-medium text-ink">What-if for Q4</span>
-          <span class="mt-1 block text-sm text-muted">
-            One concrete fact the text doesn't state, that should move a reading or deliberately not
-            move it. Not a diagnosis, and not a rewording of the text.
-          </span>
-          <span class="mt-2 flex flex-wrap items-center gap-x-2 font-serif">
-            <span>…how would it change if</span>
-            <input
-              v-model="whatIf"
-              class="min-w-64 flex-1 rounded-sm border border-line bg-surface px-3 py-2 font-sans disabled:bg-page disabled:text-muted"
-              data-testid="whatif"
-              maxlength="1000"
-              :disabled="readOnly"
-            />
-            <span>?</span>
-          </span>
-          <span
-            v-if="fieldErrors.q4_whatif"
-            class="mt-1 block text-sm text-danger"
-            data-error="q4_whatif"
-          >
-            {{ fieldErrors.q4_whatif }}
-          </span>
+        <section>
+          <h2 class="text-xl">Questions</h2>
+          <p class="mt-1 text-sm text-muted">
+            Every vignette asks the same six questions. Q4 is built around a what-if: one concrete
+            fact the text doesn't state, that should move a reading or deliberately not move it. Not
+            a diagnosis, and not a rewording of the text.
+          </p>
+          <ol class="mt-3 space-y-3" data-testid="questions">
+            <li v-for="q in questions" :key="q.id" class="flex gap-3" data-testid="question">
+              <span class="w-8 shrink-0 font-semibold text-ink">{{ q.id }}</span>
+              <p v-if="q.id !== 'Q4'" class="font-serif">{{ q.text }}</p>
+              <div v-else class="min-w-0 flex-1">
+                <p class="flex flex-wrap items-center gap-x-2 font-serif">
+                  <span>{{ around(q)[0] }}</span>
+                  <input
+                    v-model="whatIf"
+                    class="min-w-64 flex-1 rounded-sm border border-line bg-surface px-3 py-2 font-sans disabled:bg-page disabled:text-muted"
+                    aria-label="What-if for Q4"
+                    data-testid="whatif"
+                    maxlength="1000"
+                    :disabled="readOnly"
+                  />
+                  <span>{{ around(q)[1] }}</span>
+                </p>
+                <span
+                  v-if="fieldErrors.q4_whatif"
+                  class="mt-1 block text-sm text-danger"
+                  data-error="q4_whatif"
+                >
+                  {{ fieldErrors.q4_whatif }}
+                </span>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <label class="block border-t border-line pt-6">
+          <span class="text-xl font-serif text-ink">Notes</span>
+          <span class="mt-1 block text-sm text-muted">Only admins see these.</span>
+          <textarea
+            v-model="design.notes"
+            :class="INPUT"
+            class="mt-1"
+            data-testid="notes"
+            rows="4"
+            :disabled="readOnly"
+          />
         </label>
-
-        <p class="text-sm text-muted">Every vignette asks the same six questions.</p>
-
-        <fieldset class="space-y-5 border-t border-line pt-6" :disabled="readOnly">
-          <legend class="float-left mb-1 w-full font-serif text-xl text-ink">Design notes</legend>
-          <p class="clear-both text-sm text-muted">
-            Experts and reviewers never see these. They are what the answers get scored against.
-          </p>
-
-          <label class="block">
-            <span class="text-sm font-medium text-ink">Purpose</span>
-            <input v-model="design.purpose" :class="INPUT" data-testid="purpose" />
-          </label>
-
-          <div class="grid gap-5 sm:grid-cols-3">
-            <label class="block">
-              <span class="text-sm font-medium text-ink">Track</span>
-              <select v-model="design.track" :class="INPUT">
-                <option value="general">General</option>
-                <option value="text_analysis">Text analysis</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="text-sm font-medium text-ink">Population</span>
-              <input v-model="design.population" :class="INPUT" />
-            </label>
-            <label class="block">
-              <span class="text-sm font-medium text-ink">Origin</span>
-              <select v-model="design.origin" :class="INPUT">
-                <option value="hand_written">Hand written</option>
-                <option value="real_text">Real text</option>
-                <option value="llm">Generated</option>
-              </select>
-            </label>
-          </div>
-
-          <label v-if="design.track === 'text_analysis'" class="block">
-            <span class="text-sm font-medium text-ink">Knowledge it should elicit</span>
-            <input v-model="design.knowledge_target" :class="INPUT" />
-            <span
-              v-if="fieldErrors.knowledge_target"
-              class="mt-1 block text-sm text-danger"
-              data-error="knowledge_target"
-            >
-              {{ fieldErrors.knowledge_target }}
-            </span>
-          </label>
-
-          <label v-if="design.origin === 'real_text'" class="block">
-            <span class="text-sm font-medium text-ink">Source</span>
-            <input v-model="design.source_ref" :class="INPUT" />
-          </label>
-
-          <label class="flex items-center gap-2 text-sm">
-            <input v-model="design.is_control" type="checkbox" />
-            Control vignette (no planted cues)
-          </label>
-
-          <p v-if="fieldErrors.quotes" class="text-sm text-danger" data-error="quotes" role="alert">
-            {{ fieldErrors.quotes }}
-          </p>
-
-          <div v-if="!design.is_control">
-            <h3 class="text-sm font-semibold text-ink">Planted cues</h3>
-            <ul class="mt-2 space-y-3">
-              <li
-                v-for="(cue, index) in design.planted_cues"
-                :key="index"
-                class="border-l-2 border-line pl-3"
-                data-testid="cue"
-              >
-                <p class="font-serif">“{{ cue.quote }}”</p>
-                <p v-if="!inText(cue.quote)" class="text-sm text-danger">
-                  This quote is no longer in the text.
-                </p>
-                <div class="mt-1 flex flex-wrap items-center gap-3">
-                  <input
-                    v-model="cue.trait"
-                    class="min-w-48 flex-1 rounded-sm border border-line bg-surface px-2 py-1 text-sm disabled:bg-page disabled:text-muted"
-                    placeholder="Trait"
-                    aria-label="Trait"
-                  />
-                  <select
-                    v-model="cue.strength"
-                    class="rounded-sm border border-line bg-surface px-2 py-1 text-sm disabled:bg-page disabled:text-muted"
-                    aria-label="Strength"
-                  >
-                    <option value="weak">Weak</option>
-                    <option value="moderate">Moderate</option>
-                    <option value="strong">Strong</option>
-                  </select>
-                  <button
-                    v-if="!readOnly"
-                    type="button"
-                    class="cursor-pointer text-sm text-muted hover:text-danger hover:underline"
-                    @click="design.planted_cues.splice(index, 1)"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </li>
-            </ul>
-            <button v-if="!readOnly" type="button" class="btn-quiet mt-3" @click="addCue">
-              Add selected text as a cue
-            </button>
-          </div>
-
-          <div>
-            <h3 class="text-sm font-semibold text-ink">Confounders</h3>
-            <ul class="mt-2 space-y-3">
-              <li
-                v-for="(confounder, index) in design.confounders"
-                :key="index"
-                class="border-l-2 border-line pl-3"
-                data-testid="confounder"
-              >
-                <p class="font-serif">“{{ confounder.quote }}”</p>
-                <p v-if="!inText(confounder.quote)" class="text-sm text-danger">
-                  This quote is no longer in the text.
-                </p>
-                <div class="mt-1 flex flex-wrap items-center gap-3">
-                  <input
-                    v-model="confounder.alternative_explanation"
-                    class="min-w-48 flex-1 rounded-sm border border-line bg-surface px-2 py-1 text-sm disabled:bg-page disabled:text-muted"
-                    placeholder="Alternative explanation"
-                    aria-label="Alternative explanation"
-                  />
-                  <button
-                    v-if="!readOnly"
-                    type="button"
-                    class="cursor-pointer text-sm text-muted hover:text-danger hover:underline"
-                    @click="design.confounders.splice(index, 1)"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </li>
-            </ul>
-            <button v-if="!readOnly" type="button" class="btn-quiet mt-3" @click="addConfounder">
-              Add selected text as a confounder
-            </button>
-          </div>
-          <p v-if="quoteHint" class="text-sm text-ink" role="status">{{ quoteHint }}</p>
-        </fieldset>
 
         <div class="flex flex-wrap gap-3 border-t border-line pt-6">
           <template v-if="!readOnly">
@@ -540,12 +429,6 @@ watch(() => props.id, open)
           </template>
         </div>
       </form>
-
-      <AssignPanel
-        v-if="current && current.status !== 'draft'"
-        :version-id="current.id"
-        :can-assign="current.status === 'published'"
-      />
 
       <ConfirmDialog
         v-if="confirmRetire"

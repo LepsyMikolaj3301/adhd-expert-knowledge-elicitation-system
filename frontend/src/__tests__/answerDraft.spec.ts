@@ -42,6 +42,7 @@ function assignment(overrides: Partial<ExpertAssignment> = {}): ExpertAssignment
       version: 1,
       text: 'The patient text.',
       framing: 'personal_journal',
+      patient_summary: 'A student.',
       word_count: 3,
       content_hash: 'x',
       questions: GATE,
@@ -51,8 +52,6 @@ function assignment(overrides: Partial<ExpertAssignment> = {}): ExpertAssignment
       payload: { answers: { Q1: 'saved' }, highlights: [], insufficient_information: false },
       updated_at: '2026-11-05T10:00:00Z',
     },
-    gate_passed_at: null,
-    locked_highlights: 0,
     started_at: '2026-11-05T10:00:00Z',
     submitted_at: null,
     ...overrides,
@@ -110,17 +109,14 @@ describe('firstOpenStep', () => {
   const answered = { Q1: FIFTEEN, Q2: TEN, Q3: TEN }
 
   it('goes to the first unanswered question', () => {
-    expect(firstOpenStep(GATE, view({}), false)).toBe('Q1')
-    expect(firstOpenStep(GATE, view({ Q1: FIFTEEN }), false)).toBe('Q2')
+    expect(firstOpenStep(GATE, view({}))).toBe('Q1')
+    expect(firstOpenStep(GATE, view({ Q1: FIFTEEN }))).toBe('Q2')
   })
 
-  it('stays on Q3 before the gate, where the lock-in button is', () => {
-    expect(firstOpenStep(GATE, view(answered), false)).toBe('Q3')
-  })
-
-  it('moves on after the gate, and ends on the review', () => {
+  it('goes on past Q3, and ends on the review', () => {
     const all = [...GATE, ...LATER]
-    expect(firstOpenStep(all, view(answered), true)).toBe('Q4')
+    expect(firstOpenStep(GATE, view(answered))).toBe('review')
+    expect(firstOpenStep(all, view(answered))).toBe('Q4')
     expect(
       firstOpenStep(
         all,
@@ -128,7 +124,6 @@ describe('firstOpenStep', () => {
           { ...answered, Q5: TEN },
           { q4: { hypothesis: 'tired not trait', shift: 0 }, rating: 2 },
         ),
-        true,
       ),
     ).toBe('review')
   })
@@ -275,7 +270,7 @@ describe('useAnswerDraft', () => {
     expect(writes()[1]?.body?.payload.answers).toEqual({ Q1: 'two' })
   })
 
-  it('saves before locking in, because the server checks the saved draft', async () => {
+  it('saves before submitting, because the server submits the saved draft', async () => {
     const draft = useAnswerDraft('a1')
     await draft.load()
     answer = (call) =>
@@ -283,28 +278,23 @@ describe('useAnswerDraft', () => {
         ? jsonResponse(200, { version: 5, updated_at: 'now' })
         : jsonResponse(
             200,
-            assignment({
-              gate_passed_at: 'now',
-              locked_highlights: 0,
-              allowed_actions: ['save_draft', 'submit'],
-              vignette: { ...assignment().vignette, questions: [...GATE, ...LATER] },
-            }),
+            assignment({ state: 'proofreading', allowed_actions: [], submitted_at: 'now' }),
           )
     draft.payload.value.answers = { Q1: 'latest' }
     draft.changed()
-    await draft.passGate()
+    await draft.submit()
     expect(writes().map((c) => c.method)).toEqual(['PUT', 'POST'])
-    expect(writes()[1]?.url).toContain('/pass-gate')
-    expect(draft.view.value?.vignette.questions).toHaveLength(6)
+    expect(writes()[1]?.url).toContain('/submit')
+    expect(draft.view.value?.state).toBe('proofreading')
   })
 
-  it('does not lock in when the save fails', async () => {
+  it('does not submit when the save fails', async () => {
     const draft = useAnswerDraft('a1')
     await draft.load()
     answer = () => jsonResponse(503, { code: 'unavailable', message: 'Down.' })
     draft.payload.value.answers = { Q1: 'latest' }
     draft.changed()
-    await expect(draft.passGate()).rejects.toThrow('Down.')
+    await expect(draft.submit()).rejects.toThrow('Down.')
     expect(writes().map((c) => c.method)).toEqual(['PUT'])
     expect(draft.status.value).toBe('failed')
     draft.stop()
@@ -419,7 +409,7 @@ describe('useAnswerDraft', () => {
 
   it('reads a submitted vignette from the submission', async () => {
     const submitted = assignment({
-      state: 'expert_check',
+      state: 'proofread_check',
       allowed_actions: [],
       submitted_at: 'now',
     })

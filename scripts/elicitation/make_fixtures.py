@@ -37,10 +37,11 @@ import os
 import random
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from difflib import SequenceMatcher
 from pathlib import Path
+from typing import Any
 
 from leak_terms import find_leaks
 from llm_clients import (
@@ -66,12 +67,14 @@ from app.elicitation.schema import (
     Confounder,
     ElicitationDocument,
     PlantedCue,
+    QuestionId,
     ReferenceClaim,
     Response,
     ShiftAnswer,
     VariantInfo,
     Vignette,
     VignetteDesign,
+    content_hash,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -98,7 +101,7 @@ EPOCH = datetime(2026, 1, 5, 9, 0, tzinfo=UTC)  # fixed: fixtures must be reprod
 # --- scenarios: what each vignette is about (the model writes the text) -------------------------
 
 NO_TRAITS = "none: this person has no notable attention or organisation difficulties"
-SCENARIOS = [
+SCENARIOS: list[dict[str, Any]] = [
     dict(
         id="S01",
         age=29,
@@ -423,7 +426,7 @@ def q4_whatif_from(data: dict) -> str | None:
     return whatif.strip() if whatif else None
 
 
-def question_ids(q4_whatif: str | None) -> list[str]:
+def question_ids(q4_whatif: str | None) -> list[QuestionId]:
     """All questions; Q4 only when there is a what-if to ask about."""
     return [q.id for q in QUESTIONS if q.id != "Q4" or q4_whatif]
 
@@ -541,7 +544,7 @@ class Gen:
     def run(self, req: GenRequest, build):
         """Call, validate with `build(raw)`, retry with a new seed; None if every attempt fails."""
         for attempt in range(self.retries + 1):
-            r = GenRequest(**{**req.__dict__, "seed": self.seed + attempt * 7919})
+            r = replace(req, seed=self.seed + attempt * 7919)
             try:
                 raw = self.generator.generate(r)
                 result = build(raw)
@@ -659,6 +662,7 @@ def make_vignettes(gen: Gen, args, pool) -> list[Vignette]:
                 id=vid,
                 version=1,
                 text=text,
+                content_hash=content_hash(text),
                 framing=sc["source"],
                 design=design,
                 question_ids=question_ids(whatif),
@@ -680,6 +684,7 @@ def make_vignettes(gen: Gen, args, pool) -> list[Vignette]:
                     id=f"V{len(out) + 1:03d}",
                     version=1,
                     text=text_b,
+                    content_hash=content_hash(text_b),
                     framing=sc["source"],
                     design=design_b,
                     question_ids=question_ids(whatif),  # not tied to the text: B keeps it
@@ -797,6 +802,7 @@ def edge_cases() -> dict[str, dict]:
         id="V001",
         version=1,
         text=EDGE_TEXT,
+        content_hash=content_hash(EDGE_TEXT),
         framing="personal_journal",
         question_ids=["Q1", "Q4", "Q6"],
         q4_whatif="the writer had started a new medication for low mood a month earlier",
@@ -930,6 +936,7 @@ def add_reddit_vignettes(vignettes: list[Vignette], args) -> list[Vignette]:
                 id=f"V{len(vignettes) + 1:03d}",
                 version=1,
                 text=post.text,
+                content_hash=content_hash(post.text),
                 framing="forum_post",
                 question_ids=question_ids(None),  # no hand-picked fragment for Q4
                 design=VignetteDesign(

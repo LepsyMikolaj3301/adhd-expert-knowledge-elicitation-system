@@ -15,6 +15,14 @@ class Settings(BaseSettings):
     classifier_model: str = "qwen3.5:9b"
     # One reply can include loading the model.
     ollama_request_timeout: float = 600
+    # The grammar checker (a self-hosted LanguageTool server, see docker-compose.yml). It is
+    # rule-based: the same text and server version always give the same corrections.
+    languagetool_url: str = "http://localhost:8010"
+    languagetool_language: str = "en-US"
+    languagetool_timeout: float = 60
+    # The model that turns fragments into full sentences (prompts/Answer_enhance.v1.md). Empty
+    # switches the enhancement off: the answers are then only proofread.
+    enhance_model: str = "qwen3.5:9b"
     # The folder with prompts/ and config/. The images copy both next to backend/.
     project_root: Path = Path(__file__).resolve().parents[2]
     # S3 (MinIO locally). Set s3_endpoint_url to an empty string to target real AWS S3.

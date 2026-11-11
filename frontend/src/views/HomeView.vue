@@ -3,7 +3,8 @@ import { computed, nextTick, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, type ActivityItem, type NextUpItem } from '@/api/client'
-import { activityText, STATEMENT, tallyLabel, TRUST_SENTENCE } from '@/copy'
+import PseudonymChip from '@/components/PseudonymChip.vue'
+import { activityText, tallyLabel, TRUST_SENTENCE } from '@/copy'
 import { navFor } from '@/navigation'
 import { useAuthStore } from '@/stores/auth'
 import { useHomeStore } from '@/stores/home'
@@ -31,7 +32,7 @@ function linkFor(a: ActivityItem): string {
   if (a.kind === 'case_assigned' || a.kind === 'check_ready')
     return `/assignments/${a.assignment_id}`
   if (a.kind === 'job_failed') return '/assignments'
-  return `/reviews/${a.assignment_id}${a.unit_id ? `#unit-${a.unit_id}` : ''}`
+  return `/reviews/${a.assignment_id}${a.question_id ? `#answer-${a.question_id}` : ''}`
 }
 
 onMounted(home.load)
@@ -62,8 +63,8 @@ watch(
             <span class="flex-1 font-serif text-xl text-ink">
               Case {{ n.vignette_code }}
               <span v-if="n.expert_pseudonym" class="font-sans text-sm text-muted"
-                >· {{ n.expert_pseudonym }}</span
-              >
+                >· <PseudonymChip :pseudonym="n.expert_pseudonym"
+              /></span>
             </span>
             <button v-if="n.action === 'retry'" type="button" class="btn" @click="retry(n)">
               Retry
@@ -100,7 +101,7 @@ watch(
             <RouterLink :to="`/reviews/${r.assignment_id}`" class="flex-1 font-serif text-xl"
               >Case {{ r.vignette_code }}</RouterLink
             >
-            <span class="text-sm text-muted">{{ tallyLabel(r.accepts, r.declines) }}</span>
+            <span class="text-sm text-muted">{{ tallyLabel(r.approvals, r.disapprovals) }}</span>
             <span class="text-sm text-muted">{{ r.comment_count }} comments</span>
           </li>
         </ul>
@@ -119,10 +120,9 @@ watch(
               >Case {{ r.vignette_code }}</RouterLink
             >
             <p class="text-sm text-muted">
-              {{ r.state === 'peer_review' ? 'Open' : 'Closed' }} · {{ r.unit_count }}
-              {{ STATEMENT }}s
+              {{ r.state === 'peer_review' ? 'Open' : 'Closed' }} · {{ r.answer_count }} answers
             </p>
-            <p class="text-sm text-muted">{{ tallyLabel(r.accepts, r.declines) }}</p>
+            <p class="text-sm text-muted">{{ tallyLabel(r.approvals, r.disapprovals) }}</p>
           </li>
         </ul>
       </section>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GATE_IDS, q4Wording } from '@/answering/steps'
+import { q4Wording } from '@/answering/steps'
 import type { AnswerPayload, QuestionView } from '@/api/client'
 
 import { questionLabel } from '@/copy'
@@ -9,8 +9,8 @@ import ChipText from './ChipText.vue'
 const props = defineProps<{
   questions: QuestionView[]
   payload: AnswerPayload
-  /** Which questions still have an Edit button. */
-  editableIds: string[]
+  /** Every answer has an Edit button until the answers are submitted. */
+  editable: boolean
 }>()
 
 defineEmits<{ edit: [id: string]; active: [chip: number | null] }>()
@@ -44,19 +44,13 @@ function scaleLine(question: QuestionView): string {
           {{ question.text }}
         </h2>
         <button
-          v-if="editableIds.includes(question.id)"
+          v-if="editable"
           type="button"
           class="btn-quiet shrink-0 !px-3 !py-1"
           @click="$emit('edit', question.id)"
         >
           Edit
         </button>
-        <span
-          v-else-if="editableIds.length && GATE_IDS.includes(question.id)"
-          class="shrink-0 text-sm text-muted"
-        >
-          Locked
-        </span>
       </div>
 
       <div class="mt-2 text-[0.95rem] leading-relaxed">

@@ -28,13 +28,15 @@ async function show(next?: string) {
 }
 
 describe('the instruction page', () => {
-  it('explains the two stages and the lock-in', async () => {
+  it('explains that answers stay open, then the proofread check and the review', async () => {
     const page = await show()
     const structure = page.get('[data-testid="intro-structure"]').text()
-    expect(structure).toContain('Stage 1')
-    expect(structure).toContain('Stage 2')
-    expect(structure).toContain("can't change your answers to Q1 to Q3")
-    expect(page.get('[data-testid="intro-flow"]').text()).toContain('Lock in')
+    expect(structure).toContain('any order')
+    expect(structure).toContain('Submit for proofreading')
+    expect(structure).toContain('Check the edited text')
+    expect(structure).toContain('Submit for review')
+    expect(structure).not.toMatch(/lock/i)
+    expect(page.get('[data-testid="intro-flow"]').text()).toContain('Proofread')
   })
 
   it('lists what is wanted and the four directions', async () => {

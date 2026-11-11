@@ -11,6 +11,7 @@ import re
 from pathlib import Path
 
 import asyncpg
+import httpx
 import numpy as np
 import pytest
 import pytest_asyncio
@@ -79,8 +80,10 @@ async def clean_database(migrated_database: str):
 
 
 class FakeModels:
-    """Stands in for Ollama: the classifier files every sentence it is asked about under `case`
-    (or wherever `labels` says), and embeddings are deterministic vectors of the text."""
+    """Stands in for Ollama and LanguageTool: the classifier files every sentence it is asked
+    about under `case` (or wherever `labels` says), embeddings are deterministic vectors of the
+    text, the grammar checker finds nothing (or what `grammar_matches` says), and the enhancement
+    returns the answer unchanged (or `enhance_reply`)."""
 
     def __init__(self) -> None:
         self.classifier_calls: list[str] = []  # the user prompt of each call
@@ -88,6 +91,26 @@ class FakeModels:
         self.labels: dict[str, list[str]] = {}
         self.classifier_reply: str | None = None  # a raw reply, e.g. garbage
         self.down = False
+        self.grammar_calls: list[str] = []
+        self.grammar_matches: dict[str, list[dict]] = {}  # text -> LanguageTool matches
+        self.grammar_down = False
+        self.enhance_calls: list[str] = []
+        self.enhance_reply: dict[str, str] = {}  # answer -> edited answer
+        self.enhance_down = False
+
+    async def check_grammar(self, text, quotes) -> dict:
+        self.grammar_calls.append(text)
+        if self.grammar_down:
+            raise httpx.ConnectError("languagetool is down")
+        return {"software": {"version": "fake"}, "matches": self.grammar_matches.get(text, [])}
+
+    async def enhance(self, system, user) -> str:
+        self.enhance_calls.append(user)
+        if self.enhance_down:
+            raise httpx.ConnectError("ollama is down")
+        answer = re.search(r"<answer>\n(.*?)\n</answer>", user, re.DOTALL)
+        text = answer.group(1) if answer else ""
+        return json.dumps({"answer": self.enhance_reply.get(text, text)})
 
     async def ask(self, system, user, seed) -> str:
         self.classifier_calls.append(user)
@@ -117,4 +140,6 @@ def models(monkeypatch) -> FakeModels:
     fake = FakeModels()
     monkeypatch.setattr("app.knowledge.classifier.ask", fake.ask)
     monkeypatch.setattr("app.knowledge.embedding.embed_texts", fake.embed_texts)
+    monkeypatch.setattr("app.proofread.grammar.ask", fake.check_grammar)
+    monkeypatch.setattr("app.proofread.enhance.ask", fake.enhance)
     return fake

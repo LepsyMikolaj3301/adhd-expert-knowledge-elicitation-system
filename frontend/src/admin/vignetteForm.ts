@@ -1,7 +1,8 @@
 /** The parts of the vignette form that are plain logic. */
 import { ApiError, type VignetteDesign } from '@/api/client'
 
-export type FormField = 'code' | 'text' | 'q4_whatif' | 'knowledge_target' | 'quotes'
+export type FormField =
+  'code' | 'text' | 'q4_whatif' | 'patient_summary' | 'knowledge_target' | 'quotes'
 
 export const MIN_WORDS = 120
 export const MAX_WORDS = 250
@@ -10,17 +11,24 @@ const FIELD_OF_CODE: Record<string, FormField> = {
   vignette_code_taken: 'code',
   word_count_out_of_range: 'text',
   q4_without_whatif: 'q4_whatif',
+  summary_missing: 'patient_summary',
   track_without_target: 'knowledge_target',
   span_not_in_text: 'quotes',
   control_with_cues: 'quotes',
 }
-const FIELDS: readonly string[] = ['code', 'text', 'q4_whatif', 'knowledge_target']
+const FIELDS: readonly string[] = [
+  'code',
+  'text',
+  'q4_whatif',
+  'patient_summary',
+  'knowledge_target',
+]
 
 /** Where on the form a refusal from the server belongs. Null: at the top of the form. */
 export function fieldForError(error: ApiError): FormField | null {
   if (error.code === 'construct_word_in_text') {
     const field = error.details?.field
-    return field === 'text' || field === 'q4_whatif' ? field : null
+    return field === 'text' || field === 'q4_whatif' || field === 'patient_summary' ? field : null
   }
   if (error.code === 'validation_error') {
     const errors = (error.details?.errors ?? []) as { loc?: unknown[] }[]
@@ -39,6 +47,7 @@ export function nextCode(codes: string[]): string {
 export function emptyDesign(): VignetteDesign {
   return {
     purpose: '',
+    notes: '',
     planted_cues: [],
     confounders: [],
     is_control: false,
@@ -62,4 +71,10 @@ export function designForSaving(design: VignetteDesign): VignetteDesign {
 
 export function countTextWords(text: string): number {
   return text.split(/\s+/).filter(Boolean).length
+}
+
+/** The first words of a text, for a preview. */
+export function openingWords(text: string, count = 40): string {
+  const words = text.split(/\s+/).filter(Boolean)
+  return words.slice(0, count).join(' ') + (words.length > count ? '…' : '')
 }

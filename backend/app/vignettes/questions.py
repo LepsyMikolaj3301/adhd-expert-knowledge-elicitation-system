@@ -10,7 +10,7 @@ QUESTION_IDS: tuple[str, ...] = get_args(QuestionId)
 
 @dataclass(frozen=True)
 class Question:
-    id: str
+    id: QuestionId
     kind: QuestionKind
     text: str
     # Different words an answer should have. Only scripts/elicitation uses it: the API neither sends
@@ -63,9 +63,6 @@ QUESTIONS: dict[str, Question] = {
         ),
     )
 }
-
-# Answered before anything else is shown. Passing the gate locks these answers.
-GATE: tuple[str, ...] = ("Q1", "Q2", "Q3")
 
 # Like min_words, used by scripts/elicitation only.
 HYPOTHESIS_MIN_WORDS = 3

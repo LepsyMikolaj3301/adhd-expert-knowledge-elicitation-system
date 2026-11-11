@@ -1,4 +1,4 @@
-"""What each job does: file the answers, build the units, ingest the approved ones."""
+"""What each job does: proofread the answers, cut the approved ones into units, ingest them."""
 
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -18,12 +18,12 @@ from app.jobs.errors import (  # noqa: F401  (PermanentJobError is also imported
     SyntheticIngestionRefused,
 )
 from app.jobs.models import JobKind
-from app.knowledge import classifier, findings
+from app.knowledge import findings
 from app.knowledge import ingest as ingest_module
 from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
-from app.settings import settings
+from app.proofread import service as proofread_service
+from app.reviews.models import AnswerDecision, DecisionValue
 from app.users.models import User
-from app.vignettes.models import Vignette, VignetteVersion
 
 # What a job does has two parts. `PREPARE[kind](assignment_id)` is the slow part (models, network):
 # it runs with no transaction and no lock open, and returns what `HANDLERS[kind]` needs. The
@@ -34,98 +34,86 @@ Handler = Callable[[AsyncSession, Assignment, Any], Awaitable[Action | None]]
 PREPARE: dict[JobKind, Prepare] = {}
 
 
-async def prepare_process(assignment_id: UUID) -> dict[str, Any]:
-    """Files the submitted answers' sentences under the expert's citations (steps 2 to 4 of
-    docs/new-chips-knowledge.md). The slow part is the classifier call: no transaction is open."""
-    async with session_factory()() as db:
-        assignment = await db.get(Assignment, assignment_id)
-        submission = await db.get(Submission, assignment_id)
-        assert assignment is not None and submission is not None
-        row = (
-            await db.execute(
-                select(VignetteVersion, Vignette.code)
-                .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-                .where(VignetteVersion.id == assignment.vignette_version_id)
-            )
-        ).one()
-        version, code = row[0], row[1]
-        expert = await db.get(User, assignment.expert_id)
-        assert expert is not None
-        payload, text, framing, design = (
-            submission.payload,
-            version.text,
-            version.framing,
-            version.design,
-        )
-        number, expert_id, is_synthetic = version.version, expert.id, expert.is_synthetic
-
-    response = findings.response_from_submission(payload, code, number)
-    highlights, sentences = findings.assign(response, text)
-    left = findings.unresolved(sentences)
-    labels, info = await classifier.classify(text, highlights, sentences, left)
-    record = findings.build_record(
-        response,
-        text,
-        str(assignment_id),
-        str(expert_id),
-        None,  # experts have no role yet
-        framing,
-        design.get("population", "adult"),
-        labels if left else None,
-    )
-    record |= {
-        # What the expert is shown, as ids: the flags themselves quote their words and change as
-        # they correct things, but the evaluation wants to know what was shown.
-        "flags_shown": [
-            {"kind": f["kind"], "highlight": f["highlight"], "sentence": f.get("sentence")}
-            for f in record["flags"]
-        ],
-        "track": design.get("track", "general"),
-        "origin": design.get("origin", "hand_written"),
-        "is_synthetic": is_synthetic,
-        "corrections": [],
-    }
-    return {
-        "record": record,
-        "classifier": settings.classifier_model if left else None,
-        "prompt": classifier.PROMPT if left else None,
-        "attempts": info["attempts"],
-    }
+async def prepare_proofread(assignment_id: UUID) -> dict[str, Any]:
+    """Proofreads the submitted answers and links their lines to the citations. The slow part
+    (LanguageTool, the models) runs with no transaction open."""
+    return await proofread_service.prepare(assignment_id)
 
 
-async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None) -> Action | None:
-    """Saves the findings for the expert to check. Running again replaces them."""
-    row = await db.get(AnswerFindings, assignment.id)
-    if row is None:
-        row = AnswerFindings(assignment_id=assignment.id, version=1)
-        db.add(row)
-    row.record = prepared["record"]
-    row.classifier = prepared["classifier"]
-    row.prompt = prepared["prompt"]
-    row.findings_version = findings.FINDINGS_VERSION
-    row.check_outcome = None
+async def proofread(db: AsyncSession, assignment: Assignment, prepared: Any) -> Action | None:
+    """Saves the proofread answers for the author to check."""
+    await proofread_service.record(db, assignment, prepared)
     return None
 
 
 def unit_content_hash(embed_text: str, embed_text_combined: str) -> str:
-    """What an approval is for: both texts that will be embedded, not only the one shown."""
+    """Both texts that will be embedded, not only the one shown."""
     return content_hash(embed_text + "\n" + embed_text_combined)
 
 
-async def build_units(
-    db: AsyncSession, assignment: Assignment, prepared: Any = None
-) -> Action | None:
-    """Cuts the checked filing into units (steps 6 and 7 of docs/new-chips-knowledge.md), saves
-    them for review. Nobody is asked: every colleague who may read them sees them (see
-    `app.reviews.access`)."""
-    row = await db.get(AnswerFindings, assignment.id)
-    if row is None:
+async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None) -> Action | None:
+    """Cuts the answers the admin approved into units (steps 6 and 7 of
+    docs/new-chips-knowledge.md), from their lines as the author linked them. The units are
+    approved with their answers; nobody reads them before ingestion."""
+    submission = await db.get(Submission, assignment.id)
+    round_ = await proofread_service.get_round(db, assignment.id, assignment.review_round)
+    expert = await db.get(User, assignment.expert_id)
+    assert expert is not None
+    if submission is None or round_ is None:
         raise NoFindings
-    record = row.record
-    by_id = {h["id"]: h for h in record["highlights"]}
-    units = findings.build_units(record)  # from the corrected sentences, never from a stale copy
+    version, code = await proofread_service.version_and_code(db, assignment.vignette_version_id)
+    approved = set(
+        await db.scalars(
+            select(AnswerDecision.question_id).where(
+                AnswerDecision.assignment_id == assignment.id,
+                AnswerDecision.review_round == assignment.review_round,
+                AnswerDecision.decision == DecisionValue.APPROVE,
+            )
+        )
+    )
+    rows = [
+        row
+        for row in await proofread_service.revisions(
+            db, assignment.id, assignment.review_round, version.question_ids
+        )
+        if row.question_id in approved
+    ]
+    payload = {**submission.payload, "answers": {row.question_id: row.final for row in rows}}
+    response = findings.response_from_submission(payload, code, version.version)
+    record = findings.record_from_lines(
+        response,
+        {row.question_id: row.lines for row in rows},
+        round_.highlights,
+        str(assignment.id),
+        str(expert.id),
+        None,  # experts have no role yet
+        version.framing,
+        version.design.get("population", "adult"),
+    )
+    record |= {
+        # What the author was shown, as ids: the evaluation wants to know what was shown.
+        "flags_shown": [
+            {"kind": f["kind"], "highlight": f["highlight"], "sentence": f.get("sentence")}
+            for f in round_.flags
+        ],
+        "track": version.design.get("track", "general"),
+        "origin": version.design.get("origin", "hand_written"),
+        "is_synthetic": expert.is_synthetic,
+        "corrections": [],
+    }
+    units = record["units"]
     if not units:
         raise NoUnits
+    row = await db.get(AnswerFindings, assignment.id)
+    if row is None:
+        row = AnswerFindings(assignment_id=assignment.id, version=1)
+        db.add(row)
+    row.record = record
+    row.classifier = round_.classifier
+    row.prompt = round_.prompt
+    row.findings_version = findings.FINDINGS_VERSION
+    row.check_outcome = "completed"
+    by_id = {h["id"]: h for h in record["highlights"]}
     db.add_all(
         KnowledgeUnit(
             assignment_id=assignment.id,
@@ -142,6 +130,7 @@ async def build_units(
             context=unit["context"],
             embed_text=unit["i1"],
             embed_text_combined=unit["i3"],
+            status=UnitStatus.APPROVED,
         )
         for ordinal, unit in enumerate(units, start=1)
     )
@@ -171,11 +160,11 @@ async def ingest(
     return None
 
 
-PREPARE[JobKind.PROCESS] = prepare_process
+PREPARE[JobKind.PROOFREAD] = prepare_proofread
 PREPARE[JobKind.INGEST] = prepare_ingest
 
 HANDLERS: dict[JobKind, Handler] = {
+    JobKind.PROOFREAD: proofread,
     JobKind.PROCESS: process,
-    JobKind.BUILD_UNITS: build_units,
     JobKind.INGEST: ingest,
 }

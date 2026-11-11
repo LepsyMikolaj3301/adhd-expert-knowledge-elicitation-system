@@ -7,7 +7,6 @@ import type { AnswerPayload, Q4Answer, QuestionView } from '@/api/client'
 import { questionLabel } from '@/copy'
 
 import ChipEditor from './ChipEditor.vue'
-import ChipText from './ChipText.vue'
 import Q4Step from './Q4Step.vue'
 import RatingStep from './RatingStep.vue'
 
@@ -17,8 +16,6 @@ const Q1_NUDGE_WORDS = 60
 const props = defineProps<{
   question: QuestionView
   payload: AnswerPayload
-  /** Shows the answer as it is, with no way to change it. */
-  locked: boolean
   /** What is missing, once the expert has tried to go on without it. Null shows nothing. */
   problem?: string | null
   /** Counts up on every such attempt, so the flash plays again. */
@@ -47,7 +44,6 @@ const heading = computed(() => {
 const q1Nudge = computed(
   () =>
     props.question.id === 'Q1' &&
-    !props.locked &&
     countWords(answer.value) > Q1_NUDGE_WORDS &&
     !answer.value.includes('⟦h'),
 )
@@ -83,11 +79,7 @@ defineExpose({
         class="flag-flash pointer-events-none absolute inset-0 rounded-sm"
         aria-hidden="true"
       />
-      <p v-if="question.kind === 'open' && locked" class="leading-relaxed">
-        <ChipText :text="answer" @active="emit('active', $event)" />
-      </p>
-
-      <template v-else-if="question.kind === 'open'">
+      <template v-if="question.kind === 'open'">
         <ChipEditor
           ref="editor"
           :model-value="answer"

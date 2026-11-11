@@ -28,7 +28,7 @@ async def list_knowledge_units(
         .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
         .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
         .join(User, User.id == Assignment.expert_id)
-        .order_by(KnowledgeUnit.created_at.desc(), KnowledgeUnit.id)
+        .order_by(KnowledgeUnit.created_at.desc(), KnowledgeUnit.ordinal, KnowledgeUnit.id)
         .limit(limit)
         .offset(offset)
     )
@@ -45,6 +45,9 @@ async def list_knowledge_units(
             ordinal=unit.ordinal,
             review_round=unit.review_round,
             text=unit.text,
+            kind=unit.kind,
+            direction=unit.direction,
+            patient_words=unit.patient_words,
             status=unit.status,
             created_at=unit.created_at,
         )

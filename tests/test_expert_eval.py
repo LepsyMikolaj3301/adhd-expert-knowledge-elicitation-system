@@ -91,7 +91,8 @@ def test_weighted_kappa_is_one_for_agreement_and_low_for_opposite_scores():
 
     scores = [1, 2, 3, 4, 5, 3, 2, 4]
     assert weighted_kappa(scores, scores) == pytest.approx(1.0)
-    assert weighted_kappa(scores, [6 - s for s in scores]) < 0
+    kappa = weighted_kappa(scores, [6 - s for s in scores])
+    assert kappa is not None and kappa < 0
 
 
 EXPERT_SAMPLE = {

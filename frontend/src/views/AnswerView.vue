@@ -17,31 +17,32 @@ import {
   uncitedChips,
   type Answers,
 } from '@/answering/highlights'
+import { chipFocus, markFor, provideQuoteFocus } from '@/answering/quoteFocus'
 import {
   firstOpenStep,
+  firstProblem,
   forSaving,
-  GATE_IDS,
   REVIEW,
-  gateProblem,
   stepProblem,
   type StepId,
 } from '@/answering/steps'
 import { plainText } from '@/answering/plainText'
 import { useAnswerDraft } from '@/answering/useAnswerDraft'
-import type { Citation, Direction, Q4Answer, QuestionView } from '@/api/client'
+import type { Citation, Direction, LinkedHighlight, Q4Answer, QuestionView } from '@/api/client'
 import CitationTable from '@/components/answering/CitationTable.vue'
-import ExpertCheck from '@/components/answering/ExpertCheck.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
+import ProofreadStep from '@/components/answering/ProofreadStep.vue'
 import QuestionBlock from '@/components/answering/QuestionBlock.vue'
 import ReviewStep from '@/components/answering/ReviewStep.vue'
 import StepRail, { type RailStep } from '@/components/answering/StepRail.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import UnsavedText from '@/components/answering/UnsavedText.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
 import {
   describeError,
   directionNeeded,
+  FRAMING_LABELS,
   notMentioned,
-  quoteCount,
   removalNote,
   renumberNote,
   saveRefusal,
@@ -50,12 +51,18 @@ import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{ id: string }>()
 
-const FRAMING: Record<string, string> = {
-  forum_post: 'Forum post',
-  personal_journal: 'Personal journal',
-  email: 'Email',
-}
-const LATER_IDS = ['Q4', 'Q5', 'Q6']
+/** After proofreading: the edited answers are what the expert sees, checks and later reads. */
+const PROOFREAD_STATES = [
+  'proofread_check',
+  'peer_review',
+  'processing',
+  'processing_failed',
+  'ingesting',
+  'ingestion_failed',
+  'ingested',
+  'rejected',
+]
+const POLL_MS = 4000
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -67,9 +74,16 @@ const loadError = ref('')
 const actionError = ref('')
 const notice = ref('')
 const step = ref<StepId>('Q1')
-const activeChip = ref<number | null>(null)
+/** The quote pointed at, anywhere on this page: answers, tags and the quote table set it. */
+const focus = provideQuoteFocus()
+const activeChip = chipFocus(focus)
 const pulseChip = ref<number | null>(null)
-const dialog = ref<'lock' | 'submit' | null>(null)
+const dialog = ref<'submit' | null>(null)
+/** The proofread round's quotes, with the words answers quoted without marking them. */
+const proofHighlights = ref<LinkedHighlight[]>([])
+/** Submitted before proofreading existed, or proofreading failed: there is no edited text. */
+const noProofread = ref(false)
+let pollTimer: ReturnType<typeof setInterval> | undefined
 const removing = ref<number | null>(null)
 const busy = ref(false)
 /** The expert pressed the main button with something missing: from then on, show what and where. */
@@ -84,20 +98,18 @@ const vignette = computed(() => view.value?.vignette ?? null)
 const questions = computed(() => vignette.value?.questions ?? [])
 const citations = computed<Citation[]>(() => payload.value.highlights)
 const answers = computed<Answers>(() => payload.value.answers)
-const gatePassed = computed(() => Boolean(view.value?.gate_passed_at))
-const lockedCount = computed(() => view.value?.locked_highlights ?? 0)
 const submitted = computed(() => Boolean(view.value?.submitted_at))
-
-const lastGateId = computed(
-  () => questions.value.filter((q) => GATE_IDS.includes(q.id)).slice(-1)[0]?.id ?? '',
+const state = computed(() => view.value?.state)
+const proofreading = computed(() => state.value === 'proofreading')
+const showProofread = computed(
+  () => PROOFREAD_STATES.includes(state.value ?? '') && !noProofread.value,
 )
 
-function isLocked(id: string): boolean {
-  return gatePassed.value && GATE_IDS.includes(id)
-}
-
-const activeCitation = computed(
-  () => citations.value.find((c) => c.chip === activeChip.value) ?? null,
+/** What the case text lights up: the expert's quote, or words an edited answer quotes. */
+const activeMark = computed(
+  () =>
+    citations.value.find((c) => c.chip === activeChip.value) ??
+    markFor(focus.value, proofHighlights.value),
 )
 /** What will be saved and submitted: the screen may remember Q4 parts that are hidden right now. */
 const submittable = computed(() => forSaving(payload.value))
@@ -108,7 +120,7 @@ const counts = computed(() => citationCounts(citations.value, submittable.value.
 
 /** Whether a question has a box on screen that a reference can go into. */
 function hasAnswerBox(question: QuestionView): boolean {
-  if (!editable.value || isLocked(question.id)) return false
+  if (!editable.value) return false
   if (question.kind === 'open') return true
   return question.kind === 'shift' && Boolean(payload.value.q4?.shift)
 }
@@ -121,15 +133,8 @@ const insertTarget = computed(() => {
 })
 const canInsert = computed(() => insertTarget.value !== null)
 
-/** The first thing missing from Q4 to Q6. */
-const laterProblem = computed(() => {
-  for (const question of questions.value) {
-    if (GATE_IDS.includes(question.id)) continue
-    const problem = stepProblem(question, payload.value)
-    if (problem) return problem
-  }
-  return null
-})
+/** The first thing missing from any question. */
+const anyProblem = computed(() => firstProblem(questions.value, payload.value))
 
 function directionProblem(): string | null {
   return undirected.value.length ? directionNeeded(undirected.value) : null
@@ -137,9 +142,8 @@ function directionProblem(): string | null {
 
 /** Why the main button can't be pressed. */
 const blocker = computed<string | null>(() => {
-  if (step.value === REVIEW) return directionProblem()
-  if (!gatePassed.value) return gateProblem(questions.value, payload.value) ?? directionProblem()
-  return laterProblem.value
+  if (step.value === REVIEW) return anyProblem.value ?? directionProblem()
+  return anyProblem.value
 })
 
 /** What is missing, by question, for the questions that can still be changed. */
@@ -147,7 +151,6 @@ const stepProblems = computed<Record<string, string>>(() => {
   const found: Record<string, string> = {}
   if (!editable.value) return found
   for (const q of questions.value) {
-    if (isLocked(q.id)) continue
     const problem = stepProblem(q, payload.value)
     if (problem) found[q.id] = problem
   }
@@ -166,13 +169,7 @@ const railSteps = computed<RailStep[]>(() => {
     reachable: true,
     problem: shownProblem(q.id),
   }))
-  if (!gatePassed.value) {
-    // Named, but not sent by the server yet: the rail shows there is more without showing what.
-    for (const id of LATER_IDS) steps.push({ id, label: id, reachable: false })
-    steps.push({ id: REVIEW, label: 'Review', reachable: false })
-  } else {
-    steps.push({ id: REVIEW, label: 'Review', reachable: !laterProblem.value })
-  }
+  steps.push({ id: REVIEW, label: 'Review', reachable: !anyProblem.value })
   return steps
 })
 
@@ -310,21 +307,6 @@ function explain(error: unknown): string {
   return describeError(error)
 }
 
-async function lockIn() {
-  busy.value = true
-  actionError.value = ''
-  try {
-    await draft.passGate()
-    dialog.value = null
-    go(firstOpenStep(questions.value, payload.value, true))
-  } catch (error) {
-    dialog.value = null
-    actionError.value = explain(error)
-  } finally {
-    busy.value = false
-  }
-}
-
 async function submit() {
   busy.value = true
   actionError.value = ''
@@ -340,14 +322,32 @@ async function submit() {
   }
 }
 
+async function sentForReview() {
+  await router.push({ path: '/assignments', query: { sent: vignette.value?.code } })
+}
+
+/** While the answers are proofread, look again now and then: the check opens by itself. */
+function pollWhileProofreading() {
+  clearInterval(pollTimer)
+  if (!proofreading.value) return
+  pollTimer = setInterval(async () => {
+    try {
+      await draft.load()
+    } catch {
+      // The next tick tries again.
+    }
+    if (!proofreading.value) clearInterval(pollTimer)
+  }, POLL_MS)
+}
+
 async function load() {
   loading.value = true
   loadError.value = ''
+  noProofread.value = false
   try {
     await draft.load()
-    step.value = editable.value
-      ? firstOpenStep(questions.value, payload.value, gatePassed.value)
-      : REVIEW
+    step.value = editable.value ? firstOpenStep(questions.value, payload.value) : REVIEW
+    pollWhileProofreading()
   } catch (error) {
     loadError.value = explain(error)
   } finally {
@@ -363,8 +363,7 @@ function warnBeforeClosing(event: BeforeUnloadEvent) {
   if (status.value !== 'saved') event.preventDefault()
 }
 
-// The marks belong to one stage: locking in, or reaching the review, starts clean.
-watch(gatePassed, () => (attempted.value = false))
+// The marks belong to one stage: reaching the review starts clean.
 watch(step, (now) => {
   if (now === REVIEW) attempted.value = false
 })
@@ -387,6 +386,7 @@ onMounted(() => {
 onUnmounted(() => {
   draft.stop()
   clearTimeout(pulseTimer)
+  clearInterval(pollTimer)
   window.removeEventListener('beforeunload', warnBeforeClosing)
 })
 
@@ -414,17 +414,22 @@ onBeforeRouteLeave(async () => {
           <RouterLink to="/assignments">My cases</RouterLink>
           <span class="px-1.5 text-muted">/</span>
           <span class="font-medium text-ink">Case {{ vignette.code }}</span>
-          <span class="pl-3 text-muted">{{ FRAMING[vignette.framing] }}</span>
+          <span class="pl-3 text-muted">{{ FRAMING_LABELS[vignette.framing] }}</span>
         </p>
         <StepRail
           v-if="editable"
           :steps="railSteps"
           :current="step"
-          :gate-after="lastGateId"
           :flash-key="flashKey"
           @go="go"
         />
-        <p class="text-sm text-muted" aria-live="polite" data-testid="save-status">
+        <!-- The proofread check says for itself whether the edited answers are saved. -->
+        <p
+          v-if="!showProofread"
+          class="text-sm text-muted"
+          aria-live="polite"
+          data-testid="save-status"
+        >
           {{ saveLabel }}
         </p>
       </header>
@@ -458,9 +463,16 @@ onBeforeRouteLeave(async () => {
           <div
             class="min-h-0 overflow-y-auto rounded-sm border border-line bg-surface lg:max-h-[60%] lg:shrink-0"
           >
+            <p
+              v-if="vignette.patient_summary"
+              class="px-5 pt-4 text-sm text-muted"
+              data-testid="patient-summary"
+            >
+              About the patient: {{ vignette.patient_summary }}
+            </p>
             <VignetteText
               :text="vignette.text"
-              :active="activeCitation"
+              :active="activeMark"
               :can-cite="editable"
               @cite="onCite"
             />
@@ -469,7 +481,6 @@ onBeforeRouteLeave(async () => {
           <CitationTable
             class="lg:flex-1"
             :citations="citations"
-            :locked-count="lockedCount"
             :editable="editable"
             :can-insert="canInsert"
             :counts="counts"
@@ -484,7 +495,7 @@ onBeforeRouteLeave(async () => {
         </div>
 
         <section class="flex min-w-0 flex-col lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
-          <!-- Scrolls by itself, so that the lock-in or review button below stays in view. Relative,
+          <!-- Scrolls by itself, so that the review or submit button below stays in view. Relative,
                because the hidden radio inputs are positioned: otherwise they would escape this box
                and make the whole page scroll. -->
           <div
@@ -492,11 +503,33 @@ onBeforeRouteLeave(async () => {
             class="relative min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1 lg:pb-2"
             data-testid="question-column"
           >
-            <ExpertCheck
-              v-if="view?.state === 'expert_check'"
+            <div
+              v-if="proofreading"
+              class="flex items-start gap-3 rounded-sm border border-line bg-surface px-4 py-4"
+              role="status"
+              data-testid="proofreading"
+            >
+              <LoadingSpinner class="mt-1" />
+              <div>
+                <h1 class="text-2xl">Proofreading your answers</h1>
+                <p class="mt-2 text-muted">
+                  We are checking spelling, grammar and punctuation, and writing short notes out in
+                  full. This takes a minute or two. You can leave this page: the case waits for you
+                  under My cases.
+                </p>
+                <p class="mt-2 text-muted">
+                  Next, you check the edited text, change anything you like, and submit it for
+                  review.
+                </p>
+              </div>
+            </div>
+            <ProofreadStep
+              v-else-if="showProofread"
               :id="id"
-              :can-skip="view.allowed_actions.includes('skip_expert_check')"
-              @done="load"
+              :key="`${state}-${view?.review_round}`"
+              @submitted="sentForReview"
+              @missing="noProofread = true"
+              @highlights="proofHighlights = $event"
             />
             <template v-else-if="step === REVIEW">
               <h1 class="text-2xl" data-testid="question">
@@ -509,7 +542,7 @@ onBeforeRouteLeave(async () => {
                 <ReviewStep
                   :questions="questions"
                   :payload="submittable"
-                  :editable-ids="editable ? LATER_IDS : []"
+                  :editable="editable"
                   @edit="go"
                   @active="activeChip = $event"
                 />
@@ -520,18 +553,6 @@ onBeforeRouteLeave(async () => {
             </template>
 
             <template v-else>
-              <p
-                class="mb-6 rounded-sm border-l-2 border-action bg-surface px-3 py-2 text-sm text-muted"
-                data-testid="gate-note"
-              >
-                <template v-if="gatePassed">
-                  Questions 1 to 3 are locked. This keeps your first reading as you wrote it.
-                </template>
-                <template v-else>
-                  Answer these three together. Once you lock them in, you can't change them, and the
-                  next questions open.
-                </template>
-              </p>
               <div class="divide-y divide-line">
                 <QuestionBlock
                   v-for="q in questions"
@@ -540,7 +561,6 @@ onBeforeRouteLeave(async () => {
                   :data-question="q.id"
                   :question="q"
                   :payload="payload"
-                  :locked="isLocked(q.id)"
                   :problem="shownProblem(q.id)"
                   :flash-key="flashKey"
                   @focusin="step = q.id"
@@ -581,18 +601,7 @@ onBeforeRouteLeave(async () => {
                 :disabled="busy"
                 @click="blocker ? attempt() : (dialog = 'submit')"
               >
-                Submit answers
-              </button>
-              <button
-                v-else-if="!gatePassed"
-                type="button"
-                class="btn"
-                :class="blocker ? 'opacity-60' : ''"
-                :aria-disabled="blocker ? 'true' : undefined"
-                :disabled="busy"
-                @click="blocker ? attempt() : (dialog = 'lock')"
-              >
-                Lock in results
+                Submit for proofreading
               </button>
               <button
                 v-else
@@ -610,40 +619,20 @@ onBeforeRouteLeave(async () => {
       </div>
 
       <ConfirmDialog
-        v-if="dialog === 'lock'"
-        title="Lock in results?"
-        confirm-label="Lock in results"
-        cancel-label="Keep editing"
-        @confirm="lockIn"
-        @cancel="dialog = null"
-      >
-        <p>
-          You won't be able to change your answers to Q1 to Q3, or the
-          {{ quoteCount(citations.length) }} you have made, including
-          {{ citations.length === 1 ? 'its direction' : 'their directions' }}.
-        </p>
-        <p>The remaining questions open next. You can still add new quotes there.</p>
-        <p v-if="!citations.length" class="font-medium">
-          You haven't added any quotes. Some texts have nothing to quote, so that's fine if it's
-          what you intended.
-        </p>
-        <p v-else-if="uncited.length" class="font-medium">
-          {{ notMentioned(uncited, 'in an answer yet') }}
-        </p>
-      </ConfirmDialog>
-
-      <ConfirmDialog
         v-if="dialog === 'submit'"
-        title="Submit your answers?"
-        confirm-label="Submit answers"
+        title="Submit for proofreading?"
+        confirm-label="Submit for proofreading"
         cancel-label="Keep editing"
         @confirm="submit"
         @cancel="dialog = null"
       >
-        <p>You won't be able to change your answers afterward.</p>
         <p>
-          They're kept word for word under your pseudonym and reviewed before an AI assistant can
-          cite them.
+          We check spelling, grammar and punctuation, leave out anything unreadable, and write short
+          notes out as full sentences.
+        </p>
+        <p>
+          You then see your answers next to the edited ones, can change anything, and submit them
+          for review. Your quotes can't be changed after this.
         </p>
         <p v-if="uncited.length" class="font-medium">
           {{ notMentioned(uncited, 'in any answer') }}

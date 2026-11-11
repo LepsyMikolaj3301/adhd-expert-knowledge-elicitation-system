@@ -9,6 +9,7 @@ import yaml
 from pydantic import Field
 
 from app.chunking.config import EmbeddingConfig, Model
+from expert_knowledge_core.bm25 import Bm25Config  # BM25 query and stored vectors share it
 
 # Bump when the indexed rows change for the same config, so documents are re-indexed.
 INDEXER_VERSION = "1"
@@ -16,12 +17,6 @@ INDEXER_VERSION = "1"
 
 class IndexEmbeddingConfig(EmbeddingConfig):
     dimensions: int = Field(gt=0)
-
-
-class Bm25Config(Model):
-    k1: float = Field(1.2, gt=0)
-    b: float = Field(0.75, ge=0, le=1)
-    stemmer: str | None = "english"  # a Snowball language, or null for no stemming
 
 
 class IndexingConfig(Model):

@@ -25,7 +25,7 @@ async def _create_admin(monkeypatch, email: str, password: str = PASSWORD) -> in
 
 async def _user_count() -> int:
     async with session_factory()() as db:
-        return await db.scalar(select(func.count()).select_from(User))
+        return await db.scalar(select(func.count()).select_from(User)) or 0
 
 
 async def test_the_created_admin_can_log_in(monkeypatch):
@@ -98,7 +98,7 @@ async def _import(directory, whatifs_file, email="admin@example.com") -> int:
 
 async def _vignette_count() -> int:
     async with session_factory()() as db:
-        return await db.scalar(select(func.count()).select_from(Vignette))
+        return await db.scalar(select(func.count()).select_from(Vignette)) or 0
 
 
 async def test_import_creates_drafts_that_ask_all_six_questions(tmp_path, capsys):

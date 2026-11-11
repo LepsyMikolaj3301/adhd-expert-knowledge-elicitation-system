@@ -7,8 +7,6 @@ import { citedTimes, DIRECTIONS, directionLabel } from '@/copy'
 
 const props = defineProps<{
   citations: Citation[]
-  /** The first this many can't change any more. */
-  lockedCount: number
   /** False on a submitted vignette: the table can then only be hovered. */
   editable: boolean
   /** Whether there is an answer box on screen to insert a chip into. */
@@ -33,7 +31,7 @@ const rows = ref<HTMLElement>()
 /** Quotes the expert can still give a direction that have none. */
 const needsDirection = (chip: number): boolean => {
   const c = props.citations.find((x) => x.chip === chip)
-  return Boolean(props.editable && c && !c.direction && !isLocked(chip))
+  return Boolean(props.editable && c && !c.direction)
 }
 const anyMissing = computed(() => props.citations.some((c) => needsDirection(c.chip)))
 const helpOpen = ref(false)
@@ -73,10 +71,6 @@ function shortQuote(text: string): string {
 function pick(chip: number) {
   if (props.canInsert) emit('insert', chip)
   else emit('active', chip)
-}
-
-function isLocked(chip: number): boolean {
-  return chip <= props.lockedCount
 }
 
 function onDirection(chip: number, event: Event) {
@@ -238,7 +232,7 @@ watch(
                     + Add to answer
                   </span>
                 </button>
-                <span v-if="editable && !isLocked(citation.chip)" class="mt-0.5 flex pl-8 text-sm">
+                <span v-if="editable" class="mt-0.5 flex pl-8 text-sm">
                   <button
                     type="button"
                     class="flex cursor-pointer items-center gap-1 text-muted hover:text-danger hover:underline"
@@ -266,7 +260,7 @@ watch(
               </td>
               <td class="w-52 border-l border-line py-1.5 pl-3 xl:w-60">
                 <select
-                  v-if="editable && !isLocked(citation.chip)"
+                  v-if="editable"
                   :key="`direction-${citation.chip}-${flashKey ?? 0}`"
                   class="w-full rounded-sm border bg-surface px-1 py-0.5 text-sm"
                   :class="[

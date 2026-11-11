@@ -8,9 +8,7 @@ from app.assignments.answers import (
     PAYLOAD_FORMAT,
     AnswerPayload,
     check_draft,
-    check_gate_answers,
     clean_submission,
-    gate_questions,
 )
 from app.assignments.models import AnswerDraft, Assignment, Submission
 from app.assignments.schemas import (
@@ -42,7 +40,8 @@ from app.reviews import access
 from app.reviews.models import ReviewParticipant
 from app.users.models import Role, User
 from app.vignettes.models import VersionStatus, Vignette, VignetteVersion
-from app.vignettes.questions import GATE, Q4_WORDING, QUESTIONS, render_question
+from app.vignettes.questions import Q4_WORDING, QUESTIONS, render_question
+from app.vignettes.service import opening_words
 
 # Events of the discussion, which the author's timeline leaves out: it is for the workflow.
 REVIEW_CHATTER = ("review_opened", "comment_added", "vote_cast")
@@ -50,19 +49,12 @@ REVIEW_CHATTER = ("review_opened", "comment_added", "vote_cast")
 LEGACY_PEER_ACTIONS = frozenset({"peers_approved", "peer_rejected"})
 
 
-def gate_open(assignment: Assignment, version: VignetteVersion) -> bool:
-    return assignment.gate_passed_at is not None or not gate_questions(version.question_ids)
-
-
-def allowed_actions(state: State, actor: Actor, *, gate_is_open: bool) -> list[str]:
+def allowed_actions(state: State, actor: Actor) -> list[str]:
     names = user_actions(state, actor)
     if state == State.IN_PROGRESS and actor == Actor.ASSIGNEE:
         names.add("save_draft")
-        if not gate_is_open:
-            names.add("pass_gate")
-            names.discard("submit")
-    if state == State.EXPERT_CHECK and actor == Actor.ASSIGNEE:
-        names.add("correct_findings")
+    if state == State.PROOFREAD_CHECK and actor == Actor.ASSIGNEE:
+        names.add("edit_proofread")
     if state == State.PEER_REVIEW:
         names.add("comment")  # the author, the reviewers and the admin all talk
         if actor == Actor.REVIEWER:
@@ -121,11 +113,9 @@ async def lock(
 # --- views ----------------------------------------------------------------------------------
 
 
-def _visible_questions(version: VignetteVersion, is_open: bool) -> list[QuestionView]:
+def _visible_questions(version: VignetteVersion) -> list[QuestionView]:
     views = []
     for question_id in version.question_ids:
-        if not is_open and question_id not in GATE:
-            continue
         question = QUESTIONS[question_id]
         views.append(
             QuestionView(
@@ -153,8 +143,7 @@ async def build_view(
     db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User
 ) -> ExpertAssignment | AdminAssignment | PeerAssignment:
     version, code = await _version_and_code(db, assignment.vignette_version_id)
-    is_open = gate_open(assignment, version)
-    actions = allowed_actions(assignment.state, actor, gate_is_open=is_open)
+    actions = allowed_actions(assignment.state, actor)
     words = len(version.text.split())
     if actor == Actor.ASSIGNEE:
         draft = await db.get(AnswerDraft, assignment.id)
@@ -169,9 +158,10 @@ async def build_view(
                 version=version.version,
                 text=version.text,
                 framing=version.framing,  # ty: ignore[invalid-argument-type]
+                patient_summary=version.patient_summary,
                 word_count=words,
                 content_hash=version.content_hash,
-                questions=_visible_questions(version, is_open),
+                questions=_visible_questions(version),
             ),
             draft=DraftView(
                 version=draft.version,
@@ -180,8 +170,6 @@ async def build_view(
             )
             if draft
             else None,
-            gate_passed_at=assignment.gate_passed_at,
-            locked_highlights=assignment.locked_highlights,
             started_at=assignment.started_at,
             submitted_at=assignment.submitted_at,
         )
@@ -197,6 +185,7 @@ async def build_view(
                 version=version.version,
                 text=version.text,
                 framing=version.framing,  # ty: ignore[invalid-argument-type]
+                patient_summary=version.patient_summary,
                 word_count=words,
             ),
         )
@@ -213,7 +202,14 @@ async def build_view(
         vignette_code=code,
         vignette_version=version.version,
         vignette_version_id=version.id,
-        gate_passed_at=assignment.gate_passed_at,
+        vignette=PeerVignette(
+            code=code,
+            version=version.version,
+            text=version.text,
+            framing=version.framing,  # ty: ignore[invalid-argument-type]
+            patient_summary=version.patient_summary,
+            word_count=words,
+        ),
         started_at=assignment.started_at,
         submitted_at=assignment.submitted_at,
     )
@@ -254,14 +250,17 @@ async def list_assignments(
         AssignmentSummary(
             id=assignment.id,
             state=assignment.state,
-            allowed_actions=allowed_actions(
-                assignment.state, actor, gate_is_open=gate_open(assignment, version)
-            ),
+            allowed_actions=allowed_actions(assignment.state, actor),
             job_running=assignment.state in JOB_STATES,
             vignette_code=code,
             vignette_version=version.version,
             vignette_version_id=version.id,
+            expert_id=assignment.expert_id,
             expert_pseudonym=pseudonym,
+            patient_summary=version.patient_summary,
+            framing=version.framing,  # ty: ignore[invalid-argument-type]
+            word_count=len(version.text.split()),
+            opening=opening_words(version.text),
             updated_at=assignment.updated_at,
         )
         for assignment, version, code, pseudonym in rows
@@ -370,46 +369,17 @@ async def save_draft(
             details={"current_version": draft.version},
         )
     version, _ = await _version_and_code(db, assignment.vignette_version_id)
-    check_draft(
-        payload,
-        AnswerPayload.model_validate(draft.payload),
-        version.question_ids,
-        assignment.gate_passed_at is not None,
-        version.text,
-        assignment.locked_highlights,
-    )
+    check_draft(payload, version.question_ids, version.text)
     draft.payload = payload.model_dump(mode="json")
     draft.version += 1
     draft.updated_at = utcnow()
     return DraftSaved(version=draft.version, updated_at=draft.updated_at)
 
 
-async def pass_gate(db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User) -> None:
-    """Idempotent: a double click must not fail, and the first time recorded stands."""
-    _require_own_in_progress(assignment, actor)
-    if assignment.gate_passed_at is not None:
-        return
-    draft = await _draft(db, assignment)
-    version, _ = await _version_and_code(db, assignment.vignette_version_id)
-    payload = AnswerPayload.model_validate(draft.payload)
-    check_gate_answers(payload, version.question_ids)
-    assignment.gate_passed_at = utcnow()
-    assignment.locked_highlights = len(payload.highlights)
-    record_event(
-        db,
-        actor_id=viewer.id,
-        entity_type="assignment",
-        entity_id=assignment.id,
-        action="gate_passed",
-    )
-
-
 async def submit(db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User) -> None:
     check_transition(assignment.state, Action.SUBMIT, actor)
     draft = await _draft(db, assignment)
     version, code = await _version_and_code(db, assignment.vignette_version_id)
-    if not gate_open(assignment, version):
-        raise invalid("gate_not_passed", "Q1-Q3 need answers first.")
     clean = clean_submission(
         AnswerPayload.model_validate(draft.payload), version.question_ids, version.text
     )
@@ -428,11 +398,6 @@ async def submit(db: AsyncSession, assignment: Assignment, actor: Actor, viewer:
                 "expert_pseudonym": viewer.pseudonym,
                 "is_synthetic": viewer.is_synthetic,
                 "started_at": assignment.started_at.isoformat() if assignment.started_at else None,
-                "gate_passed_at": (
-                    assignment.gate_passed_at.isoformat() if assignment.gate_passed_at else None
-                ),
-                # Tells the citations made before the what-if was seen from those made after it.
-                "locked_highlights": assignment.locked_highlights,
                 "submitted_at": now.isoformat(),
             },
         )
@@ -441,7 +406,7 @@ async def submit(db: AsyncSession, assignment: Assignment, actor: Actor, viewer:
 
 
 async def get_submission(db: AsyncSession, assignment: Assignment, actor: Actor) -> Submission:
-    """The raw answers are for their author and the admin. Peers review units only."""
+    """The raw answers are for their author and the admin. Peers read the edited answers."""
     if actor == Actor.REVIEWER:
         raise not_found("Submission")
     submission = await db.get(Submission, assignment.id)
@@ -454,8 +419,8 @@ async def get_submission(db: AsyncSession, assignment: Assignment, actor: Actor)
 
 
 RETRY_BY_JOB = {
+    JobKind.PROOFREAD: Action.RETRY_PROOFREAD,
     JobKind.PROCESS: Action.RETRY_PROCESSING,
-    JobKind.BUILD_UNITS: Action.RETRY_UNITS,
     JobKind.INGEST: Action.RETRY_INGESTION,
 }
 

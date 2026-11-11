@@ -19,13 +19,14 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from app.elicitation.questions import QUESTIONS_BY_ID
-from app.elicitation.schema import ElicitationDocument, Response, _Model
+from app.elicitation.schema import ElicitationDocument, QuestionId, Response, _Model
+from expert_knowledge_core.notes import CHIP_RE
 
 CHIP_VERSION = "1.1-chips"
-CHIP_RE = re.compile(r"⟦h(\d+)⟧")
 Direction = Literal["toward", "away", "neutral", "unclear"]
 DIRECTIONS = ("toward", "away", "neutral", "unclear")
-CHIP_QUESTIONS = ("Q1", "Q2", "Q3", "Q5", "Q6")  # no Q4: out of scope for the chip test
+# no Q4: out of scope for the chip test
+CHIP_QUESTIONS: tuple[QuestionId, ...] = ("Q1", "Q2", "Q3", "Q5", "Q6")
 
 # Q1 asks which fragments matter in either direction ("could be ADHD" primes positive readings)
 Q1_CHIPS = (

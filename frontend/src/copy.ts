@@ -7,7 +7,9 @@
 import {
   ApiError,
   type ActivityItem,
+  type AssignmentSummary,
   type Direction,
+  type LinkedHighlight,
   type ReviewItem,
   type Speaker,
 } from '@/api/client'
@@ -73,26 +75,26 @@ export const INTRO = {
   },
   structure: {
     heading: 'How it is structured',
-    lead: 'Each case has two stages, and the first one is locked once you finish it.',
+    lead: 'You can answer the questions in any order and change any of them until you submit.',
     steps: [
       {
-        term: 'Stage 1: Q1 to Q3',
-        text: 'You answer these three together, from your first reading of the text.',
+        term: 'Answer Q1 to Q6',
+        text: 'Move freely between the questions. Your quotes and their directions can change too.',
       },
       {
-        term: 'Lock in',
-        text: "When you lock in, you can't change your answers to Q1 to Q3 or the quotes you have made so far, including their directions. This keeps your first reading as you wrote it.",
+        term: 'Submit for proofreading',
+        text: 'We check spelling, grammar and punctuation, leave out anything unreadable, and write short notes out as full sentences. This takes a minute or two.',
       },
       {
-        term: 'Stage 2: Q4 to Q6',
-        text: 'The remaining questions open. You can still add new quotes here.',
+        term: 'Check the edited text',
+        text: 'You see your answer next to the edited one, with every change marked. Change anything you want, and check which quotes each sentence is about.',
       },
       {
-        term: 'Review and submit',
-        text: 'You check all your answers, then submit. After you submit, nothing can be changed.',
+        term: 'Submit for review',
+        text: 'Colleagues read your edited answers and comment; the study team decides. After this, nothing can be changed unless they send it back to you.',
       },
     ],
-    flow: ['Stage 1', 'Lock in', 'Stage 2', 'Review', 'Submit'],
+    flow: ['Answer', 'Proofread', 'Check', 'Review'],
     save: 'Your work is saved as you go, so you can leave and come back to a case.',
   },
   hints: {
@@ -178,14 +180,10 @@ export function describeError(error: unknown): string {
       return error.details?.state === 'cancelled'
         ? "The study team has cancelled this case, so changes can't be saved."
         : 'This case can no longer be changed.'
-    case 'gate_not_passed':
-      return 'Please answer questions 1–3 first.'
-    case 'gate_locked':
-      return "Part 1 is already locked, so this can't change."
     case 'submission_incomplete':
       return "Something's still missing. Please look through your answers and try again."
     case 'empty_answer': {
-      const questions = questionNumbers(error.details?.answers)
+      const questions = questionNumbers(error.details?.question_ids ?? error.details?.answers)
       if (!questions.length) return 'An answer needs a little more.'
       return questions.length === 1
         ? `Question ${questions[0]} needs a little more.`
@@ -205,11 +203,21 @@ export function describeError(error: unknown): string {
     case 'review_closed':
       return 'The study team has already decided on this case, so this can no longer be added. What you typed is still here.'
     case 'stale_round':
-      return 'The statements changed while you were reading. We have loaded the new ones, so please look again.'
+      return 'The answers changed while you were reading. We have loaded the new ones, so please look again.'
     case 'comment_required':
       return 'Please say what should change.'
+    case 'decisions_incomplete':
+      return 'Please decide every answer once.'
+    case 'proofread_conflict':
     case 'findings_conflict':
       return 'This was changed in another tab or device. Please reload to see the latest.'
+    case 'links_missing':
+      return 'Some sentences are not linked to a quote yet. They are marked “Choose quotes”.'
+    case 'no_target':
+      return 'A sentence has to be about something: keep at least one quote, or the whole case.'
+    case 'unknown_target':
+    case 'question_not_answered':
+      return `This doesn't match your answers. Please reload the page. If it continues, contact ${STUDY_TEAM}.`
     case 'email_taken':
       return 'Someone already has an account with this email.'
     case 'cannot_deactivate_self':
@@ -228,12 +236,32 @@ export function saveRefusal(error: ApiError): string {
   return describeError(error)
 }
 
-/** The word experts read for what the API calls a unit. */
-export const STATEMENT = 'statement'
-
 /** The tally is advice for the study team, never a verdict. */
-export function tallyLabel(accepts: number, declines: number): string {
-  return `${accepts} accept, ${declines} decline`
+export function tallyLabel(approvals: number, disapprovals: number): string {
+  return `${approvals} approve, ${disapprovals} disapprove`
+}
+
+/** A tag on a line of an answer: one of the expert's quotes, quoted words, or the whole case. */
+export function quoteTagLabel(target: string, highlight: LinkedHighlight | null): string {
+  if (target === 'case') return 'Whole case'
+  if (highlight?.chip) return `Quote ${highlight.chip}`
+  const words = (highlight?.text ?? '').split(/\s+/)
+  return `“${words.slice(0, 4).join(' ')}${words.length > 4 ? '…' : ''}”`
+}
+
+/** What the proofreading could not do, for the note above the edited answers. */
+export function proofreadPassNote(passes: Record<string, unknown>): string | null {
+  const answers = Object.entries(passes).filter(([key]) => /^Q\d$/.test(key))
+  const missed = (pass: string) =>
+    answers.some(([, value]) => (value as Record<string, unknown>)[pass] === 'unavailable')
+  const grammar = missed('grammar')
+  const enhanced = missed('enhanced')
+  if (grammar && enhanced)
+    return "The proofreading couldn't run this time, so your answers are as you wrote them, one sentence per line."
+  if (grammar)
+    return "The grammar check couldn't run this time. Please check the spelling yourself."
+  if (enhanced) return "Short notes couldn't be written out this time. The grammar was checked."
+  return null
 }
 
 export function speakerLabel(speaker: Speaker | null | undefined): string {
@@ -247,16 +275,18 @@ export const STANCES = { support: 'Supports', challenge: 'Challenges', question:
 /** What the study team did with a submission, as the page of a closed review says it. */
 export function reviewOutcome(state: ReviewItem['state'], round: number): string | null {
   if (state === 'peer_review') return null
-  if (state === 'expert_check')
+  if (state === 'proofread_check')
     return `Sent back to the author for changes. A new round (${round}) follows.`
-  if (state === 'rejected') return 'Closed: the study team rejected these statements.'
-  return 'Closed: the study team decided. Approved statements go into the knowledge base.'
+  if (state === 'rejected') return 'Closed: the study team rejected these answers.'
+  return 'Closed: the study team decided. Approved answers go into the knowledge base.'
 }
 
 /** One sentence per kind of change in the home feed. */
 export function activityText(a: ActivityItem): string {
   const who = speakerLabel(a.speaker)
-  const where = `${STATEMENT} ${a.unit_ordinal ?? ''} of case ${a.vignette_code}`.replace('  ', ' ')
+  const where = a.question_id
+    ? `the answer to ${questionLabel(a.question_id).toLowerCase()} of case ${a.vignette_code}`
+    : `case ${a.vignette_code}`
   switch (a.kind) {
     case 'case_assigned':
       return `Case ${a.vignette_code} was assigned to you.`
@@ -275,4 +305,26 @@ export function activityText(a: ActivityItem): string {
     case 'job_failed':
       return `Processing case ${a.vignette_code} failed.`
   }
+}
+
+export const FRAMING_LABELS: Record<string, string> = {
+  forum_post: 'Forum post',
+  personal_journal: 'Personal journal',
+  email: 'Email',
+}
+
+/** What the study team reads in an assignment's status. */
+export const ASSIGNMENT_STATE_LABELS: Record<AssignmentSummary['state'], string> = {
+  assigned: 'Not started',
+  in_progress: 'In progress',
+  proofreading: 'Submitted, being proofread',
+  proofread_check: 'Proofread, the expert is checking it',
+  peer_review: 'In review, waiting for your decision',
+  processing: 'Approved, being cut into units',
+  processing_failed: 'Processing failed',
+  ingesting: 'Entering the knowledge base',
+  ingestion_failed: 'Entering the knowledge base failed',
+  ingested: 'In the knowledge base',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
 }

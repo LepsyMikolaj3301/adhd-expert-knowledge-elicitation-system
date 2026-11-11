@@ -30,6 +30,7 @@ import re
 import secrets
 import string
 from collections import defaultdict
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -44,7 +45,7 @@ from rag_common import (
 )
 
 
-def rubric_for(run: dict) -> tuple[str, object, bool]:
+def rubric_for(run: dict) -> tuple[str, Callable[..., str], bool]:
     """(rubric, prompt builder, expert?) for this run."""
     if run.get("kind") == "expert":
         return EXPERT_JUDGE_RUBRIC, expert_judge_prompt, True

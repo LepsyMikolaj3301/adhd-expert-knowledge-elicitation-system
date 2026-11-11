@@ -38,7 +38,7 @@ class Prompt:
     system: str | None
     user: str  # the user message, or the whole raw prompt for completion models
 
-    def fill(self, **variables: str) -> "Prompt":
+    def fill(self, **variables: object) -> "Prompt":
         used: set[str] = set()
         return Prompt(
             self.id,
@@ -48,7 +48,7 @@ class Prompt:
             _fill(self.user, variables, used),
         )._check_unused(variables, self)
 
-    def _check_unused(self, variables: dict, template: "Prompt") -> "Prompt":
+    def _check_unused(self, variables: dict[str, object], template: "Prompt") -> "Prompt":
         names = set(_VAR.findall((template.system or "") + template.user))
         extra = set(variables) - names
         if extra:
@@ -56,7 +56,7 @@ class Prompt:
         return self
 
 
-def _fill(text: str, variables: dict[str, str], used: set[str]) -> str:
+def _fill(text: str, variables: dict[str, object], used: set[str]) -> str:
     text = _HINT.sub(r"\1", text)
     text = _IF.sub(lambda m: m.group(1) if variables.get("IF_VARIANT") else "", text)
     missing = {n for n in _VAR.findall(text) if n not in variables}

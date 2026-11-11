@@ -18,6 +18,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from chips_schema import load_document
 from llm_clients import AwaitingResponse, GenRequest, InboxGenerator
@@ -98,7 +99,9 @@ def check_claims(raw: str, v: Vignette, r: Response) -> list[ReferenceClaim]:
 
 def add_manifest_entry(tier_dir: Path, session_id: str) -> None:
     path = tier_dir / "manifest.json"
-    manifest = json.loads(path.read_text()) if path.exists() else {"tier": tier_dir.name}
+    manifest: dict[str, Any] = (
+        json.loads(path.read_text()) if path.exists() else {"tier": tier_dir.name}
+    )
     entries = manifest.setdefault("entries", [])
     if not any(e["id"] == session_id and e["kind"] == "claims" for e in entries):
         entries.append(

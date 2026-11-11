@@ -13,26 +13,27 @@ from app.assignments.states import JOB_STATES, TERMINAL_STATES, Action, Actor, S
 from app.core.errors import DomainError
 from app.jobs.models import JobKind
 
-EXPECTED_TABLES = 16
+EXPECTED_TABLES = 21
 A, E, R, S = Actor.ADMIN, Actor.ASSIGNEE, Actor.REVIEWER, Actor.SYSTEM
 
 WORKFLOW = {
     (State.ASSIGNED, Action.START): (State.IN_PROGRESS, {E}),
     (State.ASSIGNED, Action.CANCEL): (State.CANCELLED, {A}),
     (State.IN_PROGRESS, Action.CANCEL): (State.CANCELLED, {A}),
-    (State.IN_PROGRESS, Action.SUBMIT): (State.PROCESSING, {E}),
-    (State.PROCESSING, Action.PROCESSING_SUCCEEDED): (State.EXPERT_CHECK, {S}),
-    (State.PROCESSING, Action.PROCESSING_FAILED): (State.PROCESSING_FAILED, {S}),
-    (State.EXPERT_CHECK, Action.COMPLETE_EXPERT_CHECK): (State.BUILDING_UNITS, {E}),
-    (State.EXPERT_CHECK, Action.SKIP_EXPERT_CHECK): (State.BUILDING_UNITS, {E, A}),
-    (State.BUILDING_UNITS, Action.UNITS_BUILT): (State.PEER_REVIEW, {S}),
-    (State.BUILDING_UNITS, Action.UNITS_FAILED): (State.PROCESSING_FAILED, {S}),
-    (State.PROCESSING_FAILED, Action.RETRY_PROCESSING): (State.PROCESSING, {A}),
-    (State.PROCESSING_FAILED, Action.RETRY_UNITS): (State.BUILDING_UNITS, {A}),
+    (State.PROOFREAD_CHECK, Action.CANCEL): (State.CANCELLED, {A}),
+    (State.PEER_REVIEW, Action.CANCEL): (State.CANCELLED, {A}),
+    (State.IN_PROGRESS, Action.SUBMIT): (State.PROOFREADING, {E}),
+    (State.PROOFREADING, Action.PROOFREAD_SUCCEEDED): (State.PROOFREAD_CHECK, {S}),
+    (State.PROOFREADING, Action.PROOFREAD_FAILED): (State.PROCESSING_FAILED, {S}),
+    (State.PROOFREAD_CHECK, Action.SUBMIT_FOR_REVIEW): (State.PEER_REVIEW, {E}),
     # Peers discuss and vote, but only the admin closes a review or sends it back to the author.
-    (State.PEER_REVIEW, Action.APPROVE_UNITS): (State.INGESTING, {A}),
-    (State.PEER_REVIEW, Action.REJECT_ALL_UNITS): (State.REJECTED, {A}),
-    (State.PEER_REVIEW, Action.REQUEST_CHANGES): (State.EXPERT_CHECK, {A}),
+    (State.PEER_REVIEW, Action.APPROVE_ANSWERS): (State.PROCESSING, {A}),
+    (State.PEER_REVIEW, Action.REJECT_ALL_ANSWERS): (State.REJECTED, {A}),
+    (State.PEER_REVIEW, Action.REQUEST_CHANGES): (State.PROOFREAD_CHECK, {A}),
+    (State.PROCESSING, Action.PROCESSING_SUCCEEDED): (State.INGESTING, {S}),
+    (State.PROCESSING, Action.PROCESSING_FAILED): (State.PROCESSING_FAILED, {S}),
+    (State.PROCESSING_FAILED, Action.RETRY_PROOFREAD): (State.PROOFREADING, {A}),
+    (State.PROCESSING_FAILED, Action.RETRY_PROCESSING): (State.PROCESSING, {A}),
     (State.INGESTING, Action.INGESTION_SUCCEEDED): (State.INGESTED, {S}),
     (State.INGESTING, Action.INGESTION_FAILED): (State.INGESTION_FAILED, {S}),
     (State.INGESTION_FAILED, Action.RETRY_INGESTION): (State.INGESTING, {A}),
@@ -79,8 +80,8 @@ def test_answers_can_never_reopen():
 
 def test_every_job_state_queues_its_job():
     assert JOB_ON_ENTRY == {
+        State.PROOFREADING: JobKind.PROOFREAD,
         State.PROCESSING: JobKind.PROCESS,
-        State.BUILDING_UNITS: JobKind.BUILD_UNITS,
         State.INGESTING: JobKind.INGEST,
     }
     assert set(JOB_ON_ENTRY) == JOB_STATES
@@ -91,9 +92,9 @@ def test_the_system_has_no_user_actions():
 
 
 def test_user_action_names_per_role():
-    assert user_actions(State.EXPERT_CHECK, E) == {"complete_expert_check", "skip_expert_check"}
-    assert user_actions(State.EXPERT_CHECK, A) == {"skip_expert_check"}
-    assert user_actions(State.PEER_REVIEW, A) == {"decide_units"}
+    assert user_actions(State.PROOFREAD_CHECK, E) == {"submit_for_review"}
+    assert user_actions(State.PROOFREAD_CHECK, A) == {"cancel"}, "only the author submits"
+    assert user_actions(State.PEER_REVIEW, A) == {"decide_answers", "cancel"}
     assert not user_actions(State.PEER_REVIEW, R), "reviewers vote and comment, they don't decide"
     assert not user_actions(State.PEER_REVIEW, E)
     assert user_actions(State.PROCESSING_FAILED, A) == {"retry"}

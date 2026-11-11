@@ -21,7 +21,9 @@ import argparse
 import json
 import random
 import sys
+from collections.abc import Collection
 from datetime import UTC, datetime
+from typing import Any
 
 import numpy as np
 from eval_expert_generation import EXPERT_SYSTEM_PROMPT, build_prompt, checks
@@ -43,6 +45,7 @@ from rag_common import (
 )
 
 from app.elicitation.units import sentences
+from expert_knowledge_core.prompts import PATIENT_SYSTEM_PROMPT, build_patient_prompt  # noqa: F401
 
 RUNS = ROOT / "data/eval/expert_runs"
 DEFAULT_B_QUESTION = (
@@ -51,18 +54,6 @@ DEFAULT_B_QUESTION = (
 KEEP_TURNS = 3  # earlier question/answer pairs sent back to the model
 CONTEXT_OF = {"a": "units", "b": "patient"}
 TYPE_OF = {"a": "clinician_question", "b": "patient_text"}
-
-PATIENT_SYSTEM_PROMPT = f"""You help a clinician read a patient's own writing. You get numbered
-notes ([E1], [E2], ...) in which colleagues described how they read other patients' texts, and
-the patient's text. A note is one clinician's opinion, not a diagnostic criterion.
-- Take what clinicians read and why only from the notes. Add no outside knowledge.
-- Tie each reading to the passage of the patient's text it concerns (quote a short piece). Say so
-  when a note is about a different kind of text.
-- Never diagnose or say whether the patient has ADHD. Write "the notes suggest" or "one clinician
-  reads ...", and keep the clinicians' conditions ("only if", "unless", "when ...").
-- Cite each point with its note number, e.g. [E2].
-- Be concise: 4 to 7 sentences.
-- If the notes do not bear on the text, reply exactly: {NOT_IN_SOURCES}"""
 
 TIPS = """How to ask (keep it similar to what the notes are about):
   - Ask in general terms, as before seeing any particular patient: no names, no "this text".
@@ -177,7 +168,9 @@ class Notes:
             if vid in shown
         }
 
-    def get(self, strings: list[str], hide: set[str] = frozenset()) -> tuple[list[dict], list[str]]:
+    def get(
+        self, strings: list[str], hide: Collection[str] = frozenset()
+    ) -> tuple[list[dict], list[str]]:
         """(notes within the token budget, the top 20 unit ids retrieved)."""
         s = self.searcher
         allowed = np.array([self.unit_vignette[it.unit_ids[0]] not in hide for it in s.items])
@@ -189,8 +182,7 @@ class Notes:
 
 
 def patient_prompt(text: str, question: str, notes: list[dict]) -> str:
-    body = "\n\n".join(f"[E{n}] {c['text']}" for n, c in enumerate(notes, 1))
-    return f'Notes:\n\n{body or "(none)"}\n\nPatient text:\n"{text}"\n\nQuestion: {question}'
+    return build_patient_prompt(text, question, [c["text"] for c in notes])
 
 
 # --- the loop ----------------------------------------------------------------------------------
@@ -276,6 +268,7 @@ def run(args: argparse.Namespace) -> int:
     notes_index = Notes(args.tier, args.representation, args.budget, args.source)
     run_dir = RUNS / f"human-{args.rater}"
     path = run_dir / "generations.json"
+    run_data: dict[str, Any]
     if path.exists():
         run_data = json.loads(path.read_text())
         print(f"resuming {path}: {len(run_data['questions'])} questions so far")
@@ -327,12 +320,13 @@ def run(args: argparse.Namespace) -> int:
         elif line or mode == "b":
             question = line or DEFAULT_B_QUESTION
             earlier = [q for q, _ in history]
-            strings = sentences(patient_text) if mode == "b" else []
+            patient = patient_text or ""  # set in mode b: the loop above asks for it first
+            strings = sentences(patient) if mode == "b" else []
             strings = [*strings, question, *earlier[-1:]]
             notes, retrieved = notes_index.get(strings, hide)
             system = PATIENT_SYSTEM_PROMPT if mode == "b" else EXPERT_SYSTEM_PROMPT
             user = (
-                patient_prompt(patient_text, question, notes)
+                patient_prompt(patient, question, notes)
                 if mode == "b"
                 else build_prompt(question, notes)
             )
@@ -354,7 +348,7 @@ def run(args: argparse.Namespace) -> int:
 
             qid = f"Q{len(run_data['questions']) + 1:03d}"
             context = CONTEXT_OF[mode]
-            item = {
+            item: dict[str, Any] = {
                 "question": judged_question(mode, patient_text, earlier, question),
                 "type": TYPE_OF[mode], "patient_text": patient_text, "reference_points": [],
                 "relevant_units": [], "retrieved": retrieved, "contexts": {context: notes},

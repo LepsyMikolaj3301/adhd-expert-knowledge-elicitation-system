@@ -3,6 +3,12 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { api, ApiError, type AssignmentSummary } from '@/api/client'
+import CreateAssignmentDialog from '@/components/admin/CreateAssignmentDialog.vue'
+import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
+import CaseCard from '@/components/CaseCard.vue'
+import LoadingSpinner from '@/components/LoadingSpinner.vue'
+import PseudonymChip from '@/components/PseudonymChip.vue'
+import { ASSIGNMENT_STATE_LABELS } from '@/copy'
 import { useAuthStore } from '@/stores/auth'
 
 const POLL_MS = 10_000
@@ -18,21 +24,60 @@ let stopped = false
 
 const isAdmin = computed(() => auth.user?.role === 'admin')
 const justSubmitted = computed(() => route.query.submitted)
+const justSent = computed(() => route.query.sent)
+const creating = ref(false)
+const cancelling = ref<AssignmentSummary | null>(null)
 
-/** For an expert, everything after submitting is the same thing: it's out of their hands. */
+/** The admin's buttons are the actions an assignment allows; the rest are the expert's. */
+async function run(call: () => Promise<unknown>) {
+  error.value = ''
+  try {
+    await call()
+  } catch (e) {
+    error.value = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.'
+  }
+  await refresh()
+}
+
+function retry(a: AssignmentSummary) {
+  return run(() =>
+    api.POST('/api/v1/assignments/{assignment_id}/retry', {
+      params: { path: { assignment_id: a.id } },
+    }),
+  )
+}
+
+function cancel() {
+  const a = cancelling.value
+  cancelling.value = null
+  if (!a) return
+  return run(() =>
+    api.POST('/api/v1/assignments/{assignment_id}/cancel', {
+      params: { path: { assignment_id: a.id } },
+    }),
+  )
+}
+
+function created() {
+  creating.value = false
+  return refresh()
+}
+
+/** For an expert, everything after review starts is the same thing: it's out of their hands. */
 function expertStatus(state: AssignmentSummary['state']): string {
   if (state === 'assigned') return 'Not started'
   if (state === 'in_progress') return 'In progress'
   if (state === 'cancelled') return 'Cancelled'
-  if (state === 'expert_check') return 'Ready to check'
-  return 'Submitted'
+  if (state === 'proofreading') return 'Proofreading…'
+  if (state === 'proofread_check') return 'Ready to check'
+  return 'In review'
 }
 
 function openLabel(state: AssignmentSummary['state']): string | null {
   if (state === 'assigned') return 'Start'
   if (state === 'in_progress') return 'Continue'
   if (state === 'cancelled') return null
-  if (state === 'expert_check') return 'Check'
+  if (state === 'proofread_check') return 'Check'
   return 'View'
 }
 
@@ -64,7 +109,18 @@ onUnmounted(() => {
 <template>
   <div>
     <!-- The nav calls an expert's assignments "My cases": they only ever see their own. -->
-    <h1>{{ isAdmin ? 'Assignments' : 'My cases' }}</h1>
+    <div class="flex flex-wrap items-baseline justify-between gap-4">
+      <h1>{{ isAdmin ? 'Assignments' : 'My cases' }}</h1>
+      <button
+        v-if="isAdmin"
+        type="button"
+        class="btn"
+        data-testid="create-assignment"
+        @click="creating = true"
+      >
+        Create new assignment
+      </button>
+    </div>
     <p v-if="!isAdmin" class="mt-1 text-sm">
       <RouterLink to="/instructions" data-testid="instructions-link"
         >Read the instructions</RouterLink
@@ -72,7 +128,11 @@ onUnmounted(() => {
     </p>
 
     <p v-if="justSubmitted" class="mt-4 text-ink" role="status">
-      Case {{ justSubmitted }} submitted. Thank you.
+      Case {{ justSubmitted }} submitted for proofreading. In a minute or two it is ready for you to
+      check: you then see the edited text, can change it, and submit it for review.
+    </p>
+    <p v-if="justSent" class="mt-4 text-ink" role="status">
+      Case {{ justSent }} sent for review. Thank you.
     </p>
     <p v-if="error" class="alert mt-6" role="alert">{{ error }}</p>
     <p v-if="loading" class="mt-6 text-muted">Loading…</p>
@@ -90,10 +150,10 @@ onUnmounted(() => {
     >
       <thead>
         <tr class="border-b border-line text-muted">
-          <th scope="col" class="py-2 pr-4 font-medium">Vignette</th>
+          <th scope="col" class="py-2 pr-4 font-medium">Case</th>
           <th scope="col" class="py-2 pr-4 font-medium">Expert</th>
-          <th scope="col" class="py-2 pr-4 font-medium">State</th>
-          <th scope="col" class="py-2 font-medium">Available actions</th>
+          <th scope="col" class="py-2 pr-4 font-medium">Status</th>
+          <th scope="col" class="py-2 font-medium">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -104,12 +164,60 @@ onUnmounted(() => {
           data-testid="assignment"
         >
           <td class="py-3 pr-4">
-            {{ assignment.vignette_code }} v{{ assignment.vignette_version }}
+            <CaseCard
+              :code="assignment.vignette_code"
+              :version="assignment.vignette_version"
+              :patient-summary="assignment.patient_summary"
+              :framing="assignment.framing"
+              :word-count="assignment.word_count"
+              :opening="assignment.opening"
+            />
           </td>
-          <td class="py-3 pr-4">{{ assignment.expert_pseudonym }}</td>
-          <td class="py-3 pr-4" data-testid="state">{{ assignment.state }}</td>
+          <td class="py-3 pr-4"><PseudonymChip :pseudonym="assignment.expert_pseudonym" /></td>
+          <td class="py-3 pr-4" data-testid="state">
+            <span class="flex items-center gap-2">
+              <LoadingSpinner v-if="assignment.job_running" :size="16" />
+              {{ ASSIGNMENT_STATE_LABELS[assignment.state] }}
+            </span>
+          </td>
           <td class="py-3" data-testid="actions">
-            {{ assignment.allowed_actions.join(', ') || '—' }}
+            <span class="flex flex-wrap items-center gap-2">
+              <RouterLink
+                v-if="assignment.allowed_actions.includes('decide_answers')"
+                :to="`/reviews/${assignment.id}`"
+                class="btn !px-3 !py-1 hover:no-underline"
+                data-testid="decide"
+              >
+                Decide
+              </RouterLink>
+              <button
+                v-if="assignment.allowed_actions.includes('retry')"
+                type="button"
+                class="btn-quiet !px-3 !py-1"
+                data-testid="retry"
+                @click="retry(assignment)"
+              >
+                Retry
+              </button>
+              <button
+                v-if="assignment.allowed_actions.includes('cancel')"
+                type="button"
+                class="btn-quiet !px-3 !py-1"
+                data-testid="cancel"
+                @click="cancelling = assignment"
+              >
+                Cancel
+              </button>
+              <span
+                v-if="
+                  !['decide_answers', 'retry', 'cancel'].some((a) =>
+                    assignment.allowed_actions.includes(a),
+                  )
+                "
+                class="text-muted"
+                >—</span
+              >
+            </span>
           </td>
         </tr>
       </tbody>
@@ -122,8 +230,17 @@ onUnmounted(() => {
         class="flex items-center gap-4 py-3"
         data-testid="assignment"
       >
-        <span class="flex-1 font-serif text-xl text-ink">Case {{ assignment.vignette_code }}</span>
-        <span class="text-sm text-muted" data-testid="state">
+        <span class="flex-1 font-serif text-xl text-ink">
+          <CaseCard
+            :code="assignment.vignette_code"
+            :patient-summary="assignment.patient_summary"
+            :framing="assignment.framing"
+            :word-count="assignment.word_count"
+            :opening="assignment.opening"
+          />
+        </span>
+        <span class="flex items-center gap-2 text-sm text-muted" data-testid="state">
+          <LoadingSpinner v-if="assignment.state === 'proofreading'" :size="16" />
           {{ expertStatus(assignment.state) }}
         </span>
         <span class="w-24 text-right">
@@ -139,5 +256,26 @@ onUnmounted(() => {
         </span>
       </li>
     </ul>
+
+    <CreateAssignmentDialog
+      v-if="creating"
+      :assignments="assignments"
+      @done="created"
+      @cancel="creating = false"
+    />
+    <ConfirmDialog
+      v-if="cancelling"
+      title="Cancel this assignment?"
+      confirm-label="Cancel assignment"
+      cancel-label="Keep assignment"
+      danger
+      @confirm="cancel"
+      @cancel="cancelling = null"
+    >
+      <p>
+        {{ cancelling.expert_pseudonym }} will no longer work on case
+        {{ cancelling.vignette_code }}. Anything written or submitted so far won't be used.
+      </p>
+    </ConfirmDialog>
   </div>
 </template>

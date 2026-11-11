@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import chip_findings as cf  # noqa: E402
 from chips_schema import ChipDocument, to_legacy  # noqa: E402
 
-from app.elicitation.schema import Vignette, VignetteDesign  # noqa: E402
+from app.elicitation.schema import Vignette, VignetteDesign, content_hash  # noqa: E402
 
 FRAGS = [
     ("numbers on screen keep looking like they are moving when I blink", "away"),
@@ -45,8 +45,9 @@ ANSWERS = {
 
 def make_doc() -> ChipDocument:
     v = Vignette(
-        id="V001", version=1, text=TEXT, framing="personal_journal",
-        question_ids=["Q1", "Q2", "Q3", "Q5", "Q6"], design=VignetteDesign(purpose="test"),
+        id="V001", version=1, text=TEXT, content_hash=content_hash(TEXT),
+        framing="personal_journal", question_ids=["Q1", "Q2", "Q3", "Q5", "Q6"],
+        design=VignetteDesign(purpose="test"),
     )  # fmt: skip
     t = datetime(2026, 1, 5, 9, tzinfo=UTC)
     highlights = []

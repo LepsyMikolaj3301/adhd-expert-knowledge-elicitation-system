@@ -25,6 +25,7 @@ import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from eval_expert_units import parse
@@ -49,21 +50,14 @@ from rag_common import (
     write_json,
 )
 
+from expert_knowledge_core.prompts import (  # noqa: F401  (chat_expert imports it from here)
+    EXPERT_SYSTEM_PROMPT,
+    build_expert_prompt,
+)
+
 RUNS = ROOT / "data/eval/expert_runs"
 CONTEXTS = ("units", "rules", "oracle", "none", "shuffled")
 SHUFFLE_EVERY = 4
-
-EXPERT_SYSTEM_PROMPT = f"""You help a clinician by summarising what colleagues have written in short
-numbered notes ([E1], [E2], ...). Each note is one clinician's reading of a patient's text: it is
-opinion, not a diagnostic criterion.
-- Answer the question using only the notes. Add no outside knowledge.
-- Say what the clinicians read and why, and keep their conditions ("only if", "unless", "when ...").
-- Write "the notes suggest" or "one clinician reads ...", never "ADHD is diagnosed when" or any
-  other statement of criteria. If only one note supports a point, say so; if notes disagree, say
-  that.
-- Cite each point with its note number, e.g. [E2].
-- Be concise: 3 to 6 sentences.
-- If the notes do not answer the question, reply exactly: {NOT_IN_SOURCES}"""
 
 NO_NOTES_SYSTEM_PROMPT = """You help a clinician with a question about reading patients' own writing
 for ADHD-related traits. No notes from colleagues are available for this question. Answer in 3 to 6
@@ -77,10 +71,7 @@ def reference_line(c: dict) -> str:
 
 
 def build_prompt(question: str, notes: list[dict]) -> str:
-    if not notes:
-        return f"Question: {question}"
-    body = "\n\n".join(f"[E{n}] {c['text']}" for n, c in enumerate(notes, 1))
-    return f"Notes:\n\n{body}\n\nQuestion: {question}"
+    return build_expert_prompt(question, [c["text"] for c in notes])
 
 
 def cited_notes(text: str) -> list[int]:
@@ -118,7 +109,7 @@ def build_contexts(args) -> dict:
         items = [main.items[i] for i in main.rank([q], everyone, mode, diversity)[:50]]
         return [{"id": it.unit_ids[0], "text": it.shown} for it in fill_budget(items, args.budget)]
 
-    out = {}
+    out: dict[str, dict[str, Any]] = {}
     for qi, q in enumerate(questions):
         qid = f"Q{qi + 1:02d}"
         relevant = [c for c in q[label_key] if covers[c]]

@@ -1,35 +1,31 @@
-"""The admin can ask for changes after reading the discussion: the units go back to the author, who
-corrects how the answers were filed, and a new round of units is reviewed. Ollama is faked
-(tests/api/conftest.py)."""
+"""The admin can ask for changes after reading the discussion: the answers go back to the author,
+who edits them (and how their lines are linked), and a new round is reviewed. Ollama and
+LanguageTool are faked (tests/api/conftest.py)."""
 
-from api_helpers import decide_all, run_jobs, two_experts
+from api_helpers import OPEN_ANSWERS, decide_all, run_jobs, save_proofread, two_experts
 from sqlalchemy import text
 
 from app.core.db import session_factory
 
-PEER_COMMENT = "Q2 is about this passage too: file it under h1."
+PEER_COMMENT = "Q2 is about this passage too: link it to h1."
 ADMIN_COMMENT = "Agree with the reviewer, please look at Q2 again."
+EVERY_ANSWER = ("Q1", "Q2", "Q3", "Q4", "Q5")
 
 
-def decisions(units, **by_kind):
-    """A decision per unit, by its kind: decisions(units, fragment=("request_changes", "x"))."""
-    out = []
-    for unit in units:
-        decision, *comment = by_kind.get(unit["kind"], ("approve",))
-        out.append(
+async def decide(api, assignment_id, **by_question):
+    """A decision per answer: decide(api, id, Q2=("request_changes", "x")); the rest approve."""
+    decisions = []
+    for question_id in EVERY_ANSWER:
+        decision, *comment = by_question.get(question_id, ("approve",))
+        decisions.append(
             {
-                "unit_id": unit["id"],
+                "question_id": question_id,
                 "decision": decision,
                 "comment": comment[0] if comment else None,
             }
         )
-    return {"decisions": out}
-
-
-async def decide(api, assignment_id, **by_kind):
-    units = await api.ok("GET", f"/assignments/{assignment_id}/units")
     return await api.request(
-        "POST", f"/assignments/{assignment_id}/unit-decisions", json=decisions(units, **by_kind)
+        "POST", f"/assignments/{assignment_id}/answer-decisions", json={"decisions": decisions}
     )
 
 
@@ -38,97 +34,81 @@ async def state(api, assignment_id) -> str:
 
 
 async def reviewer_challenges():
-    """e2's units are read by e1, who challenges the fragment unit and votes to decline."""
+    """e2's answers are read by e1, who challenges Q2 and disapproves of it."""
     admin, e1, e2, first, second = await two_experts()
     await e1.ok("POST", f"/assignments/{second}/review/open", 204)
-    units = await e1.ok("GET", f"/assignments/{second}/units")
-    fragment = next(u for u in units if u["kind"] == "fragment")
     await e1.ok(
         "POST",
-        f"/assignments/{second}/units/{fragment['id']}/comments",
+        f"/assignments/{second}/answers/Q2/comments",
         201,
         json={"body": PEER_COMMENT, "stance": "challenge"},
     )
-    await e1.ok("PUT", f"/assignments/{second}/vote", json={"vote": "decline", "review_round": 1})
+    await e1.ok(
+        "PUT",
+        f"/assignments/{second}/answers/Q2/vote",
+        json={"vote": "disapprove", "review_round": 1},
+    )
     return admin, e1, e2, second
 
 
 async def sent_back():
-    """The admin has read it and sent it back: e2 (the author) is in the expert check, round 2."""
+    """The admin has read it and sent it back: e2 (the author) checks it again, round 2."""
     admin, e1, e2, second = await reviewer_challenges()
-    response = await decide(admin, second, fragment=("request_changes", ADMIN_COMMENT))
+    response = await decide(admin, second, Q2=("request_changes", ADMIN_COMMENT))
     assert response.status_code == 200, response.text
     return admin, e1, e2, second
 
 
 async def test_a_change_request_needs_a_comment():
     admin, e1, e2, first, second = await two_experts()
-    units = await admin.ok("GET", f"/assignments/{second}/units")
     for comment in (None, "   "):
-        body = {
-            "decisions": [
-                {"unit_id": u["id"], "decision": "request_changes", "comment": comment}
-                for u in units
-            ]
-        }
-        await admin.fails(
-            "POST", f"/assignments/{second}/unit-decisions", 422, "comment_required", json=body
-        )
+        response = await decide(admin, second, Q1=("request_changes", comment))
+        assert response.status_code == 422 and response.json()["code"] == "comment_required"
     assert await state(admin, second) == "peer_review", "nothing was recorded"
 
 
 async def test_a_reviewers_challenge_is_a_comment_for_the_admin_not_a_change_request():
     admin, e1, e2, second = await reviewer_challenges()
     assert await state(admin, second) == "peer_review", "a challenge does not move anything"
-    units = await admin.ok("GET", f"/assignments/{second}/units")
-    fragment = next(u for u in units if u["kind"] == "fragment")
-    [comment] = fragment["comments"]
+    review = await admin.ok("GET", f"/assignments/{second}/answers")
+    q2 = next(a for a in review["answers"] if a["question_id"] == "Q2")
+    [comment] = q2["comments"]
     assert (comment["stance"], comment["body"]) == ("challenge", PEER_COMMENT)
     assert comment["speaker"] == {"kind": "reviewer", "pseudonym": e1.pseudonym}
-    assert fragment["decisions"] == [], "reviewers record no decision on a unit"
-    findings = await e2.ok("GET", f"/assignments/{second}/findings")
-    assert findings["review_round"] == 1 and findings["feedback"] == []
+    assert q2["decision"] is None, "reviewers record no decision on an answer"
+    checked = await e2.ok("GET", f"/assignments/{second}/proofread")
+    assert checked["review_round"] == 1 and checked["feedback"] == []
 
 
-async def test_the_admin_sends_the_units_back_to_the_author():
+async def test_the_admin_sends_the_answers_back_to_the_author():
     admin, e1, e2, second = await sent_back()
     view = await admin.ok("GET", f"/assignments/{second}")
-    assert view["state"] == "expert_check" and view["review_round"] == 2
-    assert view["allowed_actions"] == ["skip_expert_check"]
+    assert view["state"] == "proofread_check" and view["review_round"] == 2
+    assert view["allowed_actions"] == ["cancel"]
     author_view = await e2.ok("GET", f"/assignments/{second}")
-    assert author_view["allowed_actions"] == [
-        "complete_expert_check",
-        "correct_findings",
-        "skip_expert_check",
-    ]
+    assert author_view["allowed_actions"] == ["edit_proofread", "submit_for_review"]
 
-    assert await admin.ok("GET", f"/assignments/{second}/units") == [], (
-        "no units until they are cut"
-    )
-    old = await admin.ok("GET", f"/assignments/{second}/units", params={"review_round": 1})
-    assert {u["status"] for u in old} == {"superseded"}
-    fragment = next(u for u in old if u["kind"] == "fragment")
-    assert [(d["stage"], d["decision"]) for d in fragment["decisions"]] == [
-        ("admin", "request_changes"),
-    ]
-    assert [c["body"] for c in fragment["comments"]] == [PEER_COMMENT], "the talk is kept too"
+    old = await admin.ok("GET", f"/assignments/{second}/answers")
+    assert old["review_round"] == 1 and old["rounds"] == [1], "round 2 is not submitted yet"
+    q2 = next(a for a in old["answers"] if a["question_id"] == "Q2")
+    assert q2["decision"]["decision"] == "request_changes"
+    assert [c["body"] for c in q2["comments"]] == [PEER_COMMENT], "the talk is kept too"
 
 
 async def test_the_author_reads_the_request_and_the_discussion_of_the_round_sent_back():
     admin, e1, e2, second = await sent_back()
-    findings = await e2.ok("GET", f"/assignments/{second}/findings")
-    assert findings["review_round"] == 2 and findings["editable"] is True
-    assert [(f["by"], f["comment"]) for f in findings["feedback"]] == [("admin", ADMIN_COMMENT)]
-    feedback = findings["feedback"][0]
-    assert feedback["kind"] == "fragment" and feedback["patient_words"]
-    assert "avoidance" in feedback["unit_text"], "the unit it is about, in the author's own words"
-    everything = str(findings)
+    checked = await e2.ok("GET", f"/assignments/{second}/proofread")
+    assert checked["review_round"] == 2 and checked["editable"] is True
+    assert checked["feedback"] == [{"question_id": "Q2", "comment": ADMIN_COMMENT}]
+    by_question = {item["question_id"]: item for item in checked["items"]}
+    assert by_question["Q2"]["final"] == OPEN_ANSWERS["Q2"], "round 2 starts where round 1 ended"
+    everything = str(checked)
     for secret in (e1.user_id, e1.pseudonym, admin.user_id, admin.pseudonym):
         assert secret not in everything
 
-    old = await e2.ok("GET", f"/assignments/{second}/units", params={"review_round": 1})
-    fragment = next(u for u in old if u["kind"] == "fragment")
-    [comment] = fragment["comments"]
+    old = await e2.ok("GET", f"/assignments/{second}/answers", params={"review_round": 1})
+    q2 = next(a for a in old["answers"] if a["question_id"] == "Q2")
+    [comment] = q2["comments"]
     assert comment["body"] == PEER_COMMENT
     assert comment["speaker"] == {"kind": "reviewer", "pseudonym": e1.pseudonym}
 
@@ -138,25 +118,25 @@ async def test_the_author_reads_the_request_and_the_discussion_of_the_round_sent
     assert e1.user_id not in str(events) and e1.pseudonym not in str(events)
 
 
-async def test_decisions_cannot_be_made_on_units_that_were_sent_back():
+async def test_nothing_can_be_decided_on_answers_that_were_sent_back():
     admin, e1, e2, second = await sent_back()
     await e1.fails(
         "POST",
-        f"/assignments/{second}/unit-decisions",
+        f"/assignments/{second}/answer-decisions",
         409,
         "illegal_transition",
         json={"decisions": []},
     )
     await e1.fails(
         "PUT",
-        f"/assignments/{second}/vote",
+        f"/assignments/{second}/answers/Q1/vote",
         409,
         "review_closed",
-        json={"vote": "accept", "review_round": 1},
+        json={"vote": "approve", "review_round": 1},
     )
     await admin.fails(
         "POST",
-        f"/assignments/{second}/unit-decisions",
+        f"/assignments/{second}/answer-decisions",
         409,
         "illegal_transition",
         json={"decisions": []},
@@ -166,72 +146,56 @@ async def test_decisions_cannot_be_made_on_units_that_were_sent_back():
 async def test_the_admin_can_send_back_without_waiting_for_the_reviewers():
     admin, e1, e2, first, second = await two_experts()
     assert await state(admin, second) == "peer_review"
-    response = await decide(admin, second, fragment=("request_changes", ADMIN_COMMENT))
+    response = await decide(admin, second, Q2=("request_changes", ADMIN_COMMENT))
     assert response.status_code == 200
-    assert await state(admin, second) == "expert_check"
+    assert await state(admin, second) == "proofread_check"
     listed = await e1.ok("GET", "/reviews", params={"status": "open"})
     assert second not in [q["assignment_id"] for q in listed], "no longer under review"
 
 
-async def test_a_second_round_is_cut_from_the_corrected_filing_and_judged_afresh():
+async def resubmitted():
+    """The author edited Q2, linked it to h1 and submitted round 2."""
     admin, e1, e2, second = await sent_back()
-    await e2.ok(
-        "PUT",
-        f"/assignments/{second}/findings",
-        json={"version": 1, "sentences": {"Q2.1": ["h1"]}},
-    )
-    await e2.ok("POST", f"/assignments/{second}/expert-check/complete")
-    await run_jobs()
-    assert await state(admin, second) == "peer_review"
+    q2 = OPEN_ANSWERS["Q2"]
+    await save_proofread(e2, second, {}, {"Q2": {q2: ["h1"]}})
+    await e2.ok("POST", f"/assignments/{second}/submit-for-review")
+    return admin, e1, e2, second
 
-    units = await e2.ok("GET", f"/assignments/{second}/units")
-    assert [(u["ordinal"], u["kind"], u["status"], u["review_round"]) for u in units] == [
-        (1, "fragment", "pending", 2),
-        (2, "case", "pending", 2),
-    ]
-    assert "Q2: " in units[0]["text"], "the sentence moved to the citation, so the unit has it"
+
+async def test_a_second_round_is_judged_afresh():
+    admin, e1, e2, second = await resubmitted()
+    assert await state(admin, second) == "peer_review"
     [item] = [q for q in await e1.ok("GET", "/reviews") if q["assignment_id"] == second]
-    assert item["unit_count"] == 2 and item["review_round"] == 2
-    assert (item["accepts"], item["declines"], item["my_vote"], item["comment_count"]) == (
+    assert item["answer_count"] == 5 and item["review_round"] == 2
+    assert (item["approvals"], item["disapprovals"], item["my_votes"], item["comment_count"]) == (
         0,
         0,
-        None,
+        0,
         0,
     ), "a new round is judged afresh"
-    mine = await e1.ok("GET", f"/assignments/{second}/units")
-    assert all(u["comments"] == [] for u in mine)
-    votes = await e1.ok("GET", f"/assignments/{second}/votes")
-    assert (votes["review_round"], votes["votes"]) == (2, [])
+    review = await e1.ok("GET", f"/assignments/{second}/answers")
+    assert review["review_round"] == 2
+    assert all(a["comments"] == [] and a["votes"] == [] for a in review["answers"])
+    q2 = next(a for a in review["answers"] if a["question_id"] == "Q2")
+    assert q2["lines"][0]["targets"] == ["h1"]
     await e1.fails(
         "PUT",
-        f"/assignments/{second}/vote",
+        f"/assignments/{second}/answers/Q2/vote",
         409,
         "stale_round",
-        json={"vote": "accept", "review_round": 1},
+        json={"vote": "approve", "review_round": 1},
     )
-
-    old = await admin.ok("GET", f"/assignments/{second}/units", params={"review_round": 1})
-    assert {u["status"] for u in old} == {"superseded"}, "the history is kept"
-    listed = await admin.ok("GET", "/knowledge-units")
-    assert sorted(
-        (u["review_round"], u["status"]) for u in listed if u["assignment_id"] == second
-    ) == [
-        (1, "superseded"),
-        (1, "superseded"),
-        (2, "pending"),
-        (2, "pending"),
-    ]
+    history = await admin.ok("GET", f"/assignments/{second}/answers", params={"review_round": 1})
+    assert history["rounds"] == [1, 2] and history["review_round"] == 1
+    await admin.fails(
+        "GET", f"/assignments/{second}/answers", 404, "not_found", params={"review_round": 3}
+    )
+    as_reviewer = await e1.ok("GET", f"/assignments/{second}/answers", params={"review_round": 1})
+    assert as_reviewer["review_round"] == 2, "reviewers read the round under review only"
 
 
 async def test_only_the_last_round_reaches_the_rag_tables():
-    admin, e1, e2, second = await sent_back()
-    await e2.ok(
-        "PUT",
-        f"/assignments/{second}/findings",
-        json={"version": 1, "sentences": {"Q2.1": ["h1"]}},
-    )
-    await e2.ok("POST", f"/assignments/{second}/expert-check/complete")
-    await run_jobs()
+    admin, e1, e2, second = await resubmitted()
     await decide_all(admin, second)
     await run_jobs()
     assert await state(admin, second) == "ingested"
@@ -246,8 +210,8 @@ async def test_only_the_last_round_reaches_the_rag_tables():
                 {"s": second},
             )
         ).all()
-    assert len(rows) == 2, "one copy of each unit, not one per round"
+    assert len(rows) == 2, "one copy of each unit"
     fragment = next(text_ for id_, text_ in rows if id_.endswith("-h1"))
-    assert "sleep loss" in fragment, "the corrected cut"
+    assert "sleep loss" in fragment, "the round-2 link"
     case = next(text_ for id_, text_ in rows if id_.endswith("-case"))
     assert "sleep loss" not in case

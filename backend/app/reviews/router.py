@@ -9,14 +9,14 @@ from app.auth.dependencies import CurrentUser
 from app.core.db import DbSession
 from app.reviews import service
 from app.reviews.schemas import (
+    AnswerDecisionsRequest,
     CommentCreate,
     CommentView,
+    ReviewAnswersView,
     ReviewItem,
-    UnitDecisionsRequest,
-    UnitView,
     VoteInput,
-    VotesView,
 )
+from app.vignettes.questions import QuestionId
 
 router = APIRouter(tags=["reviews"])
 
@@ -41,48 +41,51 @@ async def open_review(assignment_id: UUID, db: DbSession, user: CurrentUser) -> 
     await db.commit()
 
 
-@router.get("/assignments/{assignment_id}/units")
-async def list_units(
+@router.get("/assignments/{assignment_id}/answers")
+async def list_answers(
     assignment_id: UUID, db: DbSession, user: CurrentUser, review_round: int | None = None
-) -> list[UnitView]:
-    """The current round's units. The admin and the author can ask for an earlier round."""
+) -> ReviewAnswersView:
+    """The answers under review. The admin and the author can ask for an earlier round."""
     assignment, actor = await assignments.load(db, assignment_id, user)
-    return await service.list_units(db, assignment, actor, user, review_round)
+    return await service.list_answers(db, assignment, actor, user, review_round)
 
 
 @router.post(
-    "/assignments/{assignment_id}/units/{unit_id}/comments", status_code=status.HTTP_201_CREATED
+    "/assignments/{assignment_id}/answers/{question_id}/comments",
+    status_code=status.HTTP_201_CREATED,
 )
 async def add_comment(
-    assignment_id: UUID, unit_id: UUID, body: CommentCreate, db: DbSession, user: CurrentUser
+    assignment_id: UUID,
+    question_id: QuestionId,
+    body: CommentCreate,
+    db: DbSession,
+    user: CurrentUser,
 ) -> CommentView:
     assignment, actor = await assignments.lock(db, assignment_id, user)
-    comment = await service.add_comment(db, assignment, actor, user, unit_id, body)
+    comment = await service.add_comment(db, assignment, actor, user, question_id, body)
     await db.commit()
     return comment
 
 
-@router.get("/assignments/{assignment_id}/votes")
-async def get_votes(assignment_id: UUID, db: DbSession, user: CurrentUser) -> VotesView:
-    assignment, actor = await assignments.load(db, assignment_id, user)
-    return await service.votes_view(db, assignment, actor, user)
-
-
-@router.put("/assignments/{assignment_id}/vote")
+@router.put("/assignments/{assignment_id}/answers/{question_id}/vote")
 async def cast_vote(
-    assignment_id: UUID, body: VoteInput, db: DbSession, user: CurrentUser
-) -> VotesView:
+    assignment_id: UUID,
+    question_id: QuestionId,
+    body: VoteInput,
+    db: DbSession,
+    user: CurrentUser,
+) -> ReviewAnswersView:
     assignment, actor = await assignments.lock(db, assignment_id, user)
-    votes = await service.cast_vote(db, assignment, actor, user, body)
+    answers = await service.cast_vote(db, assignment, actor, user, question_id, body)
     await db.commit()
-    return votes
+    return answers
 
 
-@router.post("/assignments/{assignment_id}/unit-decisions")
+@router.post("/assignments/{assignment_id}/answer-decisions")
 async def submit_decisions(
-    assignment_id: UUID, body: UnitDecisionsRequest, db: DbSession, user: CurrentUser
+    assignment_id: UUID, body: AnswerDecisionsRequest, db: DbSession, user: CurrentUser
 ) -> AssignmentView:
-    """The admin's decision on each unit; it closes the review."""
+    """The admin's decision on each answer; it closes the review."""
     assignment, actor = await assignments.lock(db, assignment_id, user)
     await service.submit_decisions(db, assignment, actor, user, body.decisions)
     await db.commit()

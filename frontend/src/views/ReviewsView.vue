@@ -3,7 +3,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, type ReviewItem } from '@/api/client'
-import { describeError, STATEMENT, tallyLabel } from '@/copy'
+import PseudonymChip from '@/components/PseudonymChip.vue'
+import { describeError, tallyLabel } from '@/copy'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -20,9 +21,11 @@ const groups = computed(() => {
     return [{ title: '', items: sorted }]
   }
   const mine = (r: ReviewItem) => r.relation === 'author'
+  /** Votes are per answer: a review is done once every answer has the reviewer's vote. */
+  const voted = (r: ReviewItem) => r.answer_count > 0 && r.my_votes >= r.answer_count
   return [
-    { title: 'Waiting for your vote', items: items.value.filter((r) => !mine(r) && !r.my_vote) },
-    { title: "You've voted", items: items.value.filter((r) => !mine(r) && r.my_vote) },
+    { title: 'Waiting for your vote', items: items.value.filter((r) => !mine(r) && !voted(r)) },
+    { title: "You've voted", items: items.value.filter((r) => !mine(r) && voted(r)) },
     { title: 'Your submissions', items: items.value.filter(mine) },
   ].filter((g) => g.items.length)
 })
@@ -78,14 +81,16 @@ watch(status, load)
             class="flex flex-wrap items-center gap-x-4 gap-y-1 py-3"
             data-testid="review"
           >
-            <RouterLink :to="`/reviews/${r.assignment_id}`" class="flex-1 font-serif text-xl">
-              Case {{ r.vignette_code }}
-              <span v-if="isAdmin && r.author_pseudonym" class="font-sans text-sm text-muted"
-                >· {{ r.author_pseudonym }}</span
+            <span class="flex-1 font-serif text-xl">
+              <RouterLink :to="`/reviews/${r.assignment_id}`"
+                >Case {{ r.vignette_code }}</RouterLink
               >
-            </RouterLink>
-            <span class="text-sm text-muted">{{ r.unit_count }} {{ STATEMENT }}s</span>
-            <span class="text-sm text-muted">{{ tallyLabel(r.accepts, r.declines) }}</span>
+              <span v-if="isAdmin && r.author_pseudonym" class="font-sans text-sm text-muted"
+                >· <PseudonymChip :pseudonym="r.author_pseudonym"
+              /></span>
+            </span>
+            <span class="text-sm text-muted">{{ r.answer_count }} answers</span>
+            <span class="text-sm text-muted">{{ tallyLabel(r.approvals, r.disapprovals) }}</span>
             <span class="text-sm text-muted">{{ r.comment_count }} comments</span>
             <span class="text-sm text-muted capitalize">{{
               r.relation === 'author' ? 'Yours' : r.relation === 'admin' ? '' : 'To review'

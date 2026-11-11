@@ -23,7 +23,7 @@
       "version": "24"
     }
   },
-  "postCreateCommand": "git config --global --add safe.directory /workspace",
+  "postCreateCommand": "git config --global --add safe.directory /workspace && uv sync --frozen --all-packages",
   "forwardPorts": [8000, 5432, 9000, 9001, 11434, 8888],
   "customizations": {
     "vscode": {

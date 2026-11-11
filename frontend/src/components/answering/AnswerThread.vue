@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { api, type CommentView, type UnitView } from '@/api/client'
+import { api, type CommentView, type QuestionId } from '@/api/client'
 import UnsavedText from '@/components/answering/UnsavedText.vue'
+import PseudonymChip from '@/components/PseudonymChip.vue'
 import { describeError, speakerLabel, STANCES } from '@/copy'
 
+/** The discussion under one answer: comments, and replies one level deep. */
 const props = defineProps<{
   assignmentId: string
-  unit: UnitView
+  questionId: string
+  comments: CommentView[]
   canComment: boolean
   /** Only reviewers take a side; the author and the admin don't. */
   canStance: boolean
@@ -20,15 +23,20 @@ const replyTo = ref<string | null>(null)
 const error = ref('')
 const busy = ref(false)
 
-const top = computed(() => props.unit.comments.filter((c) => !c.parent_id))
-const repliesTo = (id: string) => props.unit.comments.filter((c) => c.parent_id === id)
+const top = computed(() => props.comments.filter((c) => !c.parent_id))
+const repliesTo = (id: string) => props.comments.filter((c) => c.parent_id === id)
 
 async function post() {
   busy.value = true
   error.value = ''
   try {
-    await api.POST('/api/v1/assignments/{assignment_id}/units/{unit_id}/comments', {
-      params: { path: { assignment_id: props.assignmentId, unit_id: props.unit.id } },
+    await api.POST('/api/v1/assignments/{assignment_id}/answers/{question_id}/comments', {
+      params: {
+        path: {
+          assignment_id: props.assignmentId,
+          question_id: props.questionId as QuestionId,
+        },
+      },
       body: {
         body: body.value,
         parent_id: replyTo.value,
@@ -53,7 +61,12 @@ async function post() {
     <ul class="space-y-3 text-sm" data-testid="comments">
       <li v-for="c in top" :key="c.id" data-testid="comment">
         <p>
-          <strong>{{ speakerLabel(c.speaker) }}</strong>
+          <PseudonymChip
+            v-if="c.speaker?.pseudonym"
+            :pseudonym="c.speaker.pseudonym"
+            class="font-bold"
+          />
+          <strong v-else>{{ speakerLabel(c.speaker) }}</strong>
           <span v-if="c.stance" class="ml-2 rounded-sm border border-line px-1.5 text-xs">{{
             STANCES[c.stance]
           }}</span>
@@ -65,7 +78,12 @@ async function post() {
         <ul v-if="repliesTo(c.id).length" class="mt-2 space-y-2 border-l-2 border-line pl-3">
           <li v-for="r in repliesTo(c.id)" :key="r.id">
             <p>
-              <strong>{{ speakerLabel(r.speaker) }}</strong>
+              <PseudonymChip
+                v-if="r.speaker?.pseudonym"
+                :pseudonym="r.speaker.pseudonym"
+                class="font-bold"
+              />
+              <strong v-else>{{ speakerLabel(r.speaker) }}</strong>
               <span v-if="r.stance" class="ml-2 rounded-sm border border-line px-1.5 text-xs">{{
                 STANCES[r.stance]
               }}</span>

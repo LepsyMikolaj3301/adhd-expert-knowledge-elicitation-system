@@ -5,8 +5,11 @@ each point to the fragments it is about. **Status:** the expert's input (step 1 
 built, see [frontend-vignettes.md](frontend-vignettes.md). Steps 2 to 7 run in the web application's
 worker (`backend/app/knowledge/`, how it works: [backend-workflow.md](backend-workflow.md)), and the
 approved units are written to the Postgres schema `chips`. The review screen of step 5 has its API
-(`/assignments/{id}/findings`) but no screen yet. Steps 8 and 9 (retrieval and packing) still only
-exist in `scripts/rag/` over files, not over the database. It replaces
+(`/assignments/{id}/findings`) but no screen yet. Steps 8 and 9 (retrieval and packing) over the
+database are the LangChain retrievers of [packages/expert-knowledge-rag](../packages/expert-knowledge-rag);
+the evaluation harness in `scripts/rag/` still runs over files. What the web application's ingestion
+and those retrievers must agree on (BM25, packing, the record, the prompts) is one copy in
+[packages/expert-knowledge-core](../packages/expert-knowledge-core). It replaces
 the regex segmentation of B1 ([expert-knowledge.md](expert-knowledge.md)) and is a lighter alternative
 to LLM-extracted atoms ([expert-atoms.md](expert-atoms.md)). B1 stays shipped until this wins on the
 same harness (see *Decision rule*).

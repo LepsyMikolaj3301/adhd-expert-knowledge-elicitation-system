@@ -247,3 +247,28 @@ async def test_retiring_keeps_existing_assignments_working():
     view = await expert.ok("POST", f"/assignments/{assignment_id}/start")
     assert view["state"] == "in_progress"
     assert DESIGN_SECRET not in str(view)
+
+
+async def test_publishing_needs_a_patient_summary():
+    admin = await admin_api()
+    vignette = await admin.ok("POST", "/vignettes", 201, json=vignette_body(patient_summary=""))
+    version_id = vignette["versions"][0]["id"]
+    await admin.fails("POST", f"/vignette-versions/{version_id}/publish", 422, "summary_missing")
+    await admin.ok(
+        "PATCH", f"/vignette-versions/{version_id}", json={"patient_summary": "A student."}
+    )
+    await admin.ok("POST", f"/vignette-versions/{version_id}/publish")
+
+
+async def test_design_notes_round_trip_and_purpose_is_optional():
+    admin = await admin_api()
+    body = vignette_body(design={"notes": "Check the sleep cue."})
+    vignette = await admin.ok("POST", "/vignettes", 201, json=body)
+    assert vignette["versions"][0]["design"]["notes"] == "Check the sleep cue."
+
+
+async def test_the_questions_come_from_the_server_with_the_q4_placeholder():
+    admin = await admin_api()
+    questions = await admin.ok("GET", "/vignettes/questions")
+    assert [q["id"] for q in questions] == ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]
+    assert "{whatif}" in questions[3]["text"]

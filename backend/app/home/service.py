@@ -12,10 +12,9 @@ from app.assignments.states import Actor, State
 from app.audit.models import AuditEvent
 from app.core.db import utcnow
 from app.home.schemas import ActivityItem, ActivityKind, HomeView, NextAction, NextUpItem, Outcome
-from app.knowledge.models import KnowledgeUnit
 from app.reviews import access
 from app.reviews import service as reviews
-from app.reviews.models import ReviewParticipant, UnitComment
+from app.reviews.models import AnswerComment, ReviewParticipant
 from app.users.models import Role, User
 from app.vignettes.models import Vignette, VignetteVersion
 
@@ -28,21 +27,25 @@ EXCERPT = 140
 EXPERT_ACTIONS: dict[State, NextAction] = {
     State.ASSIGNED: "start",
     State.IN_PROGRESS: "continue",
-    State.EXPERT_CHECK: "check",
+    State.PROOFREAD_CHECK: "check",
 }
 ADMIN_ACTIONS: dict[State, NextAction] = {
     State.PROCESSING_FAILED: "retry",
     State.INGESTION_FAILED: "retry",
 }
 
-# What each audit event means to the people it reaches.
-REVIEW_OPENED = ("units_built", "units_built_for_peers")
+# What each audit event means to the people it reaches. Older events keep their old names.
+REVIEW_OPENED = ("submit_for_review", "units_built", "units_built_for_peers")
 REVIEW_CLOSED: dict[str, Outcome] = {
+    "approve_answers": "accepted",
+    "reject_all_answers": "rejected",
     "approve_units": "accepted",
     "reject_all_units": "rejected",
     "request_changes": "sent_back",
 }
-JOB_FAILED = ("processing_failed", "units_failed", "ingestion_failed")
+JOB_FAILED = ("proofread_failed", "processing_failed", "units_failed", "ingestion_failed")
+# The author's answers are ready to check (`processing_succeeded` before proofreading existed).
+CHECK_READY = ("proofread_succeeded",)
 
 
 async def _next_up(db: AsyncSession, viewer: User) -> tuple[list[NextUpItem], int]:
@@ -92,7 +95,7 @@ async def _workflow_activity(db: AsyncSession, viewer: User) -> list[tuple[datet
             ReviewParticipant.expert_id == viewer.id,
         )
         wanted = or_(
-            and_(own, AuditEvent.action.in_(("assigned", "processing_succeeded"))),
+            and_(own, AuditEvent.action.in_(("assigned", *CHECK_READY))),
             and_(
                 AuditEvent.action.in_(REVIEW_OPENED),
                 or_(own, VignetteVersion.vignette_id.not_in(blocked)),
@@ -141,41 +144,39 @@ async def _workflow_activity(db: AsyncSession, viewer: User) -> list[tuple[datet
 
 
 async def _comment_activity(db: AsyncSession, viewer: User) -> list[tuple[datetime, ActivityItem]]:
-    """Comments on the viewer's own case, and replies in threads they took part in."""
-    other = aliased(UnitComment)
+    """Comments on the viewer's own answers, and replies in threads they took part in."""
+    other = aliased(AnswerComment)
     in_my_thread = and_(
-        UnitComment.parent_id.is_not(None),
+        AnswerComment.parent_id.is_not(None),
         exists().where(
-            or_(other.id == UnitComment.parent_id, other.parent_id == UnitComment.parent_id),
+            or_(other.id == AnswerComment.parent_id, other.parent_id == AnswerComment.parent_id),
             other.author_id == viewer.id,
-            other.id != UnitComment.id,
+            other.id != AnswerComment.id,
         ),
     )
     rows = await db.execute(
         select(
-            UnitComment,
-            KnowledgeUnit.ordinal,
+            AnswerComment,
             Assignment,
             Vignette.code,
             User.role,
             User.pseudonym,
             in_my_thread,
         )
-        .join(KnowledgeUnit, KnowledgeUnit.id == UnitComment.unit_id)
-        .join(Assignment, Assignment.id == KnowledgeUnit.assignment_id)
+        .join(Assignment, Assignment.id == AnswerComment.assignment_id)
         .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
         .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-        .join(User, User.id == UnitComment.author_id)
+        .join(User, User.id == AnswerComment.author_id)
         .where(
-            UnitComment.author_id != viewer.id,
+            AnswerComment.author_id != viewer.id,
             or_(Assignment.expert_id == viewer.id, in_my_thread),
         )
-        .order_by(UnitComment.created_at.desc())
+        .order_by(AnswerComment.created_at.desc())
         .limit(ACTIVITY)
     )
     as_actor = Actor.ADMIN if viewer.role == Role.ADMIN else Actor.REVIEWER
     items = []
-    for comment, ordinal, assignment, code, role, pseudonym, in_thread in rows:
+    for comment, assignment, code, role, pseudonym, in_thread in rows:
         body = comment.body.strip()
         items.append(
             (
@@ -186,8 +187,7 @@ async def _comment_activity(db: AsyncSession, viewer: User) -> list[tuple[dateti
                     vignette_code=code,
                     at=comment.created_at,
                     unread=False,
-                    unit_id=comment.unit_id,
-                    unit_ordinal=ordinal,
+                    question_id=comment.question_id,
                     comment_id=comment.id,
                     speaker=reviews.speaker_for(
                         assignment,
@@ -219,7 +219,8 @@ async def home(db: AsyncSession, viewer: User) -> HomeView:
     waiting = [
         item
         for item in open_reviews
-        if viewer.role == Role.ADMIN or (item.relation == "reviewer" and item.my_vote is None)
+        if viewer.role == Role.ADMIN
+        or (item.relation == "reviewer" and item.my_votes < item.answer_count)
     ]
     activity = await _activity(db, viewer)
     return HomeView(

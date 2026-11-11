@@ -19,17 +19,18 @@ from pgvector.asyncpg import register_vector
 from app.embeddings import Embedder
 from app.indexing import Bm25Config, bm25, build_embedder, load_indexing_config
 from app.settings import settings
+from expert_knowledge_core.prompts import (
+    NOT_IN_SOURCES,  # noqa: F401  (scripts import it from here)
+)
+from expert_knowledge_core.retrieval import FUSION_DEPTH, RRF_K  # noqa: F401
 
 K = 5  # chunks given to the generator
 CANDIDATES = 20  # retrieval depth for the metrics
 RETRIEVAL_MODES = ("dense", "bm25", "hybrid")
 RETRIEVAL = "hybrid"  # dense: pgvector cosine; bm25: sparsevec BM25; hybrid: both fused with RRF
-RRF_K = 60  # reciprocal rank fusion: score = sum over rankings of 1 / (RRF_K + rank)
-FUSION_DEPTH = 50  # candidates taken from each ranking before fusing
 MODELS = ["qwen3.5:9b", "gemma4:e4b"]
 GENERATION_OPTIONS = {"temperature": 0, "num_ctx": 8192, "num_predict": 600}
 SAMPLING_TEMPERATURE = 0.7  # used when a question is asked more than once
-NOT_IN_SOURCES = "NOT_IN_SOURCES"
 
 DATASET = Path("data/eval/bronze_qa.json")
 RUNS_DIR = Path("data/eval/runs")

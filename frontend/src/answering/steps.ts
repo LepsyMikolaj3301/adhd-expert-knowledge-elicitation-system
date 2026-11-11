@@ -4,7 +4,6 @@ import type { AnswerPayload, QuestionView } from '@/api/client'
 /** A question id, or the page at the end. */
 export type StepId = string
 export const REVIEW: StepId = 'review'
-export const GATE_IDS = ['Q1', 'Q2', 'Q3']
 
 /** The Q4 wording the API sends, which it types only as a dictionary. */
 export interface Q4Wording {
@@ -48,27 +47,21 @@ export function stepProblem(question: QuestionView, payload: AnswerPayload): str
   return payload.answers[question.id]?.trim() ? null : `${question.id} needs an answer.`
 }
 
-/** What stops the expert from locking in Q1 to Q3. Moving between them is never stopped. */
-export function gateProblem(questions: QuestionView[], payload: AnswerPayload): string | null {
+/** The first thing missing from any question, in question order. */
+export function firstProblem(questions: QuestionView[], payload: AnswerPayload): string | null {
   for (const question of questions) {
-    if (GATE_IDS.includes(question.id)) {
-      const problem = stepProblem(question, payload)
-      if (problem) return problem
-    }
+    const problem = stepProblem(question, payload)
+    if (problem) return problem
   }
   return null
 }
 
-/** Where to open a vignette. Before the gate that is at most Q3, which holds the lock-in button. */
-export function firstOpenStep(
-  questions: QuestionView[],
-  payload: AnswerPayload,
-  gateOpen: boolean,
-): StepId {
+/** Where to open a vignette: the first question with something missing, else the review. */
+export function firstOpenStep(questions: QuestionView[], payload: AnswerPayload): StepId {
   for (const question of questions) {
     if (stepProblem(question, payload)) return question.id
   }
-  return gateOpen ? REVIEW : (questions[questions.length - 1]?.id ?? REVIEW)
+  return REVIEW
 }
 
 /**

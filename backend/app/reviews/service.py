@@ -1,7 +1,8 @@
-"""Units, their discussion and the reviewers' votes. Only the admin's decision closes a review."""
+"""Answers under review, their discussion and the reviewers' votes. Only the admin's decision
+closes a review."""
 
 from collections import defaultdict
-from typing import Any, Literal
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import case, exists, func, or_, select
@@ -13,33 +14,33 @@ from app.assignments.states import Action, Actor, State
 from app.audit.service import record_event
 from app.core.db import utcnow
 from app.core.errors import DomainError, forbidden, invalid, not_found
-from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
+from app.knowledge import findings
+from app.proofread import service as proofread
+from app.proofread.models import AnswerRevision, ProofreadRound
 from app.reviews import access
 from app.reviews.models import (
+    AnswerComment,
+    AnswerDecision,
+    AnswerVote,
+    AnswerVoteValue,
     DecisionValue,
     ReviewParticipant,
-    ReviewStage,
-    SubmissionVote,
-    UnitComment,
-    UnitDecision,
-    Vote,
 )
 from app.reviews.schemas import (
+    AnswerDecisionInput,
     CommentCreate,
     CommentView,
     DecisionView,
+    ReviewAnswer,
+    ReviewAnswersView,
     ReviewItem,
     Speaker,
-    UnitAdminView,
-    UnitAuthorView,
-    UnitDecisionInput,
-    UnitPeerView,
     VoteEntry,
     VoteInput,
-    VotesView,
 )
 from app.users.models import Role, User
 from app.vignettes.models import Vignette, VignetteVersion
+from app.vignettes.questions import QUESTIONS, render_question
 
 
 def speaker_for(
@@ -57,108 +58,120 @@ def speaker_for(
     )
 
 
-async def _units(
-    db: AsyncSession, assignment: Assignment, review_round: int | None = None
-) -> list[KnowledgeUnit]:
-    """The units of the assignment's current round, or of another one (the history)."""
-    wanted = assignment.review_round if review_round is None else review_round
+async def submitted_rounds(db: AsyncSession, assignment_id: UUID) -> list[int]:
     return list(
         await db.scalars(
-            select(KnowledgeUnit)
+            select(ProofreadRound.review_round)
             .where(
-                KnowledgeUnit.assignment_id == assignment.id,
-                KnowledgeUnit.review_round == wanted,
+                ProofreadRound.assignment_id == assignment_id,
+                ProofreadRound.submitted_at.is_not(None),
             )
-            .order_by(KnowledgeUnit.ordinal)
+            .order_by(ProofreadRound.review_round)
         )
     )
 
 
-async def _comments(
-    db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User, unit_ids: list[UUID]
-) -> dict[UUID, list[CommentView]]:
-    by_unit: dict[UUID, list[CommentView]] = defaultdict(list)
-    rows = await db.execute(
-        select(UnitComment, User.role, User.pseudonym)
-        .join(User, User.id == UnitComment.author_id)
-        .where(UnitComment.unit_id.in_(unit_ids))
-        .order_by(UnitComment.created_at, UnitComment.id)
+def _comment_view(
+    assignment: Assignment, actor: Actor, viewer: User, comment: AnswerComment, role, pseudonym
+) -> CommentView:
+    return CommentView(
+        id=comment.id,
+        question_id=comment.question_id,
+        parent_id=comment.parent_id,
+        stance=comment.stance,
+        body=comment.body,
+        created_at=comment.created_at,
+        speaker=speaker_for(
+            assignment, actor, user_id=comment.author_id, role=role, pseudonym=pseudonym
+        ),
+        is_mine=comment.author_id == viewer.id,
     )
-    for comment, role, pseudonym in rows:
-        by_unit[comment.unit_id].append(
-            CommentView(
-                id=comment.id,
-                unit_id=comment.unit_id,
-                parent_id=comment.parent_id,
-                stance=comment.stance,
-                body=comment.body,
-                created_at=comment.created_at,
-                speaker=speaker_for(
-                    assignment, actor, user_id=comment.author_id, role=role, pseudonym=pseudonym
-                ),
-                is_mine=comment.author_id == viewer.id,
-            )
-        )
-    return by_unit
 
 
-async def list_units(
+async def list_answers(
     db: AsyncSession,
     assignment: Assignment,
     actor: Actor,
     viewer: User,
     review_round: int | None = None,
-) -> list[UnitAdminView | UnitPeerView | UnitAuthorView]:
-    """The current round's units, with their discussion. The admin and the author can ask for an
-    earlier round: the author to read what was said while correcting the filing."""
+) -> ReviewAnswersView:
+    """The answers of the round under review, with their discussion and votes. The admin and the
+    author can ask for an earlier round: the author to read what was said while editing."""
+    rounds = await submitted_rounds(db, assignment.id)
+    if not rounds:
+        raise not_found("Review")
     history = actor in (Actor.ADMIN, Actor.ASSIGNEE)
-    units = await _units(db, assignment, review_round if history else None)
-    unit_ids = [unit.id for unit in units]
-    comments = await _comments(db, assignment, actor, viewer, unit_ids)
-    common: dict[UUID, dict[str, Any]] = {
-        unit.id: {
-            "id": unit.id,
-            "ordinal": unit.ordinal,
-            "review_round": unit.review_round,
-            "text": unit.text,
-            "kind": unit.kind,
-            "direction": unit.direction,
-            "patient_words": unit.patient_words,
-            "comments": comments[unit.id],
-        }
-        for unit in units
-    }
-    if actor == Actor.ASSIGNEE:
-        return [UnitAuthorView(**common[unit.id], status=unit.status) for unit in units]
-    if actor == Actor.REVIEWER:
-        return [UnitPeerView(**common[unit.id]) for unit in units]
-    decisions: dict[UUID, list[DecisionView]] = defaultdict(list)
-    rows = await db.execute(
-        select(UnitDecision, User.pseudonym)
-        .join(User, User.id == UnitDecision.reviewer_id)
-        .where(UnitDecision.unit_id.in_(unit_ids))
-        .order_by(UnitDecision.decided_at, UnitDecision.id)
-    )
-    for decision, pseudonym in rows:
-        decisions[decision.unit_id].append(
-            DecisionView(
-                reviewer_id=decision.reviewer_id,
-                reviewer_pseudonym=pseudonym,
-                stage=decision.stage,
-                decision=decision.decision,
-                comment=decision.comment,
-                decided_at=decision.decided_at,
+    wanted = review_round if history and review_round is not None else rounds[-1]
+    if wanted not in rounds:
+        raise not_found("Review round")
+    round_ = await proofread.get_round(db, assignment.id, wanted)
+    assert round_ is not None
+    version, _ = await proofread.version_and_code(db, assignment.vignette_version_id)
+    rows = await proofread.revisions(db, assignment.id, wanted, version.question_ids)
+
+    comments: dict[str, list[CommentView]] = defaultdict(list)
+    for comment, role, pseudonym in await db.execute(
+        select(AnswerComment, User.role, User.pseudonym)
+        .join(User, User.id == AnswerComment.author_id)
+        .where(AnswerComment.assignment_id == assignment.id, AnswerComment.review_round == wanted)
+        .order_by(AnswerComment.created_at, AnswerComment.id)
+    ):
+        comments[comment.question_id].append(
+            _comment_view(assignment, actor, viewer, comment, role, pseudonym)
+        )
+    votes: dict[str, list[VoteEntry]] = defaultdict(list)
+    mine: dict[str, AnswerVoteValue] = {}
+    for vote, role, pseudonym in await db.execute(
+        select(AnswerVote, User.role, User.pseudonym)
+        .join(User, User.id == AnswerVote.voter_id)
+        .where(AnswerVote.assignment_id == assignment.id, AnswerVote.review_round == wanted)
+        .order_by(AnswerVote.created_at, AnswerVote.voter_id)
+    ):
+        votes[vote.question_id].append(
+            VoteEntry(
+                speaker=speaker_for(
+                    assignment, actor, user_id=vote.voter_id, role=role, pseudonym=pseudonym
+                ),
+                vote=vote.vote,
+                at=vote.updated_at,
             )
         )
-    return [
-        UnitAdminView(
-            **common[unit.id],
-            status=unit.status,
-            content_hash=unit.content_hash,
-            decisions=decisions[unit.id],
+        if vote.voter_id == viewer.id:
+            mine[vote.question_id] = vote.vote
+    decisions = {
+        decision.question_id: DecisionView(
+            decision=decision.decision, comment=decision.comment, decided_at=decision.decided_at
         )
-        for unit in units
-    ]
+        for decision in await db.scalars(
+            select(AnswerDecision).where(
+                AnswerDecision.assignment_id == assignment.id,
+                AnswerDecision.review_round == wanted,
+            )
+        )
+    }
+    return ReviewAnswersView(
+        review_round=wanted,
+        rounds=rounds,
+        state=assignment.state,
+        highlights=proofread.highlight_views(round_.highlights),
+        answers=[
+            ReviewAnswer(
+                question_id=row.question_id,
+                question=render_question(QUESTIONS[row.question_id], version.q4_whatif),
+                text=row.final,
+                lines=proofread.line_views(row.lines),
+                comments=comments[row.question_id],
+                approvals=sum(v.vote == AnswerVoteValue.APPROVE for v in votes[row.question_id]),
+                disapprovals=sum(
+                    v.vote == AnswerVoteValue.DISAPPROVE for v in votes[row.question_id]
+                ),
+                my_vote=mine.get(row.question_id),
+                votes=votes[row.question_id],
+                decision=decisions.get(row.question_id),
+            )
+            for row in rows
+        ],
+    )
 
 
 # --- the list of reviews --------------------------------------------------------------------
@@ -179,34 +192,34 @@ async def list_reviews(
         None: access.REVIEW_VISIBLE_STATES,
     }[status]
     is_admin = viewer.role == Role.ADMIN
-    this_round = (
-        KnowledgeUnit.assignment_id == Assignment.id,
-        KnowledgeUnit.review_round == Assignment.review_round,
+    answer_count = (
+        select(func.count())
+        .select_from(AnswerRevision)
+        .where(
+            AnswerRevision.assignment_id == Assignment.id,
+            AnswerRevision.review_round == Assignment.review_round,
+        )
     )
-    unit_count = select(func.count()).select_from(KnowledgeUnit).where(*this_round)
     comment_count = (
         select(func.count())
-        .select_from(UnitComment)
-        .join(KnowledgeUnit, KnowledgeUnit.id == UnitComment.unit_id)
-        .where(*this_round)
+        .select_from(AnswerComment)
+        .where(
+            AnswerComment.assignment_id == Assignment.id,
+            AnswerComment.review_round == Assignment.review_round,
+        )
     )
 
     def votes(*extra):
         return (
             select(func.count())
-            .select_from(SubmissionVote)
+            .select_from(AnswerVote)
             .where(
-                SubmissionVote.assignment_id == Assignment.id,
-                SubmissionVote.review_round == Assignment.review_round,
+                AnswerVote.assignment_id == Assignment.id,
+                AnswerVote.review_round == Assignment.review_round,
                 *extra,
             )
         )
 
-    my_vote = select(SubmissionVote.vote).where(
-        SubmissionVote.assignment_id == Assignment.id,
-        SubmissionVote.review_round == Assignment.review_round,
-        SubmissionVote.voter_id == viewer.id,
-    )
     opened = exists().where(
         ReviewParticipant.assignment_id == Assignment.id,
         ReviewParticipant.expert_id == viewer.id,
@@ -220,18 +233,18 @@ async def list_reviews(
             Assignment.state,
             Assignment.expert_id,
             User.pseudonym,
-            unit_count.scalar_subquery(),
-            votes(SubmissionVote.vote == Vote.ACCEPT).scalar_subquery(),
-            votes(SubmissionVote.vote == Vote.DECLINE).scalar_subquery(),
+            answer_count.scalar_subquery(),
+            votes(AnswerVote.vote == AnswerVoteValue.APPROVE).scalar_subquery(),
+            votes(AnswerVote.vote == AnswerVoteValue.DISAPPROVE).scalar_subquery(),
             comment_count.scalar_subquery(),
-            my_vote.scalar_subquery(),
+            votes(AnswerVote.voter_id == viewer.id).scalar_subquery(),
             case((opened, True), else_=False),
             Assignment.updated_at,
         )
         .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
         .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
         .join(User, User.id == Assignment.expert_id)
-        .where(Assignment.state.in_(states))
+        .where(Assignment.state.in_(states), access.was_submitted())
         .order_by(Assignment.updated_at.desc(), Assignment.id)
         .limit(limit)
     )
@@ -247,7 +260,7 @@ async def list_reviews(
     items = []
     for row in await db.execute(query):
         (assignment_id, code, version, review_round, state, author_id, author_pseudonym) = row[:7]
-        (units, accepts, declines, comments, mine, was_opened, updated_at) = row[7:]
+        (answers, approvals, disapprovals, comments, my_votes, was_opened, updated_at) = row[7:]
         relation: Literal["reviewer", "author", "admin"] = (
             "admin" if is_admin else "author" if author_id == viewer.id else "reviewer"
         )
@@ -260,11 +273,11 @@ async def list_reviews(
                 state=state,
                 relation=relation,
                 opened=relation != "reviewer" or was_opened,
-                unit_count=units,
-                accepts=accepts,
-                declines=declines,
+                answer_count=answers,
+                approvals=approvals,
+                disapprovals=disapprovals,
                 comment_count=comments,
-                my_vote=mine,
+                my_votes=my_votes,
                 updated_at=updated_at,
                 author_pseudonym=author_pseudonym if is_admin else None,
             )
@@ -298,35 +311,42 @@ def _require_open(assignment: Assignment) -> None:
         )
 
 
+async def _answer(db: AsyncSession, assignment: Assignment, question_id: str) -> AnswerRevision:
+    row = await db.get(AnswerRevision, (assignment.id, assignment.review_round, question_id))
+    if row is None:
+        raise not_found("Answer")
+    return row
+
+
 async def add_comment(
     db: AsyncSession,
     assignment: Assignment,
     actor: Actor,
     viewer: User,
-    unit_id: UUID,
+    question_id: str,
     body: CommentCreate,
 ) -> CommentView:
     _require_open(assignment)
     if body.stance is not None and actor != Actor.REVIEWER:
         # The author taking a side on their own work would be a vote for it.
         raise invalid("stance_not_allowed", "Only reviewers can take a side.")
-    unit = await db.scalar(
-        select(KnowledgeUnit).where(
-            KnowledgeUnit.id == unit_id,
-            KnowledgeUnit.assignment_id == assignment.id,
-            KnowledgeUnit.review_round == assignment.review_round,
-        )
-    )
-    if unit is None:
-        raise not_found("Unit")
+    await _answer(db, assignment, question_id)
     if body.parent_id is not None:
-        parent = await db.get(UnitComment, body.parent_id)
-        if parent is None or parent.unit_id != unit.id or parent.parent_id is not None:
+        parent = await db.get(AnswerComment, body.parent_id)
+        if (
+            parent is None
+            or parent.assignment_id != assignment.id
+            or parent.review_round != assignment.review_round
+            or parent.question_id != question_id
+            or parent.parent_id is not None
+        ):
             raise invalid(
-                "invalid_parent", "Reply to a comment on this unit that is not itself a reply."
+                "invalid_parent", "Reply to a comment on this answer that is not itself a reply."
             )
-    comment = UnitComment(
-        unit_id=unit.id,
+    comment = AnswerComment(
+        assignment_id=assignment.id,
+        review_round=assignment.review_round,
+        question_id=question_id,
         author_id=viewer.id,
         parent_id=body.parent_id,
         stance=body.stance,
@@ -341,66 +361,22 @@ async def add_comment(
         entity_id=assignment.id,
         action="comment_added",
         meta={
-            "unit_id": str(unit.id),
+            "question_id": question_id,
             "comment_id": str(comment.id),
             "stance": body.stance.value if body.stance else None,
         },
     )
-    return CommentView(
-        id=comment.id,
-        unit_id=comment.unit_id,
-        parent_id=comment.parent_id,
-        stance=comment.stance,
-        body=comment.body,
-        created_at=comment.created_at,
-        speaker=speaker_for(
-            assignment, actor, user_id=viewer.id, role=viewer.role, pseudonym=viewer.pseudonym
-        ),
-        is_mine=True,
-    )
-
-
-async def votes_view(
-    db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User
-) -> VotesView:
-    rows = await db.execute(
-        select(SubmissionVote, User.role, User.pseudonym)
-        .join(User, User.id == SubmissionVote.voter_id)
-        .where(
-            SubmissionVote.assignment_id == assignment.id,
-            SubmissionVote.review_round == assignment.review_round,
-        )
-        .order_by(SubmissionVote.created_at, SubmissionVote.voter_id)
-    )
-    entries = [
-        VoteEntry(
-            speaker=speaker_for(
-                assignment, actor, user_id=vote.voter_id, role=role, pseudonym=pseudonym
-            ),
-            vote=vote.vote,
-            at=vote.updated_at,
-        )
-        for vote, role, pseudonym in rows
-    ]
-    mine = await db.scalar(
-        select(SubmissionVote.vote).where(
-            SubmissionVote.assignment_id == assignment.id,
-            SubmissionVote.review_round == assignment.review_round,
-            SubmissionVote.voter_id == viewer.id,
-        )
-    )
-    return VotesView(
-        review_round=assignment.review_round,
-        accepts=sum(entry.vote == Vote.ACCEPT for entry in entries),
-        declines=sum(entry.vote == Vote.DECLINE for entry in entries),
-        my_vote=mine,
-        votes=entries,
-    )
+    return _comment_view(assignment, actor, viewer, comment, viewer.role, viewer.pseudonym)
 
 
 async def cast_vote(
-    db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User, body: VoteInput
-) -> VotesView:
+    db: AsyncSession,
+    assignment: Assignment,
+    actor: Actor,
+    viewer: User,
+    question_id: str,
+    body: VoteInput,
+) -> ReviewAnswersView:
     """Advisory, and changeable until the admin closes the review."""
     if actor != Actor.REVIEWER:
         raise forbidden("Only reviewers vote.")
@@ -408,15 +384,18 @@ async def cast_vote(
     if body.review_round != assignment.review_round:
         raise DomainError(
             "stale_round",
-            "These units have been cut again since you opened them. Reload the review.",
+            "These answers have been edited since you opened them. Reload the review.",
             details={"current_round": assignment.review_round},
         )
-    existing = await db.get(SubmissionVote, (assignment.id, assignment.review_round, viewer.id))
+    await _answer(db, assignment, question_id)
+    key = (assignment.id, assignment.review_round, question_id, viewer.id)
+    existing = await db.get(AnswerVote, key)
     if existing is None:
         db.add(
-            SubmissionVote(
+            AnswerVote(
                 assignment_id=assignment.id,
                 review_round=assignment.review_round,
+                question_id=question_id,
                 voter_id=viewer.id,
                 vote=body.vote,
             )
@@ -430,117 +409,30 @@ async def cast_vote(
         entity_type="assignment",
         entity_id=assignment.id,
         action="vote_cast",
-        meta={"vote": body.vote.value, "review_round": assignment.review_round},
+        meta={
+            "question_id": question_id,
+            "vote": body.vote.value,
+            "review_round": assignment.review_round,
+        },
     )
     await db.flush()
-    return await votes_view(db, assignment, actor, viewer)
+    return await list_answers(db, assignment, actor, viewer)
 
 
 # --- the admin's decision -------------------------------------------------------------------
 
 
-def _check_complete(units: list[KnowledgeUnit], decisions: list[UnitDecisionInput]) -> None:
-    """Every unit exactly once: partial reviews would make stage completion ambiguous."""
-    given = [decision.unit_id for decision in decisions]
-    if len(set(given)) != len(given) or set(given) != {unit.id for unit in units}:
-        raise invalid("decisions_incomplete", "Decide every unit of this assignment exactly once.")
-
-
-def _record_decisions(
-    db: AsyncSession,
-    units: list[KnowledgeUnit],
-    decisions: list[UnitDecisionInput],
-    reviewer: User,
-    stage: ReviewStage,
-) -> None:
-    hashes = {unit.id: unit.content_hash for unit in units}
-    db.add_all(
-        UnitDecision(
-            unit_id=decision.unit_id,
-            reviewer_id=reviewer.id,
-            stage=stage,
-            decision=decision.decision,
-            comment=decision.comment,
-            unit_content_hash=hashes[decision.unit_id],
-        )
-        for decision in decisions
-    )
-
-
-async def _send_back(
-    db: AsyncSession,
-    assignment: Assignment,
-    actor: Actor,
-    viewer: User,
-    units: list[KnowledgeUnit],
-    by_unit: dict[UUID, DecisionValue],
-    changes: int,
-) -> None:
-    """The admin asked for changes: these units become history, the author corrects the filing, and
-    a new round of units is cut and reviewed. Nothing from this round is ingested."""
-    for unit in units:
-        unit.status = UnitStatus.SUPERSEDED
-    assignment.review_round += 1
-    approved = sum(d == DecisionValue.APPROVE for d in by_unit.values())
-    await transition(
-        db,
-        assignment,
-        Action.REQUEST_CHANGES,
-        actor,
-        viewer.id,
-        {
-            "approved": approved,
-            "rejected": len(units) - approved - changes,
-            "changes": changes,
-            "review_round": assignment.review_round,
-        },
-    )
-    findings = await db.get(AnswerFindings, assignment.id)
-    if findings is not None:
-        findings.check_outcome = None  # the author approves the (corrected) filing again
-
-
-async def _admin_decides(
-    db: AsyncSession,
-    assignment: Assignment,
-    actor: Actor,
-    viewer: User,
-    units: list[KnowledgeUnit],
-    decisions: list[UnitDecisionInput],
-) -> None:
-    check_transition(assignment.state, Action.APPROVE_UNITS, actor)
-    _check_complete(units, decisions)
-    _record_decisions(db, units, decisions, viewer, ReviewStage.ADMIN)
-    by_unit = {decision.unit_id: decision.decision for decision in decisions}
-    if changes := sum(d == DecisionValue.REQUEST_CHANGES for d in by_unit.values()):
-        await _send_back(db, assignment, actor, viewer, units, by_unit, changes)
-        return
-    for unit in units:
-        approved = by_unit[unit.id] == DecisionValue.APPROVE
-        unit.status = UnitStatus.APPROVED if approved else UnitStatus.REJECTED
-    approved_count = sum(unit.status == UnitStatus.APPROVED for unit in units)
-    action = Action.APPROVE_UNITS if approved_count else Action.REJECT_ALL_UNITS
-    await transition(
-        db,
-        assignment,
-        action,
-        actor,
-        viewer.id,
-        {"approved": approved_count, "rejected": len(units) - approved_count},
-    )
-
-
-def _require_comments(decisions: list[UnitDecisionInput]) -> None:
+def _require_comments(decisions: list[AnswerDecisionInput]) -> None:
     """Asking for changes without saying what to change would leave the author guessing."""
     if missing := [
-        str(d.unit_id)
+        d.question_id
         for d in decisions
         if d.decision == DecisionValue.REQUEST_CHANGES and not (d.comment or "").strip()
     ]:
         raise invalid(
             "comment_required",
             "Say what should change when asking for changes.",
-            {"unit_ids": missing},
+            {"question_ids": missing},
         )
 
 
@@ -549,9 +441,59 @@ async def submit_decisions(
     assignment: Assignment,
     actor: Actor,
     viewer: User,
-    decisions: list[UnitDecisionInput],
+    decisions: list[AnswerDecisionInput],
 ) -> None:
-    """Only the admin decides, per unit; the reviewers' votes and comments are what they read."""
-    check_transition(assignment.state, Action.APPROVE_UNITS, actor)
+    """Only the admin decides, per answer; the reviewers' votes and comments are what they read.
+
+    Any request for changes sends every answer back to the author for a new round. Otherwise the
+    approved answers are cut into units and ingested; with none approved, the submission is
+    rejected.
+    """
+    check_transition(assignment.state, Action.APPROVE_ANSWERS, actor)
     _require_comments(decisions)
-    await _admin_decides(db, assignment, actor, viewer, await _units(db, assignment), decisions)
+    version, _ = await proofread.version_and_code(db, assignment.vignette_version_id)
+    rows = await proofread.revisions(
+        db, assignment.id, assignment.review_round, version.question_ids
+    )
+    given = [decision.question_id for decision in decisions]
+    if len(set(given)) != len(given) or set(given) != {row.question_id for row in rows}:
+        raise invalid("decisions_incomplete", "Decide every answer exactly once.")
+    by_question = {row.question_id: row for row in rows}
+    db.add_all(
+        AnswerDecision(
+            assignment_id=assignment.id,
+            review_round=assignment.review_round,
+            question_id=decision.question_id,
+            reviewer_id=viewer.id,
+            decision=decision.decision,
+            comment=(decision.comment or "").strip() or None,
+            content_hash=proofread.answer_hash(by_question[decision.question_id]),
+        )
+        for decision in decisions
+    )
+    counts = {value.value: sum(d.decision == value for d in decisions) for value in DecisionValue}
+    if counts[DecisionValue.REQUEST_CHANGES.value]:
+        assignment.review_round += 1
+        await transition(
+            db,
+            assignment,
+            Action.REQUEST_CHANGES,
+            actor,
+            viewer.id,
+            {**counts, "review_round": assignment.review_round},
+        )
+        feedback = [
+            {"question_id": d.question_id, "comment": d.comment.strip()}
+            for d in decisions
+            if d.comment and d.comment.strip()
+        ]
+        await proofread.open_next_round(db, assignment, feedback)
+        return
+    # Only answers that are filed become units: approving Q4's why alone leaves nothing to ingest.
+    filed = [
+        d
+        for d in decisions
+        if d.decision == DecisionValue.APPROVE and findings.is_filed(d.question_id)
+    ]
+    action = Action.APPROVE_ANSWERS if filed else Action.REJECT_ALL_ANSWERS
+    await transition(db, assignment, action, actor, viewer.id, counts)

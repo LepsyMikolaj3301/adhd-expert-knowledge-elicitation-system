@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { emptyDesign, fieldForError, nextCode } from '@/admin/vignetteForm'
 import App from '@/App.vue'
-import { ApiError, type AssignmentSummary, type User, type VersionAdminView } from '@/api/client'
+import { ApiError, type VersionAdminView } from '@/api/client'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -23,8 +23,9 @@ function version(overrides: Partial<VersionAdminView> = {}): VersionAdminView {
     framing: 'email',
     question_ids: ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6'],
     q4_whatif: 'the writer had an exam',
+    patient_summary: 'A student writing before an exam.',
     variant: null,
-    design: { ...emptyDesign(), purpose: 'Test purpose' },
+    design: { ...emptyDesign(), notes: 'Test notes' },
     created_at: 'now',
     published_at: null,
     word_count: 130,
@@ -36,20 +37,14 @@ function vignette(versions: VersionAdminView[] = [version()], code = 'V007') {
   return { id: 'vig1', code, created_at: 'now', versions }
 }
 
-function summary(overrides: Partial<AssignmentSummary> = {}): AssignmentSummary {
-  return {
-    id: 'as1',
-    state: 'assigned',
-    allowed_actions: ['cancel'],
-    job_running: false,
-    vignette_code: 'V007',
-    vignette_version: 1,
-    vignette_version_id: 'ver1',
-    expert_pseudonym: 'E01',
-    updated_at: 'now',
-    ...overrides,
-  }
-}
+const QUESTIONS = [
+  { id: 'Q1', kind: 'open', text: 'Which fragments matter?' },
+  { id: 'Q2', kind: 'open', text: 'What else could explain them?' },
+  { id: 'Q3', kind: 'open', text: 'What is missing?' },
+  { id: 'Q4', kind: 'shift', text: 'Given your hypothesis: how would it change if {whatif}?' },
+  { id: 'Q5', kind: 'open', text: 'What would a junior over-read?' },
+  { id: 'Q6', kind: 'rating_1_5', text: 'Overall, how strongly?' },
+]
 
 type Call = { method: string; url: string; body?: Record<string, unknown> }
 let calls: Call[]
@@ -57,7 +52,7 @@ let wrapper: VueWrapper | undefined
 let routes: Record<string, () => Response>
 
 function serve(table: Record<string, () => Response>) {
-  routes = table
+  routes = { 'GET /vignettes/questions': () => jsonResponse(200, QUESTIONS), ...table }
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: Request) => {
@@ -129,6 +124,8 @@ describe('fieldForError', () => {
   it.each([
     ['word_count_out_of_range', undefined, 'text'],
     ['q4_without_whatif', undefined, 'q4_whatif'],
+    ['summary_missing', undefined, 'patient_summary'],
+    ['construct_word_in_text', { field: 'patient_summary' }, 'patient_summary'],
     ['span_not_in_text', undefined, 'quotes'],
     ['control_with_cues', undefined, 'quotes'],
     ['track_without_target', undefined, 'knowledge_target'],
@@ -174,10 +171,11 @@ describe('writing a vignette', () => {
   async function fillRequired() {
     await app().get('[data-testid="text"]').setValue(TEXT)
     await app().get('[data-testid="whatif"]').setValue('the writer had an exam')
-    await app().get('[data-testid="purpose"]').setValue('Sleep as a confounder')
+    await app().get('[data-testid="summary"]').setValue('A student before an exam.')
+    await app().get('[data-testid="notes"]').setValue('Sleep as a confounder')
   }
 
-  it('suggests the next code, and creates a draft with no questions in it', async () => {
+  it('suggests the next code, and creates a draft with a summary and notes', async () => {
     serve({
       'GET /vignettes': () => jsonResponse(200, [vignette()]),
       'POST /vignettes': () => jsonResponse(201, vignette([version()], 'V008')),
@@ -193,7 +191,8 @@ describe('writing a vignette', () => {
     expect(body.text).toBe(TEXT)
     expect(body.q4_whatif).toBe('the writer had an exam')
     expect(body).not.toHaveProperty('question_ids')
-    expect(body.design).toMatchObject({ purpose: 'Sleep as a confounder', origin: 'hand_written' })
+    expect(body.patient_summary).toBe('A student before an exam.')
+    expect(body.design).toMatchObject({ notes: 'Sleep as a confounder', origin: 'hand_written' })
 
     // The same screen stays on the page, and has to show the saved draft.
     await vi.waitFor(() => expect(app().get('[data-testid="status"]').text()).toContain('draft'))
@@ -233,44 +232,52 @@ describe('writing a vignette', () => {
     expect(app().get('[data-error="code"]').text()).toBe('V008 already exists.')
   })
 
-  it('adds a planted cue from text selected in the patient text', async () => {
+  it('shows the six questions, with the what-if written inside Q4', async () => {
     serve({ 'GET /vignettes': () => jsonResponse(200, []) })
     await open('/vignettes/new')
-    await fillRequired()
-    const area = app().get('[data-testid="text"]').element as HTMLTextAreaElement
-    area.setSelectionRange(0, 'word0 word1'.length)
-    await buttonNamed('Add selected text as a cue').trigger('click')
-    expect(app().get('[data-testid="cue"]').text()).toContain('word0 word1')
-    expect((app().get('[data-testid="cue"] input').element as HTMLInputElement).value).toBe('')
+    const questions = app().findAll('[data-testid="question"]')
+    expect(questions.map((q) => q.text().slice(0, 2))).toEqual(['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6'])
+    expect(questions[0]?.text()).toContain('Which fragments matter?')
+    const q4 = questions[3]!
+    expect(q4.text()).toContain('Given your hypothesis: how would it change if')
+    expect(q4.find('[data-testid="whatif"]').exists()).toBe(true)
+    expect(app().findAll('[data-testid="whatif"]')).toHaveLength(1)
   })
 
-  it('says when nothing is selected for a cue', async () => {
+  it('has no planted cues, confounders or design section', async () => {
     serve({ 'GET /vignettes': () => jsonResponse(200, []) })
     await open('/vignettes/new')
-    await buttonNamed('Add selected text as a cue').trigger('click')
-    expect(app().findAll('[data-testid="cue"]')).toHaveLength(0)
-    expect(app().text()).toContain('Select words in the patient text first.')
+    expect(app().text()).not.toContain('Planted cues')
+    expect(app().text()).not.toContain('Design notes')
+    expect(app().find('[data-testid="purpose"]').exists()).toBe(false)
   })
 
-  it('warns when a quote is no longer in the text', async () => {
+  it('shows the missing summary next to its field', async () => {
+    serve({
+      'GET /vignettes': () => jsonResponse(200, [vignette()]),
+      'POST /vignette-versions/ver1/publish': () =>
+        jsonResponse(422, { code: 'summary_missing', message: 'Add a short description.' }),
+    })
+    await open('/vignettes/vig1')
+    await buttonNamed('Publish').trigger('click')
+    await flushPromises()
+    expect(app().get('[data-error="patient_summary"]').text()).toContain('short description')
+  })
+
+  it('keeps the cues of an imported vignette when it is saved', async () => {
+    const cue = { quote: 'word0', trait: 't', strength: 'weak' as const }
     serve({
       'GET /vignettes': () =>
         jsonResponse(200, [
-          vignette([
-            version({
-              design: {
-                ...emptyDesign(),
-                purpose: 'p',
-                planted_cues: [{ quote: 'word0', trait: 't', strength: 'weak' }],
-                confounders: [],
-              },
-            }),
-          ]),
+          vignette([version({ design: { ...emptyDesign(), planted_cues: [cue] } })]),
         ]),
+      'PATCH /vignette-versions/ver1': () => jsonResponse(200, version()),
     })
     await open('/vignettes/vig1')
-    await app().get('[data-testid="text"]').setValue('all new words')
-    expect(app().get('[data-testid="cue"]').text()).toContain('no longer in the text')
+    await app().get('[data-testid="notes"]').setValue('changed')
+    await buttonNamed('Save draft').trigger('click')
+    await flushPromises()
+    expect(writes()[0]?.body?.design).toMatchObject({ planted_cues: [cue], notes: 'changed' })
   })
 })
 
@@ -281,8 +288,6 @@ describe('a draft version', () => {
       'GET /vignettes': () => jsonResponse(200, [vignette()]),
       'PATCH /vignette-versions/ver1': () => jsonResponse(200, version()),
       'POST /vignette-versions/ver1/publish': () => jsonResponse(200, published),
-      'GET /users': () => jsonResponse(200, []),
-      'GET /assignments': () => jsonResponse(200, []),
     })
     await open('/vignettes/vig1')
     await app().get('[data-testid="whatif"]').setValue('the writer slept well')
@@ -314,119 +319,27 @@ describe('a draft version', () => {
     await app().get('[data-testid="text"]').setValue(`${TEXT} more`)
     expect(app().find('[data-error="text"]').exists()).toBe(false)
   })
-
-  it('offers no assigning before it is published', async () => {
-    serve({ 'GET /vignettes': () => jsonResponse(200, [vignette()]) })
-    await open('/vignettes/vig1')
-    expect(app().find('[data-testid="assign-panel"]').exists()).toBe(false)
-  })
 })
 
 describe('a published version', () => {
-  const experts: User[] = [
-    { ...expert, id: 'e1', display_name: 'Eve', pseudonym: 'E01' },
-    { ...expert, id: 'e2', display_name: 'Finn', pseudonym: 'E02' },
-    { ...expert, id: 'e3', display_name: 'Gone', pseudonym: 'E03', is_active: false },
-    { ...admin, id: 'a1' },
-  ]
-
   function publishedRoutes(extra: Record<string, () => Response> = {}) {
     return {
       'GET /vignettes': () => jsonResponse(200, [vignette([version({ status: 'published' })])]),
-      'GET /users': () => jsonResponse(200, experts),
-      'GET /assignments': () => jsonResponse(200, [summary()]),
       ...extra,
     }
   }
 
-  it('is read-only', async () => {
+  it('is read-only, and leaves assigning to the Assignments page', async () => {
     serve(publishedRoutes())
     await open('/vignettes/vig1')
     expect(app().get('[data-testid="text"]').attributes('disabled')).toBeDefined()
+    expect(app().get('[data-testid="summary"]').attributes('disabled')).toBeDefined()
     expect(
       app()
         .findAll('button')
         .some((b) => b.text() === 'Save draft'),
     ).toBe(false)
-  })
-
-  it('asks only for the assignments of this version', async () => {
-    serve(publishedRoutes())
-    await open('/vignettes/vig1')
-    const asked = calls.find((c) => c.url.startsWith('/api/v1/assignments'))
-    expect(asked?.url).toContain('vignette_version_id=ver1')
-  })
-
-  it('lists who has it, and offers only active experts who do not', async () => {
-    serve(publishedRoutes())
-    await open('/vignettes/vig1')
-    const panel = app().get('[data-testid="assign-panel"]')
-    expect(panel.get('[data-testid="assigned"]').text()).toContain('Eve')
-    expect(panel.get('[data-testid="assigned"]').text()).toContain('Not started')
-    const offered = panel.findAll('[data-testid="offer"]').map((o) => o.text())
-    expect(offered).toEqual([expect.stringContaining('Finn')])
-  })
-
-  it('assigns the chosen experts, then shows the new state', async () => {
-    serve(
-      publishedRoutes({
-        'POST /vignette-versions/ver1/assignments': () => jsonResponse(201, []),
-      }),
-    )
-    await open('/vignettes/vig1')
-    expect(buttonNamed('Assign').attributes('disabled')).toBeDefined()
-    await app().get('[data-testid="offer"] input').setValue(true)
-    await buttonNamed('Assign').trigger('click')
-    await flushPromises()
-    expect(writes()[0]?.url).toBe('/api/v1/vignette-versions/ver1/assignments')
-    expect(writes()[0]?.body).toEqual({ expert_ids: ['e2'] })
-    expect(calls.filter((c) => c.url.startsWith('/api/v1/assignments')).length).toBe(2)
-  })
-
-  it('names the experts a refusal is about', async () => {
-    serve(
-      publishedRoutes({
-        'POST /vignette-versions/ver1/assignments': () =>
-          jsonResponse(409, {
-            code: 'reviewer_contaminated',
-            message: 'These experts have already reviewed answers to this vignette.',
-            details: { expert_ids: ['e2'] },
-          }),
-      }),
-    )
-    await open('/vignettes/vig1')
-    await app().get('[data-testid="offer"] input').setValue(true)
-    await buttonNamed('Assign').trigger('click')
-    await flushPromises()
-    const alert = app().get('[data-testid="assign-panel"] [role="alert"]').text()
-    expect(alert).toContain('already reviewed')
-    expect(alert).toContain('Finn')
-  })
-
-  it('asks before cancelling an assignment', async () => {
-    serve(publishedRoutes({ 'POST /assignments/as1/cancel': () => jsonResponse(200, {}) }))
-    await open('/vignettes/vig1')
-    await buttonNamed('Cancel').trigger('click')
-    expect(writes()).toHaveLength(0)
-    await app()
-      .get('dialog[open]')
-      .findAll('button')
-      .find((b) => b.text() === 'Cancel assignment')
-      ?.trigger('click')
-    await flushPromises()
-    expect(writes()[0]?.url).toBe('/api/v1/assignments/as1/cancel')
-  })
-
-  it('treats a cancelled assignment as open again', async () => {
-    serve(
-      publishedRoutes({
-        'GET /assignments': () =>
-          jsonResponse(200, [summary({ state: 'cancelled', allowed_actions: [] })]),
-      }),
-    )
-    await open('/vignettes/vig1')
-    expect(app().findAll('[data-testid="offer"]')).toHaveLength(2)
-    expect(app().find('[data-testid="assigned"]').exists()).toBe(false)
+    expect(app().find('[data-testid="assign-panel"]').exists()).toBe(false)
   })
 
   it('retires only after asking', async () => {
@@ -448,18 +361,7 @@ describe('a published version', () => {
     expect(writes()[0]?.url).toBe('/api/v1/vignette-versions/ver1/retire')
   })
 
-  it('offers no new assignments on a retired version', async () => {
-    serve(
-      publishedRoutes({
-        'GET /vignettes': () => jsonResponse(200, [vignette([version({ status: 'retired' })])]),
-      }),
-    )
-    await open('/vignettes/vig1')
-    expect(app().find('[data-testid="assign-panel"]').exists()).toBe(true)
-    expect(app().find('[data-testid="offer"]').exists()).toBe(false)
-  })
-
-  it('can start a new version that keeps the variant', async () => {
+  it('can start a new version that keeps the variant and the summary', async () => {
     const variant = { pair_id: 'P1', arm: 'A' as const, change: null }
     serve(
       publishedRoutes({
@@ -473,7 +375,11 @@ describe('a published version', () => {
     await buttonNamed('New version').trigger('click')
     await flushPromises()
     expect(writes()[0]?.url).toBe('/api/v1/vignettes/vig1/versions')
-    expect(writes()[0]?.body).toMatchObject({ text: TEXT, variant })
+    expect(writes()[0]?.body).toMatchObject({
+      text: TEXT,
+      variant,
+      patient_summary: 'A student writing before an exam.',
+    })
   })
 })
 

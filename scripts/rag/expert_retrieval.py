@@ -9,6 +9,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
@@ -25,7 +26,8 @@ from app.elicitation.units import ExpertUnit, render_unit, sentences  # noqa: E4
 from app.indexing import bm25  # noqa: E402
 
 N_QUERIES = 40
-LEAN = {"context_words": 30, "max_context": 1}  # B1: one short vignette sentence per unit
+# B1: one short vignette sentence per unit
+LEAN: dict[str, Any] = {"context_words": 30, "max_context": 1}
 MMR_POOL, MMR_LAMBDA = 30, 0.7
 POOL_DEPTH, POOL_PART = 8, 10  # claims pooled per system and question; questions per agent request
 

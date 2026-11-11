@@ -1,5 +1,5 @@
-"""One view of a unit per audience, told apart by `audience`; the discussion under it is the same
-for all three."""
+"""What reviewers, the author and the admin read of a submission under review: its answers, one
+by one, with the discussion and the votes under each."""
 
 from datetime import datetime
 from typing import Annotated, Literal
@@ -8,8 +8,9 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from app.assignments.states import State
-from app.knowledge.models import UnitStatus
-from app.reviews.models import DecisionValue, ReviewStage, Stance, Vote
+from app.proofread.schemas import AnswerLine, LinkedHighlight
+from app.reviews.models import AnswerVoteValue, DecisionValue, Stance
+from app.vignettes.questions import QuestionId
 
 
 class Speaker(BaseModel):
@@ -22,8 +23,8 @@ class Speaker(BaseModel):
 
 class CommentView(BaseModel):
     id: UUID
-    unit_id: UUID
-    # Replies are one level deep: this is a top-level comment of the same unit, or None.
+    question_id: str
+    # Replies are one level deep: this is a top-level comment of the same answer, or None.
     parent_id: UUID | None
     stance: Stance | None
     body: str
@@ -32,59 +33,41 @@ class CommentView(BaseModel):
     is_mine: bool
 
 
+class VoteEntry(BaseModel):
+    speaker: Speaker
+    vote: AnswerVoteValue
+    at: datetime
+
+
 class DecisionView(BaseModel):
-    reviewer_id: UUID
-    reviewer_pseudonym: str
-    stage: ReviewStage
     decision: DecisionValue
     comment: str | None
     decided_at: datetime
 
 
-class _UnitBase(BaseModel):
-    id: UUID
-    ordinal: int
-    review_round: int
+class ReviewAnswer(BaseModel):
+    question_id: str
+    question: str
+    # The author's edited answer, one sentence per line.
     text: str
-    # Cut by citation: a fragment unit is everything said about one passage of the vignette, the
-    # case unit everything said about the text as a whole.
-    kind: str | None
-    direction: str | None
-    patient_words: str | None
+    # Each line with the citations it is about. Empty for Q4's why, which is not linked.
+    lines: list[AnswerLine]
     comments: list[CommentView]
+    approvals: int
+    disapprovals: int
+    my_vote: AnswerVoteValue | None
+    votes: list[VoteEntry]
+    # The admin's, once the review is closed.
+    decision: DecisionView | None
 
 
-class UnitAdminView(_UnitBase):
-    audience: Literal["admin"] = "admin"
-    status: UnitStatus
-    content_hash: str
-    decisions: list[DecisionView]
-
-
-class UnitPeerView(_UnitBase):
-    audience: Literal["peer"] = "peer"
-
-
-class UnitAuthorView(_UnitBase):
-    audience: Literal["author"] = "author"
-    status: UnitStatus
-
-
-UnitView = Annotated[UnitAdminView | UnitPeerView | UnitAuthorView, Field(discriminator="audience")]
-
-
-class UnitDecisionInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    unit_id: UUID
-    decision: DecisionValue
-    comment: str | None = Field(default=None, max_length=5_000)
-
-
-class UnitDecisionsRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    decisions: list[UnitDecisionInput] = Field(max_length=1_000)
+class ReviewAnswersView(BaseModel):
+    review_round: int
+    # The rounds that were submitted for review: the admin and the author can read each.
+    rounds: list[int]
+    state: State
+    highlights: list[LinkedHighlight]
+    answers: list[ReviewAnswer]
 
 
 class CommentCreate(BaseModel):
@@ -98,24 +81,24 @@ class CommentCreate(BaseModel):
 class VoteInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    vote: Vote
-    # The round the reviewer was looking at: a vote on units that have since been cut again is
+    vote: AnswerVoteValue
+    # The round the reviewer was looking at: a vote on an answer that has since been edited is
     # refused instead of landing on text nobody read.
     review_round: int = Field(ge=1)
 
 
-class VoteEntry(BaseModel):
-    speaker: Speaker
-    vote: Vote
-    at: datetime
+class AnswerDecisionInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question_id: QuestionId
+    decision: DecisionValue
+    comment: str | None = Field(default=None, max_length=5_000)
 
 
-class VotesView(BaseModel):
-    review_round: int
-    accepts: int
-    declines: int
-    my_vote: Vote | None
-    votes: list[VoteEntry]
+class AnswerDecisionsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    decisions: list[AnswerDecisionInput] = Field(max_length=20)
 
 
 Relation = Literal["reviewer", "author", "admin"]
@@ -130,11 +113,12 @@ class ReviewItem(BaseModel):
     relation: Relation
     # A reviewer has agreed to read it. Always true for the author and the admin.
     opened: bool
-    unit_count: int
-    accepts: int
-    declines: int
+    answer_count: int
+    approvals: int
+    disapprovals: int
     comment_count: int
-    my_vote: Vote | None
+    # How many of this round's answers the viewer has voted on.
+    my_votes: int
     updated_at: datetime
     # Only the admin knows who wrote it.
     author_pseudonym: str | None

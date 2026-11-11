@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
-import { inkFor, segmentsFor } from '@/answering/highlights'
-import type { Citation } from '@/api/client'
+import { segmentsFor } from '@/answering/highlights'
+import { inkOf } from '@/answering/quoteFocus'
+import InfoPopover from '@/components/InfoPopover.vue'
 
 const props = defineProps<{
   text: string
-  /** The citation to light up. Nothing else is ever marked. */
-  active: Citation | null
+  /** The passage to light up: a citation, or words an answer quoted. Nothing else is marked. */
+  active: { span: readonly number[]; chip: number | null } | null
   canCite: boolean
 }>()
 
@@ -17,7 +18,6 @@ const root = ref<HTMLElement>()
 const mark = ref<HTMLElement>()
 // Marking a passage rewrites the text nodes, which would destroy a selection being dragged.
 const selecting = ref(false)
-const hasSelection = ref(false)
 
 const shown = computed(() => (selecting.value ? null : props.active))
 const parts = computed(() => segmentsFor(props.text, shown.value))
@@ -49,31 +49,22 @@ function citeSelection() {
   const offsets = readSelection()
   if (!offsets) return
   window.getSelection()?.removeAllRanges()
-  hasSelection.value = false
   emit('cite', offsets[0], offsets[1])
 }
 
-function onPointerDown(event: PointerEvent) {
+/** Every selection becomes a quote as soon as the pointer lifts: no confirming step. */
+function onPointerDown() {
   if (!props.canCite) return
   selecting.value = true
-  // A touch selection is adjusted after the finger lifts: the button below confirms it.
-  const automatic = event.pointerType !== 'touch'
   const finish = () => {
     window.removeEventListener('pointerup', finish)
     window.removeEventListener('pointercancel', finish)
     selecting.value = false
-    if (automatic) citeSelection()
+    citeSelection()
   }
   window.addEventListener('pointerup', finish)
   window.addEventListener('pointercancel', finish)
 }
-
-function onSelectionChange() {
-  hasSelection.value = props.canCite && !selecting.value && readSelection() !== null
-}
-
-onMounted(() => document.addEventListener('selectionchange', onSelectionChange))
-onUnmounted(() => document.removeEventListener('selectionchange', onSelectionChange))
 
 watch(shown, async (citation) => {
   if (!citation) return
@@ -84,24 +75,32 @@ watch(shown, async (citation) => {
 
 <template>
   <div class="px-5 py-5 md:px-7">
+    <div v-if="canCite" class="mb-3 text-sm text-muted">
+      <InfoPopover mode="hover">
+        <template #trigger="{ panelId }">
+          <span
+            class="cursor-help underline decoration-dotted underline-offset-4"
+            tabindex="0"
+            :aria-describedby="panelId"
+            data-testid="cite-help"
+            >How to add a quote</span
+          >
+        </template>
+        <p class="text-ink">
+          Select words in the text below. They become a quote as soon as you let go.
+        </p>
+        <p class="text-muted">Then choose its direction in the list of quotes.</p>
+      </InfoPopover>
+    </div>
     <p ref="root" class="patient-text" data-testid="vignette-text" @pointerdown="onPointerDown">
       <span>{{ parts.before }}</span
       ><mark
         v-if="parts.marked"
         ref="mark"
         class="ink-mark"
-        :style="{ '--ink': inkFor(active?.chip ?? 1) }"
+        :style="{ '--ink': inkOf(active?.chip ?? null) }"
         >{{ parts.marked }}</mark
       ><span v-if="parts.after">{{ parts.after }}</span>
     </p>
-    <button
-      v-if="hasSelection"
-      type="button"
-      class="btn-quiet mt-3"
-      data-testid="cite-selection"
-      @click="citeSelection"
-    >
-      Mark selection
-    </button>
   </div>
 </template>

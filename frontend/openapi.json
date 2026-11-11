@@ -87,6 +87,17 @@
             ],
             "title": "Outcome"
           },
+          "question_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Id"
+          },
           "speaker": {
             "anyOf": [
               {
@@ -96,29 +107,6 @@
                 "type": "null"
               }
             ]
-          },
-          "unit_id": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit Id"
-          },
-          "unit_ordinal": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Unit Ordinal"
           },
           "unread": {
             "title": "Unread",
@@ -182,18 +170,6 @@
             "title": "Expert Pseudonym",
             "type": "string"
           },
-          "gate_passed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gate Passed At"
-          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -235,6 +211,9 @@
             "title": "Updated At",
             "type": "string"
           },
+          "vignette": {
+            "$ref": "#/components/schemas/PeerVignette"
+          },
           "vignette_code": {
             "title": "Vignette Code",
             "type": "string"
@@ -260,11 +239,100 @@
           "vignette_code",
           "vignette_version",
           "vignette_version_id",
-          "gate_passed_at",
+          "vignette",
           "started_at",
           "submitted_at"
         ],
         "title": "AdminAssignment",
+        "type": "object"
+      },
+      "AnswerDecisionInput": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/DecisionValue"
+          },
+          "question_id": {
+            "enum": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4",
+              "Q5",
+              "Q6"
+            ],
+            "title": "Question Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "decision"
+        ],
+        "title": "AnswerDecisionInput",
+        "type": "object"
+      },
+      "AnswerDecisionsRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerDecisionInput"
+            },
+            "maxItems": 20,
+            "title": "Decisions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "decisions"
+        ],
+        "title": "AnswerDecisionsRequest",
+        "type": "object"
+      },
+      "AnswerLine": {
+        "properties": {
+          "assigned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned By"
+          },
+          "targets": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "targets",
+          "assigned_by"
+        ],
+        "title": "AnswerLine",
         "type": "object"
       },
       "AnswerPayload": {
@@ -330,6 +398,14 @@
         "title": "AnswerPayload",
         "type": "object"
       },
+      "AnswerVoteValue": {
+        "enum": [
+          "approve",
+          "disapprove"
+        ],
+        "title": "AnswerVoteValue",
+        "type": "string"
+      },
       "AssignRequest": {
         "additionalProperties": false,
         "properties": {
@@ -359,8 +435,22 @@
             "title": "Allowed Actions",
             "type": "array"
           },
+          "expert_id": {
+            "format": "uuid",
+            "title": "Expert Id",
+            "type": "string"
+          },
           "expert_pseudonym": {
             "title": "Expert Pseudonym",
+            "type": "string"
+          },
+          "framing": {
+            "enum": [
+              "forum_post",
+              "personal_journal",
+              "email"
+            ],
+            "title": "Framing",
             "type": "string"
           },
           "id": {
@@ -371,6 +461,14 @@
           "job_running": {
             "title": "Job Running",
             "type": "boolean"
+          },
+          "opening": {
+            "title": "Opening",
+            "type": "string"
+          },
+          "patient_summary": {
+            "title": "Patient Summary",
+            "type": "string"
           },
           "state": {
             "$ref": "#/components/schemas/State"
@@ -392,6 +490,10 @@
             "format": "uuid",
             "title": "Vignette Version Id",
             "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -402,10 +504,43 @@
           "vignette_code",
           "vignette_version",
           "vignette_version_id",
+          "expert_id",
           "expert_pseudonym",
+          "patient_summary",
+          "framing",
+          "word_count",
+          "opening",
           "updated_at"
         ],
         "title": "AssignmentSummary",
+        "type": "object"
+      },
+      "CaseCounts": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "in_review": {
+            "title": "In Review",
+            "type": "integer"
+          },
+          "open": {
+            "title": "Open",
+            "type": "integer"
+          },
+          "stopped": {
+            "title": "Stopped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "open",
+          "in_review",
+          "done",
+          "stopped"
+        ],
+        "title": "CaseCounts",
         "type": "object"
       },
       "CommentCreate": {
@@ -478,6 +613,10 @@
             ],
             "title": "Parent Id"
           },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
           "speaker": {
             "$ref": "#/components/schemas/Speaker"
           },
@@ -490,16 +629,11 @@
                 "type": "null"
               }
             ]
-          },
-          "unit_id": {
-            "format": "uuid",
-            "title": "Unit Id",
-            "type": "string"
           }
         },
         "required": [
           "id",
-          "unit_id",
+          "question_id",
           "parent_id",
           "stance",
           "body",
@@ -559,24 +693,9 @@
           },
           "decision": {
             "$ref": "#/components/schemas/DecisionValue"
-          },
-          "reviewer_id": {
-            "format": "uuid",
-            "title": "Reviewer Id",
-            "type": "string"
-          },
-          "reviewer_pseudonym": {
-            "title": "Reviewer Pseudonym",
-            "type": "string"
-          },
-          "stage": {
-            "$ref": "#/components/schemas/ReviewStage"
           }
         },
         "required": [
-          "reviewer_id",
-          "reviewer_pseudonym",
-          "stage",
           "decision",
           "comment",
           "decided_at"
@@ -828,26 +947,10 @@
               }
             ]
           },
-          "gate_passed_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Gate Passed At"
-          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
-          },
-          "locked_highlights": {
-            "title": "Locked Highlights",
-            "type": "integer"
           },
           "review_round": {
             "title": "Review Round",
@@ -897,8 +1000,6 @@
           "updated_at",
           "vignette",
           "draft",
-          "gate_passed_at",
-          "locked_highlights",
           "started_at",
           "submitted_at"
         ],
@@ -922,6 +1023,10 @@
               "email"
             ],
             "title": "Framing",
+            "type": "string"
+          },
+          "patient_summary": {
+            "title": "Patient Summary",
             "type": "string"
           },
           "questions": {
@@ -949,60 +1054,12 @@
           "version",
           "text",
           "framing",
+          "patient_summary",
           "word_count",
           "content_hash",
           "questions"
         ],
         "title": "ExpertVignette",
-        "type": "object"
-      },
-      "FindingFeedback": {
-        "description": "A request for changes made in the last round, without saying who made it.",
-        "properties": {
-          "by": {
-            "enum": [
-              "reviewer",
-              "admin"
-            ],
-            "title": "By",
-            "type": "string"
-          },
-          "comment": {
-            "title": "Comment",
-            "type": "string"
-          },
-          "kind": {
-            "enum": [
-              "fragment",
-              "case"
-            ],
-            "title": "Kind",
-            "type": "string"
-          },
-          "patient_words": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Patient Words"
-          },
-          "unit_text": {
-            "title": "Unit Text",
-            "type": "string"
-          }
-        },
-        "required": [
-          "kind",
-          "patient_words",
-          "unit_text",
-          "comment",
-          "by"
-        ],
-        "title": "FindingFeedback",
         "type": "object"
       },
       "FindingFlag": {
@@ -1142,51 +1199,8 @@
         "title": "FindingSentence",
         "type": "object"
       },
-      "FindingsCorrection": {
-        "additionalProperties": false,
-        "description": "Only what changes: sentence id -> its new targets, highlight id -> its new direction.",
-        "properties": {
-          "directions": {
-            "additionalProperties": {
-              "enum": [
-                "toward",
-                "away",
-                "neutral",
-                "unclear"
-              ],
-              "type": "string"
-            },
-            "default": {},
-            "maxProperties": 200,
-            "title": "Directions",
-            "type": "object"
-          },
-          "sentences": {
-            "additionalProperties": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "default": {},
-            "maxProperties": 1000,
-            "title": "Sentences",
-            "type": "object"
-          },
-          "version": {
-            "minimum": 1.0,
-            "title": "Version",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "version"
-        ],
-        "title": "FindingsCorrection",
-        "type": "object"
-      },
       "FindingsView": {
-        "description": "For the author and the admin. Peers never see the filing of someone's raw answers.",
+        "description": "The sentences of the approved answers filed under citations, as cut into units. For the\nadmin only: the author links lines in the proofread check and never sees this.",
         "properties": {
           "check_outcome": {
             "anyOf": [
@@ -1202,17 +1216,6 @@
               }
             ],
             "title": "Check Outcome"
-          },
-          "editable": {
-            "title": "Editable",
-            "type": "boolean"
-          },
-          "feedback": {
-            "items": {
-              "$ref": "#/components/schemas/FindingFeedback"
-            },
-            "title": "Feedback",
-            "type": "array"
           },
           "flags": {
             "items": {
@@ -1247,8 +1250,6 @@
         "required": [
           "version",
           "review_round",
-          "feedback",
-          "editable",
           "check_outcome",
           "highlights",
           "sentences",
@@ -1404,6 +1405,17 @@
             "title": "Created At",
             "type": "string"
           },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
           "expert_pseudonym": {
             "title": "Expert Pseudonym",
             "type": "string"
@@ -1413,9 +1425,31 @@
             "title": "Id",
             "type": "string"
           },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
           "ordinal": {
             "title": "Ordinal",
             "type": "integer"
+          },
+          "patient_words": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Words"
           },
           "review_round": {
             "title": "Review Round",
@@ -1446,10 +1480,75 @@
           "ordinal",
           "review_round",
           "text",
+          "kind",
+          "direction",
+          "patient_words",
           "status",
           "created_at"
         ],
         "title": "KnowledgeUnitListItem",
+        "type": "object"
+      },
+      "LinkedHighlight": {
+        "properties": {
+          "chip": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chip"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "span": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Span",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "chip",
+          "text",
+          "span",
+          "origin",
+          "direction"
+        ],
+        "title": "LinkedHighlight",
         "type": "object"
       },
       "LoginRequest": {
@@ -1593,6 +1692,10 @@
             "title": "Framing",
             "type": "string"
           },
+          "patient_summary": {
+            "title": "Patient Summary",
+            "type": "string"
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -1611,9 +1714,81 @@
           "version",
           "text",
           "framing",
+          "patient_summary",
           "word_count"
         ],
         "title": "PeerVignette",
+        "type": "object"
+      },
+      "PersonAdminCard": {
+        "properties": {
+          "audience": {
+            "const": "admin",
+            "default": "admin",
+            "title": "Audience",
+            "type": "string"
+          },
+          "cases": {
+            "$ref": "#/components/schemas/CaseCounts"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "is_synthetic": {
+            "title": "Is Synthetic",
+            "type": "boolean"
+          },
+          "pseudonym": {
+            "title": "Pseudonym",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "pseudonym",
+          "role",
+          "display_name",
+          "email",
+          "is_active",
+          "is_synthetic",
+          "cases"
+        ],
+        "title": "PersonAdminCard",
+        "type": "object"
+      },
+      "PersonCard": {
+        "description": "Who a pseudonym is, for everyone but the admin: no name, no email.",
+        "properties": {
+          "audience": {
+            "const": "peer",
+            "default": "peer",
+            "title": "Audience",
+            "type": "string"
+          },
+          "pseudonym": {
+            "title": "Pseudonym",
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "pseudonym",
+          "role"
+        ],
+        "title": "PersonCard",
         "type": "object"
       },
       "PlantedCue": {
@@ -1644,6 +1819,236 @@
           "strength"
         ],
         "title": "PlantedCue",
+        "type": "object"
+      },
+      "ProofreadFeedback": {
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "comment"
+        ],
+        "title": "ProofreadFeedback",
+        "type": "object"
+      },
+      "ProofreadFlag": {
+        "properties": {
+          "highlight": {
+            "title": "Highlight",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "highlight",
+          "message"
+        ],
+        "title": "ProofreadFlag",
+        "type": "object"
+      },
+      "ProofreadItem": {
+        "properties": {
+          "dropped": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dropped",
+            "type": "array"
+          },
+          "final": {
+            "title": "Final",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "linked": {
+            "title": "Linked",
+            "type": "boolean"
+          },
+          "original": {
+            "title": "Original",
+            "type": "string"
+          },
+          "proposed": {
+            "title": "Proposed",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question_id",
+          "question",
+          "original",
+          "proposed",
+          "final",
+          "linked",
+          "lines",
+          "dropped"
+        ],
+        "title": "ProofreadItem",
+        "type": "object"
+      },
+      "ProofreadSave": {
+        "additionalProperties": false,
+        "properties": {
+          "answers": {
+            "additionalProperties": {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            "propertyNames": {
+              "enum": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ]
+            },
+            "title": "Answers",
+            "type": "object"
+          },
+          "overrides": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "items": {
+                  "pattern": "^(h\\d+|i\\d+|case)$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "propertyNames": {
+                "maxLength": 5000
+              },
+              "type": "object"
+            },
+            "default": {},
+            "propertyNames": {
+              "enum": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ]
+            },
+            "title": "Overrides",
+            "type": "object"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "answers"
+        ],
+        "title": "ProofreadSave",
+        "type": "object"
+      },
+      "ProofreadView": {
+        "properties": {
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "feedback": {
+            "items": {
+              "$ref": "#/components/schemas/ProofreadFeedback"
+            },
+            "title": "Feedback",
+            "type": "array"
+          },
+          "flags": {
+            "items": {
+              "$ref": "#/components/schemas/ProofreadFlag"
+            },
+            "title": "Flags",
+            "type": "array"
+          },
+          "highlights": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedHighlight"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProofreadItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "passes": {
+            "additionalProperties": true,
+            "title": "Passes",
+            "type": "object"
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "review_round",
+          "version",
+          "editable",
+          "submitted_at",
+          "feedback",
+          "highlights",
+          "flags",
+          "passes",
+          "items"
+        ],
+        "title": "ProofreadView",
         "type": "object"
       },
       "Q4Answer": {
@@ -1706,6 +2111,42 @@
         "title": "Q4Answer",
         "type": "object"
       },
+      "QuestionTemplate": {
+        "properties": {
+          "id": {
+            "enum": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4",
+              "Q5",
+              "Q6"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "open",
+              "shift",
+              "rating_1_5"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "text"
+        ],
+        "title": "QuestionTemplate",
+        "type": "object"
+      },
       "QuestionView": {
         "properties": {
           "id": {
@@ -1746,10 +2187,134 @@
         "title": "QuestionView",
         "type": "object"
       },
+      "ReviewAnswer": {
+        "properties": {
+          "approvals": {
+            "title": "Approvals",
+            "type": "integer"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommentView"
+            },
+            "title": "Comments",
+            "type": "array"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "disapprovals": {
+            "title": "Disapprovals",
+            "type": "integer"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "my_vote": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnswerVoteValue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "votes": {
+            "items": {
+              "$ref": "#/components/schemas/VoteEntry"
+            },
+            "title": "Votes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "question_id",
+          "question",
+          "text",
+          "lines",
+          "comments",
+          "approvals",
+          "disapprovals",
+          "my_vote",
+          "votes",
+          "decision"
+        ],
+        "title": "ReviewAnswer",
+        "type": "object"
+      },
+      "ReviewAnswersView": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewAnswer"
+            },
+            "title": "Answers",
+            "type": "array"
+          },
+          "highlights": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedHighlight"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "review_round": {
+            "title": "Review Round",
+            "type": "integer"
+          },
+          "rounds": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Rounds",
+            "type": "array"
+          },
+          "state": {
+            "$ref": "#/components/schemas/State"
+          }
+        },
+        "required": [
+          "review_round",
+          "rounds",
+          "state",
+          "highlights",
+          "answers"
+        ],
+        "title": "ReviewAnswersView",
+        "type": "object"
+      },
       "ReviewItem": {
         "properties": {
-          "accepts": {
-            "title": "Accepts",
+          "answer_count": {
+            "title": "Answer Count",
+            "type": "integer"
+          },
+          "approvals": {
+            "title": "Approvals",
             "type": "integer"
           },
           "assignment_id": {
@@ -1772,19 +2337,13 @@
             "title": "Comment Count",
             "type": "integer"
           },
-          "declines": {
-            "title": "Declines",
+          "disapprovals": {
+            "title": "Disapprovals",
             "type": "integer"
           },
-          "my_vote": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Vote"
-              },
-              {
-                "type": "null"
-              }
-            ]
+          "my_votes": {
+            "title": "My Votes",
+            "type": "integer"
           },
           "opened": {
             "title": "Opened",
@@ -1805,10 +2364,6 @@
           },
           "state": {
             "$ref": "#/components/schemas/State"
-          },
-          "unit_count": {
-            "title": "Unit Count",
-            "type": "integer"
           },
           "updated_at": {
             "format": "date-time",
@@ -1832,24 +2387,16 @@
           "state",
           "relation",
           "opened",
-          "unit_count",
-          "accepts",
-          "declines",
+          "answer_count",
+          "approvals",
+          "disapprovals",
           "comment_count",
-          "my_vote",
+          "my_votes",
           "updated_at",
           "author_pseudonym"
         ],
         "title": "ReviewItem",
         "type": "object"
-      },
-      "ReviewStage": {
-        "enum": [
-          "admin",
-          "peer"
-        ],
-        "title": "ReviewStage",
-        "type": "string"
       },
       "Role": {
         "enum": [
@@ -1891,7 +2438,7 @@
         "type": "object"
       },
       "Stance": {
-        "description": "How a reviewer's comment sits with the unit it is under.",
+        "description": "How a reviewer's comment sits with the answer it is under.",
         "enum": [
           "support",
           "challenge",
@@ -1904,11 +2451,11 @@
         "enum": [
           "assigned",
           "in_progress",
+          "proofreading",
+          "proofread_check",
+          "peer_review",
           "processing",
           "processing_failed",
-          "expert_check",
-          "building_units",
-          "peer_review",
           "ingesting",
           "ingestion_failed",
           "ingested",
@@ -1952,313 +2499,6 @@
           "payload"
         ],
         "title": "SubmissionView",
-        "type": "object"
-      },
-      "UnitAdminView": {
-        "properties": {
-          "audience": {
-            "const": "admin",
-            "default": "admin",
-            "title": "Audience",
-            "type": "string"
-          },
-          "comments": {
-            "items": {
-              "$ref": "#/components/schemas/CommentView"
-            },
-            "title": "Comments",
-            "type": "array"
-          },
-          "content_hash": {
-            "title": "Content Hash",
-            "type": "string"
-          },
-          "decisions": {
-            "items": {
-              "$ref": "#/components/schemas/DecisionView"
-            },
-            "title": "Decisions",
-            "type": "array"
-          },
-          "direction": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Direction"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kind"
-          },
-          "ordinal": {
-            "title": "Ordinal",
-            "type": "integer"
-          },
-          "patient_words": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Patient Words"
-          },
-          "review_round": {
-            "title": "Review Round",
-            "type": "integer"
-          },
-          "status": {
-            "$ref": "#/components/schemas/UnitStatus"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "ordinal",
-          "review_round",
-          "text",
-          "kind",
-          "direction",
-          "patient_words",
-          "comments",
-          "status",
-          "content_hash",
-          "decisions"
-        ],
-        "title": "UnitAdminView",
-        "type": "object"
-      },
-      "UnitAuthorView": {
-        "properties": {
-          "audience": {
-            "const": "author",
-            "default": "author",
-            "title": "Audience",
-            "type": "string"
-          },
-          "comments": {
-            "items": {
-              "$ref": "#/components/schemas/CommentView"
-            },
-            "title": "Comments",
-            "type": "array"
-          },
-          "direction": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Direction"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kind"
-          },
-          "ordinal": {
-            "title": "Ordinal",
-            "type": "integer"
-          },
-          "patient_words": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Patient Words"
-          },
-          "review_round": {
-            "title": "Review Round",
-            "type": "integer"
-          },
-          "status": {
-            "$ref": "#/components/schemas/UnitStatus"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "ordinal",
-          "review_round",
-          "text",
-          "kind",
-          "direction",
-          "patient_words",
-          "comments",
-          "status"
-        ],
-        "title": "UnitAuthorView",
-        "type": "object"
-      },
-      "UnitDecisionInput": {
-        "additionalProperties": false,
-        "properties": {
-          "comment": {
-            "anyOf": [
-              {
-                "maxLength": 5000,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Comment"
-          },
-          "decision": {
-            "$ref": "#/components/schemas/DecisionValue"
-          },
-          "unit_id": {
-            "format": "uuid",
-            "title": "Unit Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "unit_id",
-          "decision"
-        ],
-        "title": "UnitDecisionInput",
-        "type": "object"
-      },
-      "UnitDecisionsRequest": {
-        "additionalProperties": false,
-        "properties": {
-          "decisions": {
-            "items": {
-              "$ref": "#/components/schemas/UnitDecisionInput"
-            },
-            "maxItems": 1000,
-            "title": "Decisions",
-            "type": "array"
-          }
-        },
-        "required": [
-          "decisions"
-        ],
-        "title": "UnitDecisionsRequest",
-        "type": "object"
-      },
-      "UnitPeerView": {
-        "properties": {
-          "audience": {
-            "const": "peer",
-            "default": "peer",
-            "title": "Audience",
-            "type": "string"
-          },
-          "comments": {
-            "items": {
-              "$ref": "#/components/schemas/CommentView"
-            },
-            "title": "Comments",
-            "type": "array"
-          },
-          "direction": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Direction"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kind"
-          },
-          "ordinal": {
-            "title": "Ordinal",
-            "type": "integer"
-          },
-          "patient_words": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Patient Words"
-          },
-          "review_round": {
-            "title": "Review Round",
-            "type": "integer"
-          },
-          "text": {
-            "title": "Text",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "ordinal",
-          "review_round",
-          "text",
-          "kind",
-          "direction",
-          "patient_words",
-          "comments"
-        ],
-        "title": "UnitPeerView",
         "type": "object"
       },
       "UnitStatus": {
@@ -2500,6 +2740,10 @@
             "title": "Id",
             "type": "string"
           },
+          "patient_summary": {
+            "title": "Patient Summary",
+            "type": "string"
+          },
           "published_at": {
             "anyOf": [
               {
@@ -2580,6 +2824,7 @@
           "framing",
           "question_ids",
           "q4_whatif",
+          "patient_summary",
           "variant",
           "design",
           "created_at",
@@ -2602,6 +2847,12 @@
               "email"
             ],
             "title": "Framing",
+            "type": "string"
+          },
+          "patient_summary": {
+            "default": "",
+            "maxLength": 600,
+            "title": "Patient Summary",
             "type": "string"
           },
           "q4_whatif": {
@@ -2678,6 +2929,18 @@
               }
             ],
             "title": "Framing"
+          },
+          "patient_summary": {
+            "anyOf": [
+              {
+                "maxLength": 600,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patient Summary"
           },
           "q4_whatif": {
             "anyOf": [
@@ -2772,6 +3035,12 @@
             "title": "Framing",
             "type": "string"
           },
+          "patient_summary": {
+            "default": "",
+            "maxLength": 600,
+            "title": "Patient Summary",
+            "type": "string"
+          },
           "q4_whatif": {
             "anyOf": [
               {
@@ -2837,6 +3106,11 @@
             ],
             "title": "Knowledge Target"
           },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          },
           "origin": {
             "default": "hand_written",
             "enum": [
@@ -2861,6 +3135,7 @@
             "type": "string"
           },
           "purpose": {
+            "default": "",
             "title": "Purpose",
             "type": "string"
           },
@@ -2885,19 +3160,8 @@
             "type": "string"
           }
         },
-        "required": [
-          "purpose"
-        ],
         "title": "VignetteDesign",
         "type": "object"
-      },
-      "Vote": {
-        "enum": [
-          "accept",
-          "decline"
-        ],
-        "title": "Vote",
-        "type": "string"
       },
       "VoteEntry": {
         "properties": {
@@ -2910,7 +3174,7 @@
             "$ref": "#/components/schemas/Speaker"
           },
           "vote": {
-            "$ref": "#/components/schemas/Vote"
+            "$ref": "#/components/schemas/AnswerVoteValue"
           }
         },
         "required": [
@@ -2930,7 +3194,7 @@
             "type": "integer"
           },
           "vote": {
-            "$ref": "#/components/schemas/Vote"
+            "$ref": "#/components/schemas/AnswerVoteValue"
           }
         },
         "required": [
@@ -2938,48 +3202,6 @@
           "review_round"
         ],
         "title": "VoteInput",
-        "type": "object"
-      },
-      "VotesView": {
-        "properties": {
-          "accepts": {
-            "title": "Accepts",
-            "type": "integer"
-          },
-          "declines": {
-            "title": "Declines",
-            "type": "integer"
-          },
-          "my_vote": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Vote"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "review_round": {
-            "title": "Review Round",
-            "type": "integer"
-          },
-          "votes": {
-            "items": {
-              "$ref": "#/components/schemas/VoteEntry"
-            },
-            "title": "Votes",
-            "type": "array"
-          }
-        },
-        "required": [
-          "review_round",
-          "accepts",
-          "declines",
-          "my_vote",
-          "votes"
-        ],
-        "title": "VotesView",
         "type": "object"
       }
     }
@@ -3142,6 +3364,279 @@
         "summary": "Get Assignment",
         "tags": [
           "assignments"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/answer-decisions": {
+      "post": {
+        "description": "The admin's decision on each answer; it closes the review.",
+        "operationId": "submit_decisions_api_v1_assignments__assignment_id__answer_decisions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerDecisionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "mapping": {
+                      "admin": "#/components/schemas/AdminAssignment",
+                      "expert": "#/components/schemas/ExpertAssignment",
+                      "peer": "#/components/schemas/PeerAssignment"
+                    },
+                    "propertyName": "audience"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ExpertAssignment"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminAssignment"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PeerAssignment"
+                    }
+                  ],
+                  "title": "Response Submit Decisions Api V1 Assignments  Assignment Id  Answer Decisions Post"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Submit Decisions",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/answers": {
+      "get": {
+        "description": "The answers under review. The admin and the author can ask for an earlier round.",
+        "operationId": "list_answers_api_v1_assignments__assignment_id__answers_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "review_round",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Review Round"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewAnswersView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "List Answers",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/answers/{question_id}/comments": {
+      "post": {
+        "operationId": "add_comment_api_v1_assignments__assignment_id__answers__question_id__comments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "question_id",
+            "required": true,
+            "schema": {
+              "enum": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ],
+              "title": "Question Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Add Comment",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/answers/{question_id}/vote": {
+      "put": {
+        "operationId": "cast_vote_api_v1_assignments__assignment_id__answers__question_id__vote_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "question_id",
+            "required": true,
+            "schema": {
+              "enum": [
+                "Q1",
+                "Q2",
+                "Q3",
+                "Q4",
+                "Q5",
+                "Q6"
+              ],
+              "title": "Question Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewAnswersView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Cast Vote",
+        "tags": [
+          "reviews"
         ]
       }
     },
@@ -3321,130 +3816,6 @@
         ]
       }
     },
-    "/api/v1/assignments/{assignment_id}/expert-check/complete": {
-      "post": {
-        "operationId": "complete_expert_check_api_v1_assignments__assignment_id__expert_check_complete_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "discriminator": {
-                    "mapping": {
-                      "admin": "#/components/schemas/AdminAssignment",
-                      "expert": "#/components/schemas/ExpertAssignment",
-                      "peer": "#/components/schemas/PeerAssignment"
-                    },
-                    "propertyName": "audience"
-                  },
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpertAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/PeerAssignment"
-                    }
-                  ],
-                  "title": "Response Complete Expert Check Api V1 Assignments  Assignment Id  Expert Check Complete Post"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Complete Expert Check",
-        "tags": [
-          "assignments"
-        ]
-      }
-    },
-    "/api/v1/assignments/{assignment_id}/expert-check/skip": {
-      "post": {
-        "operationId": "skip_expert_check_api_v1_assignments__assignment_id__expert_check_skip_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "discriminator": {
-                    "mapping": {
-                      "admin": "#/components/schemas/AdminAssignment",
-                      "expert": "#/components/schemas/ExpertAssignment",
-                      "peer": "#/components/schemas/PeerAssignment"
-                    },
-                    "propertyName": "audience"
-                  },
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpertAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/PeerAssignment"
-                    }
-                  ],
-                  "title": "Response Skip Expert Check Api V1 Assignments  Assignment Id  Expert Check Skip Post"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Skip Expert Check",
-        "tags": [
-          "assignments"
-        ]
-      }
-    },
     "/api/v1/assignments/{assignment_id}/findings": {
       "get": {
         "operationId": "get_findings_api_v1_assignments__assignment_id__findings_get",
@@ -3486,9 +3857,69 @@
         "tags": [
           "assignments"
         ]
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/proofread": {
+      "get": {
+        "description": "The proofread answers of the current round (the admin and the author: any round).",
+        "operationId": "get_proofread_api_v1_assignments__assignment_id__proofread_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "review_round",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Review Round"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProofreadView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Get Proofread",
+        "tags": [
+          "assignments"
+        ]
       },
       "put": {
-        "operationId": "correct_findings_api_v1_assignments__assignment_id__findings_put",
+        "operationId": "save_proofread_api_v1_assignments__assignment_id__proofread_put",
         "parameters": [
           {
             "in": "path",
@@ -3505,7 +3936,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/FindingsCorrection"
+                "$ref": "#/components/schemas/ProofreadSave"
               }
             }
           },
@@ -3516,7 +3947,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FindingsView"
+                  "$ref": "#/components/schemas/ProofreadView"
                 }
               }
             },
@@ -3533,69 +3964,7 @@
             "description": "Client Error"
           }
         },
-        "summary": "Correct Findings",
-        "tags": [
-          "assignments"
-        ]
-      }
-    },
-    "/api/v1/assignments/{assignment_id}/pass-gate": {
-      "post": {
-        "operationId": "pass_gate_api_v1_assignments__assignment_id__pass_gate_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "discriminator": {
-                    "mapping": {
-                      "admin": "#/components/schemas/AdminAssignment",
-                      "expert": "#/components/schemas/ExpertAssignment",
-                      "peer": "#/components/schemas/PeerAssignment"
-                    },
-                    "propertyName": "audience"
-                  },
-                  "oneOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpertAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AdminAssignment"
-                    },
-                    {
-                      "$ref": "#/components/schemas/PeerAssignment"
-                    }
-                  ],
-                  "title": "Response Pass Gate Api V1 Assignments  Assignment Id  Pass Gate Post"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Pass Gate",
+        "summary": "Save Proofread",
         "tags": [
           "assignments"
         ]
@@ -3867,10 +4236,9 @@
         ]
       }
     },
-    "/api/v1/assignments/{assignment_id}/unit-decisions": {
+    "/api/v1/assignments/{assignment_id}/submit-for-review": {
       "post": {
-        "description": "The admin's decision on each unit; it closes the review.",
-        "operationId": "submit_decisions_api_v1_assignments__assignment_id__unit_decisions_post",
+        "operationId": "submit_for_review_api_v1_assignments__assignment_id__submit_for_review_post",
         "parameters": [
           {
             "in": "path",
@@ -3883,16 +4251,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UnitDecisionsRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -3917,7 +4275,7 @@
                       "$ref": "#/components/schemas/PeerAssignment"
                     }
                   ],
-                  "title": "Response Submit Decisions Api V1 Assignments  Assignment Id  Unit Decisions Post"
+                  "title": "Response Submit For Review Api V1 Assignments  Assignment Id  Submit For Review Post"
                 }
               }
             },
@@ -3934,250 +4292,9 @@
             "description": "Client Error"
           }
         },
-        "summary": "Submit Decisions",
+        "summary": "Submit For Review",
         "tags": [
-          "reviews"
-        ]
-      }
-    },
-    "/api/v1/assignments/{assignment_id}/units": {
-      "get": {
-        "description": "The current round's units. The admin and the author can ask for an earlier round.",
-        "operationId": "list_units_api_v1_assignments__assignment_id__units_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "review_round",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Review Round"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "discriminator": {
-                      "mapping": {
-                        "admin": "#/components/schemas/UnitAdminView",
-                        "author": "#/components/schemas/UnitAuthorView",
-                        "peer": "#/components/schemas/UnitPeerView"
-                      },
-                      "propertyName": "audience"
-                    },
-                    "oneOf": [
-                      {
-                        "$ref": "#/components/schemas/UnitAdminView"
-                      },
-                      {
-                        "$ref": "#/components/schemas/UnitPeerView"
-                      },
-                      {
-                        "$ref": "#/components/schemas/UnitAuthorView"
-                      }
-                    ]
-                  },
-                  "title": "Response List Units Api V1 Assignments  Assignment Id  Units Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "List Units",
-        "tags": [
-          "reviews"
-        ]
-      }
-    },
-    "/api/v1/assignments/{assignment_id}/units/{unit_id}/comments": {
-      "post": {
-        "operationId": "add_comment_api_v1_assignments__assignment_id__units__unit_id__comments_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "unit_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Unit Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CommentCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommentView"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Add Comment",
-        "tags": [
-          "reviews"
-        ]
-      }
-    },
-    "/api/v1/assignments/{assignment_id}/vote": {
-      "put": {
-        "operationId": "cast_vote_api_v1_assignments__assignment_id__vote_put",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VoteInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VotesView"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Cast Vote",
-        "tags": [
-          "reviews"
-        ]
-      }
-    },
-    "/api/v1/assignments/{assignment_id}/votes": {
-      "get": {
-        "operationId": "get_votes_api_v1_assignments__assignment_id__votes_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "assignment_id",
-            "required": true,
-            "schema": {
-              "format": "uuid",
-              "title": "Assignment Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VotesView"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "4XX": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Client Error"
-          }
-        },
-        "summary": "Get Votes",
-        "tags": [
-          "reviews"
+          "assignments"
         ]
       }
     },
@@ -4645,6 +4762,63 @@
         ]
       }
     },
+    "/api/v1/users/by-pseudonym/{pseudonym}": {
+      "get": {
+        "operationId": "person_api_v1_users_by_pseudonym__pseudonym__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pseudonym",
+            "required": true,
+            "schema": {
+              "title": "Pseudonym",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "mapping": {
+                      "admin": "#/components/schemas/PersonAdminCard",
+                      "peer": "#/components/schemas/PersonCard"
+                    },
+                    "propertyName": "audience"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PersonAdminCard"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PersonCard"
+                    }
+                  ],
+                  "title": "Response Person Api V1 Users By Pseudonym  Pseudonym  Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Person",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/api/v1/users/{user_id}": {
       "patch": {
         "operationId": "update_user_api_v1_users__user_id__patch",
@@ -5025,6 +5199,42 @@
           }
         },
         "summary": "Create Vignette",
+        "tags": [
+          "vignettes"
+        ]
+      }
+    },
+    "/api/v1/vignettes/questions": {
+      "get": {
+        "description": "The six questions every vignette asks. Q4 keeps its `{whatif}` placeholder.",
+        "operationId": "list_questions_api_v1_vignettes_questions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionTemplate"
+                  },
+                  "title": "Response List Questions Api V1 Vignettes Questions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "List Questions",
         "tags": [
           "vignettes"
         ]

@@ -6,11 +6,14 @@ from enum import StrEnum
 class State(StrEnum):
     ASSIGNED = "assigned"
     IN_PROGRESS = "in_progress"
+    # The answers are proofread and their sentences linked to the citations (a job).
+    PROOFREADING = "proofreading"
+    # The author checks the edited answers and the links, then submits them for review.
+    PROOFREAD_CHECK = "proofread_check"
+    PEER_REVIEW = "peer_review"
+    # The accepted answers are cut into units (a job), then ingested.
     PROCESSING = "processing"
     PROCESSING_FAILED = "processing_failed"
-    EXPERT_CHECK = "expert_check"
-    BUILDING_UNITS = "building_units"
-    PEER_REVIEW = "peer_review"
     INGESTING = "ingesting"
     INGESTION_FAILED = "ingestion_failed"
     INGESTED = "ingested"
@@ -20,7 +23,7 @@ class State(StrEnum):
 
 TERMINAL_STATES = frozenset({State.INGESTED, State.REJECTED, State.CANCELLED})
 # States a background job is working on: the frontend polls while it sees one of these.
-JOB_STATES = frozenset({State.PROCESSING, State.BUILDING_UNITS, State.INGESTING})
+JOB_STATES = frozenset({State.PROOFREADING, State.PROCESSING, State.INGESTING})
 
 
 class Actor(StrEnum):
@@ -34,17 +37,16 @@ class Action(StrEnum):
     START = "start"
     CANCEL = "cancel"
     SUBMIT = "submit"
+    PROOFREAD_SUCCEEDED = "proofread_succeeded"
+    PROOFREAD_FAILED = "proofread_failed"
+    SUBMIT_FOR_REVIEW = "submit_for_review"
     PROCESSING_SUCCEEDED = "processing_succeeded"
     PROCESSING_FAILED = "processing_failed"
-    COMPLETE_EXPERT_CHECK = "complete_expert_check"
-    SKIP_EXPERT_CHECK = "skip_expert_check"
-    UNITS_BUILT = "units_built"
-    UNITS_FAILED = "units_failed"
+    RETRY_PROOFREAD = "retry_proofread"
     RETRY_PROCESSING = "retry_processing"
-    RETRY_UNITS = "retry_units"
     RETRY_INGESTION = "retry_ingestion"
-    APPROVE_UNITS = "approve_units"
+    APPROVE_ANSWERS = "approve_answers"
     REQUEST_CHANGES = "request_changes"
-    REJECT_ALL_UNITS = "reject_all_units"
+    REJECT_ALL_ANSWERS = "reject_all_answers"
     INGESTION_SUCCEEDED = "ingestion_succeeded"
     INGESTION_FAILED = "ingestion_failed"

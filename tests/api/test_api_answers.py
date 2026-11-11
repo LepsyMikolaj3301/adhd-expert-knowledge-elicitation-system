@@ -7,8 +7,8 @@ from api_helpers import (
     CUE,
     DESIGN_SECRET,
     FULL_PAYLOAD,
-    GATE_ANSWERS,
     HYPOTHESIS,
+    OPEN_ANSWERS,
     Q4_WHY,
     Q5_ANSWER,
     VIGNETTE_TEXT,
@@ -16,11 +16,13 @@ from api_helpers import (
     admin_api,
     answer_and_submit,
     assign,
+    decide_all,
     expert_api,
     highlight,
     published_version,
     run_jobs,
     save,
+    to_review,
 )
 from conftest import alembic_config
 from sqlalchemy import select, text
@@ -28,6 +30,7 @@ from sqlalchemy import select, text
 from app.assignments.answers import count_words, render_chips
 from app.assignments.models import Submission
 from app.core.db import session_factory
+from app.knowledge.models import KnowledgeUnit
 
 
 async def _started(**version_overrides):
@@ -39,30 +42,11 @@ async def _started(**version_overrides):
     return admin, expert, assignment_id
 
 
-async def _past_gate(**version_overrides):
-    admin, expert, assignment_id = await _started(**version_overrides)
-    await save(expert, assignment_id, {"answers": GATE_ANSWERS})
-    await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
-    return admin, expert, assignment_id
-
-
-async def test_only_the_gate_questions_are_sent_before_the_gate():
+async def test_every_question_is_sent_at_once_with_exact_wording():
+    """No lock: Q1-Q6 are all there from the start and can be answered in any order."""
     _, expert, assignment_id = await _started()
     view = await expert.ok("GET", f"/assignments/{assignment_id}")
     assert view["audience"] == "expert"
-    assert [q["id"] for q in view["vignette"]["questions"]] == ["Q1", "Q2", "Q3"]
-    assert view["allowed_actions"] == ["pass_gate", "save_draft"]
-    text = str(view)
-    assert "the-whatif-secret" not in text
-    assert "less experienced clinician" not in text
-    assert DESIGN_SECRET not in text
-    assert "planted_cues" not in text
-    assert "q4_whatif" not in text
-
-
-async def test_all_questions_are_sent_after_the_gate_with_exact_wording():
-    _, expert, assignment_id = await _past_gate()
-    view = await expert.ok("GET", f"/assignments/{assignment_id}")
     questions = {q["id"]: q for q in view["vignette"]["questions"]}
     assert list(questions) == ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]
     assert questions["Q4"]["text"] == (
@@ -71,9 +55,12 @@ async def test_all_questions_are_sent_after_the_gate_with_exact_wording():
     assert questions["Q4"]["wording"]["shift_labels"]["0"] == "is unchanged"
     assert all("min_words" not in q for q in questions.values()), "length is nobody's gate"
     assert "hypothesis_min_words" not in questions["Q4"]["wording"]
-    assert view["gate_passed_at"]
     assert view["allowed_actions"] == ["save_draft", "submit"]
-    assert DESIGN_SECRET not in str(view)
+    assert "gate_passed_at" not in view and "locked_highlights" not in view
+    text = str(view)
+    assert DESIGN_SECRET not in text
+    assert "planted_cues" not in text
+    assert "q4_whatif" not in text
 
 
 @pytest.mark.parametrize(
@@ -86,45 +73,21 @@ async def test_all_questions_are_sent_after_the_gate_with_exact_wording():
         {"insufficient_information": True},
     ],
 )
-async def test_later_answers_are_refused_before_the_gate(payload):
+async def test_any_question_can_be_answered_first(payload):
     _, expert, assignment_id = await _started()
-    await expert.fails(
-        "PUT",
-        f"/assignments/{assignment_id}/draft",
-        422,
-        "gate_not_passed",
-        json={"version": 1, "payload": payload},
-    )
+    await save(expert, assignment_id, payload)
 
 
-async def test_gate_requires_every_answer():
+async def test_every_answer_stays_editable_until_submitted():
     _, expert, assignment_id = await _started()
-    await save(expert, assignment_id, {"answers": {"Q1": "x", "Q2": "   "}})
-    body = await expert.fails(
-        "POST", f"/assignments/{assignment_id}/pass-gate", 422, "gate_not_passed"
-    )
-    assert body["details"]["missing"] == ["Q2", "Q3"]
-
-
-async def test_passing_the_gate_locks_the_gate_answers_and_is_idempotent():
-    _, expert, assignment_id = await _past_gate()
-    first = (await expert.ok("GET", f"/assignments/{assignment_id}"))["gate_passed_at"]
-    again = await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
-    assert again["gate_passed_at"] == first
-
+    await save(expert, assignment_id, {"answers": OPEN_ANSWERS, "highlights": [highlight(1)]})
     for changed in (
-        {"answers": {**GATE_ANSWERS, "Q1": "rewritten"}},
-        {"answers": {"Q2": GATE_ANSWERS["Q2"], "Q3": GATE_ANSWERS["Q3"]}},
+        {"answers": {**OPEN_ANSWERS, "Q1": "rewritten"}},
+        {"answers": {"Q2": OPEN_ANSWERS["Q2"]}},
+        {"answers": {**OPEN_ANSWERS, "Q5": "fine"}, "highlights": []},
+        {"answers": OPEN_ANSWERS, "highlights": [highlight(1, CONFOUNDER, "away")]},
     ):
-        current = await expert.ok("GET", f"/assignments/{assignment_id}")
-        await expert.fails(
-            "PUT",
-            f"/assignments/{assignment_id}/draft",
-            422,
-            "gate_locked",
-            json={"version": current["draft"]["version"], "payload": changed},
-        )
-    await save(expert, assignment_id, {"answers": {**GATE_ANSWERS, "Q5": "fine"}})
+        await save(expert, assignment_id, changed)
 
 
 async def test_stale_autosave_from_a_second_tab_conflicts():
@@ -180,7 +143,7 @@ SUBMIT_PROBLEMS = [
     ({"q4": {"hypothesis": HYPOTHESIS, "shift": 1}}, "submission_incomplete"),
     ({"rating": None}, "submission_incomplete"),
     (
-        {"answers": {**GATE_ANSWERS, "Q5": Q5_ANSWER}},  # no why for a non-zero shift
+        {"answers": {**OPEN_ANSWERS, "Q5": Q5_ANSWER}},  # no why for a non-zero shift
         "submission_incomplete",
     ),
     (
@@ -209,7 +172,7 @@ SUBMIT_PROBLEMS = [
     ({"rating": 3, "insufficient_information": True}, "rating_conflict"),
     ({"highlights": [highlight(1, direction=None)]}, "highlight_no_direction"),
     (
-        {"answers": {**GATE_ANSWERS, "Q4": Q4_WHY, "Q5": f"⟦h9⟧ {Q5_ANSWER}"}},
+        {"answers": {**OPEN_ANSWERS, "Q4": Q4_WHY, "Q5": f"⟦h9⟧ {Q5_ANSWER}"}},
         "unknown_chip",
     ),
 ]
@@ -217,7 +180,7 @@ SUBMIT_PROBLEMS = [
 
 @pytest.mark.parametrize(("change", "code"), SUBMIT_PROBLEMS)
 async def test_submit_problems_have_stable_codes(change, code):
-    _, expert, assignment_id = await _past_gate()
+    _, expert, assignment_id = await _started()
     await save(expert, assignment_id, {**FULL_PAYLOAD, **change})
     await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, code)
     view = await expert.ok("GET", f"/assignments/{assignment_id}")
@@ -228,8 +191,8 @@ async def test_submit_problems_have_stable_codes(change, code):
     ("question_ids", "payload"),
     [
         (["Q1", "Q2", "Q3"], {"answers": {"Q5": "not asked"}}),
-        (["Q1", "Q2", "Q3"], {"answers": GATE_ANSWERS, "q4": {"shift": 0}}),
-        (["Q1", "Q2", "Q3"], {"answers": GATE_ANSWERS, "rating": 1}),
+        (["Q1", "Q2", "Q3"], {"answers": OPEN_ANSWERS, "q4": {"shift": 0}}),
+        (["Q1", "Q2", "Q3"], {"answers": OPEN_ANSWERS, "rating": 1}),
     ],
 )
 async def test_answers_to_questions_not_asked_are_refused(question_ids, payload):
@@ -254,14 +217,9 @@ async def test_q6_is_answered_with_a_rating_not_text():
     )
 
 
-async def test_submit_before_the_gate_is_refused():
-    _, expert, assignment_id = await _started()
-    await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, "gate_not_passed")
-
-
 async def test_shift_of_zero_needs_only_the_hypothesis():
-    _, expert, assignment_id = await _past_gate()
-    answers = {**GATE_ANSWERS, "Q5": Q5_ANSWER}
+    _, expert, assignment_id = await _started()
+    answers = {**OPEN_ANSWERS, "Q5": Q5_ANSWER}
     await save(
         expert,
         assignment_id,
@@ -271,10 +229,10 @@ async def test_shift_of_zero_needs_only_the_hypothesis():
 
 
 async def test_answers_are_trimmed():
-    _, expert, assignment_id = await _past_gate()
+    _, expert, assignment_id = await _started()
     payload = {
         **FULL_PAYLOAD,
-        "answers": {**GATE_ANSWERS, "Q4": f"  {Q4_WHY}  ", "Q5": f"  {Q5_ANSWER}  "},
+        "answers": {**OPEN_ANSWERS, "Q4": f"  {Q4_WHY}  ", "Q5": f"  {Q5_ANSWER}  "},
     }
     await save(expert, assignment_id, payload)
     await expert.ok("POST", f"/assignments/{assignment_id}/submit")
@@ -333,80 +291,8 @@ async def test_spans_count_characters_the_way_python_does_not_utf16():
     )
 
 
-async def test_the_gate_needs_a_direction_on_every_citation():
+async def test_submit_needs_a_direction_on_every_citation():
     _, expert, assignment_id = await _started()
-    await save(
-        expert,
-        assignment_id,
-        {"answers": GATE_ANSWERS, "highlights": [highlight(1), highlight(2, CONFOUNDER, None)]},
-    )
-    body = await expert.fails(
-        "POST", f"/assignments/{assignment_id}/pass-gate", 422, "highlight_no_direction"
-    )
-    assert body["details"]["chips"] == [2]
-    view = await expert.ok("GET", f"/assignments/{assignment_id}")
-    assert view["gate_passed_at"] is None
-
-
-async def test_the_gate_refuses_a_chip_without_a_citation():
-    _, expert, assignment_id = await _started()
-    answers = {**GATE_ANSWERS, "Q2": f"⟦h7⟧ {GATE_ANSWERS['Q2']}"}
-    await save(expert, assignment_id, {"answers": answers, "highlights": [highlight(1)]})
-    body = await expert.fails(
-        "POST", f"/assignments/{assignment_id}/pass-gate", 422, "unknown_chip"
-    )
-    assert body["details"] == {"question_id": "Q2", "chip": 7}
-
-
-async def _past_gate_with_citation():
-    admin, expert, assignment_id = await _started()
-    await save(expert, assignment_id, {"answers": GATE_ANSWERS, "highlights": [highlight(1)]})
-    view = await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
-    return view, expert, assignment_id
-
-
-async def test_passing_the_gate_locks_the_citations_made_so_far():
-    view, expert, assignment_id = await _past_gate_with_citation()
-    assert view["locked_highlights"] == 1
-
-    for changed in (
-        [],
-        [highlight(1, direction="away")],
-        [highlight(1, CONFOUNDER)],
-    ):
-        current = await expert.ok("GET", f"/assignments/{assignment_id}")
-        await expert.fails(
-            "PUT",
-            f"/assignments/{assignment_id}/draft",
-            422,
-            "gate_locked",
-            json={
-                "version": current["draft"]["version"],
-                "payload": {"answers": GATE_ANSWERS, "highlights": changed},
-            },
-        )
-
-
-async def test_citations_can_still_be_added_changed_and_removed_after_the_gate():
-    _, expert, assignment_id = await _past_gate_with_citation()
-    for later in (
-        [highlight(2, CONFOUNDER, None)],
-        [highlight(2, CONFOUNDER, "away")],
-        [],
-        [highlight(2, CONFOUNDER, "neutral")],
-    ):
-        await save(
-            expert,
-            assignment_id,
-            {"answers": GATE_ANSWERS, "highlights": [highlight(1), *later]},
-        )
-    view = await expert.ok("GET", f"/assignments/{assignment_id}")
-    assert view["locked_highlights"] == 1, "citations made after the gate are not locked"
-    assert len(view["draft"]["payload"]["highlights"]) == 2
-
-
-async def test_submit_needs_a_direction_on_citations_made_after_the_gate():
-    _, expert, assignment_id = await _past_gate_with_citation()
     await save(
         expert,
         assignment_id,
@@ -416,10 +302,20 @@ async def test_submit_needs_a_direction_on_citations_made_after_the_gate():
         "POST", f"/assignments/{assignment_id}/submit", 422, "highlight_no_direction"
     )
     assert body["details"]["chips"] == [2]
+    view = await expert.ok("GET", f"/assignments/{assignment_id}")
+    assert view["state"] == "in_progress"
 
 
-async def test_the_submission_keeps_citations_chips_and_what_was_locked():
-    _, expert, assignment_id = await _past_gate_with_citation()
+async def test_submit_refuses_a_chip_without_a_citation():
+    _, expert, assignment_id = await _started()
+    answers = {**FULL_PAYLOAD["answers"], "Q2": f"⟦h7⟧ {OPEN_ANSWERS['Q2']}"}
+    await save(expert, assignment_id, {**FULL_PAYLOAD, "answers": answers})
+    body = await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, "unknown_chip")
+    assert body["details"] == {"question_id": "Q2", "chip": 7}
+
+
+async def test_the_submission_keeps_citations_and_chips():
+    _, expert, assignment_id = await _started()
     answers = {**FULL_PAYLOAD["answers"], "Q5": f"⟦h2⟧ {Q5_ANSWER}"}
     citations = [highlight(1), highlight(2, CONFOUNDER, "away")]
     await save(expert, assignment_id, {**FULL_PAYLOAD, "answers": answers, "highlights": citations})
@@ -429,7 +325,7 @@ async def test_the_submission_keeps_citations_chips_and_what_was_locked():
     stored = submission["payload"]
     assert stored["highlights"] == citations
     assert stored["answers"]["Q5"].startswith("⟦h2⟧ ")
-    assert stored["locked_highlights"] == 1
+    assert "locked_highlights" not in stored and "gate_passed_at" not in stored
 
 
 def test_chips_render_as_the_first_eight_words_of_their_citation():
@@ -443,17 +339,18 @@ def test_chips_render_as_the_first_eight_words_of_their_citation():
     assert render_chips("No chips here.", []) == "No chips here."
 
 
-async def test_reviewers_read_units_with_quotes_instead_of_chip_tokens():
+async def test_units_show_quotes_instead_of_chip_tokens():
     admin = await admin_api()
     expert = await expert_api("e@example.com")
     [assignment_id] = await assign(admin, await published_version(admin), expert)
     answers = {**FULL_PAYLOAD["answers"], "Q5": f"⟦h1⟧ {Q5_ANSWER}"}
     await answer_and_submit(expert, assignment_id, {**FULL_PAYLOAD, "answers": answers})
+    await to_review(expert, assignment_id)
+    await decide_all(admin, assignment_id)
     await run_jobs()
-    await expert.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
-    await run_jobs()
-    units = await admin.ok("GET", f"/assignments/{assignment_id}/units")
-    text = "\n".join(unit["text"] for unit in units)
+    async with session_factory()() as db:
+        units = list(await db.scalars(select(KnowledgeUnit)))
+    text = "\n".join(unit.text for unit in units)
     assert "⟦" not in text
     assert f"Q5: «I reorganised my entire desk instead of starting…» {Q5_ANSWER}" in text
 
@@ -485,7 +382,6 @@ async def test_the_migration_clears_old_fragments_so_old_drafts_still_load():
     view = await expert.ok("GET", f"/assignments/{assignment_id}")
     assert view["draft"]["payload"]["answers"] == {"Q1": "kept"}
     assert view["draft"]["payload"]["highlights"] == []
-    assert view["locked_highlights"] == 0
 
 
 async def test_q1_asks_for_fragments_in_either_direction():
@@ -501,17 +397,15 @@ def _with_answers(**answers):
 
 
 async def test_an_empty_answer_cannot_be_submitted():
-    _, expert, assignment_id = await _past_gate()
+    _, expert, assignment_id = await _started()
     await save(expert, assignment_id, _with_answers(Q5="   "))
     await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, "empty_answer")
     assert (await expert.ok("GET", f"/assignments/{assignment_id}"))["state"] == "in_progress"
 
 
-async def test_short_answers_are_accepted_at_the_gate_and_on_submit():
+async def test_short_answers_are_accepted_on_submit():
     _, expert, assignment_id = await _started()
     short = {"Q1": "Sleep.", "Q2": "Mood.", "Q3": "No."}
-    await save(expert, assignment_id, {"answers": short})
-    await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
     payload = {
         **FULL_PAYLOAD,
         "answers": {**FULL_PAYLOAD["answers"], **short, "Q4": "Exam.", "Q5": "Over-reading."},
@@ -521,14 +415,12 @@ async def test_short_answers_are_accepted_at_the_gate_and_on_submit():
     await expert.ok("POST", f"/assignments/{assignment_id}/submit")
 
 
-async def test_the_gate_still_needs_an_answer_to_each_of_q1_to_q3():
+@pytest.mark.parametrize("missing", ["Q1", "Q2", "Q3", "Q5"])
+async def test_every_open_question_needs_an_answer(missing):
     _, expert, assignment_id = await _started()
-    await save(expert, assignment_id, {"answers": {**GATE_ANSWERS, "Q2": "  "}})
-    await expert.fails("POST", f"/assignments/{assignment_id}/pass-gate", 422, "gate_not_passed")
-    view = await expert.ok("GET", f"/assignments/{assignment_id}")
-    assert view["gate_passed_at"] is None, "the answers must stay editable"
-    await save(expert, assignment_id, {"answers": GATE_ANSWERS})
-    await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
+    answers = {q: a for q, a in FULL_PAYLOAD["answers"].items() if q != missing}
+    await save(expert, assignment_id, {**FULL_PAYLOAD, "answers": answers})
+    await expert.fails("POST", f"/assignments/{assignment_id}/submit", 422, "empty_answer")
 
 
 async def test_a_vignette_asking_only_q5_cannot_be_submitted_empty():
@@ -544,10 +436,10 @@ def test_count_words_counts_different_words():
 
 
 async def test_submitting_freezes_the_answers():
-    _, expert, assignment_id = await _past_gate()
+    _, expert, assignment_id = await _started()
     await save(expert, assignment_id, FULL_PAYLOAD)
     view = await expert.ok("POST", f"/assignments/{assignment_id}/submit")
-    assert view["state"] == "processing"
+    assert view["state"] == "proofreading"
     assert view["allowed_actions"] == []
     assert view["submitted_at"]
     await expert.fails(
@@ -561,14 +453,13 @@ async def test_submitting_freezes_the_answers():
 
     submission = await expert.ok("GET", f"/assignments/{assignment_id}/submission")
     assert submission["payload"]["expert_pseudonym"] == expert.pseudonym
-    assert submission["payload"]["gate_passed_at"]
     assert submission["payload_format"] == 2
     assert submission["vignette_hash"] == view["vignette"]["content_hash"]
     async with session_factory()() as db:
         assert len(list(await db.scalars(select(Submission)))) == 1
 
 
-async def test_vignette_without_gate_questions_starts_open():
+async def test_a_vignette_asking_only_q6():
     _, expert, assignment_id = await _started(question_ids=["Q6"])
     view = await expert.ok("GET", f"/assignments/{assignment_id}")
     assert [q["id"] for q in view["vignette"]["questions"]] == ["Q6"]

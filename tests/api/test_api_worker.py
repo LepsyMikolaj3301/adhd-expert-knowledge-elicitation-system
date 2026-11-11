@@ -39,8 +39,8 @@ async def test_slow_preparation_holds_no_lock_on_the_assignment(monkeypatch):
     async def record(db, assignment, prepared):
         seen["prepared"] = prepared
 
-    monkeypatch.setitem(handlers.PREPARE, JobKind.PROCESS, prepare)
-    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROCESS, record)
+    monkeypatch.setitem(handlers.PREPARE, JobKind.PROOFREAD, prepare)
+    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, record)
     assert await run_once() is True
     assert seen == {"lock_free": True, "prepared": "prepared"}
 
@@ -58,8 +58,8 @@ async def test_the_heartbeat_keeps_a_long_job_from_being_taken_over(monkeypatch)
     async def record(db, assignment, prepared):
         return None
 
-    monkeypatch.setitem(handlers.PREPARE, JobKind.PROCESS, slow_prepare)
-    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROCESS, record)
+    monkeypatch.setitem(handlers.PREPARE, JobKind.PROOFREAD, slow_prepare)
+    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, record)
     first = asyncio.create_task(run_once())
     await asyncio.sleep(0.7)  # the first lease ended long ago
     assert await run_once() is False, "another worker took a job that is still being worked on"
@@ -74,9 +74,9 @@ async def test_a_handler_can_choose_how_its_job_ends(monkeypatch):
     admin, _, assignment_id = await _submitted()
 
     async def record(db, assignment, prepared):
-        return Action.PROCESSING_FAILED
+        return Action.PROOFREAD_FAILED
 
-    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROCESS, record)
+    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, record)
     await run_once()
     view = await admin.ok("GET", f"/assignments/{assignment_id}")
     assert view["state"] == "processing_failed"

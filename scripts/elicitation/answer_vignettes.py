@@ -23,6 +23,7 @@ import random
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from make_fixtures import fixture_dir, write_json
 from prompt_toolkit import PromptSession
@@ -232,7 +233,9 @@ def add_manifest_entries(
     gold: Path, doc: ElicitationDocument, source_tier: str, how: str = "human:terminal"
 ) -> None:
     path = gold / "manifest.json"
-    manifest = json.loads(path.read_text()) if path.exists() else {"tier": "gold", "entries": []}
+    manifest: dict[str, Any] = (
+        json.loads(path.read_text()) if path.exists() else {"tier": "gold", "entries": []}
+    )
     manifest["quality"] = QUALITY
     have = {(e["id"], e["kind"]) for e in manifest["entries"]}
     created = doc.created_at.isoformat(timespec="seconds")

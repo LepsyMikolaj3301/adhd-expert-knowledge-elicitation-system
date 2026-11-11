@@ -18,7 +18,7 @@ const TEXT = 'I have barely slept since the move. My hand starts shaking slightl
 const FIFTEEN = 'one two three four five six seven eight nine ten eleven twelve thirteen a15 b15'
 const TEN = 'one two three four five six seven eight nine ten'
 
-const GATE: QuestionView[] = [
+const FIRST: QuestionView[] = [
   { id: 'Q1', kind: 'open', text: 'Which fragments matter?' },
   { id: 'Q2', kind: 'open', text: 'Which could be something else?' },
   { id: 'Q3', kind: 'open', text: 'What is missing?' },
@@ -72,37 +72,31 @@ function assignment(
     ...ROUND,
     id: 'a1',
     state: 'in_progress',
-    allowed_actions: ['pass_gate', 'save_draft'],
+    allowed_actions: ['save_draft', 'submit'],
     updated_at: 'now',
     vignette: {
       code: 'V007',
       version: 1,
       text: TEXT,
       framing: 'personal_journal',
+      patient_summary: 'A student.',
       word_count: 12,
       content_hash: 'x',
-      questions: GATE,
+      questions: [...FIRST, ...LATER],
     },
     draft: { version: 1, payload, updated_at: 'now' },
-    gate_passed_at: null,
-    locked_highlights: 0,
     started_at: 'now',
     submitted_at: null,
     ...overrides,
   }
 }
 
-const GATE_ANSWERS = { Q1: FIFTEEN, Q2: TEN, Q3: TEN }
-
-function afterGate(payload: Partial<AnswerPayload>, locked: number): ExpertAssignment {
-  const base = assignment(payload)
-  return {
-    ...base,
-    allowed_actions: ['save_draft', 'submit'],
-    gate_passed_at: 'now',
-    locked_highlights: locked,
-    vignette: { ...base.vignette, questions: [...GATE, ...LATER] },
-  }
+const FIRST_ANSWERS = { Q1: FIFTEEN, Q2: TEN, Q3: TEN }
+/** Everything answered: the review can be reached. */
+const DONE: Partial<AnswerPayload> = {
+  answers: { ...FIRST_ANSWERS, Q5: TEN },
+  q4: { hypothesis: 'tired not a trait', shift: 0 },
+  rating: 3,
 }
 
 type Call = { method: string; url: string; body?: { version: number; payload: AnswerPayload } }
@@ -130,14 +124,8 @@ function serve(initial: ExpertAssignment) {
         })
         return jsonResponse(200, { version: current.draft?.version, updated_at: 'now' })
       }
-      if (url.endsWith('/pass-gate')) {
-        const payload = current.draft?.payload as AnswerPayload
-        current = {
-          ...afterGate(payload, payload.highlights.length),
-          draft: current.draft,
-        }
-      } else if (url.endsWith('/submit')) {
-        current = { ...current, state: 'processing', allowed_actions: [], submitted_at: 'now' }
+      if (url.endsWith('/submit')) {
+        current = { ...current, state: 'proofreading', allowed_actions: [], submitted_at: 'now' }
       } else if (url.endsWith('/assignments')) {
         return jsonResponse(200, [])
       }
@@ -153,6 +141,11 @@ async function open(initial: ExpertAssignment) {
   await flushPromises()
   await flushPromises()
   return wrapper
+}
+
+/** An assignment in progress with these answers (the lock is gone: everything is open). */
+function withAnswers(payload: Partial<AnswerPayload>): ExpertAssignment {
+  return assignment(payload)
 }
 
 const app = () => wrapper as VueWrapper
@@ -292,7 +285,7 @@ describe('the vignette text', () => {
   it('ignores selections on a submitted vignette', async () => {
     await open(
       assignment(
-        { answers: GATE_ANSWERS, highlights: [] },
+        { answers: FIRST_ANSWERS, highlights: [] },
         { state: 'processing', allowed_actions: [], submitted_at: 'now' },
       ),
     )
@@ -310,42 +303,27 @@ describe('the side panel', () => {
 })
 
 describe('moving through the questions', () => {
-  it('shows Q1 to Q3 together with one lock-in button, and never Q4 before the lock-in', async () => {
+  it('shows every question at once, with nothing locked', async () => {
     await open(assignment({ answers: {}, highlights: [] }))
     const headings = app().findAll('[data-testid="question"]')
-    expect(headings.map((h) => h.text())).toEqual([
-      expect.stringContaining('Which fragments matter?'),
-      expect.stringContaining('Which could be something else?'),
-      expect.stringContaining('What is missing?'),
-    ])
-    expect(app().findAll('.chip-editor')).toHaveLength(3)
-    expect(app().text()).not.toContain('writer had an exam')
-    expect(buttonNamed('Lock in results')).toBeTruthy()
-    expect(
-      app()
-        .findAll('button')
-        .some((b) => b.text() === 'Next question'),
-    ).toBe(false)
-  })
-
-  it('says that locking in is final, and no longer shows a padlock in the rail', async () => {
-    await open(assignment({ answers: {}, highlights: [] }))
-    expect(app().get('[data-testid="gate-note"]').text()).toContain("you can't change them")
+    expect(headings).toHaveLength(6)
+    expect(headings[3]?.text()).toContain('writer had an exam')
+    expect(app().findAll('.chip-editor')).toHaveLength(4)
+    expect(app().find('[data-testid="gate-note"]').exists()).toBe(false)
+    expect(app().text()).not.toContain('Lock in')
+    expect(app().text()).not.toMatch(/locked/i)
     const rail = app().get('nav[aria-label="Questions"]')
-    expect(rail.find('svg').exists()).toBe(false)
-    expect(rail.find('[data-testid="gate-divider"]').exists()).toBe(true)
+    expect(rail.find('[data-testid="gate-divider"]').exists()).toBe(false)
   })
 
-  it('lets Q1 to Q3 be reached in any order, however little is written', async () => {
-    await open(assignment({ answers: { Q1: 'too short' }, highlights: [] }))
-    expect(block('Q1').text()).toContain('2 words')
+  it('lets every question be reached in any order, however little is written', async () => {
+    await open(assignment({ answers: { Q5: 'too short' }, highlights: [] }))
+    expect(block('Q5').text()).toContain('2 words')
     const steps = app().findAll('[data-testid="step"]')
-    expect(steps.slice(0, 3).map((s) => s.attributes('disabled'))).toEqual([
-      undefined,
-      undefined,
-      undefined,
-    ])
-    expect(step('Q4').attributes('disabled')).toBeDefined()
+    expect(steps.slice(0, 6).map((s) => s.attributes('disabled'))).toEqual(Array(6).fill(undefined))
+    expect(step('Review').attributes('disabled')).toBeDefined()
+    await step('Q6').trigger('click')
+    expect(currentStep()).toBe('Q6')
   })
 
   it('scrolls to the question clicked in the rail', async () => {
@@ -370,9 +348,9 @@ describe('moving through the questions', () => {
     expect(currentStep()).toBe('Q2')
   })
 
-  it('only asks for all three answers when locking in', async () => {
+  it('asks for every answer before the review', async () => {
     await open(assignment({ answers: { Q1: 'short', Q3: 'also short' }, highlights: [] }))
-    expect(buttonNamed('Lock in results').attributes('aria-disabled')).toBe('true')
+    expect(buttonNamed('Review answers').attributes('aria-disabled')).toBe('true')
     expect(app().text()).toContain('Q2 needs an answer.')
   })
 
@@ -383,8 +361,8 @@ describe('moving through the questions', () => {
   })
 
   it('marks what is missing when the button is pressed, and goes nowhere', async () => {
-    await open(assignment({ answers: { Q1: FIFTEEN, Q3: FIFTEEN }, highlights: [] }))
-    await buttonNamed('Lock in results').trigger('click')
+    await open(assignment({ ...DONE, answers: { Q1: FIFTEEN, Q3: FIFTEEN, Q5: TEN } }))
+    await buttonNamed('Review answers').trigger('click')
     expect(app().find('dialog[open]').exists()).toBe(false)
     expect(app().get('[data-testid="blocker"]').classes()).toContain('text-danger')
     expect(step('Q2').attributes('data-problem')).toBe('true')
@@ -394,8 +372,8 @@ describe('moving through the questions', () => {
   })
 
   it('clears the mark on a question as soon as it is answered', async () => {
-    await open(assignment({ answers: { Q1: FIFTEEN, Q3: FIFTEEN }, highlights: [] }))
-    await buttonNamed('Lock in results').trigger('click')
+    await open(assignment({ ...DONE, answers: { Q1: FIFTEEN, Q3: FIFTEEN, Q5: TEN } }))
+    await buttonNamed('Review answers').trigger('click')
     expect(step('Q2').attributes('data-problem')).toBe('true')
     // The second box is Q2's.
     app().findAllComponents(ChipEditor)[1]?.vm.$emit('update:modelValue', FIFTEEN)
@@ -411,13 +389,10 @@ describe('moving through the questions', () => {
 
   it('counts every word, even a repeated one', async () => {
     await open(
-      afterGate(
-        {
-          answers: { ...GATE_ANSWERS, Q5: `${TEN} ten` },
-          q4: { hypothesis: 'tired not a trait', shift: 0 },
-        },
-        0,
-      ),
+      withAnswers({
+        answers: { ...FIRST_ANSWERS, Q5: `${TEN} ten` },
+        q4: { hypothesis: 'tired not a trait', shift: 0 },
+      }),
     )
     expect(block('Q5').get('[data-testid="word-count"]').text()).toBe('11 words')
   })
@@ -428,93 +403,14 @@ describe('moving through the questions', () => {
   })
 })
 
-describe('locking in', () => {
-  it('needs a direction on every citation', async () => {
-    await open(assignment({ answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept')] }))
-    expect(buttonNamed('Lock in results').attributes('aria-disabled')).toBe('true')
-    expect(app().text()).toContain('Choose a direction for quote 1.')
-    await rows()[0]?.get('select').setValue('away')
-    expect(buttonNamed('Lock in results').attributes('aria-disabled')).toBeUndefined()
-  })
-
-  it('marks a quote without a direction once the button is pressed, then clears it', async () => {
-    await open(assignment({ answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept')] }))
-    expect(rows()[0]?.get('select').attributes('data-missing')).toBeUndefined()
-    await buttonNamed('Lock in results').trigger('click')
-    expect(app().find('dialog[open]').exists()).toBe(false)
-    expect(rows()[0]?.get('select').attributes('data-missing')).toBe('true')
-    expect(app().find('[data-testid="direction-missing"]').exists()).toBe(true)
-    await rows()[0]?.get('select').setValue('away')
-    expect(rows()[0]?.get('select').attributes('data-missing')).toBeUndefined()
-    expect(app().find('[data-testid="direction-missing"]').exists()).toBe(false)
-  })
-
-  it('asks first, then saves, then passes the gate and shows Q4', async () => {
-    await open(assignment({ answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept')] }))
-    await rows()[0]?.get('select').setValue('away')
-    await buttonNamed('Lock in results').trigger('click')
-    expect(calls.filter((c) => c.url.endsWith('/pass-gate'))).toHaveLength(0)
-    expect(app().get('dialog[open]').text()).toContain('not mentioned')
-
-    await app()
-      .get('dialog[open]')
-      .findAll('button')
-      .find((b) => b.text() === 'Lock in results')
-      ?.trigger('click')
-    await flushPromises()
-
-    const writes = calls.filter((c) => c.method !== 'GET').map((c) => c.method)
-    expect(writes).toEqual(['PUT', 'POST'])
-    expect(block('Q4').text()).toContain('the writer had an exam')
-    expect(currentStep()).toBe('Q4')
-    expect(buttonNamed('Review answers')).toBeTruthy()
-  })
-
-  it('warns about no citations at all, without blocking', async () => {
-    await open(assignment({ answers: GATE_ANSWERS, highlights: [] }))
-    await buttonNamed('Lock in results').trigger('click')
-    expect(app().get('dialog[open]').text()).toContain("haven't added any quotes")
-  })
-
-  it('keeps locked questions on screen read-only, with their chips, above the open ones', async () => {
-    const payload = {
-      answers: { ...GATE_ANSWERS, Q1: `⟦h1⟧ ${FIFTEEN}` },
-      highlights: [citation(1, 'barely slept', 'away')],
-    }
-    await open(afterGate(payload, 1))
-    expect(app().findAll('[data-testid="question"]')).toHaveLength(6)
-    for (const id of ['Q1', 'Q2', 'Q3']) {
-      expect(block(id).find('.chip-editor').exists()).toBe(false)
-    }
-    expect(block('Q5').find('.chip-editor').exists()).toBe(true)
-    expect(app().get('[data-testid="gate-note"]').text()).toContain('locked')
-
-    await block('Q1').get('[data-chip="1"]').trigger('mouseover')
-    expect(marked().text()).toBe('barely slept')
-  })
-
-  it('indents a list in a locked answer, and keeps its text as written', async () => {
-    const answers = { ...GATE_ANSWERS, Q2: 'intro\n1. first ⟦h1⟧\n- second\nend' }
-    await open(afterGate({ answers, highlights: [citation(1, 'barely slept', 'away')] }, 1))
-    const lines = block('Q2').findAll('.list-line')
-    expect(lines.map((l) => l.text())).toEqual(['1. first 1', '- second'])
-    expect(block('Q2').text()).toContain('intro')
-    expect(block('Q2').text()).toContain('end')
-  })
-
-  it('keeps locked citations fixed, while new ones can be added and removed', async () => {
-    const payload = {
-      answers: GATE_ANSWERS,
-      highlights: [citation(1, 'barely slept', 'away')],
-    }
-    await open(afterGate(payload, 1))
-    expect(rows()[0]?.find('select').exists()).toBe(false)
-    expect(rows()[0]?.text()).not.toContain('Remove')
-
+describe('quotes and the review', () => {
+  it('can add, change and remove any quote at any time', async () => {
+    await open(assignment({ ...DONE, highlights: [citation(1, 'barely slept', 'away')] }))
+    expect(rows()[0]?.find('select').exists()).toBe(true)
+    expect(rows()[0]?.text()).toContain('Remove')
     await selectInText('hand starts')
     expect(rows()).toHaveLength(2)
-    expect(rows()[1]?.find('select').exists()).toBe(true)
-    await rows()[1]
+    await rows()[0]
       ?.findAll('button')
       .find((b) => b.text() === 'Remove')
       ?.trigger('click')
@@ -522,29 +418,58 @@ describe('locking in', () => {
     expect(rows()).toHaveLength(1)
   })
 
-  it('shows what went wrong when the server refuses, and stays on Q3', async () => {
-    await open(assignment({ answers: GATE_ANSWERS, highlights: [] }))
+  it('needs a direction on every citation before submitting', async () => {
+    await open(assignment({ ...DONE, highlights: [citation(1, 'barely slept')] }))
+    expect(currentStep()).toBe('Review')
+    expect(buttonNamed('Submit for proofreading').attributes('aria-disabled')).toBe('true')
+    expect(app().text()).toContain('Choose a direction for quote 1.')
+    await rows()[0]?.get('select').setValue('away')
+    expect(buttonNamed('Submit for proofreading').attributes('aria-disabled')).toBeUndefined()
+  })
+
+  it('marks a quote without a direction once the button is pressed, then clears it', async () => {
+    await open(assignment({ ...DONE, highlights: [citation(1, 'barely slept')] }))
+    expect(rows()[0]?.get('select').attributes('data-missing')).toBeUndefined()
+    await buttonNamed('Submit for proofreading').trigger('click')
+    expect(app().find('dialog[open]').exists()).toBe(false)
+    expect(rows()[0]?.get('select').attributes('data-missing')).toBe('true')
+    await rows()[0]?.get('select').setValue('away')
+    expect(rows()[0]?.get('select').attributes('data-missing')).toBeUndefined()
+  })
+
+  it('indents a list in an answer on the review, and keeps its text as written', async () => {
+    const answers = { ...DONE.answers, Q2: 'intro\n1. first ⟦h1⟧\n- second\nend' }
+    await open(assignment({ ...DONE, answers, highlights: [citation(1, 'barely slept', 'away')] }))
+    const q2 = app().findAll('[data-testid="review-answer"]')[1]!
+    expect(q2.findAll('.list-line').map((l) => l.text())).toEqual(['1. first 1', '- second'])
+    expect(q2.text()).toContain('intro')
+    expect(q2.text()).toContain('end')
+    await q2.get('[data-chip="1"]').trigger('mouseover')
+    expect(marked().text()).toBe('barely slept')
+  })
+
+  it('shows what went wrong when the server refuses, and stays on the review', async () => {
+    await open(assignment({ ...DONE, highlights: [] }))
     const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
     const original = fetchMock.getMockImplementation()
     fetchMock.mockImplementation(async (input: Request) =>
-      urlOf(input).endsWith('/pass-gate')
+      urlOf(input).endsWith('/submit')
         ? jsonResponse(422, {
-            code: 'gate_not_passed',
+            code: 'empty_answer',
             message: 'Q3 needs an answer.',
-            details: { missing: ['Q3'] },
+            details: {},
           })
         : (original as (i: Request) => Promise<Response>)(input),
     )
-    await buttonNamed('Lock in results').trigger('click')
+    await buttonNamed('Submit for proofreading').trigger('click')
     await app()
       .get('dialog[open]')
       .findAll('button')
-      .find((b) => b.text() === 'Lock in results')
+      .find((b) => b.text() === 'Submit for proofreading')
       ?.trigger('click')
     await flushPromises()
-    expect(app().get('[role="alert"]').text()).toBe('Please answer questions 1–3 first.')
-    expect(app().text()).toContain('What is missing?')
-    expect(app().text()).not.toContain('writer had an exam')
+    expect(app().get('[role="alert"]').text()).toBe('An answer needs a little more.')
+    expect(router.currentRoute.value.path).toBe('/assignments/a1')
   })
 })
 
@@ -617,7 +542,7 @@ describe('removing a citation', () => {
 
 describe('Q4', () => {
   async function openQ4(q4: AnswerPayload['q4'] = null) {
-    await open(afterGate({ answers: GATE_ANSWERS, highlights: [], q4 }, 0))
+    await open(withAnswers({ answers: FIRST_ANSWERS, highlights: [], q4 }))
   }
 
   it('has no point chosen on the scale until the expert picks one', async () => {
@@ -649,32 +574,33 @@ describe('Q4', () => {
 
 describe('submitting', () => {
   const finished: AnswerPayload = {
-    answers: { ...GATE_ANSWERS, Q5: TEN },
+    answers: { ...FIRST_ANSWERS, Q5: TEN },
     highlights: [citation(1, 'barely slept', 'away')],
     q4: { hypothesis: 'tired not a trait', shift: 0 },
     rating: 3,
     insufficient_information: false,
   }
 
-  it('reviews everything, with Edit only on Q4 to Q6', async () => {
-    await open(afterGate(finished, 1))
+  it('reviews everything, with Edit on every answer', async () => {
+    await open(withAnswers(finished))
     expect(app().findAll('[data-testid="review-answer"]')).toHaveLength(6)
     expect(
       app()
         .findAll('button')
         .filter((b) => b.text() === 'Edit'),
-    ).toHaveLength(3)
+    ).toHaveLength(6)
     expect(app().text()).toContain('0 is unchanged')
   })
 
-  it('asks first, saves, submits and goes back to the list', async () => {
-    await open(afterGate(finished, 1))
-    await buttonNamed('Submit answers').trigger('click')
+  it('asks first, saves, submits for proofreading and goes back to the list', async () => {
+    await open(withAnswers(finished))
+    await buttonNamed('Submit for proofreading').trigger('click')
     expect(calls.filter((c) => c.url.endsWith('/submit'))).toHaveLength(0)
+    expect(app().get('dialog[open]').text()).toContain('edited ones')
     await app()
       .get('dialog[open]')
       .findAll('button')
-      .find((b) => b.text() === 'Submit answers')
+      .find((b) => b.text() === 'Submit for proofreading')
       ?.trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/assignments'))
     expect(calls.filter((c) => c.url.endsWith('/submit'))).toHaveLength(1)
@@ -685,14 +611,11 @@ describe('submitting', () => {
     // Start at +1 towards more ADHD-like, then move the scale to -1 in the same session: the screen
     // remembers the hidden "towards", but saving drops it, so Review must not show it.
     await open(
-      afterGate(
-        {
-          ...finished,
-          q4: { hypothesis: 'tired not a trait', shift: 1, toward: 'more_adhd' },
-          answers: { ...finished.answers, Q4: 'because of the exam it moves' },
-        },
-        1,
-      ),
+      withAnswers({
+        ...finished,
+        q4: { hypothesis: 'tired not a trait', shift: 1, toward: 'more_adhd' },
+        answers: { ...finished.answers, Q4: 'because of the exam it moves' },
+      }),
     )
     expect(app().text()).toContain('towards more ADHD-like')
 
@@ -715,33 +638,19 @@ describe('submitting', () => {
   it('does not count a reference in a hidden Q4 answer as used', async () => {
     // At shift 0 the "why" is dropped when saving, so a reference only there is not in the answers.
     await open(
-      afterGate(
-        {
-          ...finished,
-          answers: { ...GATE_ANSWERS, Q4: '⟦h1⟧ left over', Q5: TEN },
-          q4: { hypothesis: 'tired not a trait', shift: 0 },
-        },
-        1,
-      ),
+      withAnswers({
+        ...finished,
+        answers: { ...FIRST_ANSWERS, Q4: '⟦h1⟧ left over', Q5: TEN },
+        q4: { hypothesis: 'tired not a trait', shift: 0 },
+      }),
     )
     expect(app().text()).toContain('is not mentioned in any answer')
   })
 
-  it('needs a direction on citations added after the lock-in', async () => {
-    await open(
-      afterGate(
-        { ...finished, highlights: [...finished.highlights, citation(2, 'hand starts')] },
-        1,
-      ),
-    )
-    expect(buttonNamed('Submit answers').attributes('aria-disabled')).toBe('true')
-    expect(app().text()).toContain('Choose a direction for quote 2.')
-  })
-
-  it('shows a submitted vignette read-only, and hovering still lights the text', async () => {
+  it('shows answers with nothing proofread read-only, and hovering still lights the text', async () => {
     const submitted = {
-      ...afterGate(finished, 1),
-      state: 'processing' as const,
+      ...withAnswers(finished),
+      state: 'ingested' as const,
       allowed_actions: [],
       submitted_at: 'now',
     }
@@ -749,25 +658,28 @@ describe('submitting', () => {
     const fetchMock = globalThis.fetch as ReturnType<typeof vi.fn>
     const original = fetchMock.getMockImplementation()
     fetchMock.mockImplementation(async (input: Request) =>
-      urlOf(input).endsWith('/submission')
-        ? jsonResponse(200, {
-            assignment_id: 'a1',
-            payload_format: 2,
-            vignette_hash: 'x',
-            submitted_at: 'now',
-            payload: finished,
-          })
-        : (original as (i: Request) => Promise<Response>)(input),
+      urlOf(input).endsWith('/proofread')
+        ? jsonResponse(404, { code: 'not_found', message: 'Proofread not found.', details: {} })
+        : urlOf(input).endsWith('/submission')
+          ? jsonResponse(200, {
+              assignment_id: 'a1',
+              payload_format: 2,
+              vignette_hash: 'x',
+              submitted_at: 'now',
+              payload: finished,
+            })
+          : (original as (i: Request) => Promise<Response>)(input),
     )
     await router.push('/assignments/a1')
     wrapper = mount(App, { global: { plugins: [router] }, attachTo: document.body })
     await flushPromises()
     await flushPromises()
 
+    expect(app().text()).toContain('Your answers')
     expect(
       app()
         .findAll('button')
-        .some((b) => b.text() === 'Submit answers'),
+        .some((b) => b.text() === 'Submit for proofreading'),
     ).toBe(false)
     expect(
       app()
@@ -778,16 +690,19 @@ describe('submitting', () => {
     expect(marked().text()).toBe('barely slept')
   })
 
-  it('does not look locked once submitted', async () => {
+  it('shows a loading circle while the answers are proofread, and what comes next', async () => {
     const submitted = {
-      ...afterGate(finished, 1),
-      state: 'processing' as const,
+      ...withAnswers(finished),
+      state: 'proofreading' as const,
       allowed_actions: [],
       submitted_at: 'now',
     }
     await open(submitted)
-    expect(app().text()).not.toContain('Locked')
-    expect(app().text()).not.toContain('locked')
+    const panel = app().get('[data-testid="proofreading"]')
+    expect(panel.find('[data-testid="spinner"]').exists()).toBe(true)
+    expect(panel.text()).toContain('Proofreading your answers')
+    expect(panel.text()).toContain('submit it for review')
+    expect(app().text()).not.toMatch(/locked/i)
   })
 })
 
@@ -986,9 +901,10 @@ describe('the quotes', () => {
     expect(cited).toEqual(['Cited 3 times', 'Cited 0 times'])
   })
 
-  it('spells out the direction of a locked quote', async () => {
-    const payload = { answers: GATE_ANSWERS, highlights: [citation(1, 'barely slept', 'neutral')] }
-    await open(afterGate(payload, 1))
+  it('spells out the direction of a quote once submitted', async () => {
+    const payload = { answers: FIRST_ANSWERS, highlights: [citation(1, 'barely slept', 'neutral')] }
+    await open({ ...withAnswers(payload), state: 'proofreading', allowed_actions: [] })
+    expect(rows()[0]?.find('select').exists()).toBe(false)
     expect(rows()[0]?.text()).toContain('No bearing')
   })
 
@@ -1076,13 +992,13 @@ describe('adding a reference by clicking the quote', () => {
 
   it('only lights the quote where there is no answer box', async () => {
     const finished: AnswerPayload = {
-      answers: { ...GATE_ANSWERS, Q5: TEN },
+      answers: { ...FIRST_ANSWERS, Q5: TEN },
       highlights: [citation(1, 'barely slept', 'away')],
       q4: { hypothesis: 'tired not a trait', shift: 0 },
       rating: 3,
       insufficient_information: false,
     }
-    await open(afterGate(finished, 1))
+    await open(withAnswers(finished))
     expect(app().find('.chip-editor').exists()).toBe(false)
     expect(addButton().attributes('aria-label')).toBe('Show quote 1 in the text: “barely slept”')
     expect(rows()[0]?.text()).not.toContain('+ Add to answer')
@@ -1093,16 +1009,13 @@ describe('adding a reference by clicking the quote', () => {
     expect(calls.filter((c) => c.method === 'PUT')).toHaveLength(0)
   })
 
-  it('adds to the first open answer when the question being looked at is locked', async () => {
-    const payload = {
-      answers: GATE_ANSWERS,
-      highlights: [citation(1, 'barely slept', 'away')],
-    }
-    await open(afterGate(payload, 1))
-    await step('Q1').trigger('click')
+  it('adds to the question clicked in the rail, whichever it is', async () => {
+    const payload = { answers: FIRST_ANSWERS, highlights: [citation(1, 'barely slept', 'away')] }
+    await open(withAnswers(payload))
+    await step('Q2').trigger('click')
     await addButton().trigger('click')
     await flushPromises()
-    expect(block('Q1').find('[data-chip]').exists()).toBe(false)
-    expect(block('Q5').find('[data-chip="1"]').exists()).toBe(true)
+    expect(block('Q2').find('[data-chip="1"]').exists()).toBe(true)
+    expect(block('Q5').find('[data-chip]').exists()).toBe(false)
   })
 })

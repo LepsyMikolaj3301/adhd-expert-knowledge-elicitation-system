@@ -1,10 +1,8 @@
 """What an expert's answers look like, and the rules for saving and submitting them.
 
-Saving a draft is lenient about completeness but strict about the gate: Q4-Q6 stay closed until
-Q1-Q3 are answered, and the Q1-Q3 answers can't change afterwards. Submitting checks everything.
-
-Every question asked must be properly answered: blank answers fail, and so do answers below the
-question's word minimum. Q1-Q3 are checked at the gate, because they can't be corrected after it.
+Saving a draft is lenient about completeness: the questions can be answered in any order and
+changed until the answers are submitted. Submitting checks everything: every question asked must be
+answered.
 """
 
 import re
@@ -13,7 +11,10 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.errors import invalid
-from app.vignettes.questions import GATE, QUESTIONS, QuestionId
+from app.vignettes.questions import QUESTIONS, QuestionId
+
+# CHIP_RE: a citation inside an answer, as stored (`⟦h3⟧`); the number is the citation's `chip`.
+from expert_knowledge_core.notes import CHIP_RE  # noqa: F401  (also imported from here)
 
 # 2: citations (`highlights`, `⟦hN⟧` chips) replace `quoted_fragments`, and Q1 has its new wording.
 PAYLOAD_FORMAT = 2
@@ -21,8 +22,6 @@ AnswerText = Annotated[str, Field(max_length=20_000)]
 ShortText = Annotated[str, Field(max_length=2_000)]
 Direction = Literal["toward", "away", "neutral", "unclear"]
 
-# A citation inside an answer, as stored. The number is the citation's `chip`.
-CHIP_RE = re.compile(r"⟦h(\d+)⟧")
 # How much of a citation a chip shows when it is rendered as text.
 CHIP_QUOTE_WORDS = 8
 
@@ -58,19 +57,6 @@ class AnswerPayload(BaseModel):
     q4: Q4Answer | None = None
     rating: int | None = Field(default=None, ge=1, le=5)
     insufficient_information: bool = False
-
-
-def gate_questions(question_ids: list[str]) -> list[str]:
-    return [question_id for question_id in GATE if question_id in question_ids]
-
-
-def _has_after_gate_content(payload: AnswerPayload) -> bool:
-    return (
-        any(question_id not in GATE for question_id in payload.answers)
-        or payload.q4 is not None
-        or payload.rating is not None
-        or payload.insufficient_information
-    )
 
 
 def _check_asked(payload: AnswerPayload, question_ids: list[str]) -> None:
@@ -120,28 +106,9 @@ def _check_citations_complete(payload: AnswerPayload) -> None:
         )
 
 
-def check_draft(
-    payload: AnswerPayload,
-    previous: AnswerPayload,
-    question_ids: list[str],
-    gate_passed: bool,
-    text: str,
-    locked_highlights: int,
-) -> None:
+def check_draft(payload: AnswerPayload, question_ids: list[str], text: str) -> None:
     _check_asked(payload, question_ids)
     _check_highlights(payload.highlights, text)
-    gate = gate_questions(question_ids)
-    if not gate:
-        return
-    if not gate_passed and _has_after_gate_content(payload):
-        raise invalid("gate_not_passed", "Q1-Q3 need answers first.")
-    if gate_passed and any(payload.answers.get(q) != previous.answers.get(q) for q in gate):
-        raise invalid("gate_locked", "Q1-Q3 are locked once you have seen the next questions.")
-    # Citations made after the gate stay editable: only the ones the gate answers can use are fixed.
-    if gate_passed and (
-        payload.highlights[:locked_highlights] != previous.highlights[:locked_highlights]
-    ):
-        raise invalid("gate_locked", "Citations made before the lock-in can't change.")
 
 
 def count_words(text: str) -> int:
@@ -159,21 +126,6 @@ def render_chips(answer: str, highlights: list[dict[str, Any]]) -> str:
         return f"«{' '.join(words[:CHIP_QUOTE_WORDS])}{'…' if cut else ''}»"
 
     return CHIP_RE.sub(quote, answer)
-
-
-def _missing_gate_answers(payload: AnswerPayload, question_ids: list[str]) -> list[str]:
-    return [q for q in gate_questions(question_ids) if not payload.answers.get(q, "").strip()]
-
-
-def check_gate_answers(payload: AnswerPayload, question_ids: list[str]) -> None:
-    """Whether the expert may pass the gate. After it, these answers can't be corrected."""
-    if missing := _missing_gate_answers(payload, question_ids):
-        raise invalid(
-            "gate_not_passed",
-            f"{', '.join(missing)} need answers before the next questions.",
-            {"missing": missing},
-        )
-    _check_citations_complete(payload)
 
 
 def _incomplete(message: str) -> Exception:
@@ -209,18 +161,15 @@ def _clean_q4(payload: AnswerPayload, question_ids: list[str]) -> Q4Answer | Non
 def clean_submission(payload: AnswerPayload, question_ids: list[str], text: str) -> AnswerPayload:
     """Check a draft for submission and return it trimmed, or raise the first problem found."""
     _check_asked(payload, question_ids)
-    if _missing_gate_answers(payload, question_ids):
-        raise invalid("gate_not_passed", "Q1-Q3 need answers first.")
 
     answers: dict[QuestionId, str] = {}
     for question_id, answer in payload.answers.items():
         if answer.strip():
             answers[question_id] = answer.strip()
 
-    # Open questions after the gate must have an answer. How long it is, is the expert's call.
+    # Every open question must have an answer. How long it is, is the expert's call.
     for question_id in question_ids:
-        is_open = QUESTIONS[question_id].kind == "open"
-        if is_open and question_id not in GATE and question_id not in answers:
+        if QUESTIONS[question_id].kind == "open" and question_id not in answers:
             raise invalid("empty_answer", f"{question_id} needs an answer.")
 
     _check_highlights(payload.highlights, text)

@@ -20,7 +20,12 @@ dependencies = [
     "argon2-cffi>=23.1",
     "email-validator>=2.2",
     "pyyaml>=6.0",
+    "wordfreq>=3.1",
+    "expert-knowledge-core",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+expert-knowledge-core = { workspace = true }

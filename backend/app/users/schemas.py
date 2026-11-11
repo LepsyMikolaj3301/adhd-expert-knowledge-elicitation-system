@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Self
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
@@ -67,3 +67,32 @@ class InvitedUser(BaseModel):
 
 class InviteIssued(BaseModel):
     invite_path: str
+
+
+class CaseCounts(BaseModel):
+    open: int
+    in_review: int
+    done: int
+    stopped: int  # cancelled or rejected
+
+
+class PersonCard(BaseModel):
+    """Who a pseudonym is, for everyone but the admin: no name, no email."""
+
+    audience: Literal["peer"] = "peer"
+    pseudonym: str
+    role: Role
+
+
+class PersonAdminCard(BaseModel):
+    audience: Literal["admin"] = "admin"
+    pseudonym: str
+    role: Role
+    display_name: str
+    email: str
+    is_active: bool
+    is_synthetic: bool
+    cases: CaseCounts
+
+
+PersonView = Annotated[PersonAdminCard | PersonCard, Field(discriminator="audience")]

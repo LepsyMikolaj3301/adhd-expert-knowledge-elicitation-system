@@ -13,7 +13,7 @@ from api_helpers import (
     published_version,
     reach_review,
     run_jobs,
-    to_units,
+    to_review,
 )
 
 from app.core.db import utcnow
@@ -36,10 +36,10 @@ async def three_in_review():
     return admin, (e1, e2, e3), (first, second, third), version
 
 
-async def comment(api, assignment_id, unit_id, body, **extra):
+async def comment(api, assignment_id, question_id, body, **extra):
     return await api.ok(
         "POST",
-        f"/assignments/{assignment_id}/units/{unit_id}/comments",
+        f"/assignments/{assignment_id}/answers/{question_id}/comments",
         201,
         json={"body": body, **extra},
     )
@@ -93,11 +93,11 @@ async def test_a_submitted_case_waits_for_the_check_and_then_leaves_the_list():
     admin, expert = await admin_api(), await expert_api("e@example.com")
     [a] = await assign(admin, await published_version(admin), expert)
     await answer_and_submit(expert, a)
-    assert (await home(expert))["next_up"] == [], "being processed: nothing for the expert to do"
+    assert (await home(expert))["next_up"] == [], "being proofread: nothing for the expert to do"
     await run_jobs()
     [item] = (await home(expert))["next_up"]
-    assert (item["assignment_id"], item["action"]) == (a, "check")
-    await expert.ok("POST", f"/assignments/{a}/expert-check/skip")
+    assert (item["assignment_id"], item["action"], item["state"]) == (a, "check", "proofread_check")
+    await expert.ok("POST", f"/assignments/{a}/submit-for-review")
     assert (await home(expert))["next_up"] == []
 
 
@@ -119,7 +119,7 @@ async def test_next_up_for_the_admin_is_what_needs_a_retry(monkeypatch):
     async def broken(db, assignment, prepared):
         raise RuntimeError("boom")
 
-    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROCESS, broken)
+    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, broken)
     await run_jobs()
     feed = await home(admin)
     [item] = feed["next_up"]
@@ -137,19 +137,31 @@ async def test_next_up_for_the_admin_is_what_needs_a_retry(monkeypatch):
 # --- reviews --------------------------------------------------------------------------------
 
 
-async def test_reviews_waiting_are_the_open_ones_the_viewer_has_not_voted_on():
+async def vote(api, assignment_id, question_id, value="approve"):
+    await api.ok(
+        "PUT",
+        f"/assignments/{assignment_id}/answers/{question_id}/vote",
+        json={"vote": value, "review_round": 1},
+    )
+
+
+async def test_reviews_waiting_are_the_open_ones_the_viewer_has_not_voted_on_in_full():
     admin, (e1, e2, e3), (first, second, third), _ = await three_in_review()
     waiting = (await home(e2))["reviews_waiting"]
     assert {r["assignment_id"] for r in waiting} == {first, third}, "never one's own submission"
-    assert all(r["relation"] == "reviewer" and r["my_vote"] is None for r in waiting)
+    assert all(r["relation"] == "reviewer" and r["my_votes"] == 0 for r in waiting)
 
     await e2.ok("POST", f"/assignments/{first}/review/open", 204)
-    await e2.ok("PUT", f"/assignments/{first}/vote", json={"vote": "accept", "review_round": 1})
+    await vote(e2, first, "Q1")
+    feed = await home(e2)
+    assert {r["assignment_id"] for r in feed["reviews_waiting"]} == {first, third}, "4 to go"
+    for question_id in ("Q2", "Q3", "Q4", "Q5"):
+        await vote(e2, first, question_id, "disapprove")
     feed = await home(e2)
     assert {r["assignment_id"] for r in feed["reviews_waiting"]} == {third}
     recent = {r["assignment_id"]: r for r in feed["recent_reviews"]}
     assert set(recent) == {first, second, third}
-    assert (recent[first]["my_vote"], recent[first]["accepts"]) == ("accept", 1)
+    assert (recent[first]["my_votes"], recent[first]["approvals"]) == (5, 1)
     assert (recent[second]["relation"], recent[second]["opened"]) == ("author", True)
     assert recent[third]["opened"] is False
 
@@ -185,11 +197,12 @@ async def test_recent_reviews_are_cut_off_and_the_newest_come_first(monkeypatch)
 
 async def test_the_activity_of_a_finished_case_for_its_author_and_the_admin():
     admin, (e1, e2, e3), (first, second, third), _ = await three_in_review()
-    # e1 was assigned, had the check ready, and sees the three submissions come into review.
+    # e1 was assigned, had the check ready, and sees the two colleagues' answers come into
+    # review. Their own was sent by themselves: not news.
     assert kinds(await home(e1)) == {
         "case_assigned": 1,
         "check_ready": 1,
-        "review_opened": 3,
+        "review_opened": 2,
     }
     assert kinds(await home(admin)) == {"review_opened": 3}
 
@@ -197,24 +210,23 @@ async def test_the_activity_of_a_finished_case_for_its_author_and_the_admin():
 async def test_a_comment_on_my_case_a_reply_to_my_comment_and_a_comment_of_the_admin():
     admin, (e1, e2, e3), (first, second, third), _ = await three_in_review()
     await e2.ok("POST", f"/assignments/{first}/review/open", 204)
-    unit = (await e2.ok("GET", f"/assignments/{first}/units"))[0]
 
-    top = await comment(e2, first, unit["id"], "Why this passage?", stance="question")
+    top = await comment(e2, first, "Q1", "Why this passage?", stance="question")
     item = next(i for i in (await home(e1))["activity"] if i["kind"] == "comment_on_mine")
-    assert item["assignment_id"] == first and item["unit_id"] == unit["id"]
-    assert item["unit_ordinal"] == unit["ordinal"] and item["comment_id"] == top["id"]
+    assert item["assignment_id"] == first and item["question_id"] == "Q1"
+    assert item["comment_id"] == top["id"]
     assert item["speaker"] == {"kind": "reviewer", "pseudonym": e2.pseudonym}
     assert item["excerpt"] == "Why this passage?" and item["vignette_code"]
     assert "comment_on_mine" not in kinds(await home(e2)), "not told about one's own comment"
     assert "comment_on_mine" not in kinds(await home(e3))
 
-    reply = await comment(e1, first, unit["id"], "Because of the desk.", parent_id=top["id"])
+    reply = await comment(e1, first, "Q1", "Because of the desk.", parent_id=top["id"])
     mine = [i for i in (await home(e2))["activity"] if i["comment_id"] == reply["id"]]
     assert [i["kind"] for i in mine] == ["reply"]
     assert mine[0]["speaker"] == {"kind": "author", "pseudonym": None}
     assert not [i for i in (await home(e1))["activity"] if i["comment_id"] == reply["id"]]
 
-    note = await comment(admin, first, unit["id"], "Thanks both.", parent_id=top["id"])
+    note = await comment(admin, first, "Q1", "Thanks both.", parent_id=top["id"])
     for api in (e1, e2):  # both took part in the thread
         [seen] = [i for i in (await home(api))["activity"] if i["comment_id"] == note["id"]]
         assert seen["kind"] == "reply"
@@ -227,9 +239,8 @@ async def test_a_comment_on_my_case_a_reply_to_my_comment_and_a_comment_of_the_a
 async def test_the_admin_hears_about_replies_to_their_own_comments_with_names():
     admin, (e1, e2, e3), (first, second, third), _ = await three_in_review()
     await e2.ok("POST", f"/assignments/{first}/review/open", 204)
-    unit = (await e2.ok("GET", f"/assignments/{first}/units"))[0]
-    top = await comment(admin, first, unit["id"], "A question for the author.")
-    await comment(e1, first, unit["id"], "An answer.", parent_id=top["id"])
+    top = await comment(admin, first, "Q2", "A question for the author.")
+    await comment(e1, first, "Q2", "An answer.", parent_id=top["id"])
     [item] = [i for i in (await home(admin))["activity"] if i["kind"] == "reply"]
     assert item["speaker"] == {"kind": "author", "pseudonym": e1.pseudonym}
     assert item["excerpt"] == "An answer."
@@ -238,8 +249,7 @@ async def test_the_admin_hears_about_replies_to_their_own_comments_with_names():
 async def test_a_long_comment_is_cut_for_the_feed():
     admin, (e1, e2, e3), (first, *_), _ = await three_in_review()
     await e2.ok("POST", f"/assignments/{first}/review/open", 204)
-    unit = (await e2.ok("GET", f"/assignments/{first}/units"))[0]
-    await comment(e2, first, unit["id"], "word " * 100)
+    await comment(e2, first, "Q1", "word " * 100)
     item = next(i for i in (await home(e1))["activity"] if i["kind"] == "comment_on_mine")
     assert len(item["excerpt"]) == 140 and item["excerpt"].endswith("…")
 
@@ -260,17 +270,7 @@ async def test_the_admins_decision_reaches_the_author_and_those_who_read():
 async def test_each_outcome_is_told_apart():
     admin, (e1, e2, e3), (first, second, third), _ = await three_in_review()
     await decide_all(admin, first, "reject")
-    second_units = await admin.ok("GET", f"/assignments/{second}/units")
-    await admin.ok(
-        "POST",
-        f"/assignments/{second}/unit-decisions",
-        json={
-            "decisions": [
-                {"unit_id": u["id"], "decision": "request_changes", "comment": "again"}
-                for u in second_units
-            ]
-        },
-    )
+    await decide_all(admin, second, "request_changes", "again")
     outcomes = {
         i["assignment_id"]: i["outcome"]
         for i in (await home(e3))["activity"]
@@ -296,8 +296,10 @@ async def test_someone_still_answering_does_not_hear_about_the_reviews_of_their_
     assert feed["reviews_waiting"] == [] and feed["recent_reviews"] == []
 
     await answer_and_submit(mid, theirs)
-    await to_units(admin, mid, theirs, skip=True)
-    assert kinds(await home(mid))["review_opened"] == 4, "now they may read all four"
+    await run_jobs()
+    assert "review_opened" not in kinds(await home(mid)), "they can still edit their answers"
+    await to_review(mid, theirs)
+    assert kinds(await home(mid))["review_opened"] == 3, "now they may read the other three"
 
 
 async def test_a_reviewer_who_joins_later_sees_the_review():
@@ -314,7 +316,7 @@ async def test_a_reviewer_who_joins_later_sees_the_review():
 async def test_unread_counts_what_is_newer_than_the_last_look():
     admin, (e1, e2, e3), (first, *_), _ = await three_in_review()
     feed = await home(e1)
-    assert feed["unread_activity"] == len(feed["activity"]) == 5
+    assert feed["unread_activity"] == len(feed["activity"]) == 4
     assert all(i["unread"] for i in feed["activity"])
 
     newest = max(i["at"] for i in feed["activity"])
@@ -323,8 +325,7 @@ async def test_unread_counts_what_is_newer_than_the_last_look():
     assert feed["unread_activity"] == 0 and not any(i["unread"] for i in feed["activity"])
 
     await e2.ok("POST", f"/assignments/{first}/review/open", 204)
-    unit = (await e2.ok("GET", f"/assignments/{first}/units"))[0]
-    await comment(e2, first, unit["id"], "New.")
+    await comment(e2, first, "Q3", "New.")
     feed = await home(e1)
     assert feed["unread_activity"] == 1
     assert [i["kind"] for i in feed["activity"] if i["unread"]] == ["comment_on_mine"]
@@ -337,7 +338,7 @@ async def test_marking_seen_never_goes_back_or_ahead():
     admin, (e1, e2, e3), (first, *_), _ = await three_in_review()
     before = utcnow() - timedelta(days=1)
     await e1.ok("POST", "/me/activity/seen", 204, json={"until": before.isoformat()})
-    assert (await home(e1))["unread_activity"] == 5, "a day ago is before all of it"
+    assert (await home(e1))["unread_activity"] == 4, "a day ago is before all of it"
 
     ahead = (utcnow() + timedelta(days=1)).isoformat()
     await e1.ok("POST", "/me/activity/seen", 204, json={"until": ahead})

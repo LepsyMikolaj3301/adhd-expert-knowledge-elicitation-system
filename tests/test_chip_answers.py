@@ -3,6 +3,7 @@
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import answer_vignettes as av
 import chip_answers as ca
@@ -22,7 +23,7 @@ NOTEBOOK = Path(__file__).resolve().parents[1] / "notebooks" / "answer_vignettes
 
 
 def vignette(vid: str = "V001", **overrides) -> Vignette:
-    fields = {
+    fields: dict[str, Any] = {
         "id": vid,
         "version": 1,
         "text": TEXT,
@@ -321,6 +322,7 @@ def test_the_document_keeps_citations_chips_q4_and_the_lock_count():
     assert response.highlights[1].direction == "away"
     assert response.locked_highlights == 1
     assert response.answers["Q4"] == "⟦h2⟧ because of the exam today"
+    assert response.q4 is not None
     assert response.q4.shift == 1
     assert response.quoted_fragments == [CUE, CONFOUNDER]
 
@@ -341,6 +343,7 @@ def test_a_why_left_on_the_screen_at_zero_is_not_written():
     e["q4"] = {"hypothesis": "tired not trait", "shift": 0, "toward": "other"}
     doc = ca.build_document(draft, {"V001": vignette()}, "DOC-0001", datetime.now(UTC))
     assert "Q4" not in doc.responses[0].answers
+    assert doc.responses[0].q4 is not None
     assert doc.responses[0].q4.toward is None
 
 
@@ -382,6 +385,7 @@ def test_older_tools_read_a_chip_document_as_a_plain_one(tmp_path):
     [response] = plain.responses
     assert response.answers["Q1"].startswith(f'"{CUE}" ')
     assert response.answers["Q4"].startswith(f'"{CONFOUNDER}" ')
+    assert response.q4 is not None
     assert response.q4.shift == 1
     assert to_legacy(doc).responses[0].quoted_fragments == [CUE, CONFOUNDER]
 

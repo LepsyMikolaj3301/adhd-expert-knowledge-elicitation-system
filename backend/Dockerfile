@@ -24,6 +24,8 @@ WORKDIR /workspace
 # Only this member's runtime deps: no dev/notebook/script groups.
 COPY --chown=$USERNAME:$USERNAME pyproject.toml uv.lock ./
 COPY --chown=$USERNAME:$USERNAME backend/pyproject.toml backend/
+# The workspace's library members: expert-knowledge-core is installed from here (editable).
+COPY --chown=$USERNAME:$USERNAME packages packages
 RUN uv sync --frozen --package rag-backend --no-default-groups
 
 COPY --chown=$USERNAME:$USERNAME backend backend

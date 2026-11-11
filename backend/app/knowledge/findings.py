@@ -9,32 +9,40 @@ Step 3 (the classifier, ids only) happens outside this module; `apply_classifica
 output. Sentence splitting and quote matching are written here because the B1 helpers in
 app.elicitation.units are tuned to other inputs (sentence starts, a fixed 0.8 ratio).
 
-This is the one copy of the logic: the web application's worker uses it, and so do the scripts
-(scripts/elicitation/chip_findings.py re-exports it). `assign` and `build_record` take anything
-shaped like `Response`, so the scripts' own ChipResponse works too.
+This is the one copy of the pipeline: the web application's worker uses it, and so do the scripts
+(scripts/elicitation/chip_findings.py re-exports it). What the retrieval side shares with it
+(sentence splitting, chip rendering, the units' header, packing) lives in
+expert_knowledge_core.notes. `assign` and `build_record` take anything shaped like `Response`, so
+the scripts' own ChipResponse works too.
 """
 
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from typing import Any
+from typing import Any, Protocol
 
-from app.assignments.answers import CHIP_RE
 from app.vignettes.questions import QUESTIONS
+from expert_knowledge_core.notes import (  # noqa: F401  (re-exported: the scripts and app modules use findings.<name>)
+    CHIP_RE,
+    FRAMING_LABEL,
+    MIN_SENTENCE_WORDS,
+    RENDER_WORDS,
+    by_question,
+    case_label,
+    header,
+    merge_groups,
+    overall,
+    pack_block,
+    quote_pieces,
+    render_sentence,
+    short_quote,
+    split_sentences,
+)
+from expert_knowledge_core.records import CASE, FINDINGS_VERSION
 
-FRAMING_LABEL = {"email": "email", "forum_post": "forum post", "personal_journal": "journal entry"}
-
-FINDINGS_VERSION = 1
-MIN_SENTENCE_WORDS = 4  # shorter sentences ("Hard to say.") join the previous one
 MIN_QUOTE_WORDS, QUOTE_RATIO = 2, 0.6  # the doc's example matches a 2-word quote at 0.67
-RENDER_WORDS = 8  # a chip is rendered as «its first 8 words…»
-CASE = "case"
 
-_DQUOTE = re.compile(r'"([^"]+)"|“([^”]+)”')
-_SQUOTE = re.compile(r"(?<!\w)'([^'\n]{4,80})'(?!\w)")
-_END = re.compile(r"(?:(?<=[.!?])|(?<=[.!?][\"”’]))\s+")
-_ABBREV = ("e.g.", "i.e.", "vs.", "etc.", "approx.", "hx.", "dr.", "r/o.")
-_LIST_NUMBER = re.compile(r"(?:^|\s)\(?\d{1,2}[.)]$")
 LOWERING = re.compile(
     r"\bmore likely\b.*\bthan\b|\brather than\b|\bbetter explained by\b|\bnot\b|n't\b|\bunlikely\b",
     re.IGNORECASE,
@@ -65,6 +73,30 @@ class Response:
     insufficient_information: bool
 
 
+class ResponseLike(Protocol):
+    """What `assign`, `build_record` and `record_from_lines` read from a response: the dataclass
+    above, or a pydantic response of the elicitation schema (the scripts' chips_schema.py)."""
+
+    @property
+    def vignette_id(self) -> str: ...
+    @property
+    def vignette_version(self) -> int: ...
+    @property
+    def answers(self) -> Mapping[Any, str]: ...
+    @property
+    def highlights(self) -> Sequence[Any]: ...
+    @property
+    def rating(self) -> int | None: ...
+    @property
+    def insufficient_information(self) -> bool: ...
+
+
+def is_filed(question_id: str) -> bool:
+    """Whether an answer is cut into units: open questions only. Q4's why is about a what-if,
+    and the rating isn't text."""
+    return QUESTIONS[question_id].kind == "open" and question_id != "Q4"
+
+
 def response_from_submission(
     payload: dict[str, Any], vignette_code: str, vignette_version: int
 ) -> Response:
@@ -76,7 +108,7 @@ def response_from_submission(
         answers={
             question_id: text
             for question_id, text in payload.get("answers", {}).items()
-            if QUESTIONS[question_id].kind == "open" and question_id != "Q4"
+            if is_filed(question_id)
         },
         highlights=[
             Highlight(h["chip"], h["text"], (h["span"][0], h["span"][1]), h.get("direction"))
@@ -92,39 +124,6 @@ def response_from_submission(
 
 def _words(text: str) -> int:
     return len(text.split())
-
-
-def _quote_spans(text: str) -> list[tuple[int, int, str]]:
-    found = [(m.start(), m.end(), m.group(1) or m.group(2)) for m in _DQUOTE.finditer(text)]
-    found += [(m.start(), m.end(), m.group(1)) for m in _SQUOTE.finditer(text)]
-    return sorted(found)
-
-
-def split_sentences(text: str) -> list[tuple[int, int]]:
-    """Sentence spans of an answer. Never splits inside a quotation, after an abbreviation or after
-    a list number; sentences under MIN_SENTENCE_WORDS words join their neighbour."""
-    inside = [(s, e) for s, e, _ in _quote_spans(text)]
-    cuts, start = [], 0
-    for m in _END.finditer(text):
-        head = text[start : m.start()]
-        if any(s < m.start() < e for s, e in inside):
-            continue
-        if head.lower().endswith(_ABBREV) or _LIST_NUMBER.search(head):
-            continue
-        cuts.append((start, m.start()))
-        start = m.end()
-    cuts.append((start, len(text)))
-    spans = [(a, b) for a, b in cuts if text[a:b].strip()]
-    merged: list[tuple[int, int]] = []
-    for a, b in spans:
-        if merged and _words(text[a:b]) < MIN_SENTENCE_WORDS:
-            merged[-1] = (merged[-1][0], b)
-        else:
-            merged.append((a, b))
-    if len(merged) > 1 and _words(text[slice(*merged[0])]) < MIN_SENTENCE_WORDS:
-        merged[1] = (merged[0][0], merged[1][1])
-        merged.pop(0)
-    return merged
 
 
 def _norm(token: str) -> str:
@@ -153,50 +152,54 @@ def match_in_text(piece: str, text: str) -> tuple[int, int, float] | None:
     return best
 
 
-def _quote_pieces(sentence: str) -> list[str]:
-    pieces = []
-    for *_, quote in _quote_spans(sentence):
-        pieces += [p for p in re.split(r"\.\.\.|…", quote) if p.strip()]
-    return pieces
-
-
 def _overlaps(a: tuple[int, int], b: tuple[int, int]) -> bool:
     """True if the overlap is at least half of the shorter span."""
     common = min(a[1], b[1]) - max(a[0], b[0])
     return common > 0 and common * 2 >= min(a[1] - a[0], b[1] - b[0])
 
 
-def assign(resp: Response, vignette: str) -> tuple[list[dict], list[dict]]:
-    """Rules 1-3 of the doc: chips, then quotes matching a highlight, then quotes matching only the
-    vignette (an implicit highlight). Sentences left over have no targets and `assigned_by` None."""
-    highlights: list[dict[str, Any]] = [
+def expert_highlights(highlights: Sequence[Any]) -> list[dict[str, Any]]:
+    return [
         dict(id=f"h{h.chip}", origin="expert", chip=h.chip, span=list(h.span), text=h.text,
              direction=h.direction)
-        for h in resp.highlights
+        for h in highlights
     ]  # fmt: skip
+
+
+def link_text(text: str, highlights: list[dict], vignette: str) -> tuple[list[str], str | None]:
+    """Rules 1-3 for one sentence: its chips, else its quotes that match a highlight, else its
+    quotes that match only the vignette (a new implicit highlight is appended to `highlights`).
+    Returns (targets, assigned_by); ([], None) when nothing matched."""
+    targets: list[str] = [f"h{n}" for n in dict.fromkeys(map(int, CHIP_RE.findall(text)))]
+    if targets:
+        return targets, "chip"
+    for piece in quote_pieces(text):
+        hit = match_in_text(piece, vignette)
+        if hit is None:
+            continue
+        span = (hit[0], hit[1])
+        found = [h["id"] for h in highlights if _overlaps(span, tuple(h["span"]))]
+        if not found:
+            new = len([h for h in highlights if h["origin"] == "implicit"]) + 1
+            highlights.append(
+                dict(id=f"i{new}", origin="implicit", chip=None, span=list(span),
+                     text=vignette[span[0] : span[1]], direction=None)
+            )  # fmt: skip
+            found = [f"i{new}"]
+        targets += [t for t in found if t not in targets]
+    return targets, "quote" if targets else None
+
+
+def assign(resp: ResponseLike, vignette: str) -> tuple[list[dict], list[dict]]:
+    """Rules 1-3 of the doc: chips, then quotes matching a highlight, then quotes matching only the
+    vignette (an implicit highlight). Sentences left over have no targets and `assigned_by` None."""
+    highlights = expert_highlights(resp.highlights)
     sentences: list[dict[str, Any]] = []
     for qid in sorted(resp.answers):
         answer = resp.answers[qid]
         for idx, (a, b) in enumerate(split_sentences(answer), 1):
             text = answer[a:b]
-            targets: list[str] = [f"h{n}" for n in dict.fromkeys(map(int, CHIP_RE.findall(text)))]
-            by = "chip" if targets else None
-            if not targets:
-                for piece in _quote_pieces(text):
-                    hit = match_in_text(piece, vignette)
-                    if hit is None:
-                        continue
-                    span = (hit[0], hit[1])
-                    found = [h["id"] for h in highlights if _overlaps(span, tuple(h["span"]))]
-                    if not found:
-                        new = len([h for h in highlights if h["origin"] == "implicit"]) + 1
-                        highlights.append(
-                            dict(id=f"i{new}", origin="implicit", chip=None, span=list(span),
-                                 text=vignette[span[0] : span[1]], direction=None)
-                        )  # fmt: skip
-                        found = [f"i{new}"]
-                    targets += [t for t in found if t not in targets]
-                by = "quote" if targets else None
+            targets, by = link_text(text, highlights, vignette)
             sentences.append(
                 dict(id=f"{qid}.{idx}", question_id=qid, idx=idx, span=[a, b], text=text,
                      targets=targets, assigned_by=by)
@@ -259,47 +262,6 @@ def check(highlights: list[dict], sentences: list[dict]) -> list[dict]:
 # --- step 6/7: units and the text that is embedded ---------------------------------------------
 
 
-def short_quote(text: str, words: int = RENDER_WORDS) -> str:
-    parts = text.split()
-    return "«" + " ".join(parts[:words]) + ("…" if len(parts) > words else "") + "»"
-
-
-def render_sentence(text: str, highlights: list[dict]) -> str:
-    """Chips as «first 8 words…», so the sentence reads on its own."""
-    by_chip = {h["chip"]: h for h in highlights if h["chip"]}
-    return CHIP_RE.sub(lambda m: short_quote(by_chip[int(m.group(1))]["text"]), text).strip()
-
-
-def _by_question(sentences: list[dict], highlights: list[dict]) -> list[str]:
-    lines: list[tuple[str, list[str]]] = []
-    for s in sentences:
-        if not lines or lines[-1][0] != s["question_id"]:
-            lines.append((s["question_id"], []))
-        lines[-1][1].append(render_sentence(s["text"], highlights))
-    return [f"{q}: {' '.join(parts)}" for q, parts in lines]
-
-
-def overall(meta: dict) -> str:
-    if meta["insufficient"]:
-        return "overall: insufficient information"
-    return f"overall {meta['rating']}/5" if meta["rating"] is not None else "no overall rating"
-
-
-def case_label(meta: dict) -> str:
-    article = "an" if meta["population"][0] in "aeiou" else "a"
-    return f"{article} {meta['population']}'s {FRAMING_LABEL[meta['framing']]}"
-
-
-def header(meta: dict, unit: dict) -> str:
-    who = f"Clinician ({meta['role']})" if meta.get("role") else "Clinician"
-    parts = [f"{who} on {case_label(meta)}"]
-    if unit["kind"] == "case":
-        parts.append("case-level points")
-    elif unit["direction"]:
-        parts.append(f"fragment marked: {unit['direction']}")
-    return " · ".join([*parts, overall(meta)])
-
-
 def build_units(rec: dict) -> list[dict]:
     """One fragment unit per highlight that has sentences, one case unit. I1 = header + the unit's
     sentences, each question's sentences prefixed with the question label; I3 adds the patient's
@@ -329,7 +291,7 @@ def build_units(rec: dict) -> list[dict]:
             sentences=[s["id"] for s in targeted[t]],
             context=context.get(t, []),
         )
-        lines = _by_question(targeted[t], rec["highlights"])
+        lines = by_question(targeted[t], rec["highlights"])
         head = header(meta, unit)
         # What a reviewer reads, and the tail of what is embedded: the same sentences either way.
         unit["body"] = "\n".join(lines)
@@ -340,7 +302,7 @@ def build_units(rec: dict) -> list[dict]:
 
 
 def build_record(
-    resp: Response, vignette: str, session_id: str, expert_id: str, role: str | None,
+    resp: ResponseLike, vignette: str, session_id: str, expert_id: str, role: str | None,
     framing: str, population: str, labels: dict[str, list[str]] | None = None,
 ) -> dict:  # fmt: skip
     """Steps 2-7 for one response. `labels` is the classifier's output (None: none needed)."""
@@ -361,45 +323,40 @@ def build_record(
     return rec
 
 
+def record_from_lines(
+    resp: ResponseLike, lines: dict[str, list[dict]], highlights: list[dict], session_id: str,
+    expert_id: str, role: str | None, framing: str, population: str,
+) -> dict:  # fmt: skip
+    """Steps 6-7 from answers whose lines were already linked (the proofread check): each line is
+    cut into sentences, and each sentence takes its line's targets. Nothing is linked again.
+    `lines` holds, per question, [{text, targets, assigned_by}]; `resp.answers` says which
+    questions are filed."""
+    sentences: list[dict[str, Any]] = []
+    for qid in sorted(resp.answers):
+        offset, idx = 0, 0
+        for line in lines.get(qid, []):
+            text = line["text"]
+            for a, b in split_sentences(text):
+                idx += 1
+                sentences.append(
+                    dict(id=f"{qid}.{idx}", question_id=qid, idx=idx,
+                         span=[offset + a, offset + b], text=text[a:b],
+                         targets=list(line["targets"]), assigned_by=line["assigned_by"])
+                )  # fmt: skip
+            offset += len(text) + 1
+    rec: dict[str, Any] = dict(
+        version=FINDINGS_VERSION, session_id=session_id, expert_id=expert_id,
+        vignette_id=resp.vignette_id, vignette_version=resp.vignette_version,
+        meta=dict(role=role, framing=framing, population=population, rating=resp.rating,
+                  insufficient=resp.insufficient_information),
+        highlights=[dict(h) for h in highlights], sentences=sentences, fallback=[],
+    )  # fmt: skip
+    rec["flags"] = check(rec["highlights"], sentences)
+    rec["units"] = build_units(rec)
+    return rec
+
+
 # --- step 9: packing ---------------------------------------------------------------------------
-
-
-def merge_groups(units_by_id: dict[str, dict], unit_ids: list[str]) -> list[list[str]]:
-    """Group unit ids (one session and vignette each) that share a sentence, transitively. Groups
-    and members keep the order of first appearance in `unit_ids`."""
-    groups: list[list[str]] = []
-    for uid in unit_ids:
-        mine = set(units_by_id[uid]["sentences"])
-        hit = [g for g in groups if any(mine & set(units_by_id[m]["sentences"]) for m in g)]
-        if not hit:
-            groups.append([uid])
-            continue
-        hit[0].append(uid)
-        for g in hit[1:]:
-            hit[0].extend(g)
-            groups.remove(g)
-    return groups
-
-
-def pack_block(rec: dict, unit_ids: list[str]) -> str:
-    """The note the generator reads: case line, the patient's words with the expert's toggles, the
-    expert's sentences verbatim in question order (each once), chips rendered as short quotes."""
-    units = [u for u in rec["units"] if u["id"] in unit_ids]
-    meta, hls = rec["meta"], rec["highlights"]
-    by_id = {h["id"]: h for h in hls}
-    wanted = {sid for u in units for sid in u["sentences"]}
-    sents = [s for s in rec["sentences"] if s["id"] in wanted]
-    words = []
-    for u in units:
-        h = by_id.get(u["highlight"] or "")
-        if h:
-            mark = f" (marked: {h['direction']})" if h["direction"] else ""
-            words.append(f'"{h["text"]}"{mark}')
-    who = f"clinician: {meta['role']}" if meta.get("role") else "clinician"
-    lines = [f"Teaching case {rec['vignette_id']}: {case_label(meta)}; {who}; {overall(meta)}"]
-    if words:
-        lines.append("Patient's words: " + " · ".join(words))
-    return "\n".join([*lines, "Clinician's own words:", *_by_question(sents, hls)])
 
 
 # --- step 5: the expert's corrections ----------------------------------------------------------

@@ -133,7 +133,7 @@ def main(argv=None) -> int:
     folder = args.out / args.tier / tag
     write_json(folder / "units.json", built)
     if not args.no_embed:
-        np.savez_compressed(folder / "embeddings.npz", **embed_all(built))
+        np.savez_compressed(folder / "embeddings.npz", allow_pickle=True, **embed_all(built))
     print(json.dumps(built["stats"], indent=1))
     print(f"wrote {folder}")
     return 0

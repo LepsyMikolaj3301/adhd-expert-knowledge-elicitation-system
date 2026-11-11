@@ -3,9 +3,18 @@ import { computed } from 'vue'
 
 import { CHIP_RE, inkFor } from '@/answering/highlights'
 import { listMarker } from '@/answering/listLines'
+import { useQuoteFocus } from '@/answering/quoteFocus'
 
 const props = defineProps<{ text: string }>()
 const emit = defineEmits<{ active: [chip: number | null] }>()
+
+/** Pointing at a chip lights its passage up wherever the page shows the case text. */
+const focus = useQuoteFocus()
+
+function point(chip: number | null) {
+  focus.value = chip === null ? null : `h${chip}`
+  emit('active', chip)
+}
 
 function partsOf(line: string) {
   const found: { text: string; chip: number | null }[] = []
@@ -20,7 +29,7 @@ function partsOf(line: string) {
 }
 
 /**
- * An answer that can't be edited any more, line by line: plain runs of text with chips between them.
+ * An answer as text (read-only), line by line: plain runs of text with chips between them.
  * A list item is its own block, indented like in the editor. Other lines stay inline, so that a label
  * in front of the answer ("Why: …") still flows into it.
  */
@@ -43,8 +52,8 @@ const lines = computed(() =>
             :data-chip="part.chip"
             :style="{ '--ink': inkFor(part.chip) }"
             :aria-label="`reference ${part.chip}`"
-            @mouseover="emit('active', part.chip)"
-            @mouseout="emit('active', null)"
+            @mouseover="point(part.chip)"
+            @mouseout="point(null)"
             >{{ part.text }}</span
           >
           <template v-else>{{ part.text }}</template>

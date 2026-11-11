@@ -4,6 +4,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 
 import { api, type UserAdmin } from '@/api/client'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
+import PseudonymChip from '@/components/PseudonymChip.vue'
 import { describeError } from '@/copy'
 
 const users = ref<UserAdmin[]>([])
@@ -194,7 +195,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warn))
             <template v-else>{{ u.display_name }}</template>
           </td>
           <td class="py-3 pr-4">{{ u.email }}</td>
-          <td class="py-3 pr-4">{{ u.pseudonym }}</td>
+          <td class="py-3 pr-4"><PseudonymChip :pseudonym="u.pseudonym" /></td>
           <td class="py-3 pr-4 capitalize">{{ u.role }}</td>
           <td class="py-3 pr-4" data-testid="status">{{ status(u) }}</td>
           <td class="space-x-2 py-3 text-right whitespace-nowrap">

@@ -32,6 +32,14 @@ def corpus_line(run: dict) -> str:
     return f"{c['chunks']} chunks, index `{', '.join(c['index_configs'])}`"
 
 
+def load_required(path: Path) -> dict:
+    """A run's JSON; a missing file stops the comparison here, not later in a table."""
+    data = load(path)
+    if data is None:
+        raise SystemExit(f"missing {path}")
+    return data
+
+
 def retrieval_tables(runs: dict[str, dict]) -> list[str]:
     lines = ["### Overall", ""]
     rows = [[name, corpus_line(r), *(r["summary"]["overall"][m] for m in METRICS)]
@@ -181,14 +189,14 @@ def main() -> None:
     args = parser.parse_args()
 
     retrieval = {
-        "historic (dense)": load(args.historic / "retrieval.json"),
-        "dense (old method)": load(args.dense / "retrieval.json"),
-        **({"bm25 only": load(args.bm25 / "retrieval.json")} if args.bm25 else {}),
-        "hybrid (new method)": load(args.hybrid / "retrieval.json"),
+        "historic (dense)": load_required(args.historic / "retrieval.json"),
+        "dense (old method)": load_required(args.dense / "retrieval.json"),
+        **({"bm25 only": load_required(args.bm25 / "retrieval.json")} if args.bm25 else {}),
+        "hybrid (new method)": load_required(args.hybrid / "retrieval.json"),
     }
 
     def gen(path: Path) -> Run:
-        return Run(load(path / "generations.json"), load(path / "judgments.json"))
+        return Run(load_required(path / "generations.json"), load(path / "judgments.json"))
 
     runs = {"historic": gen(args.historic), "dense": gen(args.dense), "hybrid": gen(args.hybrid)}
     hist_dir = args.historic.name

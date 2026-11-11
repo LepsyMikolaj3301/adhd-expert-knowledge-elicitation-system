@@ -22,6 +22,7 @@ import re
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import PurePosixPath
+from typing import Any
 from urllib.parse import urlparse
 
 import asyncpg
@@ -37,9 +38,12 @@ from docling_core.types.doc import (
     ListItem,
     SectionHeaderItem,
     TableItem,
+    TextItem,
     TitleItem,
 )
-from lxml import etree
+
+# lxml's etree is a compiled extension, which ty cannot read; it imports fine at runtime.
+from lxml import etree  # ty: ignore[unresolved-import]
 
 from app.settings import settings
 from app.sources import excluded_source_ids
@@ -227,7 +231,9 @@ def docling_to_sections(doc: DoclingDocument) -> list[dict]:
             continue
         if isinstance(item, InlineGroup):
             # Fallback for inputs not flattened beforehand (PDF): one block per inline group.
-            runs = [c for c, _ in doc.iterate_items(root=item) if getattr(c, "text", None)]
+            runs = [
+                c for c, _ in doc.iterate_items(root=item) if isinstance(c, TextItem) and c.text
+            ]
             merged.update(c.self_ref for c in runs)
             if runs:
                 parent = item.parent.resolve(doc) if item.parent else None
@@ -242,7 +248,7 @@ def docling_to_sections(doc: DoclingDocument) -> list[dict]:
             rows = [[str(c) for c in row] for row in item.export_to_dataframe(doc).values.tolist()]
             block = {"type": "table", "text": item.export_to_markdown(doc), "rows": rows}
             current["blocks"].append(block | {"page": page_of(item)})
-        elif getattr(item, "text", None):
+        elif isinstance(item, TextItem) and item.text:
             kind = "list_item" if isinstance(item, ListItem) else str(item.label.value)
             kind = {"text": "paragraph"}.get(kind, kind)
             current["blocks"].append({"type": kind, "text": item.text, "page": page_of(item)})
@@ -284,7 +290,7 @@ def page_of(item) -> int | None:
 
 def parse_docling(raw: bytes, name: str, source_id: str) -> tuple[dict, str]:
     page_range = None
-    kwargs = {}
+    kwargs: dict[str, Any] = {}
     if name.endswith(".pdf") and source_id in PDF_SECTIONS:
         page_range = pdf_section_pages(raw, PDF_SECTIONS[source_id])
         kwargs["page_range"] = page_range
@@ -505,7 +511,7 @@ def parse_file(meta: dict, record: dict, raw: bytes) -> tuple[dict, str]:
         "metadata": meta.get("metadata", {}),
         "file": file,
     }
-    document = {
+    document: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "parser": {
             **parsed.pop("parser"),
@@ -557,7 +563,9 @@ async def run(args: argparse.Namespace) -> int:
             ]
             for record in records:
                 out_base = f"{args.out_prefix}{source_id}/{PurePosixPath(record['name']).stem}"
-                entry = {"source_id": source_id, "file": record["name"], "key": out_base + ".json"}
+                entry: dict[str, Any] = {
+                    "source_id": source_id, "file": record["name"], "key": out_base + ".json"
+                }  # fmt: skip
                 try:
                     head = s3_head(out_base + ".json")
                     if (

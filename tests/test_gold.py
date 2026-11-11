@@ -20,10 +20,12 @@ from rag_common import parse_sample_judgment
 
 from app.elicitation.schema import (
     ElicitationDocument,
+    QuestionId,
     Response,
     VariantInfo,
     Vignette,
     VignetteDesign,
+    content_hash,
 )
 
 TEXT = (
@@ -36,9 +38,12 @@ NOW = datetime(2026, 11, 2, tzinfo=UTC)
 WHATIF = "the writer had an exam earlier that day"
 
 
-def vignette(vid="V001", variant=None, question_ids=("Q1", "Q2", "Q6")) -> Vignette:
+def vignette(
+    vid="V001", variant=None, question_ids: tuple[QuestionId, ...] = ("Q1", "Q2", "Q6")
+) -> Vignette:
     return Vignette(
-        id=vid, version=1, text=TEXT, framing="email", variant=variant,
+        id=vid, version=1, text=TEXT, content_hash=content_hash(TEXT), framing="email",
+        variant=variant,
         question_ids=list(question_ids), design=VignetteDesign(purpose="test"),
         q4_whatif=WHATIF if "Q4" in question_ids else None,
     )  # fmt: skip
@@ -130,6 +135,7 @@ def test_build_document_q4(raw, why, expected, kept_why):
     d["answers"]["V001"]["answers"]["Q4"] = why
     doc = build_document(d, {"V001": vignette(question_ids=Q4_IDS)}, "DOC-0001", NOW)
     (r,) = doc.responses
+    assert r.q4 is not None
     assert r.q4.model_dump() == expected
     assert ("Q4" in r.answers) == kept_why
 
@@ -351,4 +357,4 @@ def test_q4_parts_are_required_in_the_apps(q4, why, missing):
     import answer_vignettes as av
 
     got = av.q4_incomplete({"q4": q4, "answers": {"Q4": why}})
-    assert (got is None) if missing is None else (missing in got.lower())
+    assert (got is None) if missing is None else (missing in (got or "").lower())

@@ -1,15 +1,18 @@
 from uuid import UUID
 
 from fastapi import status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.assignments.models import Assignment
+from app.assignments.states import State
 from app.audit.service import record_event
 from app.auth.service import end_all_sessions
 from app.core.errors import DomainError, not_found
 from app.core.security import hash_password
 from app.users.models import PSEUDONYM_SEQUENCE, SYNTHETIC_PREFIX, Role, User
+from app.users.schemas import CaseCounts, PersonAdminCard, PersonCard, PersonView
 
 
 async def create_user(
@@ -82,3 +85,45 @@ async def update_user(
             action="user_activated" if is_active else "user_deactivated",
         )
     return user
+
+
+_DONE = {
+    State.PROCESSING,
+    State.PROCESSING_FAILED,
+    State.INGESTING,
+    State.INGESTION_FAILED,
+    State.INGESTED,
+}
+_STOPPED = {State.CANCELLED, State.REJECTED}
+
+
+async def person_card(db: AsyncSession, pseudonym: str, viewer: User) -> PersonView:
+    user = await db.scalar(select(User).where(User.pseudonym == pseudonym))
+    if user is None:
+        raise not_found("Person")
+    if viewer.role != Role.ADMIN:
+        return PersonCard(pseudonym=user.pseudonym, role=user.role)
+    rows = (
+        await db.execute(
+            select(Assignment.state, func.count())
+            .where(Assignment.expert_id == user.id)
+            .group_by(Assignment.state)
+        )
+    ).all()
+    count = lambda states: sum(n for state, n in rows if state in states)  # noqa: E731
+    return PersonAdminCard(
+        pseudonym=user.pseudonym,
+        role=user.role,
+        display_name=user.display_name,
+        email=user.email,
+        is_active=user.is_active,
+        is_synthetic=user.is_synthetic,
+        cases=CaseCounts(
+            open=count(
+                {State.ASSIGNED, State.IN_PROGRESS, State.PROOFREADING, State.PROOFREAD_CHECK}
+            ),
+            in_review=count({State.PEER_REVIEW}),
+            done=count(_DONE),
+            stopped=count(_STOPPED),
+        ),
+    )

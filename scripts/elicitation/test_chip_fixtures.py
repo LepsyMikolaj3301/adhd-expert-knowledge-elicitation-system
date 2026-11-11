@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import make_chip_fixtures as mk  # noqa: E402
 from make_fixtures import Rejected  # noqa: E402
 
-from app.elicitation.schema import Vignette, VignetteDesign  # noqa: E402
+from app.elicitation.schema import Vignette, VignetteDesign, content_hash  # noqa: E402
 
 TEXT = (
     "I only opened the file at nine because I did the dishes first. The report is due on Friday "
@@ -20,7 +20,8 @@ TEXT = (
 
 def vignette(variant=None) -> Vignette:
     return Vignette(
-        id="V001", version=1, text=TEXT, framing="personal_journal", variant=variant,
+        id="V001", version=1, text=TEXT, content_hash=content_hash(TEXT),
+        framing="personal_journal", variant=variant,
         question_ids=["Q1", "Q2", "Q3", "Q5", "Q6"], design=VignetteDesign(purpose="test"),
     )  # fmt: skip
 

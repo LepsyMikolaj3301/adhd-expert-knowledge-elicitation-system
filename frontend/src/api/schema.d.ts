@@ -4,3123 +4,3153 @@
  */
 
 export interface paths {
-  '/api/v1/assignments': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List Assignments */
-    get: operations['list_assignments_api_v1_assignments_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get Assignment */
-    get: operations['get_assignment_api_v1_assignments__assignment_id__get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/cancel': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Cancel */
-    post: operations['cancel_api_v1_assignments__assignment_id__cancel_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/draft': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    /** Save Draft */
-    put: operations['save_draft_api_v1_assignments__assignment_id__draft_put']
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/events': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get Events */
-    get: operations['get_events_api_v1_assignments__assignment_id__events_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/expert-check/complete': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Complete Expert Check */
-    post: operations['complete_expert_check_api_v1_assignments__assignment_id__expert_check_complete_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/expert-check/skip': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Skip Expert Check */
-    post: operations['skip_expert_check_api_v1_assignments__assignment_id__expert_check_skip_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/findings': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get Findings */
-    get: operations['get_findings_api_v1_assignments__assignment_id__findings_get']
-    /** Correct Findings */
-    put: operations['correct_findings_api_v1_assignments__assignment_id__findings_put']
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/pass-gate': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Pass Gate */
-    post: operations['pass_gate_api_v1_assignments__assignment_id__pass_gate_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/retry': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Retry */
-    post: operations['retry_api_v1_assignments__assignment_id__retry_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/review/open': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Open Review
-     * @description A reviewer agrees to read the submission. From then on they can't be assigned the
-     *     vignette, because what they read would colour their own answer.
-     */
-    post: operations['open_review_api_v1_assignments__assignment_id__review_open_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/start': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Start */
-    post: operations['start_api_v1_assignments__assignment_id__start_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/submission': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get Submission */
-    get: operations['get_submission_api_v1_assignments__assignment_id__submission_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/submit': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Submit */
-    post: operations['submit_api_v1_assignments__assignment_id__submit_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/unit-decisions': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Submit Decisions
-     * @description The admin's decision on each unit; it closes the review.
-     */
-    post: operations['submit_decisions_api_v1_assignments__assignment_id__unit_decisions_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/units': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List Units
-     * @description The current round's units. The admin and the author can ask for an earlier round.
-     */
-    get: operations['list_units_api_v1_assignments__assignment_id__units_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/units/{unit_id}/comments': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Add Comment */
-    post: operations['add_comment_api_v1_assignments__assignment_id__units__unit_id__comments_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/vote': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    /** Cast Vote */
-    put: operations['cast_vote_api_v1_assignments__assignment_id__vote_put']
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/assignments/{assignment_id}/votes': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Get Votes */
-    get: operations['get_votes_api_v1_assignments__assignment_id__votes_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/auth/accept-invite': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Accept Invite */
-    post: operations['accept_invite_api_v1_auth_accept_invite_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/auth/login': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Login */
-    post: operations['login_api_v1_auth_login_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/auth/logout': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Logout */
-    post: operations['logout_api_v1_auth_logout_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/health': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Health */
-    get: operations['health_api_v1_health_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/knowledge-units': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List Knowledge Units */
-    get: operations['list_knowledge_units_api_v1_knowledge_units_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/me': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Me */
-    get: operations['me_api_v1_me_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/me/activity/seen': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Activity Seen */
-    post: operations['activity_seen_api_v1_me_activity_seen_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/me/home': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** Home */
-    get: operations['home_api_v1_me_home_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/reviews': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List Reviews
-     * @description The submissions the viewer can follow: open ones wait for the admin's decision.
-     */
-    get: operations['list_reviews_api_v1_reviews_get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/users': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List Users */
-    get: operations['list_users_api_v1_users_get']
-    put?: never
-    /** Create User */
-    post: operations['create_user_api_v1_users_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/users/{user_id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    /** Update User */
-    patch: operations['update_user_api_v1_users__user_id__patch']
-    trace?: never
-  }
-  '/api/v1/users/{user_id}/invite': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Reissue Invite
-     * @description Also the way to reset a forgotten password: accepting the invite sets a new one.
-     */
-    post: operations['reissue_invite_api_v1_users__user_id__invite_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/vignette-versions/{version_id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    /** Update Version */
-    patch: operations['update_version_api_v1_vignette_versions__version_id__patch']
-    trace?: never
-  }
-  '/api/v1/vignette-versions/{version_id}/assignments': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Assign */
-    post: operations['assign_api_v1_vignette_versions__version_id__assignments_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/vignette-versions/{version_id}/publish': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Publish Version */
-    post: operations['publish_version_api_v1_vignette_versions__version_id__publish_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/vignette-versions/{version_id}/retire': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Retire Version */
-    post: operations['retire_version_api_v1_vignette_versions__version_id__retire_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/vignettes': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /** List Vignettes */
-    get: operations['list_vignettes_api_v1_vignettes_get']
-    put?: never
-    /** Create Vignette */
-    post: operations['create_vignette_api_v1_vignettes_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/v1/vignettes/{vignette_id}/versions': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /** Add Version */
-    post: operations['add_version_api_v1_vignettes__vignette_id__versions_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
+    "/api/v1/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Assignments */
+        get: operations["list_assignments_api_v1_assignments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Assignment */
+        get: operations["get_assignment_api_v1_assignments__assignment_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/answer-decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Decisions
+         * @description The admin's decision on each answer; it closes the review.
+         */
+        post: operations["submit_decisions_api_v1_assignments__assignment_id__answer_decisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Answers
+         * @description The answers under review. The admin and the author can ask for an earlier round.
+         */
+        get: operations["list_answers_api_v1_assignments__assignment_id__answers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/answers/{question_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Comment */
+        post: operations["add_comment_api_v1_assignments__assignment_id__answers__question_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/answers/{question_id}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Cast Vote */
+        put: operations["cast_vote_api_v1_assignments__assignment_id__answers__question_id__vote_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_api_v1_assignments__assignment_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Draft */
+        put: operations["save_draft_api_v1_assignments__assignment_id__draft_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Events */
+        get: operations["get_events_api_v1_assignments__assignment_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/findings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Findings */
+        get: operations["get_findings_api_v1_assignments__assignment_id__findings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/proofread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Proofread
+         * @description The proofread answers of the current round (the admin and the author: any round).
+         */
+        get: operations["get_proofread_api_v1_assignments__assignment_id__proofread_get"];
+        /** Save Proofread */
+        put: operations["save_proofread_api_v1_assignments__assignment_id__proofread_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry */
+        post: operations["retry_api_v1_assignments__assignment_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/review/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Review
+         * @description A reviewer agrees to read the submission. From then on they can't be assigned the
+         *     vignette, because what they read would colour their own answer.
+         */
+        post: operations["open_review_api_v1_assignments__assignment_id__review_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start */
+        post: operations["start_api_v1_assignments__assignment_id__start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/submission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Submission */
+        get: operations["get_submission_api_v1_assignments__assignment_id__submission_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit */
+        post: operations["submit_api_v1_assignments__assignment_id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assignments/{assignment_id}/submit-for-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit For Review */
+        post: operations["submit_for_review_api_v1_assignments__assignment_id__submit_for_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/accept-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Invite */
+        post: operations["accept_invite_api_v1_auth_accept_invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Logout */
+        post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_api_v1_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Knowledge Units */
+        get: operations["list_knowledge_units_api_v1_knowledge_units_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Me */
+        get: operations["me_api_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/activity/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activity Seen */
+        post: operations["activity_seen_api_v1_me_activity_seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Home */
+        get: operations["home_api_v1_me_home_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Reviews
+         * @description The submissions the viewer can follow: open ones wait for the admin's decision.
+         */
+        get: operations["list_reviews_api_v1_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Users */
+        get: operations["list_users_api_v1_users_get"];
+        put?: never;
+        /** Create User */
+        post: operations["create_user_api_v1_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/by-pseudonym/{pseudonym}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Person */
+        get: operations["person_api_v1_users_by_pseudonym__pseudonym__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update User */
+        patch: operations["update_user_api_v1_users__user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/users/{user_id}/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reissue Invite
+         * @description Also the way to reset a forgotten password: accepting the invite sets a new one.
+         */
+        post: operations["reissue_invite_api_v1_users__user_id__invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vignette-versions/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Version */
+        patch: operations["update_version_api_v1_vignette_versions__version_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/vignette-versions/{version_id}/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign */
+        post: operations["assign_api_v1_vignette_versions__version_id__assignments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vignette-versions/{version_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Version */
+        post: operations["publish_version_api_v1_vignette_versions__version_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vignette-versions/{version_id}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retire Version */
+        post: operations["retire_version_api_v1_vignette_versions__version_id__retire_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vignettes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Vignettes */
+        get: operations["list_vignettes_api_v1_vignettes_get"];
+        put?: never;
+        /** Create Vignette */
+        post: operations["create_vignette_api_v1_vignettes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vignettes/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Questions
+         * @description The six questions every vignette asks. Q4 keeps its `{whatif}` placeholder.
+         */
+        get: operations["list_questions_api_v1_vignettes_questions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/vignettes/{vignette_id}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Version */
+        post: operations["add_version_api_v1_vignettes__vignette_id__versions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
-export type webhooks = Record<string, never>
+export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** AcceptInviteRequest */
-    AcceptInviteRequest: {
-      /** Password */
-      password: string
-      /** Token */
-      token: string
-    }
-    /** ActivityItem */
-    ActivityItem: {
-      /**
-       * Assignment Id
-       * Format: uuid
-       */
-      assignment_id: string
-      /**
-       * At
-       * Format: date-time
-       */
-      at: string
-      /** Comment Id */
-      comment_id?: string | null
-      /** Excerpt */
-      excerpt?: string | null
-      /**
-       * Kind
-       * @enum {string}
-       */
-      kind:
-        | 'case_assigned'
-        | 'check_ready'
-        | 'review_opened'
-        | 'review_closed'
-        | 'comment_on_mine'
-        | 'reply'
-        | 'job_failed'
-      /** Outcome */
-      outcome?: ('accepted' | 'rejected' | 'sent_back') | null
-      speaker?: components['schemas']['Speaker'] | null
-      /** Unit Id */
-      unit_id?: string | null
-      /** Unit Ordinal */
-      unit_ordinal?: number | null
-      /** Unread */
-      unread: boolean
-      /** Vignette Code */
-      vignette_code: string
-    }
-    /** ActivitySeen */
-    ActivitySeen: {
-      /** Until */
-      until?: string | null
-    }
-    /** AdminAssignment */
-    AdminAssignment: {
-      /** Allowed Actions */
-      allowed_actions: string[]
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'admin'
-      /**
-       * Expert Id
-       * Format: uuid
-       */
-      expert_id: string
-      /** Expert Pseudonym */
-      expert_pseudonym: string
-      /** Gate Passed At */
-      gate_passed_at: string | null
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Review Round */
-      review_round: number
-      /** Started At */
-      started_at: string | null
-      state: components['schemas']['State']
-      /** Submitted At */
-      submitted_at: string | null
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      /** Vignette Code */
-      vignette_code: string
-      /** Vignette Version */
-      vignette_version: number
-      /**
-       * Vignette Version Id
-       * Format: uuid
-       */
-      vignette_version_id: string
-    }
-    /** AnswerPayload */
-    AnswerPayload: {
-      /**
-       * Answers
-       * @default {}
-       */
-      answers: {
-        [key: string]: string
-      }
-      /**
-       * Highlights
-       * @default []
-       */
-      highlights: components['schemas']['Highlight'][]
-      /**
-       * Insufficient Information
-       * @default false
-       */
-      insufficient_information: boolean
-      q4?: components['schemas']['Q4Answer'] | null
-      /** Rating */
-      rating?: number | null
-    }
-    /** AssignRequest */
-    AssignRequest: {
-      /** Expert Ids */
-      expert_ids: string[]
-    }
-    /** AssignmentSummary */
-    AssignmentSummary: {
-      /** Allowed Actions */
-      allowed_actions: string[]
-      /** Expert Pseudonym */
-      expert_pseudonym: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Job Running */
-      job_running: boolean
-      state: components['schemas']['State']
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      /** Vignette Code */
-      vignette_code: string
-      /** Vignette Version */
-      vignette_version: number
-      /**
-       * Vignette Version Id
-       * Format: uuid
-       */
-      vignette_version_id: string
-    }
-    /** CommentCreate */
-    CommentCreate: {
-      /** Body */
-      body: string
-      /** Parent Id */
-      parent_id?: string | null
-      stance?: components['schemas']['Stance'] | null
-    }
-    /** CommentView */
-    CommentView: {
-      /** Body */
-      body: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Is Mine */
-      is_mine: boolean
-      /** Parent Id */
-      parent_id: string | null
-      speaker: components['schemas']['Speaker']
-      stance: components['schemas']['Stance'] | null
-      /**
-       * Unit Id
-       * Format: uuid
-       */
-      unit_id: string
-    }
-    /** Confounder */
-    Confounder: {
-      /** Alternative Explanation */
-      alternative_explanation: string
-      /** Quote */
-      quote: string
-    }
-    /**
-     * DecisionValue
-     * @enum {string}
-     */
-    DecisionValue: 'approve' | 'reject' | 'request_changes'
-    /** DecisionView */
-    DecisionView: {
-      /** Comment */
-      comment: string | null
-      /**
-       * Decided At
-       * Format: date-time
-       */
-      decided_at: string
-      decision: components['schemas']['DecisionValue']
-      /**
-       * Reviewer Id
-       * Format: uuid
-       */
-      reviewer_id: string
-      /** Reviewer Pseudonym */
-      reviewer_pseudonym: string
-      stage: components['schemas']['ReviewStage']
-    }
-    /** DraftSave */
-    DraftSave: {
-      payload: components['schemas']['AnswerPayload']
-      /** Version */
-      version: number
-    }
-    /** DraftSaved */
-    DraftSaved: {
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      /** Version */
-      version: number
-    }
-    /** DraftView */
-    DraftView: {
-      payload: components['schemas']['AnswerPayload']
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      /** Version */
-      version: number
-    }
-    /** ErrorResponse */
-    ErrorResponse: {
-      /** Code */
-      code: string
-      /** Details */
-      details?: {
-        [key: string]: unknown
-      } | null
-      /** Message */
-      message: string
-    }
-    /** EventAdminView */
-    EventAdminView: {
-      /** Action */
-      action: string
-      /** Actor Id */
-      actor_id: string | null
-      /**
-       * At
-       * Format: date-time
-       */
-      at: string
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'admin'
-      /** From State */
-      from_state: string | null
-      /** Meta */
-      meta: {
-        [key: string]: unknown
-      }
-      /** To State */
-      to_state: string | null
-    }
-    /**
-     * EventAuthorView
-     * @description Who did it is reduced to a role, so reviewers stay anonymous to the author.
-     */
-    EventAuthorView: {
-      /** Action */
-      action: string
-      /**
-       * Actor
-       * @enum {string}
-       */
-      actor: 'you' | 'admin' | 'reviewer' | 'system'
-      /**
-       * At
-       * Format: date-time
-       */
-      at: string
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'author'
-      /** From State */
-      from_state: string | null
-      /** To State */
-      to_state: string | null
-    }
-    /** ExpertAssignment */
-    ExpertAssignment: {
-      /** Allowed Actions */
-      allowed_actions: string[]
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'expert'
-      draft: components['schemas']['DraftView'] | null
-      /** Gate Passed At */
-      gate_passed_at: string | null
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Locked Highlights */
-      locked_highlights: number
-      /** Review Round */
-      review_round: number
-      /** Started At */
-      started_at: string | null
-      state: components['schemas']['State']
-      /** Submitted At */
-      submitted_at: string | null
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      vignette: components['schemas']['ExpertVignette']
-    }
-    /** ExpertVignette */
-    ExpertVignette: {
-      /** Code */
-      code: string
-      /** Content Hash */
-      content_hash: string
-      /**
-       * Framing
-       * @enum {string}
-       */
-      framing: 'forum_post' | 'personal_journal' | 'email'
-      /** Questions */
-      questions: components['schemas']['QuestionView'][]
-      /** Text */
-      text: string
-      /** Version */
-      version: number
-      /** Word Count */
-      word_count: number
-    }
-    /**
-     * FindingFeedback
-     * @description A request for changes made in the last round, without saying who made it.
-     */
-    FindingFeedback: {
-      /**
-       * By
-       * @enum {string}
-       */
-      by: 'reviewer' | 'admin'
-      /** Comment */
-      comment: string
-      /**
-       * Kind
-       * @enum {string}
-       */
-      kind: 'fragment' | 'case'
-      /** Patient Words */
-      patient_words: string | null
-      /** Unit Text */
-      unit_text: string
-    }
-    /** FindingFlag */
-    FindingFlag: {
-      /** Highlight */
-      highlight: string
-      /**
-       * Kind
-       * @enum {string}
-       */
-      kind: 'coverage' | 'direction'
-      /** Message */
-      message: string
-      /** Sentence */
-      sentence?: string | null
-    }
-    /** FindingHighlight */
-    FindingHighlight: {
-      /** Chip */
-      chip: number | null
-      /** Direction */
-      direction: ('toward' | 'away' | 'neutral' | 'unclear') | null
-      /** Id */
-      id: string
-      /**
-       * Origin
-       * @enum {string}
-       */
-      origin: 'expert' | 'implicit'
-      /** Text */
-      text: string
-    }
-    /** FindingSentence */
-    FindingSentence: {
-      /**
-       * Assigned By
-       * @enum {string}
-       */
-      assigned_by: 'chip' | 'quote' | 'llm' | 'expert'
-      /** Id */
-      id: string
-      /** Question Id */
-      question_id: string
-      /** Targets */
-      targets: string[]
-      /** Text */
-      text: string
-    }
-    /**
-     * FindingsCorrection
-     * @description Only what changes: sentence id -> its new targets, highlight id -> its new direction.
-     */
-    FindingsCorrection: {
-      /**
-       * Directions
-       * @default {}
-       */
-      directions: {
-        [key: string]: 'toward' | 'away' | 'neutral' | 'unclear'
-      }
-      /**
-       * Sentences
-       * @default {}
-       */
-      sentences: {
-        [key: string]: string[]
-      }
-      /** Version */
-      version: number
-    }
-    /**
-     * FindingsView
-     * @description For the author and the admin. Peers never see the filing of someone's raw answers.
-     */
-    FindingsView: {
-      /** Check Outcome */
-      check_outcome: ('completed' | 'skipped') | null
-      /** Editable */
-      editable: boolean
-      /** Feedback */
-      feedback: components['schemas']['FindingFeedback'][]
-      /** Flags */
-      flags: components['schemas']['FindingFlag'][]
-      /** Highlights */
-      highlights: components['schemas']['FindingHighlight'][]
-      /** Review Round */
-      review_round: number
-      /** Sentences */
-      sentences: components['schemas']['FindingSentence'][]
-      /** Version */
-      version: number
-    }
-    /**
-     * Highlight
-     * @description A passage the expert cited. Same shape as the chip fixtures (scripts/.../chips_schema.py).
-     */
-    Highlight: {
-      /** Chip */
-      chip: number
-      /** Direction */
-      direction?: ('toward' | 'away' | 'neutral' | 'unclear') | null
-      /** Span */
-      span: [number, number]
-      /** Text */
-      text: string
-    }
-    /** HomeView */
-    HomeView: {
-      /** Activity */
-      activity: components['schemas']['ActivityItem'][]
-      /** Next Up */
-      next_up: components['schemas']['NextUpItem'][]
-      /** Next Up Total */
-      next_up_total: number
-      /** Recent Reviews */
-      recent_reviews: components['schemas']['ReviewItem'][]
-      /** Reviews Waiting */
-      reviews_waiting: components['schemas']['ReviewItem'][]
-      /** Unread Activity */
-      unread_activity: number
-    }
-    /** InviteIssued */
-    InviteIssued: {
-      /** Invite Path */
-      invite_path: string
-    }
-    /** InvitedUser */
-    InvitedUser: {
-      /** Invite Path */
-      invite_path: string
-      user: components['schemas']['UserAdminView']
-    }
-    /** KnowledgeUnitListItem */
-    KnowledgeUnitListItem: {
-      /**
-       * Assignment Id
-       * Format: uuid
-       */
-      assignment_id: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /** Expert Pseudonym */
-      expert_pseudonym: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Ordinal */
-      ordinal: number
-      /** Review Round */
-      review_round: number
-      status: components['schemas']['UnitStatus']
-      /** Text */
-      text: string
-      /** Vignette Code */
-      vignette_code: string
-      /** Vignette Version */
-      vignette_version: number
-    }
-    /** LoginRequest */
-    LoginRequest: {
-      /**
-       * Email
-       * Format: email
-       */
-      email: string
-      /** Password */
-      password: string
-    }
-    /**
-     * NextUpItem
-     * @description Something waiting for the viewer. `action` is decided here, so the page has no copy of the
-     *     workflow's rules.
-     */
-    NextUpItem: {
-      /**
-       * Action
-       * @enum {string}
-       */
-      action: 'start' | 'continue' | 'check' | 'retry'
-      /**
-       * Assignment Id
-       * Format: uuid
-       */
-      assignment_id: string
-      /** Expert Pseudonym */
-      expert_pseudonym: string | null
-      state: components['schemas']['State']
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      /** Vignette Code */
-      vignette_code: string
-      /** Vignette Version */
-      vignette_version: number
-    }
-    /** PeerAssignment */
-    PeerAssignment: {
-      /** Allowed Actions */
-      allowed_actions: string[]
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'peer'
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Review Round */
-      review_round: number
-      state: components['schemas']['State']
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      vignette: components['schemas']['PeerVignette']
-    }
-    /** PeerVignette */
-    PeerVignette: {
-      /** Code */
-      code: string
-      /**
-       * Framing
-       * @enum {string}
-       */
-      framing: 'forum_post' | 'personal_journal' | 'email'
-      /** Text */
-      text: string
-      /** Version */
-      version: number
-      /** Word Count */
-      word_count: number
-    }
-    /** PlantedCue */
-    PlantedCue: {
-      /** Quote */
-      quote: string
-      /**
-       * Strength
-       * @enum {string}
-       */
-      strength: 'weak' | 'moderate' | 'strong'
-      /** Trait */
-      trait: string
-    }
-    /** Q4Answer */
-    Q4Answer: {
-      /** Hypothesis */
-      hypothesis?: string | null
-      /** Other Explanation */
-      other_explanation?: string | null
-      /** Shift */
-      shift?: number | null
-      /** Toward */
-      toward?: ('more_adhd' | 'less_adhd' | 'other') | null
-    }
-    /** QuestionView */
-    QuestionView: {
-      /** Id */
-      id: string
-      /**
-       * Kind
-       * @enum {string}
-       */
-      kind: 'open' | 'shift' | 'rating_1_5'
-      /** Text */
-      text: string
-      /** Wording */
-      wording?: {
-        [key: string]: unknown
-      } | null
-    }
-    /** ReviewItem */
-    ReviewItem: {
-      /** Accepts */
-      accepts: number
-      /**
-       * Assignment Id
-       * Format: uuid
-       */
-      assignment_id: string
-      /** Author Pseudonym */
-      author_pseudonym: string | null
-      /** Comment Count */
-      comment_count: number
-      /** Declines */
-      declines: number
-      my_vote: components['schemas']['Vote'] | null
-      /** Opened */
-      opened: boolean
-      /**
-       * Relation
-       * @enum {string}
-       */
-      relation: 'reviewer' | 'author' | 'admin'
-      /** Review Round */
-      review_round: number
-      state: components['schemas']['State']
-      /** Unit Count */
-      unit_count: number
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string
-      /** Vignette Code */
-      vignette_code: string
-      /** Vignette Version */
-      vignette_version: number
-    }
-    /**
-     * ReviewStage
-     * @enum {string}
-     */
-    ReviewStage: 'admin' | 'peer'
-    /**
-     * Role
-     * @enum {string}
-     */
-    Role: 'admin' | 'expert'
-    /**
-     * Speaker
-     * @description Who said it. A reviewer is told by pseudonym; the author and the admin are only a role,
-     *     unless the viewer is the admin, who sees every pseudonym.
-     */
-    Speaker: {
-      /**
-       * Kind
-       * @enum {string}
-       */
-      kind: 'author' | 'reviewer' | 'admin'
-      /** Pseudonym */
-      pseudonym: string | null
-    }
-    /**
-     * Stance
-     * @description How a reviewer's comment sits with the unit it is under.
-     * @enum {string}
-     */
-    Stance: 'support' | 'challenge' | 'question'
-    /**
-     * State
-     * @enum {string}
-     */
-    State:
-      | 'assigned'
-      | 'in_progress'
-      | 'processing'
-      | 'processing_failed'
-      | 'expert_check'
-      | 'building_units'
-      | 'peer_review'
-      | 'ingesting'
-      | 'ingestion_failed'
-      | 'ingested'
-      | 'rejected'
-      | 'cancelled'
-    /** SubmissionView */
-    SubmissionView: {
-      /**
-       * Assignment Id
-       * Format: uuid
-       */
-      assignment_id: string
-      /** Payload */
-      payload: {
-        [key: string]: unknown
-      }
-      /** Payload Format */
-      payload_format: number
-      /**
-       * Submitted At
-       * Format: date-time
-       */
-      submitted_at: string
-      /** Vignette Hash */
-      vignette_hash: string
-    }
-    /** UnitAdminView */
-    UnitAdminView: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'admin'
-      /** Comments */
-      comments: components['schemas']['CommentView'][]
-      /** Content Hash */
-      content_hash: string
-      /** Decisions */
-      decisions: components['schemas']['DecisionView'][]
-      /** Direction */
-      direction: string | null
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Kind */
-      kind: string | null
-      /** Ordinal */
-      ordinal: number
-      /** Patient Words */
-      patient_words: string | null
-      /** Review Round */
-      review_round: number
-      status: components['schemas']['UnitStatus']
-      /** Text */
-      text: string
-    }
-    /** UnitAuthorView */
-    UnitAuthorView: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'author'
-      /** Comments */
-      comments: components['schemas']['CommentView'][]
-      /** Direction */
-      direction: string | null
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Kind */
-      kind: string | null
-      /** Ordinal */
-      ordinal: number
-      /** Patient Words */
-      patient_words: string | null
-      /** Review Round */
-      review_round: number
-      status: components['schemas']['UnitStatus']
-      /** Text */
-      text: string
-    }
-    /** UnitDecisionInput */
-    UnitDecisionInput: {
-      /** Comment */
-      comment?: string | null
-      decision: components['schemas']['DecisionValue']
-      /**
-       * Unit Id
-       * Format: uuid
-       */
-      unit_id: string
-    }
-    /** UnitDecisionsRequest */
-    UnitDecisionsRequest: {
-      /** Decisions */
-      decisions: components['schemas']['UnitDecisionInput'][]
-    }
-    /** UnitPeerView */
-    UnitPeerView: {
-      /**
-       * @description discriminator enum property added by openapi-typescript
-       * @enum {string}
-       */
-      audience: 'peer'
-      /** Comments */
-      comments: components['schemas']['CommentView'][]
-      /** Direction */
-      direction: string | null
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Kind */
-      kind: string | null
-      /** Ordinal */
-      ordinal: number
-      /** Patient Words */
-      patient_words: string | null
-      /** Review Round */
-      review_round: number
-      /** Text */
-      text: string
-    }
-    /**
-     * UnitStatus
-     * @enum {string}
-     */
-    UnitStatus: 'pending' | 'approved' | 'rejected' | 'ingested' | 'superseded'
-    /**
-     * UserAdminView
-     * @description What the admin sees: also whether the person has yet to accept their invite.
-     */
-    UserAdminView: {
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /** Display Name */
-      display_name: string
-      /** Email */
-      email: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Invite Pending */
-      invite_pending: boolean
-      /** Is Active */
-      is_active: boolean
-      /** Is Synthetic */
-      is_synthetic: boolean
-      /** Pseudonym */
-      pseudonym: string
-      role: components['schemas']['Role']
-    }
-    /** UserCreate */
-    UserCreate: {
-      /** Display Name */
-      display_name: string
-      /**
-       * Email
-       * Format: email
-       */
-      email: string
-      /**
-       * Is Synthetic
-       * @default false
-       */
-      is_synthetic: boolean
-      role: components['schemas']['Role']
-    }
-    /** UserUpdate */
-    UserUpdate: {
-      /** Display Name */
-      display_name?: string | null
-      /** Is Active */
-      is_active?: boolean | null
-    }
-    /** UserView */
-    UserView: {
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /** Display Name */
-      display_name: string
-      /** Email */
-      email: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Is Active */
-      is_active: boolean
-      /** Is Synthetic */
-      is_synthetic: boolean
-      /** Pseudonym */
-      pseudonym: string
-      role: components['schemas']['Role']
-    }
-    /** VariantInfo */
-    VariantInfo: {
-      /**
-       * Arm
-       * @enum {string}
-       */
-      arm: 'A' | 'B'
-      /** Change */
-      change?: string | null
-      /** Pair Id */
-      pair_id: string
-    }
-    /** VersionAdminView */
-    VersionAdminView: {
-      /** Content Hash */
-      content_hash: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      design: components['schemas']['VignetteDesign']
-      /**
-       * Framing
-       * @enum {string}
-       */
-      framing: 'forum_post' | 'personal_journal' | 'email'
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Published At */
-      published_at: string | null
-      /** Q4 Whatif */
-      q4_whatif: string | null
-      /** Question Ids */
-      question_ids: ('Q1' | 'Q2' | 'Q3' | 'Q4' | 'Q5' | 'Q6')[]
-      status: components['schemas']['VersionStatus']
-      /** Text */
-      text: string
-      variant: components['schemas']['VariantInfo'] | null
-      /** Version */
-      version: number
-      /**
-       * Vignette Id
-       * Format: uuid
-       */
-      vignette_id: string
-      /** Word Count */
-      readonly word_count: number
-    }
-    /** VersionContent */
-    VersionContent: {
-      design: components['schemas']['VignetteDesign']
-      /**
-       * Framing
-       * @enum {string}
-       */
-      framing: 'forum_post' | 'personal_journal' | 'email'
-      /** Q4 Whatif */
-      q4_whatif?: string | null
-      /** Text */
-      text: string
-      variant?: components['schemas']['VariantInfo'] | null
-    }
-    /**
-     * VersionStatus
-     * @enum {string}
-     */
-    VersionStatus: 'draft' | 'published' | 'retired'
-    /** VersionUpdate */
-    VersionUpdate: {
-      design?: components['schemas']['VignetteDesign'] | null
-      /** Framing */
-      framing?: ('forum_post' | 'personal_journal' | 'email') | null
-      /** Q4 Whatif */
-      q4_whatif?: string | null
-      /** Text */
-      text?: string | null
-      variant?: components['schemas']['VariantInfo'] | null
-    }
-    /** VignetteAdminView */
-    VignetteAdminView: {
-      /** Code */
-      code: string
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string
-      /** Versions */
-      versions: components['schemas']['VersionAdminView'][]
-    }
-    /** VignetteCreate */
-    VignetteCreate: {
-      /** Code */
-      code: string
-      design: components['schemas']['VignetteDesign']
-      /**
-       * Framing
-       * @enum {string}
-       */
-      framing: 'forum_post' | 'personal_journal' | 'email'
-      /** Q4 Whatif */
-      q4_whatif?: string | null
-      /** Text */
-      text: string
-      variant?: components['schemas']['VariantInfo'] | null
-    }
-    /** VignetteDesign */
-    VignetteDesign: {
-      /**
-       * Confounders
-       * @default []
-       */
-      confounders: components['schemas']['Confounder'][]
-      /**
-       * Is Control
-       * @default false
-       */
-      is_control: boolean
-      /** Knowledge Target */
-      knowledge_target?: string | null
-      /**
-       * Origin
-       * @default hand_written
-       * @enum {string}
-       */
-      origin: 'llm' | 'real_text' | 'hand_written'
-      /**
-       * Planted Cues
-       * @default []
-       */
-      planted_cues: components['schemas']['PlantedCue'][]
-      /**
-       * Population
-       * @default adult
-       */
-      population: string
-      /** Purpose */
-      purpose: string
-      /** Source Ref */
-      source_ref?: string | null
-      /**
-       * Track
-       * @default general
-       * @enum {string}
-       */
-      track: 'general' | 'text_analysis'
-    }
-    /**
-     * Vote
-     * @enum {string}
-     */
-    Vote: 'accept' | 'decline'
-    /** VoteEntry */
-    VoteEntry: {
-      /**
-       * At
-       * Format: date-time
-       */
-      at: string
-      speaker: components['schemas']['Speaker']
-      vote: components['schemas']['Vote']
-    }
-    /** VoteInput */
-    VoteInput: {
-      /** Review Round */
-      review_round: number
-      vote: components['schemas']['Vote']
-    }
-    /** VotesView */
-    VotesView: {
-      /** Accepts */
-      accepts: number
-      /** Declines */
-      declines: number
-      my_vote: components['schemas']['Vote'] | null
-      /** Review Round */
-      review_round: number
-      /** Votes */
-      votes: components['schemas']['VoteEntry'][]
-    }
-  }
-  responses: never
-  parameters: never
-  requestBodies: never
-  headers: never
-  pathItems: never
+    schemas: {
+        /** AcceptInviteRequest */
+        AcceptInviteRequest: {
+            /** Password */
+            password: string;
+            /** Token */
+            token: string;
+        };
+        /** ActivityItem */
+        ActivityItem: {
+            /**
+             * Assignment Id
+             * Format: uuid
+             */
+            assignment_id: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Comment Id */
+            comment_id?: string | null;
+            /** Excerpt */
+            excerpt?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "case_assigned" | "check_ready" | "review_opened" | "review_closed" | "comment_on_mine" | "reply" | "job_failed";
+            /** Outcome */
+            outcome?: ("accepted" | "rejected" | "sent_back") | null;
+            /** Question Id */
+            question_id?: string | null;
+            speaker?: components["schemas"]["Speaker"] | null;
+            /** Unread */
+            unread: boolean;
+            /** Vignette Code */
+            vignette_code: string;
+        };
+        /** ActivitySeen */
+        ActivitySeen: {
+            /** Until */
+            until?: string | null;
+        };
+        /** AdminAssignment */
+        AdminAssignment: {
+            /** Allowed Actions */
+            allowed_actions: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "admin";
+            /**
+             * Expert Id
+             * Format: uuid
+             */
+            expert_id: string;
+            /** Expert Pseudonym */
+            expert_pseudonym: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Review Round */
+            review_round: number;
+            /** Started At */
+            started_at: string | null;
+            state: components["schemas"]["State"];
+            /** Submitted At */
+            submitted_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            vignette: components["schemas"]["PeerVignette"];
+            /** Vignette Code */
+            vignette_code: string;
+            /** Vignette Version */
+            vignette_version: number;
+            /**
+             * Vignette Version Id
+             * Format: uuid
+             */
+            vignette_version_id: string;
+        };
+        /** AnswerDecisionInput */
+        AnswerDecisionInput: {
+            /** Comment */
+            comment?: string | null;
+            decision: components["schemas"]["DecisionValue"];
+            /**
+             * Question Id
+             * @enum {string}
+             */
+            question_id: "Q1" | "Q2" | "Q3" | "Q4" | "Q5" | "Q6";
+        };
+        /** AnswerDecisionsRequest */
+        AnswerDecisionsRequest: {
+            /** Decisions */
+            decisions: components["schemas"]["AnswerDecisionInput"][];
+        };
+        /** AnswerLine */
+        AnswerLine: {
+            /** Assigned By */
+            assigned_by: string | null;
+            /** Targets */
+            targets: string[];
+            /** Text */
+            text: string;
+        };
+        /** AnswerPayload */
+        AnswerPayload: {
+            /**
+             * Answers
+             * @default {}
+             */
+            answers: {
+                [key: string]: string;
+            };
+            /**
+             * Highlights
+             * @default []
+             */
+            highlights: components["schemas"]["Highlight"][];
+            /**
+             * Insufficient Information
+             * @default false
+             */
+            insufficient_information: boolean;
+            q4?: components["schemas"]["Q4Answer"] | null;
+            /** Rating */
+            rating?: number | null;
+        };
+        /**
+         * AnswerVoteValue
+         * @enum {string}
+         */
+        AnswerVoteValue: "approve" | "disapprove";
+        /** AssignRequest */
+        AssignRequest: {
+            /** Expert Ids */
+            expert_ids: string[];
+        };
+        /** AssignmentSummary */
+        AssignmentSummary: {
+            /** Allowed Actions */
+            allowed_actions: string[];
+            /**
+             * Expert Id
+             * Format: uuid
+             */
+            expert_id: string;
+            /** Expert Pseudonym */
+            expert_pseudonym: string;
+            /**
+             * Framing
+             * @enum {string}
+             */
+            framing: "forum_post" | "personal_journal" | "email";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Job Running */
+            job_running: boolean;
+            /** Opening */
+            opening: string;
+            /** Patient Summary */
+            patient_summary: string;
+            state: components["schemas"]["State"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Vignette Code */
+            vignette_code: string;
+            /** Vignette Version */
+            vignette_version: number;
+            /**
+             * Vignette Version Id
+             * Format: uuid
+             */
+            vignette_version_id: string;
+            /** Word Count */
+            word_count: number;
+        };
+        /** CaseCounts */
+        CaseCounts: {
+            /** Done */
+            done: number;
+            /** In Review */
+            in_review: number;
+            /** Open */
+            open: number;
+            /** Stopped */
+            stopped: number;
+        };
+        /** CommentCreate */
+        CommentCreate: {
+            /** Body */
+            body: string;
+            /** Parent Id */
+            parent_id?: string | null;
+            stance?: components["schemas"]["Stance"] | null;
+        };
+        /** CommentView */
+        CommentView: {
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Mine */
+            is_mine: boolean;
+            /** Parent Id */
+            parent_id: string | null;
+            /** Question Id */
+            question_id: string;
+            speaker: components["schemas"]["Speaker"];
+            stance: components["schemas"]["Stance"] | null;
+        };
+        /** Confounder */
+        Confounder: {
+            /** Alternative Explanation */
+            alternative_explanation: string;
+            /** Quote */
+            quote: string;
+        };
+        /**
+         * DecisionValue
+         * @enum {string}
+         */
+        DecisionValue: "approve" | "reject" | "request_changes";
+        /** DecisionView */
+        DecisionView: {
+            /** Comment */
+            comment: string | null;
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            decision: components["schemas"]["DecisionValue"];
+        };
+        /** DraftSave */
+        DraftSave: {
+            payload: components["schemas"]["AnswerPayload"];
+            /** Version */
+            version: number;
+        };
+        /** DraftSaved */
+        DraftSaved: {
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** DraftView */
+        DraftView: {
+            payload: components["schemas"]["AnswerPayload"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** ErrorResponse */
+        ErrorResponse: {
+            /** Code */
+            code: string;
+            /** Details */
+            details?: {
+                [key: string]: unknown;
+            } | null;
+            /** Message */
+            message: string;
+        };
+        /** EventAdminView */
+        EventAdminView: {
+            /** Action */
+            action: string;
+            /** Actor Id */
+            actor_id: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "admin";
+            /** From State */
+            from_state: string | null;
+            /** Meta */
+            meta: {
+                [key: string]: unknown;
+            };
+            /** To State */
+            to_state: string | null;
+        };
+        /**
+         * EventAuthorView
+         * @description Who did it is reduced to a role, so reviewers stay anonymous to the author.
+         */
+        EventAuthorView: {
+            /** Action */
+            action: string;
+            /**
+             * Actor
+             * @enum {string}
+             */
+            actor: "you" | "admin" | "reviewer" | "system";
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "author";
+            /** From State */
+            from_state: string | null;
+            /** To State */
+            to_state: string | null;
+        };
+        /** ExpertAssignment */
+        ExpertAssignment: {
+            /** Allowed Actions */
+            allowed_actions: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "expert";
+            draft: components["schemas"]["DraftView"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Review Round */
+            review_round: number;
+            /** Started At */
+            started_at: string | null;
+            state: components["schemas"]["State"];
+            /** Submitted At */
+            submitted_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            vignette: components["schemas"]["ExpertVignette"];
+        };
+        /** ExpertVignette */
+        ExpertVignette: {
+            /** Code */
+            code: string;
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Framing
+             * @enum {string}
+             */
+            framing: "forum_post" | "personal_journal" | "email";
+            /** Patient Summary */
+            patient_summary: string;
+            /** Questions */
+            questions: components["schemas"]["QuestionView"][];
+            /** Text */
+            text: string;
+            /** Version */
+            version: number;
+            /** Word Count */
+            word_count: number;
+        };
+        /** FindingFlag */
+        FindingFlag: {
+            /** Highlight */
+            highlight: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "coverage" | "direction";
+            /** Message */
+            message: string;
+            /** Sentence */
+            sentence?: string | null;
+        };
+        /** FindingHighlight */
+        FindingHighlight: {
+            /** Chip */
+            chip: number | null;
+            /** Direction */
+            direction: ("toward" | "away" | "neutral" | "unclear") | null;
+            /** Id */
+            id: string;
+            /**
+             * Origin
+             * @enum {string}
+             */
+            origin: "expert" | "implicit";
+            /** Text */
+            text: string;
+        };
+        /** FindingSentence */
+        FindingSentence: {
+            /**
+             * Assigned By
+             * @enum {string}
+             */
+            assigned_by: "chip" | "quote" | "llm" | "expert";
+            /** Id */
+            id: string;
+            /** Question Id */
+            question_id: string;
+            /** Targets */
+            targets: string[];
+            /** Text */
+            text: string;
+        };
+        /**
+         * FindingsView
+         * @description The sentences of the approved answers filed under citations, as cut into units. For the
+         *     admin only: the author links lines in the proofread check and never sees this.
+         */
+        FindingsView: {
+            /** Check Outcome */
+            check_outcome: ("completed" | "skipped") | null;
+            /** Flags */
+            flags: components["schemas"]["FindingFlag"][];
+            /** Highlights */
+            highlights: components["schemas"]["FindingHighlight"][];
+            /** Review Round */
+            review_round: number;
+            /** Sentences */
+            sentences: components["schemas"]["FindingSentence"][];
+            /** Version */
+            version: number;
+        };
+        /**
+         * Highlight
+         * @description A passage the expert cited. Same shape as the chip fixtures (scripts/.../chips_schema.py).
+         */
+        Highlight: {
+            /** Chip */
+            chip: number;
+            /** Direction */
+            direction?: ("toward" | "away" | "neutral" | "unclear") | null;
+            /** Span */
+            span: [
+                number,
+                number
+            ];
+            /** Text */
+            text: string;
+        };
+        /** HomeView */
+        HomeView: {
+            /** Activity */
+            activity: components["schemas"]["ActivityItem"][];
+            /** Next Up */
+            next_up: components["schemas"]["NextUpItem"][];
+            /** Next Up Total */
+            next_up_total: number;
+            /** Recent Reviews */
+            recent_reviews: components["schemas"]["ReviewItem"][];
+            /** Reviews Waiting */
+            reviews_waiting: components["schemas"]["ReviewItem"][];
+            /** Unread Activity */
+            unread_activity: number;
+        };
+        /** InviteIssued */
+        InviteIssued: {
+            /** Invite Path */
+            invite_path: string;
+        };
+        /** InvitedUser */
+        InvitedUser: {
+            /** Invite Path */
+            invite_path: string;
+            user: components["schemas"]["UserAdminView"];
+        };
+        /** KnowledgeUnitListItem */
+        KnowledgeUnitListItem: {
+            /**
+             * Assignment Id
+             * Format: uuid
+             */
+            assignment_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Direction */
+            direction: string | null;
+            /** Expert Pseudonym */
+            expert_pseudonym: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string | null;
+            /** Ordinal */
+            ordinal: number;
+            /** Patient Words */
+            patient_words: string | null;
+            /** Review Round */
+            review_round: number;
+            status: components["schemas"]["UnitStatus"];
+            /** Text */
+            text: string;
+            /** Vignette Code */
+            vignette_code: string;
+            /** Vignette Version */
+            vignette_version: number;
+        };
+        /** LinkedHighlight */
+        LinkedHighlight: {
+            /** Chip */
+            chip: number | null;
+            /** Direction */
+            direction: string | null;
+            /** Id */
+            id: string;
+            /** Origin */
+            origin: string;
+            /** Span */
+            span: [
+                number,
+                number
+            ];
+            /** Text */
+            text: string;
+        };
+        /** LoginRequest */
+        LoginRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /**
+         * NextUpItem
+         * @description Something waiting for the viewer. `action` is decided here, so the page has no copy of the
+         *     workflow's rules.
+         */
+        NextUpItem: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "start" | "continue" | "check" | "retry";
+            /**
+             * Assignment Id
+             * Format: uuid
+             */
+            assignment_id: string;
+            /** Expert Pseudonym */
+            expert_pseudonym: string | null;
+            state: components["schemas"]["State"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Vignette Code */
+            vignette_code: string;
+            /** Vignette Version */
+            vignette_version: number;
+        };
+        /** PeerAssignment */
+        PeerAssignment: {
+            /** Allowed Actions */
+            allowed_actions: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "peer";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Review Round */
+            review_round: number;
+            state: components["schemas"]["State"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            vignette: components["schemas"]["PeerVignette"];
+        };
+        /** PeerVignette */
+        PeerVignette: {
+            /** Code */
+            code: string;
+            /**
+             * Framing
+             * @enum {string}
+             */
+            framing: "forum_post" | "personal_journal" | "email";
+            /** Patient Summary */
+            patient_summary: string;
+            /** Text */
+            text: string;
+            /** Version */
+            version: number;
+            /** Word Count */
+            word_count: number;
+        };
+        /** PersonAdminCard */
+        PersonAdminCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "admin";
+            cases: components["schemas"]["CaseCounts"];
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Synthetic */
+            is_synthetic: boolean;
+            /** Pseudonym */
+            pseudonym: string;
+            role: components["schemas"]["Role"];
+        };
+        /**
+         * PersonCard
+         * @description Who a pseudonym is, for everyone but the admin: no name, no email.
+         */
+        PersonCard: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            audience: "peer";
+            /** Pseudonym */
+            pseudonym: string;
+            role: components["schemas"]["Role"];
+        };
+        /** PlantedCue */
+        PlantedCue: {
+            /** Quote */
+            quote: string;
+            /**
+             * Strength
+             * @enum {string}
+             */
+            strength: "weak" | "moderate" | "strong";
+            /** Trait */
+            trait: string;
+        };
+        /** ProofreadFeedback */
+        ProofreadFeedback: {
+            /** Comment */
+            comment: string;
+            /** Question Id */
+            question_id: string;
+        };
+        /** ProofreadFlag */
+        ProofreadFlag: {
+            /** Highlight */
+            highlight: string;
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+        };
+        /** ProofreadItem */
+        ProofreadItem: {
+            /** Dropped */
+            dropped: string[];
+            /** Final */
+            final: string;
+            /** Lines */
+            lines: components["schemas"]["AnswerLine"][];
+            /** Linked */
+            linked: boolean;
+            /** Original */
+            original: string;
+            /** Proposed */
+            proposed: string;
+            /** Question */
+            question: string;
+            /** Question Id */
+            question_id: string;
+        };
+        /** ProofreadSave */
+        ProofreadSave: {
+            /** Answers */
+            answers: {
+                [key: string]: string;
+            };
+            /**
+             * Overrides
+             * @default {}
+             */
+            overrides: {
+                [key: string]: {
+                    [key: string]: string[];
+                };
+            };
+            /** Version */
+            version: number;
+        };
+        /** ProofreadView */
+        ProofreadView: {
+            /** Editable */
+            editable: boolean;
+            /** Feedback */
+            feedback: components["schemas"]["ProofreadFeedback"][];
+            /** Flags */
+            flags: components["schemas"]["ProofreadFlag"][];
+            /** Highlights */
+            highlights: components["schemas"]["LinkedHighlight"][];
+            /** Items */
+            items: components["schemas"]["ProofreadItem"][];
+            /** Passes */
+            passes: {
+                [key: string]: unknown;
+            };
+            /** Review Round */
+            review_round: number;
+            /** Submitted At */
+            submitted_at: string | null;
+            /** Version */
+            version: number;
+        };
+        /** Q4Answer */
+        Q4Answer: {
+            /** Hypothesis */
+            hypothesis?: string | null;
+            /** Other Explanation */
+            other_explanation?: string | null;
+            /** Shift */
+            shift?: number | null;
+            /** Toward */
+            toward?: ("more_adhd" | "less_adhd" | "other") | null;
+        };
+        /** QuestionTemplate */
+        QuestionTemplate: {
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "Q1" | "Q2" | "Q3" | "Q4" | "Q5" | "Q6";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "open" | "shift" | "rating_1_5";
+            /** Text */
+            text: string;
+        };
+        /** QuestionView */
+        QuestionView: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "open" | "shift" | "rating_1_5";
+            /** Text */
+            text: string;
+            /** Wording */
+            wording?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** ReviewAnswer */
+        ReviewAnswer: {
+            /** Approvals */
+            approvals: number;
+            /** Comments */
+            comments: components["schemas"]["CommentView"][];
+            decision: components["schemas"]["DecisionView"] | null;
+            /** Disapprovals */
+            disapprovals: number;
+            /** Lines */
+            lines: components["schemas"]["AnswerLine"][];
+            my_vote: components["schemas"]["AnswerVoteValue"] | null;
+            /** Question */
+            question: string;
+            /** Question Id */
+            question_id: string;
+            /** Text */
+            text: string;
+            /** Votes */
+            votes: components["schemas"]["VoteEntry"][];
+        };
+        /** ReviewAnswersView */
+        ReviewAnswersView: {
+            /** Answers */
+            answers: components["schemas"]["ReviewAnswer"][];
+            /** Highlights */
+            highlights: components["schemas"]["LinkedHighlight"][];
+            /** Review Round */
+            review_round: number;
+            /** Rounds */
+            rounds: number[];
+            state: components["schemas"]["State"];
+        };
+        /** ReviewItem */
+        ReviewItem: {
+            /** Answer Count */
+            answer_count: number;
+            /** Approvals */
+            approvals: number;
+            /**
+             * Assignment Id
+             * Format: uuid
+             */
+            assignment_id: string;
+            /** Author Pseudonym */
+            author_pseudonym: string | null;
+            /** Comment Count */
+            comment_count: number;
+            /** Disapprovals */
+            disapprovals: number;
+            /** My Votes */
+            my_votes: number;
+            /** Opened */
+            opened: boolean;
+            /**
+             * Relation
+             * @enum {string}
+             */
+            relation: "reviewer" | "author" | "admin";
+            /** Review Round */
+            review_round: number;
+            state: components["schemas"]["State"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Vignette Code */
+            vignette_code: string;
+            /** Vignette Version */
+            vignette_version: number;
+        };
+        /**
+         * Role
+         * @enum {string}
+         */
+        Role: "admin" | "expert";
+        /**
+         * Speaker
+         * @description Who said it. A reviewer is told by pseudonym; the author and the admin are only a role,
+         *     unless the viewer is the admin, who sees every pseudonym.
+         */
+        Speaker: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "author" | "reviewer" | "admin";
+            /** Pseudonym */
+            pseudonym: string | null;
+        };
+        /**
+         * Stance
+         * @description How a reviewer's comment sits with the answer it is under.
+         * @enum {string}
+         */
+        Stance: "support" | "challenge" | "question";
+        /**
+         * State
+         * @enum {string}
+         */
+        State: "assigned" | "in_progress" | "proofreading" | "proofread_check" | "peer_review" | "processing" | "processing_failed" | "ingesting" | "ingestion_failed" | "ingested" | "rejected" | "cancelled";
+        /** SubmissionView */
+        SubmissionView: {
+            /**
+             * Assignment Id
+             * Format: uuid
+             */
+            assignment_id: string;
+            /** Payload */
+            payload: {
+                [key: string]: unknown;
+            };
+            /** Payload Format */
+            payload_format: number;
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /** Vignette Hash */
+            vignette_hash: string;
+        };
+        /**
+         * UnitStatus
+         * @enum {string}
+         */
+        UnitStatus: "pending" | "approved" | "rejected" | "ingested" | "superseded";
+        /**
+         * UserAdminView
+         * @description What the admin sees: also whether the person has yet to accept their invite.
+         */
+        UserAdminView: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invite Pending */
+            invite_pending: boolean;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Synthetic */
+            is_synthetic: boolean;
+            /** Pseudonym */
+            pseudonym: string;
+            role: components["schemas"]["Role"];
+        };
+        /** UserCreate */
+        UserCreate: {
+            /** Display Name */
+            display_name: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Is Synthetic
+             * @default false
+             */
+            is_synthetic: boolean;
+            role: components["schemas"]["Role"];
+        };
+        /** UserUpdate */
+        UserUpdate: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+        };
+        /** UserView */
+        UserView: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Is Synthetic */
+            is_synthetic: boolean;
+            /** Pseudonym */
+            pseudonym: string;
+            role: components["schemas"]["Role"];
+        };
+        /** VariantInfo */
+        VariantInfo: {
+            /**
+             * Arm
+             * @enum {string}
+             */
+            arm: "A" | "B";
+            /** Change */
+            change?: string | null;
+            /** Pair Id */
+            pair_id: string;
+        };
+        /** VersionAdminView */
+        VersionAdminView: {
+            /** Content Hash */
+            content_hash: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            design: components["schemas"]["VignetteDesign"];
+            /**
+             * Framing
+             * @enum {string}
+             */
+            framing: "forum_post" | "personal_journal" | "email";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Patient Summary */
+            patient_summary: string;
+            /** Published At */
+            published_at: string | null;
+            /** Q4 Whatif */
+            q4_whatif: string | null;
+            /** Question Ids */
+            question_ids: ("Q1" | "Q2" | "Q3" | "Q4" | "Q5" | "Q6")[];
+            status: components["schemas"]["VersionStatus"];
+            /** Text */
+            text: string;
+            variant: components["schemas"]["VariantInfo"] | null;
+            /** Version */
+            version: number;
+            /**
+             * Vignette Id
+             * Format: uuid
+             */
+            vignette_id: string;
+            /** Word Count */
+            readonly word_count: number;
+        };
+        /** VersionContent */
+        VersionContent: {
+            design: components["schemas"]["VignetteDesign"];
+            /**
+             * Framing
+             * @enum {string}
+             */
+            framing: "forum_post" | "personal_journal" | "email";
+            /**
+             * Patient Summary
+             * @default
+             */
+            patient_summary: string;
+            /** Q4 Whatif */
+            q4_whatif?: string | null;
+            /** Text */
+            text: string;
+            variant?: components["schemas"]["VariantInfo"] | null;
+        };
+        /**
+         * VersionStatus
+         * @enum {string}
+         */
+        VersionStatus: "draft" | "published" | "retired";
+        /** VersionUpdate */
+        VersionUpdate: {
+            design?: components["schemas"]["VignetteDesign"] | null;
+            /** Framing */
+            framing?: ("forum_post" | "personal_journal" | "email") | null;
+            /** Patient Summary */
+            patient_summary?: string | null;
+            /** Q4 Whatif */
+            q4_whatif?: string | null;
+            /** Text */
+            text?: string | null;
+            variant?: components["schemas"]["VariantInfo"] | null;
+        };
+        /** VignetteAdminView */
+        VignetteAdminView: {
+            /** Code */
+            code: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Versions */
+            versions: components["schemas"]["VersionAdminView"][];
+        };
+        /** VignetteCreate */
+        VignetteCreate: {
+            /** Code */
+            code: string;
+            design: components["schemas"]["VignetteDesign"];
+            /**
+             * Framing
+             * @enum {string}
+             */
+            framing: "forum_post" | "personal_journal" | "email";
+            /**
+             * Patient Summary
+             * @default
+             */
+            patient_summary: string;
+            /** Q4 Whatif */
+            q4_whatif?: string | null;
+            /** Text */
+            text: string;
+            variant?: components["schemas"]["VariantInfo"] | null;
+        };
+        /** VignetteDesign */
+        VignetteDesign: {
+            /**
+             * Confounders
+             * @default []
+             */
+            confounders: components["schemas"]["Confounder"][];
+            /**
+             * Is Control
+             * @default false
+             */
+            is_control: boolean;
+            /** Knowledge Target */
+            knowledge_target?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Origin
+             * @default hand_written
+             * @enum {string}
+             */
+            origin: "llm" | "real_text" | "hand_written";
+            /**
+             * Planted Cues
+             * @default []
+             */
+            planted_cues: components["schemas"]["PlantedCue"][];
+            /**
+             * Population
+             * @default adult
+             */
+            population: string;
+            /**
+             * Purpose
+             * @default
+             */
+            purpose: string;
+            /** Source Ref */
+            source_ref?: string | null;
+            /**
+             * Track
+             * @default general
+             * @enum {string}
+             */
+            track: "general" | "text_analysis";
+        };
+        /** VoteEntry */
+        VoteEntry: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            speaker: components["schemas"]["Speaker"];
+            vote: components["schemas"]["AnswerVoteValue"];
+        };
+        /** VoteInput */
+        VoteInput: {
+            /** Review Round */
+            review_round: number;
+            vote: components["schemas"]["AnswerVoteValue"];
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-export type $defs = Record<string, never>
+export type $defs = Record<string, never>;
 export interface operations {
-  list_assignments_api_v1_assignments_get: {
-    parameters: {
-      query?: {
-        state?: components['schemas']['State'] | null
-        vignette_version_id?: string | null
-        limit?: number
-        offset?: number
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['AssignmentSummary'][]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  get_assignment_api_v1_assignments__assignment_id__get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  cancel_api_v1_assignments__assignment_id__cancel_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  save_draft_api_v1_assignments__assignment_id__draft_put: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['DraftSave']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['DraftSaved']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  get_events_api_v1_assignments__assignment_id__events_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': (
-            components['schemas']['EventAdminView'] | components['schemas']['EventAuthorView']
-          )[]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  complete_expert_check_api_v1_assignments__assignment_id__expert_check_complete_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  skip_expert_check_api_v1_assignments__assignment_id__expert_check_skip_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  get_findings_api_v1_assignments__assignment_id__findings_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FindingsView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  correct_findings_api_v1_assignments__assignment_id__findings_put: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['FindingsCorrection']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['FindingsView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  pass_gate_api_v1_assignments__assignment_id__pass_gate_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  retry_api_v1_assignments__assignment_id__retry_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  open_review_api_v1_assignments__assignment_id__review_open_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  start_api_v1_assignments__assignment_id__start_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  get_submission_api_v1_assignments__assignment_id__submission_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['SubmissionView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  submit_api_v1_assignments__assignment_id__submit_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  submit_decisions_api_v1_assignments__assignment_id__unit_decisions_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UnitDecisionsRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json':
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  list_units_api_v1_assignments__assignment_id__units_get: {
-    parameters: {
-      query?: {
-        review_round?: number | null
-      }
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': (
-            | components['schemas']['UnitAdminView']
-            | components['schemas']['UnitPeerView']
-            | components['schemas']['UnitAuthorView']
-          )[]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  add_comment_api_v1_assignments__assignment_id__units__unit_id__comments_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-        unit_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['CommentCreate']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['CommentView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  cast_vote_api_v1_assignments__assignment_id__vote_put: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VoteInput']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VotesView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  get_votes_api_v1_assignments__assignment_id__votes_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        assignment_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VotesView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  accept_invite_api_v1_auth_accept_invite_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AcceptInviteRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  login_api_v1_auth_login_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['LoginRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  logout_api_v1_auth_logout_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  health_api_v1_health_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': {
-            [key: string]: string
-          }
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  list_knowledge_units_api_v1_knowledge_units_get: {
-    parameters: {
-      query?: {
-        status?: components['schemas']['UnitStatus'] | null
-        limit?: number
-        offset?: number
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['KnowledgeUnitListItem'][]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  me_api_v1_me_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  activity_seen_api_v1_me_activity_seen_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: {
-      content: {
-        'application/json': components['schemas']['ActivitySeen'] | null
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  home_api_v1_me_home_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['HomeView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  list_reviews_api_v1_reviews_get: {
-    parameters: {
-      query?: {
-        status?: ('open' | 'closed') | null
-        limit?: number
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ReviewItem'][]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  list_users_api_v1_users_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserAdminView'][]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  create_user_api_v1_users_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UserCreate']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['InvitedUser']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  update_user_api_v1_users__user_id__patch: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        user_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UserUpdate']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['UserAdminView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  reissue_invite_api_v1_users__user_id__invite_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        user_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['InviteIssued']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  update_version_api_v1_vignette_versions__version_id__patch: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        version_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VersionUpdate']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VersionAdminView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  assign_api_v1_vignette_versions__version_id__assignments_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        version_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AssignRequest']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': (
-            | components['schemas']['ExpertAssignment']
-            | components['schemas']['AdminAssignment']
-            | components['schemas']['PeerAssignment']
-          )[]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  publish_version_api_v1_vignette_versions__version_id__publish_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        version_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VersionAdminView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  retire_version_api_v1_vignette_versions__version_id__retire_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        version_id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VersionAdminView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  list_vignettes_api_v1_vignettes_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VignetteAdminView'][]
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  create_vignette_api_v1_vignettes_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VignetteCreate']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VignetteAdminView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  add_version_api_v1_vignettes__vignette_id__versions_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        vignette_id: string
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VersionContent']
-      }
-    }
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['VersionAdminView']
-        }
-      }
-      /** @description Client Error */
-      '4XX': {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
+    list_assignments_api_v1_assignments_get: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["State"] | null;
+                vignette_version_id?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignmentSummary"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_assignment_api_v1_assignments__assignment_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    submit_decisions_api_v1_assignments__assignment_id__answer_decisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnswerDecisionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_answers_api_v1_assignments__assignment_id__answers_get: {
+        parameters: {
+            query?: {
+                review_round?: number | null;
+            };
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewAnswersView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_comment_api_v1_assignments__assignment_id__answers__question_id__comments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+                question_id: "Q1" | "Q2" | "Q3" | "Q4" | "Q5" | "Q6";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cast_vote_api_v1_assignments__assignment_id__answers__question_id__vote_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+                question_id: "Q1" | "Q2" | "Q3" | "Q4" | "Q5" | "Q6";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoteInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewAnswersView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_assignments__assignment_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_draft_api_v1_assignments__assignment_id__draft_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftSave"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftSaved"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_events_api_v1_assignments__assignment_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": (components["schemas"]["EventAdminView"] | components["schemas"]["EventAuthorView"])[];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_findings_api_v1_assignments__assignment_id__findings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FindingsView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_proofread_api_v1_assignments__assignment_id__proofread_get: {
+        parameters: {
+            query?: {
+                review_round?: number | null;
+            };
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProofreadView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_proofread_api_v1_assignments__assignment_id__proofread_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProofreadSave"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProofreadView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    retry_api_v1_assignments__assignment_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_review_api_v1_assignments__assignment_id__review_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_api_v1_assignments__assignment_id__start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_submission_api_v1_assignments__assignment_id__submission_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubmissionView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    submit_api_v1_assignments__assignment_id__submit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    submit_for_review_api_v1_assignments__assignment_id__submit_for_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assignment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_invite_api_v1_auth_accept_invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    health_api_v1_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_knowledge_units_api_v1_knowledge_units_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["UnitStatus"] | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeUnitListItem"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    me_api_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    activity_seen_api_v1_me_activity_seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ActivitySeen"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    home_api_v1_me_home_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HomeView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_reviews_api_v1_reviews_get: {
+        parameters: {
+            query?: {
+                status?: ("open" | "closed") | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewItem"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_users_api_v1_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAdminView"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_user_api_v1_users_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitedUser"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    person_api_v1_users_by_pseudonym__pseudonym__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                pseudonym: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonAdminCard"] | components["schemas"]["PersonCard"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_user_api_v1_users__user_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserAdminView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reissue_invite_api_v1_users__user_id__invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteIssued"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_version_api_v1_vignette_versions__version_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionAdminView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assign_api_v1_vignette_versions__version_id__assignments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": (components["schemas"]["ExpertAssignment"] | components["schemas"]["AdminAssignment"] | components["schemas"]["PeerAssignment"])[];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    publish_version_api_v1_vignette_versions__version_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionAdminView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    retire_version_api_v1_vignette_versions__version_id__retire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionAdminView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_vignettes_api_v1_vignettes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VignetteAdminView"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_vignette_api_v1_vignettes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VignetteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VignetteAdminView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_questions_api_v1_vignettes_questions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionTemplate"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_version_api_v1_vignettes__vignette_id__versions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                vignette_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionContent"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionAdminView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
 }

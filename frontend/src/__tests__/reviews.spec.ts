@@ -35,11 +35,11 @@ function review(overrides: Partial<ReviewItem> = {}): ReviewItem {
     state: 'peer_review',
     relation: 'reviewer',
     opened: true,
-    unit_count: 3,
-    accepts: 1,
-    declines: 0,
+    answer_count: 3,
+    approvals: 1,
+    disapprovals: 0,
     comment_count: 2,
-    my_vote: null,
+    my_votes: 0,
     author_pseudonym: null,
     review_round: 1,
     updated_at: '2026-11-04T10:00:00Z',
@@ -47,16 +47,30 @@ function review(overrides: Partial<ReviewItem> = {}): ReviewItem {
   }
 }
 
-const unit = (comments: unknown[] = []) => ({
-  audience: 'peer',
-  id: 'u1',
-  ordinal: 1,
-  kind: 'fragment',
-  direction: 'toward',
-  patient_words: 'barely slept',
-  text: 'She slept badly.',
+const answers = (comments: unknown[] = []) => ({
   review_round: 1,
-  comments,
+  rounds: [1],
+  state: 'peer_review',
+  highlights: [
+    { id: 'h1', chip: 1, text: 'patient', span: [4, 11], origin: 'expert', direction: 'away' },
+  ],
+  answers: [
+    {
+      question_id: 'Q1',
+      question: 'Which fragments matter?',
+      text: 'She slept badly.\nNothing else.',
+      lines: [
+        { text: 'She slept badly.', targets: ['h1'], assigned_by: 'chip' },
+        { text: 'Nothing else.', targets: ['case'], assigned_by: 'llm' },
+      ],
+      comments,
+      approvals: 0,
+      disapprovals: 0,
+      my_vote: null,
+      votes: [],
+      decision: null,
+    },
+  ],
 })
 
 describe('wording', () => {
@@ -73,13 +87,13 @@ describe('wording', () => {
     const text = activityText({
       kind: 'comment_on_mine',
       speaker: { kind: 'reviewer', pseudonym: 'E07' },
-      unit_ordinal: 2,
+      question_id: 'Q2',
       vignette_code: 'V001',
       assignment_id: 'a1',
       at: '',
       unread: true,
     })
-    expect(text).toBe('E07 commented on statement 2 of case V001.')
+    expect(text).toBe('E07 commented on the answer to question 2 of case V001.')
   })
 })
 
@@ -89,7 +103,8 @@ describe('ReviewsView', () => {
     stubFetch(() =>
       jsonResponse(200, [
         review({ assignment_id: 'a1' }),
-        review({ assignment_id: 'a2', my_vote: 'accept' }),
+        review({ assignment_id: 'a2', my_votes: 3 }),
+        review({ assignment_id: 'a4', my_votes: 1 }),
         review({ assignment_id: 'a3', relation: 'author' }),
       ]),
     )
@@ -98,6 +113,12 @@ describe('ReviewsView', () => {
     const titles = wrapper!.findAll('[data-testid="group"] h2').map((h) => h.text())
     expect(titles).toEqual(['Waiting for your vote', "You've voted", 'Your submissions'])
     expect(wrapper!.get('a').attributes('href')).toBe('/reviews/a1')
+    const waiting = wrapper!.findAll('[data-testid="group"]')[0]!
+    expect(waiting.text()).toContain('3 answers')
+    expect(waiting.findAll('a').map((a) => a.attributes('href'))).toEqual([
+      '/reviews/a1',
+      '/reviews/a4',
+    ])
   })
 
   it('lists an admin’s reviews in one list, oldest first', async () => {
@@ -155,16 +176,12 @@ describe('ReviewView', () => {
       if (!isOpen) {
         return jsonResponse(409, { code: 'review_not_opened', message: 'Open the review first.' })
       }
-      if (url.endsWith('/units')) return jsonResponse(200, [unit()])
-      if (url.endsWith('/votes'))
-        return jsonResponse(200, {
-          accepts: 0,
-          declines: 0,
-          my_vote: null,
-          review_round: 1,
-          votes: [],
-        })
-      if (url.endsWith('/vote')) return jsonResponse(200, {})
+      if (url.endsWith('/answers')) return jsonResponse(200, answers())
+      if (url.endsWith('/vote')) {
+        const voted = answers()
+        voted.answers[0] = { ...voted.answers[0]!, my_vote: 'approve' as never, approvals: 1 }
+        return jsonResponse(200, voted)
+      }
       return jsonResponse(200, peer)
     })
     return calls
@@ -183,18 +200,40 @@ describe('ReviewView', () => {
     await wrapper!.get('[data-testid="gate"] button').trigger('click')
     await flushPromises()
     expect(wrapper!.find('[data-testid="gate"]').exists()).toBe(false)
-    expect(wrapper!.get('[data-testid="unit"]').text()).toContain('She slept badly.')
+    const answer = wrapper!.get('[data-testid="answer"]')
+    expect(answer.text()).toContain('Which fragments matter?')
+    expect(answer.findAll('[data-testid="lines"] li').map((l) => l.text())).toEqual([
+      expect.stringContaining('She slept badly.'),
+      expect.stringContaining('Nothing else.'),
+    ])
     expect(wrapper!.text()).toContain('The patient text.')
   })
 
-  it('offers the vote bar only when the server allows it, worded as advice', async () => {
+  it('shows what each sentence is about, and lights the quote in the text', async () => {
     logIn(expert)
     server(true)
     mountView(ReviewView, { id: 'a1' })
     await flushPromises()
+    const tags = wrapper!.findAll('[data-testid="quote-tag"]')
+    expect(tags.map((t) => t.text())).toEqual(['Quote 1', 'Whole case'])
+    expect(wrapper!.find('[data-testid="vignette-text"] mark').exists()).toBe(false)
+    await tags[0]!.trigger('mouseover')
+    expect(wrapper!.get('[data-testid="vignette-text"] mark').text()).toBe('patient')
+  })
+
+  it('lets a reviewer vote on each answer, worded as advice', async () => {
+    logIn(expert)
+    server(true)
+    mountView(ReviewView, { id: 'a1' })
+    await flushPromises()
+    expect(wrapper!.text()).toContain('study team makes the final decision')
     const bar = wrapper!.get('[data-testid="votes"]')
-    expect(bar.text()).toContain('study team makes the final decision')
-    expect(bar.findAll('button').map((b) => b.text())).toEqual(['Accept', 'Decline'])
+    expect(bar.findAll('button').map((b) => b.text())).toEqual(['Approve', 'Disapprove'])
+    await bar.findAll('button')[0]!.trigger('click')
+    await flushPromises()
+    const after = wrapper!.get('[data-testid="votes"]')
+    expect(after.text()).toContain('1 approve, 0 disapprove')
+    expect(after.findAll('button')[0]!.attributes('aria-pressed')).toBe('true')
   })
 
   it('keeps a comment that could not be posted', async () => {
@@ -202,15 +241,7 @@ describe('ReviewView', () => {
     stubFetch((url) => {
       if (url.endsWith('/comments'))
         return jsonResponse(409, { code: 'review_closed', message: 'closed' })
-      if (url.endsWith('/units')) return jsonResponse(200, [unit()])
-      if (url.endsWith('/votes'))
-        return jsonResponse(200, {
-          accepts: 0,
-          declines: 0,
-          my_vote: null,
-          review_round: 1,
-          votes: [],
-        })
+      if (url.endsWith('/answers')) return jsonResponse(200, answers())
       return jsonResponse(200, peer)
     })
     mountView(ReviewView, { id: 'a1' })
@@ -224,28 +255,35 @@ describe('ReviewView', () => {
     )
   })
 
-  it('lets the admin decide only once every statement has a decision', async () => {
+  it('lets the admin decide only once every answer has a decision', async () => {
     logIn(admin)
+    // jsdom doesn't implement dialogs.
+    HTMLDialogElement.prototype.showModal = function () {
+      this.setAttribute('open', '')
+    }
+    HTMLDialogElement.prototype.close = function () {
+      this.removeAttribute('open')
+    }
     stubFetch((url) => {
-      if (url.endsWith('/units'))
-        return jsonResponse(200, [
-          { ...unit(), audience: 'admin', status: 'pending', decisions: [] },
-        ])
-      if (url.endsWith('/votes'))
-        return jsonResponse(200, {
-          accepts: 1,
-          declines: 0,
-          my_vote: null,
-          review_round: 1,
-          votes: [],
-        })
+      if (url.endsWith('/answers')) return jsonResponse(200, answers())
       return jsonResponse(200, {
         audience: 'admin',
         id: 'a1',
         state: 'peer_review',
         review_round: 1,
-        vignette_code: 'V001',
-        allowed_actions: ['comment', 'decide_units'],
+        vignette: {
+          code: 'V001',
+          version: 1,
+          text: 'The patient text.',
+          framing: 'personal_journal',
+          patient_summary: 'A student.',
+          word_count: 3,
+        },
+        expert_id: 'e1',
+        expert_pseudonym: 'E01',
+        vignette_version: 1,
+        vignette_version_id: 'v1',
+        allowed_actions: ['comment', 'decide_answers'],
       })
     })
     mountView(ReviewView, { id: 'a1' })
@@ -254,8 +292,44 @@ describe('ReviewView', () => {
     expect(submit.attributes('disabled')).toBeDefined()
     await wrapper!.get('input[value="request_changes"]').setValue()
     expect(submit.attributes('disabled')).toBeDefined() // the comment is required
-    await wrapper!.get('textarea[aria-label="What should change"]').setValue('Re-file sentence 2')
+    await wrapper!.get('textarea[aria-label="What should change"]').setValue('Say more about sleep')
     expect(submit.attributes('disabled')).toBeUndefined()
+    await submit.trigger('click')
+    expect(wrapper!.text()).toContain('sends every answer back to the author')
+  })
+})
+
+describe('an admin reading a review', () => {
+  it('sees the patient summary and the full case text beside the answers', async () => {
+    logIn(admin)
+    stubFetch((url) => {
+      if (url.endsWith('/answers')) return jsonResponse(200, answers())
+      return jsonResponse(200, {
+        audience: 'admin',
+        id: 'a1',
+        state: 'peer_review',
+        review_round: 1,
+        vignette: {
+          code: 'V001',
+          version: 1,
+          text: 'The whole patient text.',
+          framing: 'personal_journal',
+          patient_summary: 'A student.',
+          word_count: 4,
+        },
+        expert_id: 'e1',
+        expert_pseudonym: 'E01',
+        vignette_version: 1,
+        vignette_version_id: 'v1',
+        allowed_actions: ['comment', 'decide_answers'],
+      })
+    })
+    mountView(ReviewView, { id: 'a1' })
+    await flushPromises()
+    expect(wrapper!.get('[data-testid="vignette-text"]').text()).toContain(
+      'The whole patient text.',
+    )
+    expect(wrapper!.get('[data-testid="patient-summary"]').text()).toContain('A student.')
   })
 })
 
@@ -270,7 +344,7 @@ describe('HomeView', () => {
             action: 'check',
             vignette_code: 'V009',
             vignette_version: 1,
-            state: 'expert_check',
+            state: 'proofread_check',
             updated_at: '',
             expert_pseudonym: null,
           },
@@ -305,8 +379,7 @@ describe('HomeView', () => {
           {
             kind: 'comment_on_mine',
             assignment_id: 'a1',
-            unit_id: 'u1',
-            unit_ordinal: 2,
+            question_id: 'Q2',
             vignette_code: 'V001',
             unread: true,
             at: '2026-11-05T09:00:00Z',
@@ -326,7 +399,7 @@ describe('HomeView', () => {
     const fetchMock = vi.mocked(globalThis.fetch)
     mountView(HomeView)
     await flushPromises()
-    expect(wrapper!.get('[data-testid="news"] a').attributes('href')).toBe('/reviews/a1#unit-u1')
+    expect(wrapper!.get('[data-testid="news"] a').attributes('href')).toBe('/reviews/a1#answer-Q2')
     const post = fetchMock.mock.calls
       .map(([r]) => r as Request)
       .find((r) => r.url.endsWith('/activity/seen'))
@@ -379,72 +452,5 @@ describe('ExpertsView', () => {
       (wrapper!.get('input[aria-label="Invite link"]').element as HTMLInputElement).value,
     ).toBe(`${location.origin}/invite/tok`)
     expect(wrapper!.get('[data-testid="invite"]').text()).toContain("can't be shown again")
-  })
-})
-
-describe('ExpertCheck', () => {
-  it('sends only the sentences that changed, then approves', async () => {
-    logIn(expert)
-    const sent: { method: string; url: string; body?: unknown }[] = []
-    const findings = {
-      version: 3,
-      editable: true,
-      check_outcome: null,
-      review_round: 1,
-      feedback: [],
-      flags: [{ kind: 'coverage', highlight: 'h1', message: 'Nobody wrote about passage 1.' }],
-      highlights: [
-        { id: 'h1', chip: 1, direction: 'toward', origin: 'expert', text: 'barely slept' },
-      ],
-      sentences: [
-        {
-          id: 's1',
-          question_id: 'Q1',
-          text: 'She slept badly.',
-          targets: ['case'],
-          assigned_by: 'llm',
-        },
-        {
-          id: 's2',
-          question_id: 'Q1',
-          text: 'Nothing else.',
-          targets: ['case'],
-          assigned_by: 'llm',
-        },
-      ],
-    }
-    stubFetch(() => jsonResponse(200, findings))
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: Request) => {
-        sent.push({
-          method: input.method,
-          url: input.url.replace(/^.*\/api\/v1/, ''),
-          body: input.method === 'PUT' ? await input.clone().json() : undefined,
-        })
-        return input.method === 'GET' ? jsonResponse(200, findings) : jsonResponse(200, findings)
-      }),
-    )
-    const { default: ExpertCheck } = await import('@/components/answering/ExpertCheck.vue')
-    mountView(ExpertCheck, { id: 'a1', canSkip: true })
-    await flushPromises()
-    expect(wrapper!.get('[data-testid="flags"]').text()).toContain('Nobody wrote')
-
-    await wrapper!.findAll('[data-testid="sentence"]')[0]!.findAll('input')[0]!.setValue(true)
-    await wrapper!
-      .findAll('button')
-      .find((b) => b.text() === 'Save and approve')!
-      .trigger('click')
-    await flushPromises()
-
-    expect(sent.filter((c) => c.method !== 'GET')).toEqual([
-      {
-        method: 'PUT',
-        url: '/assignments/a1/findings',
-        body: { version: 3, sentences: { s1: ['case', 'h1'] }, directions: {} },
-      },
-      { method: 'POST', url: '/assignments/a1/expert-check/complete', body: undefined },
-    ])
-    expect(wrapper!.emitted('done')).toHaveLength(1)
   })
 })

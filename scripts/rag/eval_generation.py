@@ -92,7 +92,7 @@ def same_ids(a: list[RetrievedChunk], b: list[RetrievedChunk]) -> bool:
     return [c.id for c in a] == [c.id for c in b]
 
 
-async def build_contexts(dataset: list[dict], previous: dict, args) -> dict:
+async def build_contexts(dataset: list[dict], previous: dict, args) -> tuple[dict, dict]:
     """{question id: {context name: chunks}}; contexts stored in `previous` are kept."""
     embedder = query_embedder()
     sparse_config = bm25_config()

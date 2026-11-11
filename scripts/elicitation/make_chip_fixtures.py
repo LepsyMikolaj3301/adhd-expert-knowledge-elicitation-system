@@ -53,7 +53,7 @@ from make_fixtures import (
 from prompt_loader import load_prompt
 from pydantic import ValidationError
 
-from app.elicitation.schema import ReferenceClaim, VariantInfo, Vignette
+from app.elicitation.schema import ReferenceClaim, VariantInfo, Vignette, content_hash
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data/fixtures_chips"
@@ -155,7 +155,8 @@ def make_vignettes(gen: Gen, inbox: Path, only: list[str] | None) -> list[Vignet
         questions = list(CHIP_QUESTIONS)
         out.append(
             Vignette(
-                id=f"V{len(out) + 1:03d}", version=1, text=text, framing=sc["source"],
+                id=f"V{len(out) + 1:03d}", version=1, text=text,
+                content_hash=content_hash(text), framing=sc["source"],
                 design=design, question_ids=questions,
                 variant=VariantInfo(pair_id=sc["id"], arm="A") if pair else None,
             )
@@ -171,7 +172,8 @@ def make_vignettes(gen: Gen, inbox: Path, only: list[str] | None) -> list[Vignet
             )
             out.append(
                 Vignette(
-                    id=f"V{len(out) + 1:03d}", version=1, text=text_b, framing=sc["source"],
+                    id=f"V{len(out) + 1:03d}", version=1, text=text_b,
+                    content_hash=content_hash(text_b), framing=sc["source"],
                     design=design_b, question_ids=questions,
                     variant=VariantInfo(pair_id=sc["id"], arm="B", change=sc["variant_change"]),
                 )
@@ -243,8 +245,8 @@ def chip_answer_pieces(data: dict, v: Vignette, kind: str, forbidden: re.Pattern
         raise Rejected("no chip is cited in any answer")
 
     alltext = " ".join(clean.values())
-    if LEAK.search(alltext):
-        raise Rejected(f"persona or design talk: {LEAK.search(alltext).group()!r}")
+    if leak := LEAK.search(alltext):
+        raise Rejected(f"persona or design talk: {leak.group()!r}")
     if CANNOT_QUOTE.search(clean["Q1"]):
         raise Rejected("Q1 says it cannot pick fragments, but highlights were marked")
     if forbidden:

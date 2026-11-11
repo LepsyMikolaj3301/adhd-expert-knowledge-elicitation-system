@@ -27,6 +27,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import httpx
 import numpy as np
@@ -97,7 +98,7 @@ def build_contexts(args) -> dict:
         everyone = np.ones(len(search.items), dtype=bool)
         return [search.items[i] for i in search.rank([q], everyone)[:50]]
 
-    out = {}
+    out: dict[str, dict[str, Any]] = {}
     for qi, q in enumerate(questions):
         qid = f"Q{qi + 1:02d}"
         chip_ranked = postprocess(ci, ranked(chips_search, q["question"]), mods)

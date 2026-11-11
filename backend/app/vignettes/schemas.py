@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.vignettes.models import VersionStatus
-from app.vignettes.questions import QuestionId
+from app.vignettes.questions import QuestionId, QuestionKind
 
 Framing = Literal["forum_post", "personal_journal", "email"]
 Strength = Literal["weak", "moderate", "strong"]
@@ -30,8 +30,16 @@ class Confounder(_Strict):
     alternative_explanation: str
 
 
+class QuestionTemplate(BaseModel):
+    id: QuestionId
+    kind: QuestionKind
+    text: str
+
+
 class VignetteDesign(_Strict):
-    purpose: str
+    purpose: str = ""
+    # The designer's own notes. Admin only, like the rest of the design.
+    notes: str = ""
     planted_cues: list[PlantedCue] = []
     confounders: list[Confounder] = []
     is_control: bool = False
@@ -53,6 +61,7 @@ class VersionContent(_Strict):
     framing: Framing
     # No question_ids: every version asks the same Q1-Q6, set by the server.
     q4_whatif: str | None = Field(default=None, max_length=1_000)
+    patient_summary: str = Field(default="", max_length=600)
     variant: VariantInfo | None = None
     design: VignetteDesign
 
@@ -65,6 +74,7 @@ class VersionUpdate(_Strict):
     text: str | None = Field(default=None, min_length=1, max_length=20_000)
     framing: Framing | None = None
     q4_whatif: str | None = Field(default=None, max_length=1_000)
+    patient_summary: str | None = Field(default=None, max_length=600)
     variant: VariantInfo | None = None
     design: VignetteDesign | None = None
 
@@ -81,6 +91,7 @@ class VersionAdminView(BaseModel):
     framing: Framing
     question_ids: list[QuestionId]
     q4_whatif: str | None
+    patient_summary: str
     variant: VariantInfo | None
     design: VignetteDesign
     created_at: datetime

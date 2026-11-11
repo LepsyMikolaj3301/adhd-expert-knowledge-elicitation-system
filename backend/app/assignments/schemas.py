@@ -25,6 +25,7 @@ class ExpertVignette(BaseModel):
     version: int
     text: str
     framing: Framing
+    patient_summary: str
     word_count: int
     content_hash: str
     # Only the questions the expert may see now: Q4-Q6 are absent until the gate is passed.
@@ -36,6 +37,7 @@ class PeerVignette(BaseModel):
     version: int
     text: str
     framing: Framing
+    patient_summary: str
     word_count: int
 
 
@@ -48,7 +50,7 @@ class DraftView(BaseModel):
 class _AssignmentBase(BaseModel):
     id: UUID
     state: State
-    # 1 until reviewers' requests for changes have sent the units back to the author.
+    # 1 until the admin's requests for changes have sent the answers back to the author.
     review_round: int
     allowed_actions: list[str]
     updated_at: datetime
@@ -58,9 +60,6 @@ class ExpertAssignment(_AssignmentBase):
     audience: Literal["expert"] = "expert"
     vignette: ExpertVignette
     draft: DraftView | None
-    gate_passed_at: datetime | None
-    # The first this many citations were made before the gate and can't change.
-    locked_highlights: int
     started_at: datetime | None
     submitted_at: datetime | None
 
@@ -72,7 +71,7 @@ class AdminAssignment(_AssignmentBase):
     vignette_code: str
     vignette_version: int
     vignette_version_id: UUID
-    gate_passed_at: datetime | None
+    vignette: PeerVignette
     started_at: datetime | None
     submitted_at: datetime | None
 
@@ -96,7 +95,13 @@ class AssignmentSummary(BaseModel):
     vignette_code: str
     vignette_version: int
     vignette_version_id: UUID
+    expert_id: UUID
     expert_pseudonym: str
+    # What the case card shows on hover.
+    patient_summary: str
+    framing: Framing
+    word_count: int
+    opening: str
     updated_at: datetime
 
 
@@ -153,7 +158,7 @@ class EventAuthorView(BaseModel):
 EventView = Annotated[EventAdminView | EventAuthorView, Field(discriminator="audience")]
 
 
-# --- the expert check ------------------------------------------------------------------------
+# --- how the approved answers were filed (the admin's view) ----------------------------------
 
 FindingDirection = Literal["toward", "away", "neutral", "unclear"]
 
@@ -181,35 +186,13 @@ class FindingFlag(BaseModel):
     message: str
 
 
-class FindingFeedback(BaseModel):
-    """A request for changes made in the last round, without saying who made it."""
-
-    kind: Literal["fragment", "case"]
-    patient_words: str | None
-    unit_text: str
-    comment: str
-    by: Literal["reviewer", "admin"]
-
-
 class FindingsView(BaseModel):
-    """For the author and the admin. Peers never see the filing of someone's raw answers."""
+    """The sentences of the approved answers filed under citations, as cut into units. For the
+    admin only: the author links lines in the proofread check and never sees this."""
 
     version: int
     review_round: int
-    # What reviewers asked to change in the round before this one; empty in the first.
-    feedback: list[FindingFeedback]
-    editable: bool
     check_outcome: Literal["completed", "skipped"] | None
     highlights: list[FindingHighlight]
     sentences: list[FindingSentence]
     flags: list[FindingFlag]
-
-
-class FindingsCorrection(BaseModel):
-    """Only what changes: sentence id -> its new targets, highlight id -> its new direction."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    version: int = Field(ge=1)
-    sentences: dict[str, list[str]] = Field(default={}, max_length=1_000)
-    directions: dict[str, FindingDirection] = Field(default={}, max_length=200)

@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.elicitation.questions import describe_shift
 from app.elicitation.schema import ElicitationDocument, Response, Vignette
+from expert_knowledge_core.notes import FRAMING_LABEL
 
 SEGMENTER_VERSION = 1
 LONG_WORDS = 120  # a non-Q1 answer longer than this is split like an unlabelled Q1
@@ -19,7 +20,6 @@ MIN_QUOTE_WORDS = 3  # shorter quotes ("again") are commentary, not evidence wor
 FUZZY_RATIO = 0.8  # word-window similarity that still counts as the same quote
 MAX_CONTEXT_WORDS = 60  # vignette sentences are often run-ons; clip around the quote
 
-FRAMING_LABEL = {"email": "email", "forum_post": "forum post", "personal_journal": "journal entry"}
 # what each question asks, short enough for a header ("Q2 'what else could explain them'")
 QUESTION_GIST = {
     "Q1": "fragments relevant to ADHD-related traits",

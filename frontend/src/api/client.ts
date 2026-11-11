@@ -17,15 +17,23 @@ export type ReviewItem = components['schemas']['ReviewItem']
 export type HomeData = components['schemas']['HomeView']
 export type ActivityItem = components['schemas']['ActivityItem']
 export type FindingsView = components['schemas']['FindingsView']
-export type UnitView =
-  | components['schemas']['UnitAdminView']
-  | components['schemas']['UnitPeerView']
-  | components['schemas']['UnitAuthorView']
+export type ProofreadView = components['schemas']['ProofreadView']
+export type ProofreadItem = components['schemas']['ProofreadItem']
+export type AnswerLine = components['schemas']['AnswerLine']
+export type LinkedHighlight = components['schemas']['LinkedHighlight']
+export type ReviewAnswersView = components['schemas']['ReviewAnswersView']
+export type ReviewAnswer = components['schemas']['ReviewAnswer']
 export type CommentView = components['schemas']['CommentView']
 export type Speaker = components['schemas']['Speaker']
 export type UserAdmin = components['schemas']['UserAdminView']
-export type Vote = components['schemas']['Vote']
+export type AnswerVote = components['schemas']['AnswerVoteValue']
+export type QuestionId =
+  paths['/api/v1/assignments/{assignment_id}/answers/{question_id}/vote']['put']['parameters']['path']['question_id']
 export type NextUpItem = components['schemas']['NextUpItem']
+export type PersonView =
+  components['schemas']['PersonAdminCard'] | components['schemas']['PersonCard']
+export type QuestionTemplate = components['schemas']['QuestionTemplate']
+export type State = AssignmentSummary['state']
 type ErrorBody = components['schemas']['ErrorResponse']
 
 /** Every failed API call throws this. `code` is stable; `message` is safe to show the user. */

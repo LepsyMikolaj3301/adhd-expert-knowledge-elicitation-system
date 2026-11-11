@@ -40,8 +40,8 @@ class ActivityItem(BaseModel):
     vignette_code: str
     at: datetime
     unread: bool
-    unit_id: UUID | None = None
-    unit_ordinal: int | None = None
+    # The answer a comment is under.
+    question_id: str | None = None
     comment_id: UUID | None = None
     speaker: Speaker | None = None
     # The first words of a comment.
@@ -52,7 +52,7 @@ class ActivityItem(BaseModel):
 class HomeView(BaseModel):
     next_up: list[NextUpItem]
     next_up_total: int
-    # Open reviews the viewer has yet to vote on (for the admin: every open review).
+    # Open reviews the viewer has yet to vote on every answer of (for the admin: every open one).
     reviews_waiting: list[ReviewItem]
     recent_reviews: list[ReviewItem]
     activity: list[ActivityItem]

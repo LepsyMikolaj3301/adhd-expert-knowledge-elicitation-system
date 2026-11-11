@@ -52,7 +52,7 @@ Q6 = Question(
 )
 
 QUESTIONS = (Q1, Q2, Q3, Q4, Q5, Q6)
-QUESTIONS_BY_ID = {q.id: q for q in QUESTIONS}
+QUESTIONS_BY_ID: dict[str, Question] = {q.id: q for q in QUESTIONS}
 assert tuple(QUESTIONS_BY_ID) == get_args(QuestionId), "QuestionId and QUESTIONS are out of sync"
 
 # Q4-Q6 are shown only once every asked gate question has a non-blank answer; after that the

@@ -6,13 +6,13 @@ requires-python = ">=3.12"
 dependencies = []
 
 # Root is a virtual project; every deployable lives in a workspace member.
-# Add future members here (e.g. "frontend" only if it has a Python side).
+# packages/* are installable libraries (expert-knowledge-core is used by the backend too).
 [tool.uv]
 package = false
 default-groups = ["dev", "notebooks", "scripts"]
 
 [tool.uv.workspace]
-members = ["backend"]
+members = ["backend", "packages/*"]
 
 [dependency-groups]
 dev = [
@@ -38,16 +38,18 @@ experiments = []
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = [".", "backend"]
+src = [".", "backend", "packages/expert-knowledge-core/src", "packages/expert-knowledge-rag/src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM"]
 
 [tool.ty.environment]
 python-version = "3.12"
+extra-paths = ["backend", "scripts/elicitation", "scripts/rag"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "packages/expert-knowledge-core/tests", "packages/expert-knowledge-rag/tests"]
 pythonpath = ["backend", "scripts/elicitation", "scripts/rag"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+markers = ["integration: needs the Postgres of DATABASE_URL (pgvector); skipped when unreachable"]

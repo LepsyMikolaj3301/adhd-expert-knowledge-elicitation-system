@@ -32,11 +32,8 @@ class Assignment(Base):
     state: Mapped[State] = mapped_column(
         enum_column(State, "state"), default=State.ASSIGNED, index=True
     )
-    # 1 until a reviewer's change request sends the units back to the author: then 2, and so on.
+    # 1 until the admin's change request sends the answers back to the author: then 2, and so on.
     review_round: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
-    gate_passed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # How many citations existed at the gate. These are fixed; later ones stay editable.
-    locked_highlights: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(

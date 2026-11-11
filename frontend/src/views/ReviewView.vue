@@ -2,11 +2,21 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { api, ApiError, type UnitView, type Vote } from '@/api/client'
+import { markFor, provideQuoteFocus } from '@/answering/quoteFocus'
+import {
+  api,
+  ApiError,
+  type AnswerVote,
+  type QuestionId,
+  type ReviewAnswer,
+  type ReviewAnswersView,
+} from '@/api/client'
+import AnswerThread from '@/components/answering/AnswerThread.vue'
+import ChipText from '@/components/answering/ChipText.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
-import UnitThread from '@/components/answering/UnitThread.vue'
+import QuoteTag from '@/components/answering/QuoteTag.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
-import { describeError, directionLabel, reviewOutcome, STATEMENT, tallyLabel } from '@/copy'
+import { describeError, questionLabel, reviewOutcome, tallyLabel } from '@/copy'
 
 const REFRESH_MS = 30_000
 type Decision = 'approve' | 'reject' | 'request_changes'
@@ -15,14 +25,19 @@ const DECISIONS: [Decision, string][] = [
   ['reject', 'Reject'],
   ['request_changes', 'Request changes'],
 ]
+const DECISION_LABEL: Record<Decision, string> = {
+  approve: 'Approved',
+  reject: 'Rejected',
+  request_changes: 'Changes requested',
+}
 
 const props = defineProps<{ id: string }>()
 const route = useRoute()
+const focus = provideQuoteFocus()
 
 type AssignmentView = NonNullable<Awaited<ReturnType<typeof fetchView>>>
 const view = ref<AssignmentView | null>(null)
-const units = ref<UnitView[]>([])
-const votes = ref<{ accepts: number; declines: number; my_vote: Vote | null } | null>(null)
+const review = ref<ReviewAnswersView | null>(null)
 const selectedRound = ref<number | null>(null)
 const needsOpening = ref(false)
 const loading = ref(true)
@@ -35,38 +50,34 @@ const path = { params: { path: { assignment_id: props.id } } }
 const fetchView = async () => (await api.GET('/api/v1/assignments/{assignment_id}', path)).data
 
 const actions = computed(() => view.value?.allowed_actions ?? [])
-const round = computed(() => view.value?.review_round ?? 1)
-const viewingOld = computed(
-  () => selectedRound.value !== null && selectedRound.value !== round.value,
-)
+const answers = computed(() => review.value?.answers ?? [])
+const highlights = computed(() => review.value?.highlights ?? [])
+const rounds = computed(() => review.value?.rounds ?? [])
+const latest = computed(() => rounds.value[rounds.value.length - 1] ?? 1)
+const shownRound = computed(() => review.value?.review_round ?? latest.value)
+const viewingOld = computed(() => shownRound.value !== latest.value)
 const audience = computed(() => view.value?.audience)
-const code = computed(() =>
-  view.value && 'vignette' in view.value
-    ? view.value.vignette.code
-    : view.value && 'vignette_code' in view.value
-      ? view.value.vignette_code
-      : '',
-)
-// Admins get no case text from the API, only the statements.
-const caseText = computed(() =>
-  view.value && 'vignette' in view.value ? view.value.vignette.text : '',
-)
+const code = computed(() => view.value?.vignette.code ?? '')
+const caseText = computed(() => view.value?.vignette.text ?? '')
+const summary = computed(() => view.value?.vignette.patient_summary ?? '')
+const activeMark = computed(() => markFor(focus.value, highlights.value))
 const canComment = computed(() => actions.value.includes('comment') && !viewingOld.value)
 const canVote = computed(() => actions.value.includes('vote') && !viewingOld.value)
-const canDecide = computed(() => actions.value.includes('decide_units') && !viewingOld.value)
-const outcome = computed(() => (view.value ? reviewOutcome(view.value.state, round.value) : null))
+const canDecide = computed(() => actions.value.includes('decide_answers') && !viewingOld.value)
+const outcome = computed(() =>
+  view.value ? reviewOutcome(view.value.state, view.value.review_round) : null,
+)
 
 async function fetchAll() {
   view.value = (await fetchView()) ?? null
-  const wanted = viewingOld.value ? selectedRound.value : null
-  const [u, v] = await Promise.all([
-    api.GET('/api/v1/assignments/{assignment_id}/units', {
-      params: { path: { assignment_id: props.id }, query: wanted ? { review_round: wanted } : {} },
-    }),
-    viewingOld.value ? null : api.GET('/api/v1/assignments/{assignment_id}/votes', path),
-  ])
-  units.value = u.data ?? []
-  votes.value = v?.data ?? null
+  const { data } = await api.GET('/api/v1/assignments/{assignment_id}/answers', {
+    params: {
+      path: { assignment_id: props.id },
+      query: selectedRound.value ? { review_round: selectedRound.value } : {},
+    },
+  })
+  // openapi-fetch's types widen the `span` tuple to an array, though the API sends two numbers.
+  review.value = (data as ReviewAnswersView | undefined) ?? null
 }
 
 async function load() {
@@ -104,14 +115,19 @@ async function openReview() {
   }
 }
 
-async function vote(choice: Vote) {
+async function vote(answer: ReviewAnswer, choice: AnswerVote) {
   error.value = ''
   try {
-    await api.PUT('/api/v1/assignments/{assignment_id}/vote', {
-      ...path,
-      body: { vote: choice, review_round: round.value },
-    })
-    await fetchAll()
+    const { data } = await api.PUT(
+      '/api/v1/assignments/{assignment_id}/answers/{question_id}/vote',
+      {
+        params: {
+          path: { assignment_id: props.id, question_id: answer.question_id as QuestionId },
+        },
+        body: { vote: choice, review_round: shownRound.value },
+      },
+    )
+    if (data) review.value = data as ReviewAnswersView
   } catch (e) {
     error.value = describeError(e)
     if (e instanceof ApiError && e.code === 'stale_round') await load()
@@ -120,32 +136,33 @@ async function vote(choice: Vote) {
 
 async function pickRound(event: Event) {
   const n = Number((event.target as HTMLSelectElement).value)
-  selectedRound.value = n === round.value ? null : n
+  selectedRound.value = n === latest.value ? null : n
   await load()
 }
 
-const choice = (u: UnitView) => (choices.value[u.id] ??= { decision: '', comment: '' })
+const choice = (a: ReviewAnswer) => (choices.value[a.question_id] ??= { decision: '', comment: '' })
 const decided = computed(
   () =>
-    units.value.length > 0 &&
-    units.value.every((u) => {
-      const c = choices.value[u.id]
+    answers.value.length > 0 &&
+    answers.value.every((a) => {
+      const c = choices.value[a.question_id]
       return c?.decision && (c.decision !== 'request_changes' || c.comment.trim())
     }),
 )
-const count = (d: Decision) => units.value.filter((u) => choices.value[u.id]?.decision === d).length
+const count = (d: Decision) =>
+  answers.value.filter((a) => choices.value[a.question_id]?.decision === d).length
 
 async function submitDecisions() {
   confirming.value = false
   error.value = ''
   try {
-    await api.POST('/api/v1/assignments/{assignment_id}/unit-decisions', {
+    await api.POST('/api/v1/assignments/{assignment_id}/answer-decisions', {
       ...path,
       body: {
-        decisions: units.value.map((u) => ({
-          unit_id: u.id,
-          decision: choice(u).decision as Decision,
-          comment: choice(u).comment.trim() || null,
+        decisions: answers.value.map((a) => ({
+          question_id: a.question_id as QuestionId,
+          decision: choice(a).decision as Decision,
+          comment: choice(a).comment.trim() || null,
         })),
       },
     })
@@ -189,15 +206,11 @@ onUnmounted(() => clearInterval(timer))
           <span class="px-1.5 text-muted">/</span>
           <span class="font-medium text-ink">Case {{ code }}</span>
         </p>
-        <label v-if="audience !== 'peer' && round > 1" class="text-sm">
+        <label v-if="audience !== 'peer' && rounds.length > 1" class="text-sm">
           Round
-          <select
-            class="field !mt-0 !inline-block !w-auto"
-            :value="selectedRound ?? round"
-            @change="pickRound"
-          >
-            <option v-for="n in round" :key="n" :value="n">
-              {{ n === round ? `${n} (current)` : n }}
+          <select class="field !mt-0 !inline-block !w-auto" :value="shownRound" @change="pickRound">
+            <option v-for="n in rounds" :key="n" :value="n">
+              {{ n === latest ? `${n} (latest)` : n }}
             </option>
           </select>
         </label>
@@ -215,67 +228,79 @@ onUnmounted(() => clearInterval(timer))
         You are reading an earlier round. It can't be changed.
       </p>
       <p v-if="audience === 'expert'" class="mt-3 text-sm">
-        This is your submission. You can read and comment, but not vote.
+        These are your answers. You can read and comment, but not vote.
       </p>
-
-      <section
-        v-if="votes && !viewingOld"
-        class="mt-4 rounded-md border border-line bg-surface p-3"
-        data-testid="votes"
-      >
-        <p class="text-sm">
-          {{ tallyLabel(votes.accepts, votes.declines) }}. This is advice: the study team makes the
-          final decision.
-        </p>
-        <div v-if="canVote" class="mt-2 flex items-center gap-3">
-          <button
-            v-for="v in ['accept', 'decline'] as const"
-            :key="v"
-            type="button"
-            :class="votes.my_vote === v ? 'btn' : 'btn-quiet'"
-            :aria-pressed="votes.my_vote === v"
-            @click="vote(v)"
-          >
-            {{ v === 'accept' ? 'Accept' : 'Decline' }}
-          </button>
-          <span class="text-sm text-muted">You can change your vote until the review closes.</span>
-        </div>
-      </section>
+      <p v-if="canVote" class="mt-3 text-sm text-muted">
+        Approve or disapprove each answer, and say why in a comment. Votes are advice: the study
+        team makes the final decision. You can change a vote until the review closes.
+      </p>
 
       <div class="mt-4 grid gap-8 lg:items-start" :class="caseText ? 'lg:grid-cols-2' : ''">
         <div
           v-if="caseText"
           class="rounded-sm border border-line bg-surface lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto"
         >
-          <VignetteText :text="caseText" :active="null" :can-cite="false" />
+          <p v-if="summary" class="px-5 pt-4 text-sm text-muted" data-testid="patient-summary">
+            About the patient: {{ summary }}
+          </p>
+          <VignetteText :text="caseText" :active="activeMark" :can-cite="false" />
         </div>
 
         <ol class="min-w-0 space-y-6">
           <li
-            v-for="u in units"
-            :id="`unit-${u.id}`"
-            :key="u.id"
+            v-for="a in answers"
+            :id="`answer-${a.question_id}`"
+            :key="a.question_id"
             class="rounded-md border border-line bg-surface p-4"
-            data-testid="unit"
+            data-testid="answer"
           >
-            <p class="text-xs font-semibold tracking-wide text-action uppercase">
-              {{ STATEMENT }} {{ u.ordinal }}
-              <span v-if="'status' in u" class="ml-2 text-muted normal-case">{{ u.status }}</span>
-            </p>
-            <p v-if="u.patient_words" class="mt-2 text-sm text-muted">
-              Quote: “{{ u.patient_words }}”
-            </p>
-            <p v-if="u.direction" class="text-sm text-muted">
-              {{ directionLabel(u.direction as never) }}
-            </p>
-            <p class="mt-2 whitespace-pre-wrap">{{ u.text }}</p>
+            <h2 class="text-base">
+              <span class="mb-0.5 block text-xs font-semibold tracking-wide text-action uppercase">
+                {{ questionLabel(a.question_id) }}
+              </span>
+              {{ a.question }}
+            </h2>
 
-            <template v-if="'decisions' in u && u.decisions.length">
-              <p v-for="d in u.decisions" :key="d.decided_at" class="mt-2 text-sm">
-                Decision: {{ d.decision.replace('_', ' ')
-                }}<template v-if="d.comment"> — {{ d.comment }}</template>
-              </p>
-            </template>
+            <ol v-if="a.lines.length" class="mt-3 space-y-1.5" data-testid="lines">
+              <li
+                v-for="(line, index) in a.lines"
+                :key="index"
+                class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1"
+              >
+                <span class="min-w-0 flex-1 leading-relaxed"><ChipText :text="line.text" /></span>
+                <span class="flex flex-wrap gap-1">
+                  <QuoteTag
+                    v-for="target in line.targets"
+                    :key="target"
+                    :target="target"
+                    :highlights="highlights"
+                  />
+                </span>
+              </li>
+            </ol>
+            <p v-else class="mt-3 leading-relaxed"><ChipText :text="a.text" /></p>
+
+            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm" data-testid="votes">
+              <span class="text-muted">{{ tallyLabel(a.approvals, a.disapprovals) }}</span>
+              <template v-if="canVote">
+                <button
+                  v-for="v in ['approve', 'disapprove'] as const"
+                  :key="v"
+                  type="button"
+                  class="!px-3 !py-1"
+                  :class="a.my_vote === v ? 'btn' : 'btn-quiet'"
+                  :aria-pressed="a.my_vote === v"
+                  @click="vote(a, v)"
+                >
+                  {{ v === 'approve' ? 'Approve' : 'Disapprove' }}
+                </button>
+              </template>
+            </div>
+
+            <p v-if="a.decision" class="mt-2 text-sm" data-testid="decision">
+              <strong>{{ DECISION_LABEL[a.decision.decision] }}</strong
+              ><template v-if="a.decision.comment"> — {{ a.decision.comment }}</template>
+            </p>
 
             <fieldset v-if="canDecide" class="mt-3 text-sm">
               <legend class="font-medium">Your decision</legend>
@@ -285,26 +310,35 @@ onUnmounted(() => clearInterval(timer))
                 class="mr-4 inline-flex items-center gap-1.5"
               >
                 <input
-                  v-model="choice(u).decision"
+                  v-model="choice(a).decision"
                   type="radio"
-                  :name="`d-${u.id}`"
+                  :name="`d-${a.question_id}`"
                   :value="value"
                 />
                 {{ label }}
               </label>
               <textarea
-                v-if="choice(u).decision === 'request_changes'"
-                v-model="choice(u).comment"
+                v-if="choice(a).decision"
+                v-model="choice(a).comment"
                 rows="2"
                 class="field"
-                aria-label="What should change"
-                placeholder="What should change?"
+                :aria-label="
+                  choice(a).decision === 'request_changes'
+                    ? 'What should change'
+                    : 'A note for the author (optional)'
+                "
+                :placeholder="
+                  choice(a).decision === 'request_changes'
+                    ? 'What should change?'
+                    : 'A note for the author (optional)'
+                "
               />
             </fieldset>
 
-            <UnitThread
+            <AnswerThread
               :assignment-id="id"
-              :unit="u"
+              :question-id="a.question_id"
+              :comments="a.comments"
               :can-comment="canComment"
               :can-stance="canVote"
               @posted="refresh"
@@ -313,7 +347,7 @@ onUnmounted(() => clearInterval(timer))
         </ol>
       </div>
 
-      <p v-if="!units.length" class="mt-6 text-muted">There are no statements to read here.</p>
+      <p v-if="!answers.length" class="mt-6 text-muted">There are no answers to read here.</p>
 
       <div v-if="canDecide" class="mt-6 flex justify-end">
         <button type="button" class="btn" :disabled="!decided" @click="confirming = true">
@@ -335,10 +369,12 @@ onUnmounted(() => clearInterval(timer))
           afterwards.
         </p>
         <p v-if="count('request_changes')" class="font-medium">
-          Asking for changes sends the whole set back to the author, and a new round begins.
+          Asking for changes sends every answer back to the author, and a new round begins.
         </p>
-        <p v-else-if="count('approve')">Approved statements go into the knowledge base.</p>
-        <p v-else>Every statement is rejected, so nothing enters the knowledge base.</p>
+        <p v-else-if="count('approve')">
+          Approved answers are cut into statements and go into the knowledge base.
+        </p>
+        <p v-else>Every answer is rejected, so nothing enters the knowledge base.</p>
       </ConfirmDialog>
     </template>
   </div>

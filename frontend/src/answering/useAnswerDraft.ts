@@ -160,12 +160,6 @@ export function useAnswerDraft(id: string) {
     await flush().catch(() => {})
   }
 
-  async function passGate(): Promise<void> {
-    await flush()
-    const { data } = await api.POST('/api/v1/assignments/{assignment_id}/pass-gate', path)
-    if (data?.audience === 'expert') apply(data as ExpertAssignment)
-  }
-
   async function submit(): Promise<void> {
     await flush()
     const { data } = await api.POST('/api/v1/assignments/{assignment_id}/submit', path)
@@ -187,7 +181,6 @@ export function useAnswerDraft(id: string) {
     changed,
     flush,
     resume,
-    passGate,
     submit,
     stop,
   }

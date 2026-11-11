@@ -59,7 +59,7 @@ async function carryOn() {
         <template v-for="(label, i) in INTRO.structure.flow" :key="label">
           <li
             class="rounded-sm border px-2 py-1"
-            :class="label === 'Lock in' ? 'border-action font-semibold text-ink' : 'border-line'"
+            :class="label === 'Check' ? 'border-action font-semibold text-ink' : 'border-line'"
           >
             {{ label }}
           </li>

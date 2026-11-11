@@ -19,9 +19,13 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
 WORKDIR /workspace
 COPY pyproject.toml uv.lock ./
 COPY backend/pyproject.toml backend/
-# Only this member's runtime dependencies: no dev, notebook or script groups.
+# The workspace's library members (packages/*): the backend imports expert-knowledge-core, and uv
+# needs every member's pyproject to read the lockfile.
+COPY packages packages
+# Only this member's runtime dependencies: no dev, notebook or script groups. --no-editable puts
+# expert-knowledge-core into /opt/venv itself, because only /opt/venv reaches the runtime stage.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --package rag-backend --no-default-groups
+    uv sync --frozen --package rag-backend --no-default-groups --no-editable
 
 FROM python:${PYTHON_VERSION}-slim AS runtime
 ENV PATH="/opt/venv/bin:$PATH" \

@@ -20,6 +20,16 @@ services:
               count: all
               capabilities: [gpu]
 
+  # The grammar checker of the proofreading job
+  languagetool:
+    image: erikvl87/languagetool:6.8
+    ports:
+      - "8010:8010"
+    environment:
+      Java_Xms: 512m
+      Java_Xmx: 1g
+    restart: unless-stopped
+
   postgres:
     image: pgvector/pgvector:pg16
     ports:
@@ -108,11 +118,14 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
       OLLAMA_BASE_URL: http://ollama:11434
+      LANGUAGETOOL_URL: http://languagetool:8010
       S3_ENDPOINT_URL: http://minio:9000
       S3_BUCKET: ${S3_BUCKET:-documents}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-rag-app}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-rag-app-secret}
       S3_REGION: ${S3_REGION:-us-east-1}
+      # `npm run dev` inside this container: the API is the rag-backend service, not localhost.
+      VITE_API_PROXY_TARGET: http://rag-backend:8000
       PYTHONPATH: /workspace/backend
       # Keeps ~/.claude.json inside the claude-config volume too, not just ~/.claude.
       # TODO: DELETE LATER
@@ -152,6 +165,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
     volumes:
       - ./backend:/workspace/backend
+      - ./packages:/workspace/packages
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,6 +191,7 @@ services:
       S3_REGION: ${S3_REGION:-us-east-1}
     volumes:
       - ./backend:/workspace/backend
+      - ./packages:/workspace/packages
     depends_on:
       postgres:
         condition: service_healthy
@@ -188,8 +203,10 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  # Runs the background jobs: filing the answers (the classifier), building units, ingesting the
-  # approved ones (embeddings). Needs Ollama with the models in .env (CLASSIFIER_MODEL) and bge-m3.
+  # Runs the background jobs: proofreading and linking the answers (LanguageTool, the classifier and
+  # the enhancement model), cutting the approved ones into units, ingesting them (embeddings). Needs
+  # Ollama with the models in .env (CLASSIFIER_MODEL, ENHANCE_MODEL) and bge-m3. Without
+  # LanguageTool the grammar pass is skipped, not failed.
   worker:
     profiles: [app]
     build:
@@ -201,8 +218,10 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag}@postgres:5432/${POSTGRES_DB:-rag}
       OLLAMA_BASE_URL: http://ollama:11434
+      LANGUAGETOOL_URL: http://languagetool:8010
     volumes:
       - ./backend:/workspace/backend
+      - ./packages:/workspace/packages
       # Next to backend/, where settings.project_root looks for them.
       - ./prompts:/workspace/prompts:ro
       - ./config:/workspace/config:ro
@@ -212,6 +231,8 @@ services:
       migrate:
         condition: service_completed_successfully
       ollama:
+        condition: service_started
+      languagetool:
         condition: service_started
     restart: unless-stopped
 
@@ -234,7 +255,7 @@ services:
       - rag-backend
     restart: unless-stopped
 
-  # Headless browser for Claude Code (Playwright MCP over HTTP). Drives the app through the compose
+  # Headless browser for Playwright MCP. Drives the app through the compose
   # network: http://frontend:5173. Start: docker compose --profile app --profile browser up -d
   # Register once, inside the dev container: claude mcp add --transport http playwright http://playwright:8931/mcp
   playwright:

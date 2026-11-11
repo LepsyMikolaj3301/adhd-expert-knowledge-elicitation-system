@@ -31,6 +31,7 @@ def vignette_body(code: str | None = None, **overrides: Any) -> dict[str, Any]:
         "text": VIGNETTE_TEXT,
         "framing": "personal_journal",
         "q4_whatif": WHATIF,
+        "patient_summary": "A woman in her thirties writing about her week.",
         "design": {
             "purpose": DESIGN_SECRET,
             "planted_cues": [{"quote": CUE, "trait": "task avoidance", "strength": "moderate"}],
@@ -126,7 +127,7 @@ async def assign(admin: Api, version: dict[str, Any], *experts: Api) -> list[str
     return [assignment["id"] for assignment in created]
 
 
-GATE_ANSWERS = {
+OPEN_ANSWERS = {
     "Q1": f'"{CUE}" reads as avoidance of the task rather than ordinary tidiness.',
     "Q2": "Could equally be sleep loss after the recent move, not a trait.",
     "Q3": "Longitudinal history, childhood onset and how other life domains are affected.",
@@ -147,8 +148,8 @@ def highlight(chip: int, quote: str = CUE, direction: str | None = "toward") -> 
     }
 
 
-FULL_PAYLOAD = {
-    "answers": {**GATE_ANSWERS, "Q4": Q4_WHY, "Q5": Q5_ANSWER},
+FULL_PAYLOAD: dict[str, Any] = {
+    "answers": {**OPEN_ANSWERS, "Q4": Q4_WHY, "Q5": Q5_ANSWER},
     "highlights": [highlight(1)],
     "q4": {"hypothesis": HYPOTHESIS, "shift": 1, "toward": "less_adhd"},
     "rating": 2,
@@ -168,10 +169,9 @@ async def save(expert: Api, assignment_id: str, payload: dict[str, Any]) -> int:
 async def answer_and_submit(
     expert: Api, assignment_id: str, payload: dict[str, Any] | None = None
 ) -> None:
+    """Answers and submits for proofreading."""
     payload = payload if payload is not None else FULL_PAYLOAD
     await expert.ok("POST", f"/assignments/{assignment_id}/start")
-    await save(expert, assignment_id, {"answers": GATE_ANSWERS})
-    await expert.ok("POST", f"/assignments/{assignment_id}/pass-gate")
     await save(expert, assignment_id, payload)
     await expert.ok("POST", f"/assignments/{assignment_id}/submit")
 
@@ -183,45 +183,66 @@ async def run_jobs() -> int:
     return count
 
 
+async def proofread(expert: Api, assignment_id: str) -> dict[str, Any]:
+    """Runs the proofreading and returns what the author is shown."""
+    await run_jobs()
+    return await expert.ok("GET", f"/assignments/{assignment_id}/proofread")
+
+
+async def save_proofread(
+    expert: Api,
+    assignment_id: str,
+    answers: dict[str, str],
+    overrides: dict[str, dict[str, list[str]]] | None = None,
+) -> dict[str, Any]:
+    current = await expert.ok("GET", f"/assignments/{assignment_id}/proofread")
+    return await expert.ok(
+        "PUT",
+        f"/assignments/{assignment_id}/proofread",
+        json={"version": current["version"], "answers": answers, "overrides": overrides or {}},
+    )
+
+
+async def to_review(expert: Api, assignment_id: str) -> dict[str, Any]:
+    """Carries a submitted assignment through proofreading into review."""
+    await proofread(expert, assignment_id)
+    return await expert.ok("POST", f"/assignments/{assignment_id}/submit-for-review")
+
+
 async def reach_review(admin: Api, *experts: Api) -> tuple[list[str], dict[str, Any]]:
     """Assign one published version to the experts, then take each one up to review."""
     version = await published_version(admin)
     ids = await assign(admin, version, *experts)
     for expert, assignment_id in zip(experts, ids, strict=True):
         await answer_and_submit(expert, assignment_id)
-        await run_jobs()
-        await expert.ok("POST", f"/assignments/{assignment_id}/expert-check/skip")
-        await run_jobs()
+        await to_review(expert, assignment_id)
     return ids, version
 
 
-async def decide_all(api: Api, assignment_id: str, decision: str = "approve") -> Any:
-    units = await api.ok("GET", f"/assignments/{assignment_id}/units")
+async def decide_all(
+    api: Api, assignment_id: str, decision: str = "approve", comment: str | None = None
+) -> Any:
+    answers = await api.ok("GET", f"/assignments/{assignment_id}/answers")
     return await api.ok(
         "POST",
-        f"/assignments/{assignment_id}/unit-decisions",
-        json={"decisions": [{"unit_id": u["id"], "decision": decision} for u in units]},
+        f"/assignments/{assignment_id}/answer-decisions",
+        json={
+            "decisions": [
+                {"question_id": a["question_id"], "decision": decision, "comment": comment}
+                for a in answers["answers"]
+            ]
+        },
     )
-
-
-async def to_units(admin, expert, assignment_id, skip=False):
-    """Carry a submitted assignment through processing and the check to its built units."""
-    await run_jobs()
-    verb = "skip" if skip else "complete"
-    await (admin if skip else expert).ok(
-        "POST", f"/assignments/{assignment_id}/expert-check/{verb}"
-    )
-    await run_jobs()
 
 
 async def two_experts():
-    """e1 and e2 have both finished, so both are in review and each can read the other's units."""
+    """e1 and e2 have both finished, so both are in review and each can read the other's."""
     admin = await admin_api()
     e1, e2 = await expert_api("e1@example.com"), await expert_api("e2@example.com")
     version = await published_version(admin)
     first, second = await assign(admin, version, e1, e2)
     await answer_and_submit(e1, first)
-    await to_units(admin, e1, first, skip=True)
+    await to_review(e1, first)
     await answer_and_submit(e2, second)
-    await to_units(admin, e2, second)
+    await to_review(e2, second)
     return admin, e1, e2, first, second

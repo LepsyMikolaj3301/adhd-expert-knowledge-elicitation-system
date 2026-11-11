@@ -12,11 +12,19 @@ import re
 from collections import Counter
 
 from pgvector import SparseVector
+from pydantic import BaseModel, ConfigDict, Field
 from snowballstemmer import stemmer as snowball
 
-from app.indexing.config import Bm25Config
+DIMENSIONS = 1 << 20  # must match the sparsevec(1048576) columns (chunks.sparse, chips.*)
 
-DIMENSIONS = 1 << 20  # must match chunks.sparse in backend/db/init.sql
+
+class Bm25Config(BaseModel):
+    model_config = ConfigDict(extra="forbid")  # a typo in the YAML fails on load
+
+    k1: float = Field(1.2, gt=0)
+    b: float = Field(0.75, ge=0, le=1)
+    stemmer: str | None = "english"  # a Snowball language, or null for no stemming
+
 
 _STOP_TEXT = (
     "a an and are as at be been but by for from had has have he her his i if in into is it its "
