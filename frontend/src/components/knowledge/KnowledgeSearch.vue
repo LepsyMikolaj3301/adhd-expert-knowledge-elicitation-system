@@ -111,7 +111,7 @@ function pick(value: KnowledgeSearchMode) {
           <p class="mb-1 flex flex-wrap items-baseline gap-x-4 text-sm">
             <span class="font-medium text-ink">#{{ h.rank }}</span>
             <span data-testid="similarity"
-              >Similarity {{ h.similarity === null ? '–' : h.similarity.toFixed(2) }}</span
+              >Similarity {{ h.similarity === null ? '-' : h.similarity.toFixed(2) }}</span
             >
             <span class="text-muted">Platform score {{ h.score.toFixed(4) }}</span>
           </p>

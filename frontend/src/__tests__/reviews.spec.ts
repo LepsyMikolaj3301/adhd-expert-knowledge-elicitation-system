@@ -1,9 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import type { ReviewItem, User } from '@/api/client'
-import { activityText, describeAdminError, describeError, speakerLabel } from '@/copy'
+import {
+  activityText,
+  commentExcerpt,
+  describeAdminError,
+  describeError,
+  speakerLabel,
+} from '@/copy'
 import { ApiError } from '@/api/client'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
@@ -16,6 +22,13 @@ import { admin, expert, jsonResponse, stubFetch } from './helpers'
 
 let wrapper: VueWrapper | undefined
 afterEach(() => wrapper?.unmount())
+// jsdom has no layout, and focusing a comment box scrolls the cursor into view.
+beforeAll(() => {
+  const noRects = () => [] as unknown as DOMRectList
+  Range.prototype.getClientRects = noRects
+  Element.prototype.getClientRects = noRects
+  Range.prototype.getBoundingClientRect = () => new DOMRect()
+})
 beforeEach(() => setActivePinia(createPinia()))
 
 function logIn(user: User) {
@@ -105,6 +118,11 @@ describe('wording', () => {
     expect(describeAdminError(err('http_error'))).toContain('Your text is safe')
   })
 
+  it('shows a quote in a comment excerpt as words, not as its stored token', () => {
+    expect(commentExcerpt('See ⟦h2⟧ and ⟦h10⟧')).toBe('See [Quote 2] and [Quote 10]')
+    expect(commentExcerpt('Cut off at ⟦h1…')).toBe('Cut off at …')
+  })
+
   it('names speakers by role, and never calls a feed item by its kind', () => {
     expect(speakerLabel({ kind: 'author', pseudonym: null })).toBe('Author')
     expect(speakerLabel({ kind: 'reviewer', pseudonym: 'E07' })).toBe('E07')
@@ -169,6 +187,33 @@ describe('ReviewsView', () => {
       '/reviews/new',
     ])
     expect(wrapper!.text()).toContain('E03')
+  })
+
+  it('shows experts a blind author column and filters by case and author', async () => {
+    logIn(expert)
+    stubFetch(() =>
+      jsonResponse(200, [
+        review({ assignment_id: 'a1', vignette_code: 'V001' }),
+        review({ assignment_id: 'a2', vignette_code: 'V002' }),
+        review({ assignment_id: 'a3', vignette_code: 'V002', relation: 'author' }),
+      ]),
+    )
+    mountView(ReviewsView)
+    await flushPromises()
+    const authors = () => wrapper!.findAll('[data-testid="author"]').map((a) => a.text())
+    expect(authors()).toEqual(['Anonymous', 'Anonymous', 'You'])
+
+    await wrapper!.get('[data-testid="filter-case"]').setValue('V002')
+    expect(wrapper!.findAll('[data-testid="review"] a').map((a) => a.attributes('href'))).toEqual([
+      '/reviews/a2',
+      '/reviews/a3',
+    ])
+    await wrapper!.get('[data-testid="filter-author"]').setValue('You')
+    expect(authors()).toEqual(['You'])
+    expect(wrapper!.get('[data-testid="filter-count"]').text()).toBe('Showing 1 of 3')
+
+    await wrapper!.get('[data-testid="clear-filters"]').trigger('click')
+    expect(authors()).toHaveLength(3)
   })
 })
 
@@ -256,8 +301,10 @@ describe('ReviewView', () => {
     await bar.findAll('button')[0]!.trigger('click')
     await flushPromises()
     const after = wrapper!.get('[data-testid="votes"]')
-    expect(after.text()).toContain('1 approve, 0 disapprove')
     expect(after.findAll('button')[0]!.attributes('aria-pressed')).toBe('true')
+    const tally = wrapper!.get('[data-testid="tally"]')
+    expect(tally.attributes('aria-label')).toBe('1 approve, 0 disapprove')
+    expect(tally.text().replace(/\s+/g, ' ')).toBe('1 0')
   })
 
   it('keeps a comment that could not be posted', async () => {
@@ -268,15 +315,118 @@ describe('ReviewView', () => {
       if (url.endsWith('/answers')) return jsonResponse(200, answers())
       return jsonResponse(200, peer)
     })
+    wrapper = mount(ReviewView, {
+      props: { id: 'a1' },
+      global: { plugins: [router] },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    await wrapper.get('[data-testid="discussion-toggle"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="add-reference"]').trigger('click')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('already decided')
+    expect(wrapper.find('[data-testid="composer"] [data-chip="1"]').exists()).toBe(true)
+  })
+
+  it('folds the discussion away, and opens it from a link to the answer', async () => {
+    logIn(expert)
+    server(true)
     mountView(ReviewView, { id: 'a1' })
     await flushPromises()
-    await wrapper!.get('textarea').setValue('My careful thought')
-    await wrapper!.get('form').trigger('submit')
+    const toggle = wrapper!.get('[data-testid="discussion-toggle"]')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(wrapper!.find('[data-testid="discussion"]').exists()).toBe(false)
+    await toggle.trigger('click')
+    expect(wrapper!.find('[data-testid="discussion"]').exists()).toBe(true)
+    wrapper!.unmount()
+
+    await router.push('/reviews/a1#answer-Q1')
+    mountView(ReviewView, { id: 'a1' })
     await flushPromises()
-    expect(wrapper!.get('[role="alert"]').text()).toContain('already decided')
-    expect((wrapper!.get('textarea').element as HTMLTextAreaElement).value).toBe(
-      'My careful thought',
+    expect(wrapper!.find('[data-testid="discussion"]').exists()).toBe(true)
+    await router.push('/')
+  })
+
+  it('keeps a clicked quote lit in the text until it is clicked again', async () => {
+    logIn(expert)
+    server(true)
+    mountView(ReviewView, { id: 'a1' })
+    await flushPromises()
+    const tag = wrapper!.get('[data-testid="quote-tag"]')
+    await tag.trigger('mouseover')
+    await tag.trigger('click')
+    await tag.trigger('mouseout')
+    expect(tag.attributes('aria-pressed')).toBe('true')
+    expect(wrapper!.get('[data-testid="vignette-text"] mark').text()).toBe('patient')
+    await tag.trigger('click')
+    expect(wrapper!.find('[data-testid="vignette-text"] mark').exists()).toBe(false)
+  })
+
+  it('puts a quote into the comment from the answer or the quote table, and posts it', async () => {
+    logIn(expert)
+    const fetch = stubFetch((url) => {
+      if (url.endsWith('/comments')) return new Response(null, { status: 201 })
+      if (url.endsWith('/answers')) return jsonResponse(200, answers())
+      return jsonResponse(200, peer)
+    })
+    wrapper = mount(ReviewView, {
+      props: { id: 'a1' },
+      global: { plugins: [router] },
+      attachTo: document.body,
+    })
+    await flushPromises()
+    // The table only adds to a comment while a comment box is open.
+    expect(wrapper.get('[data-testid="add-reference"]').attributes('aria-label')).toContain(
+      'Show quote 1',
     )
+    await wrapper.get('[data-testid="quote-to-comment"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="quote-notice"]').text()).toBe(
+      'Quote 1 added to your comment on question 1.',
+    )
+    expect(wrapper.get('[data-testid="add-reference"]').attributes('aria-label')).toContain(
+      'to your comment',
+    )
+    await wrapper.get('[data-testid="add-reference"]').trigger('click')
+    expect(wrapper.findAll('[data-testid="composer"] [data-chip="1"]')).toHaveLength(2)
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    const post = fetch.mock.calls
+      .map(([input]) => input)
+      .find((i) => i instanceof Request && i.method === 'POST') as Request
+    expect((await post.json()).body).toBe('⟦h1⟧ ⟦h1⟧ ')
+  })
+
+  it('shows a quote in a posted comment as a chip', async () => {
+    logIn(expert)
+    stubFetch((url) => {
+      if (url.endsWith('/answers'))
+        return jsonResponse(
+          200,
+          answers([
+            {
+              id: 'c1',
+              question_id: 'Q1',
+              parent_id: null,
+              stance: 'challenge',
+              body: 'Look at ⟦h1⟧ again.',
+              created_at: '2026-11-04T10:00:00Z',
+              speaker: { kind: 'reviewer', pseudonym: null },
+              is_mine: false,
+            },
+          ]),
+        )
+      return jsonResponse(200, peer)
+    })
+    mountView(ReviewView, { id: 'a1' })
+    await flushPromises()
+    expect(wrapper!.get('[data-testid="discussion-toggle"]').text()).toContain('1 comment')
+    await wrapper!.get('[data-testid="discussion-toggle"]').trigger('click')
+    const body = wrapper!.get('[data-testid="comment-body"]')
+    expect(body.text()).toBe('Look at 1 again.')
+    expect(body.get('.chip').attributes('data-chip')).toBe('1')
   })
 
   it('lets the admin decide only once every answer has a decision', async () => {
@@ -314,7 +464,10 @@ describe('ReviewView', () => {
     await flushPromises()
     const submit = wrapper!.findAll('button').find((b) => b.text() === 'Submit decisions')!
     expect(submit.attributes('disabled')).toBeDefined()
-    await wrapper!.get('input[value="request_changes"]').setValue()
+    await wrapper!.get('[data-decision="request_changes"]').trigger('click')
+    expect(wrapper!.get('[data-decision="request_changes"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
     expect(submit.attributes('disabled')).toBeDefined() // the comment is required
     await wrapper!.get('textarea[aria-label="What should change"]').setValue('Say more about sleep')
     expect(submit.attributes('disabled')).toBeUndefined()

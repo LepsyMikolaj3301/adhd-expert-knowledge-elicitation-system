@@ -47,9 +47,9 @@ async function load() {
     <template v-else-if="person.audience === 'admin'">
       <p class="font-medium text-ink">{{ person.display_name }}</p>
       <p class="text-muted">
-        {{ person.email }} · {{ person.role }}
-        <template v-if="person.is_synthetic"> · synthetic</template>
-        <template v-if="!person.is_active"> · deactivated</template>
+        {{ person.email }} | {{ person.role }}
+        <template v-if="person.is_synthetic"> | synthetic</template>
+        <template v-if="!person.is_active"> | deactivated</template>
       </p>
       <p>
         Cases: {{ person.cases.open }} open, {{ person.cases.in_review }} in review,

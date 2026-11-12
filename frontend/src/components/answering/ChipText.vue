@@ -3,13 +3,18 @@ import { computed } from 'vue'
 
 import { CHIP_RE, inkFor } from '@/answering/highlights'
 import { listMarker } from '@/answering/listLines'
-import { useQuoteFocus } from '@/answering/quoteFocus'
+import { togglePin, useQuoteFocus, useQuotePin } from '@/answering/quoteFocus'
 
 const props = defineProps<{ text: string }>()
 const emit = defineEmits<{ active: [chip: number | null] }>()
 
 /** Pointing at a chip lights its passage up wherever the page shows the case text. */
 const focus = useQuoteFocus()
+/** Where the page keeps a clicked quote lit (the review), a chip can be clicked. */
+const pin = useQuotePin()
+const pinnable = pin !== null
+const isPinned = (chip: number) => pin?.value === `h${chip}`
+const togglePinned = (chip: number) => togglePin(pin, `h${chip}`)
 
 function point(chip: number | null) {
   focus.value = chip === null ? null : `h${chip}`
@@ -51,9 +56,11 @@ const lines = computed(() =>
             class="chip"
             :data-chip="part.chip"
             :style="{ '--ink': inkFor(part.chip) }"
+            :class="{ 'quote-pinned': isPinned(part.chip), 'cursor-pointer': pinnable }"
             :aria-label="`reference ${part.chip}`"
             @mouseover="point(part.chip)"
             @mouseout="point(null)"
+            @click="togglePinned(part.chip)"
             >{{ part.text }}</span
           >
           <template v-else>{{ part.text }}</template>

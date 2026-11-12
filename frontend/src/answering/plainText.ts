@@ -6,7 +6,8 @@ import type { AnswerPayload, QuestionView } from '@/api/client'
 
 import { CHIP_RE } from './highlights'
 
-function readable(text: string): string {
+/** A stored text with each `⟦hN⟧` spelled `[N]`, for places that show plain text. */
+export function readable(text: string): string {
   return text.replace(CHIP_RE, (_match, n: string) => `[${n}]`)
 }
 

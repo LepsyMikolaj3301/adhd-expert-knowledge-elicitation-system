@@ -7,7 +7,7 @@ import HeroBanner from '@/components/HeroBanner.vue'
 import PageIntro from '@/components/PageIntro.vue'
 import PseudonymChip from '@/components/PseudonymChip.vue'
 import SectionCard from '@/components/SectionCard.vue'
-import { activityText, HOME, tallyLabel, TRUST_SENTENCE } from '@/copy'
+import { activityText, commentExcerpt, HOME, tallyLabel, TRUST_SENTENCE } from '@/copy'
 import { navFor } from '@/navigation'
 import { SITE_NAME } from '@/site'
 import { useAuthStore } from '@/stores/auth'
@@ -111,7 +111,7 @@ watch(
                     <span class="flex-1 font-serif text-xl text-ink">
                       Case {{ n.vignette_code }}
                       <span v-if="n.expert_pseudonym" class="font-sans text-base text-muted"
-                        >· <PseudonymChip :pseudonym="n.expert_pseudonym"
+                        >| <PseudonymChip :pseudonym="n.expert_pseudonym"
                       /></span>
                     </span>
                     <button v-if="n.action === 'retry'" type="button" class="btn" @click="retry(n)">
@@ -193,7 +193,7 @@ watch(
                       >Case {{ r.vignette_code }}</RouterLink
                     >
                     <span class="text-base text-muted">
-                      {{ r.state === 'peer_review' ? 'Open' : 'Closed' }} ·
+                      {{ r.state === 'peer_review' ? 'Open' : 'Closed' }} |
                       {{ r.answer_count }} answers
                     </span>
                   </li>
@@ -228,7 +228,9 @@ watch(
               aria-label="New"
             />
             <RouterLink :to="linkFor(a)">{{ activityText(a) }}</RouterLink>
-            <p v-if="a.excerpt" class="mt-1 text-base text-muted">“{{ a.excerpt }}”</p>
+            <p v-if="a.excerpt" class="mt-1 text-base text-muted">
+              “{{ commentExcerpt(a.excerpt) }}”
+            </p>
           </li>
         </ul>
         <button

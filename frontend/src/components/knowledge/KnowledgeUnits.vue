@@ -100,7 +100,7 @@ const cases = computed(() => {
           <span class="font-sans text-sm text-muted"
             >v{{ c.version
             }}<template v-if="c.framing">
-              · {{ FRAMING_LABELS[c.framing] ?? c.framing }}</template
+              | {{ FRAMING_LABELS[c.framing] ?? c.framing }}</template
             ></span
           >
         </h2>

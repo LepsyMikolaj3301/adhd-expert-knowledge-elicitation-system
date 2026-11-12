@@ -18,6 +18,10 @@ const props = defineProps<{
   marked?: boolean
   /** Counts up on every such attempt, so the flash plays again. */
   flashKey?: number
+  /** What a click adds the reference to: "answer" while answering, "comment" in a review. */
+  insertInto?: string
+  /** The quote clicked to stay lit in the text (the review). */
+  pinnedChip?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -25,7 +29,9 @@ const emit = defineEmits<{
   direction: [chip: number, direction: Direction]
   insert: [chip: number]
   remove: [chip: number]
+  pin: [chip: number]
 }>()
+const into = computed(() => props.insertInto ?? 'answer')
 
 const rows = ref<HTMLElement>()
 /** Quotes the expert can still give a direction that have none. */
@@ -70,7 +76,10 @@ function shortQuote(text: string): string {
  */
 function pick(chip: number) {
   if (props.canInsert) emit('insert', chip)
-  else emit('active', chip)
+  else {
+    emit('active', chip)
+    emit('pin', chip)
+  }
 }
 
 function onDirection(chip: number, event: Event) {
@@ -131,6 +140,12 @@ watch(
           Click a quote to add it to your answer at the cursor. Point at it to find it in the text.
         </template>
         <template v-else>Click a quote to find it in the text.</template>
+      </p>
+      <p v-else class="mt-1 text-sm text-muted" data-testid="quotes-hint">
+        <template v-if="canInsert">
+          Click a quote to add it to your {{ into }}, or select words in the case.
+        </template>
+        <template v-else>Click a quote to keep it lit in the text.</template>
       </p>
       <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
         <table class="w-full border-collapse text-left text-sm">
@@ -205,13 +220,18 @@ watch(
                   data-testid="add-reference"
                   :aria-label="
                     canInsert
-                      ? `Add reference ${citation.chip} to your answer: ${shortQuote(citation.text)}`
+                      ? `Add reference ${citation.chip} to your ${into}: ${shortQuote(citation.text)}`
                       : `Show quote ${citation.chip} in the text: ${shortQuote(citation.text)}`
                   "
                   @mousedown.prevent
                   @click="pick(citation.chip)"
                 >
-                  <span class="chip mt-0.5 text-base" aria-hidden="true">{{ citation.chip }}</span>
+                  <span
+                    class="chip mt-0.5 text-base"
+                    :class="{ 'quote-pinned': pinnedChip === citation.chip }"
+                    aria-hidden="true"
+                    >{{ citation.chip }}</span
+                  >
                   <span class="min-w-0 flex-1">
                     <span class="line-clamp-2 font-serif text-[0.95rem]">
                       “{{ citation.text }}”
@@ -229,7 +249,7 @@ watch(
                     class="hidden shrink-0 pt-0.5 text-xs whitespace-nowrap text-action xl:block"
                     aria-hidden="true"
                   >
-                    + Add to answer
+                    + Add to {{ into }}
                   </span>
                 </button>
                 <span v-if="editable" class="mt-0.5 flex pl-8 text-sm">

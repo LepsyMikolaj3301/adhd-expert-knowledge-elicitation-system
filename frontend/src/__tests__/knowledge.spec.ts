@@ -152,7 +152,7 @@ describe('Knowledge base: units', () => {
     const sentences = view()
       .findAll('[data-testid="sentence"]')
       .map((s) => s.text())
-    expect(sentences).toEqual(['Q1.1 · cited by the expert', 'Q2.1 · filed by the model'])
+    expect(sentences).toEqual(['Q1.1 | cited by the expert', 'Q2.1 | filed by the model'])
     expect(view().get('[data-testid="context"]').text()).toContain('h2 “sleep loss”')
     expect(view().get('[data-testid="unit-direction"]').text()).toBe('Points toward ADHD traits')
     expect(view().get('[data-testid="embedded"]').text()).toContain('qwen3.5:9b')

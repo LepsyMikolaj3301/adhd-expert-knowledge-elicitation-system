@@ -28,7 +28,7 @@ defineProps<{
         <slot>Case {{ code }}{{ version ? ` v${version}` : '' }}</slot>
       </button>
     </template>
-    <p class="text-muted">{{ FRAMING_LABELS[framing] ?? framing }} · {{ wordCount }} words</p>
+    <p class="text-muted">{{ FRAMING_LABELS[framing] ?? framing }} | {{ wordCount }} words</p>
     <p v-if="patientSummary" class="text-ink" data-testid="case-summary">{{ patientSummary }}</p>
     <p class="font-serif text-ink" data-testid="case-opening">{{ opening }}</p>
   </InfoPopover>

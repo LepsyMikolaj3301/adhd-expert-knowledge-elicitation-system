@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { inkOf, useQuoteFocus } from '@/answering/quoteFocus'
+import { inkOf, togglePin, useQuoteFocus, useQuotePin } from '@/answering/quoteFocus'
 import type { LinkedHighlight } from '@/api/client'
 import { quoteTagLabel } from '@/copy'
 
@@ -17,6 +17,10 @@ const props = defineProps<{
 defineEmits<{ toggle: [] }>()
 
 const focus = useQuoteFocus()
+const pin = useQuotePin()
+const pinnable = pin !== null
+const pinned = computed(() => props.target !== 'case' && pin?.value === props.target)
+const togglePinned = () => togglePin(pin, props.target)
 const highlight = computed(() => props.highlights.find((h) => h.id === props.target) ?? null)
 const label = computed(() => quoteTagLabel(props.target, highlight.value))
 const ink = computed(() =>
@@ -44,6 +48,24 @@ function point(on: boolean) {
     @focus="point(true)"
     @blur="point(false)"
     @click="$emit('toggle')"
+  >
+    {{ label }}
+  </button>
+  <!-- Where the page keeps a clicked quote lit, the tag is a button that pins it. -->
+  <button
+    v-else-if="pinnable && target !== 'case'"
+    type="button"
+    class="quote-tag cursor-pointer hover:border-text/60"
+    :class="{ 'quote-pinned': pinned }"
+    :style="{ backgroundColor: ink }"
+    :title="highlight ? `“${highlight.text}”` : undefined"
+    :aria-pressed="pinned"
+    data-testid="quote-tag"
+    @mouseover="point(true)"
+    @mouseout="point(false)"
+    @focus="point(true)"
+    @blur="point(false)"
+    @click="togglePinned"
   >
     {{ label }}
   </button>

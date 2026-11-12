@@ -529,3 +529,18 @@ export const ASSIGNMENT_STATE_LABELS: Record<AssignmentSummary['state'], string>
   rejected: 'Rejected',
   cancelled: 'Cancelled',
 }
+
+/** When a comment was posted, short: "12 Nov, 14:05". */
+export function postedAt(iso: string): string {
+  return new Date(iso).toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/** A comment's opening words in the feed: a quote reads "[Quote 2]", not its stored token. */
+export function commentExcerpt(text: string): string {
+  return text.replace(/⟦h(\d+)⟧/g, '[Quote $1]').replace(/⟦h?\d*…$/, '…')
+}

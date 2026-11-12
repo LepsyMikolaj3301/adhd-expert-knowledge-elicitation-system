@@ -14,10 +14,16 @@ import { docToText, textToDoc } from '@/answering/chipDoc'
 import { inkFor } from '@/answering/highlights'
 import { listMarker, nextMarker } from '@/answering/listLines'
 
-const props = defineProps<{ modelValue: string; label: string }>()
+const props = defineProps<{
+  modelValue: string
+  label: string
+  /** A comment box: a few lines high instead of an answer's eleven. */
+  compact?: boolean
+}>()
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   active: [chip: number | null]
+  focus: []
 }>()
 
 /** A citation inside an answer: one unit that the cursor steps over and backspace removes whole. */
@@ -106,7 +112,7 @@ const editor = useEditor({
   extensions: [Document, Paragraph, Text, Chip, UndoRedo, ListLines],
   editorProps: {
     attributes: {
-      class: 'chip-editor',
+      class: props.compact ? 'chip-editor min-h-24' : 'chip-editor',
       role: 'textbox',
       'aria-multiline': 'true',
       'aria-label': props.label,
@@ -114,6 +120,7 @@ const editor = useEditor({
   },
   onFocus: () => {
     hasBeenFocused = true
+    emit('focus')
   },
   onUpdate: ({ editor: current }) => emit('update:modelValue', docToText(current.getJSON())),
 })
@@ -174,7 +181,15 @@ function focusEnd() {
   editor.value?.commands.focus('end')
 }
 
-defineExpose({ insertChip, focusEnd })
+/** Words at the cursor, such as a passage quoted from the case. */
+function insertText(text: string) {
+  const current = editor.value
+  if (!current) return
+  const position = hasBeenFocused ? undefined : 'end'
+  current.chain().focus(position).insertContent({ type: 'text', text }).run()
+}
+
+defineExpose({ insertChip, insertText, focusEnd })
 </script>
 
 <template>

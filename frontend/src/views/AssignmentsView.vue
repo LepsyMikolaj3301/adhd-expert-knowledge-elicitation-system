@@ -275,7 +275,7 @@ onUnmounted(() => {
                   )
                 "
                 class="text-muted"
-                >—</span
+                >-</span
               >
             </span>
           </td>

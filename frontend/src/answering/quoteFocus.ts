@@ -25,6 +25,27 @@ export function useQuoteFocus(): Ref<QuoteId | null> {
   return inject(KEY, null) ?? ref(null)
 }
 
+const PIN: InjectionKey<Ref<QuoteId | null>> = Symbol('quote-pin')
+
+/**
+ * The quote clicked on, which stays lit after the pointer leaves. Pointing at another one shows
+ * that one for as long as it is pointed at. Clicking the pinned one again lets it go.
+ */
+export function provideQuotePin(): Ref<QuoteId | null> {
+  const pin = ref<QuoteId | null>(null)
+  provide(PIN, pin)
+  return pin
+}
+
+/** The page's pin, or null where nothing provides one: clicking then does nothing. */
+export function useQuotePin(): Ref<QuoteId | null> | null {
+  return inject(PIN, null)
+}
+
+export function togglePin(pin: Ref<QuoteId | null> | null, id: QuoteId) {
+  if (pin) pin.value = pin.value === id ? null : id
+}
+
 /** The focus as a chip number, for screens that only know the expert's own quotes. */
 export function chipFocus(focus: Ref<QuoteId | null>) {
   return computed<number | null>({

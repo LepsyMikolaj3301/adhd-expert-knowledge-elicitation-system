@@ -29,7 +29,7 @@ describe('CaseCard', () => {
     await wrapper.get('[data-testid="case-trigger"]').trigger('click')
     expect(wrapper.get('[data-testid="case-summary"]').text()).toBe('A student before an exam.')
     expect(wrapper.get('[data-testid="case-opening"]').text()).toBe('I could not sleep…')
-    expect(wrapper.text()).toContain('Email · 130 words')
+    expect(wrapper.text()).toContain('Email | 130 words')
 
     await wrapper.get('[data-testid="case-trigger"]').trigger('click')
     expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(false)

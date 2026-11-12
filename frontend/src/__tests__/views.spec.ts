@@ -226,7 +226,7 @@ describe('AssignmentsView', () => {
     )
     const wrapper = mountView(AssignmentsView)
     await flushPromises()
-    expect(wrapper.get('[data-testid="actions"]').text()).toBe('—')
+    expect(wrapper.get('[data-testid="actions"]').text()).toBe('-')
     wrapper.unmount()
   })
 

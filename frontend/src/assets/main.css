@@ -13,6 +13,8 @@
   --color-action: #2459c9;
   --color-action-hover: #1b479f;
   --color-danger: #b3261e;
+  --color-success: #1f7a4d;
+  --color-warn: #a35a00;
 
   --font-serif: 'Newsreader Variable', Georgia, serif;
   --font-sans: 'Instrument Sans Variable', system-ui, sans-serif;
@@ -30,6 +32,11 @@
   --ink-8: #e8cfa6;
   /* Words the expert quoted in an answer without marking them: no number, so no colour of its own. */
   --ink-0: #dde3ee;
+  /* A quote that was clicked: it stays lit in the case text until clicked again. */
+  .quote-pinned {
+    @apply outline-2 outline-offset-1 outline-text/70;
+  }
+
   /* What proofreading changed: added words, removed words. */
   --diff-added: #cdeedb;
   --diff-removed: #f8d3cf;

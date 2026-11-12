@@ -2,7 +2,8 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { chipFocus, markFor, provideQuoteFocus } from '@/answering/quoteFocus'
+import { provideCommentSink, quoted } from '@/answering/commentSink'
+import { chipFocus, markFor, provideQuoteFocus, provideQuotePin } from '@/answering/quoteFocus'
 import {
   api,
   ApiError,
@@ -12,31 +13,21 @@ import {
   type ReviewAnswer,
   type ReviewAnswersView,
 } from '@/api/client'
-import AnswerThread from '@/components/answering/AnswerThread.vue'
 import CasePanel from '@/components/answering/CasePanel.vue'
-import ChipText from '@/components/answering/ChipText.vue'
 import CitationTable from '@/components/answering/CitationTable.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
-import QuoteTag from '@/components/answering/QuoteTag.vue'
+import DecisionButtons, { type Decision } from '@/components/answering/DecisionButtons.vue'
+import ReviewAnswerCard from '@/components/answering/ReviewAnswerCard.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
-import { CASE_TEXT, describeError, questionLabel, reviewOutcome, tallyLabel } from '@/copy'
+import { CASE_TEXT, describeError, reviewOutcome } from '@/copy'
 
 const REFRESH_MS = 30_000
-type Decision = 'approve' | 'reject' | 'request_changes'
-const DECISIONS: [Decision, string][] = [
-  ['approve', 'Approve'],
-  ['reject', 'Reject'],
-  ['request_changes', 'Request changes'],
-]
-const DECISION_LABEL: Record<Decision, string> = {
-  approve: 'Approved',
-  reject: 'Rejected',
-  request_changes: 'Changes requested',
-}
 
 const props = defineProps<{ id: string }>()
 const route = useRoute()
 const focus = provideQuoteFocus()
+const pin = provideQuotePin()
+const sink = provideCommentSink()
 
 type AssignmentView = NonNullable<Awaited<ReturnType<typeof fetchView>>>
 const view = ref<AssignmentView | null>(null)
@@ -63,8 +54,25 @@ const audience = computed(() => view.value?.audience)
 const code = computed(() => view.value?.vignette.code ?? '')
 const caseText = computed(() => view.value?.vignette.text ?? '')
 const summary = computed(() => view.value?.vignette.patient_summary ?? '')
-const activeMark = computed(() => markFor(focus.value, highlights.value))
+/** Pointing at a quote shows it; otherwise the one clicked on stays lit. */
+const activeMark = computed(() => markFor(focus.value ?? pin.value, highlights.value))
 const activeChip = chipFocus(focus)
+const pinnedChip = chipFocus(pin)
+const authorName = computed(() => {
+  if (audience.value === 'expert') return 'You'
+  if (audience.value === 'admin' && view.value && 'expert_pseudonym' in view.value)
+    return String(view.value.expert_pseudonym)
+  return 'Author'
+})
+const linkedAnswer = route.hash.startsWith('#answer-') ? route.hash.slice('#answer-'.length) : null
+
+function citeFromCase(start: number, end: number) {
+  sink.value?.insertText(quoted(caseText.value.slice(start, end)))
+}
+
+function onKey(event: KeyboardEvent) {
+  if (event.key === 'Escape') pin.value = null
+}
 /** The author's own numbered quotes, as the table showed them while answering. */
 const citations = computed<Citation[]>(() =>
   highlights.value
@@ -166,6 +174,9 @@ const decided = computed(
 )
 const count = (d: Decision) =>
   answers.value.filter((a) => choices.value[a.question_id]?.decision === d).length
+const undecided = computed(
+  () => answers.value.filter((a) => !choices.value[a.question_id]?.decision).length,
+)
 
 async function submitDecisions() {
   confirming.value = false
@@ -191,8 +202,12 @@ async function submitDecisions() {
 onMounted(() => {
   void load()
   timer = setInterval(refresh, REFRESH_MS)
+  document.addEventListener('keydown', onKey)
 })
-onUnmounted(() => clearInterval(timer))
+onUnmounted(() => {
+  clearInterval(timer)
+  document.removeEventListener('keydown', onKey)
+})
 </script>
 
 <template>
@@ -256,123 +271,67 @@ onUnmounted(() => clearInterval(timer))
             :framing="view.vignette.framing"
             :lead="CASE_TEXT.reviewLead"
           >
-            <VignetteText :text="caseText" :active="activeMark" :can-cite="false" />
+            <VignetteText
+              :text="caseText"
+              :active="activeMark"
+              :can-cite="sink !== null"
+              @cite="citeFromCase"
+            />
           </CasePanel>
           <CitationTable
             :citations="citations"
             :editable="false"
-            :can-insert="false"
+            :can-insert="sink !== null"
+            insert-into="comment"
             :counts="{}"
             :pulse-chip="null"
+            :pinned-chip="pinnedChip"
             @active="activeChip = $event"
+            @pin="pinnedChip = pinnedChip === $event ? null : $event"
+            @insert="sink?.insertChip($event)"
           />
         </div>
 
         <ol class="min-w-0 space-y-6">
-          <li
+          <ReviewAnswerCard
             v-for="a in answers"
-            :id="`answer-${a.question_id}`"
             :key="a.question_id"
-            class="card p-4"
-            data-testid="answer"
+            :answer="a"
+            :highlights="highlights"
+            :assignment-id="id"
+            :author-name="authorName"
+            :can-vote="canVote"
+            :can-comment="canComment"
+            :show-voters="audience === 'admin'"
+            :start-open="linkedAnswer === a.question_id"
+            @vote="vote(a, $event)"
+            @posted="refresh"
           >
-            <h2 class="text-base">
-              <span class="mb-0.5 block text-xs font-semibold tracking-wide text-action uppercase">
-                {{ questionLabel(a.question_id) }}
-              </span>
-              {{ a.question }}
-            </h2>
-
-            <ol v-if="a.lines.length" class="mt-3 space-y-1.5" data-testid="lines">
-              <li
-                v-for="(line, index) in a.lines"
-                :key="index"
-                class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1"
-              >
-                <span class="min-w-0 flex-1 leading-relaxed"><ChipText :text="line.text" /></span>
-                <span class="flex flex-wrap gap-1">
-                  <QuoteTag
-                    v-for="target in line.targets"
-                    :key="target"
-                    :target="target"
-                    :highlights="highlights"
-                  />
-                </span>
-              </li>
-            </ol>
-            <p v-else class="mt-3 leading-relaxed"><ChipText :text="a.text" /></p>
-
-            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm" data-testid="votes">
-              <span class="text-muted">{{ tallyLabel(a.approvals, a.disapprovals) }}</span>
-              <template v-if="canVote">
-                <button
-                  v-for="v in ['approve', 'disapprove'] as const"
-                  :key="v"
-                  type="button"
-                  class="!px-3 !py-1"
-                  :class="a.my_vote === v ? 'btn' : 'btn-quiet'"
-                  :aria-pressed="a.my_vote === v"
-                  @click="vote(a, v)"
-                >
-                  {{ v === 'approve' ? 'Approve' : 'Disapprove' }}
-                </button>
-              </template>
-            </div>
-
-            <p v-if="a.decision" class="mt-2 text-sm" data-testid="decision">
-              <strong>{{ DECISION_LABEL[a.decision.decision] }}</strong
-              ><template v-if="a.decision.comment"> — {{ a.decision.comment }}</template>
-            </p>
-
-            <fieldset v-if="canDecide" class="mt-3 text-sm">
-              <legend class="font-medium">Your decision</legend>
-              <label
-                v-for="[value, label] in DECISIONS"
-                :key="value"
-                class="mr-4 inline-flex items-center gap-1.5"
-              >
-                <input
-                  v-model="choice(a).decision"
-                  type="radio"
-                  :name="`d-${a.question_id}`"
-                  :value="value"
-                />
-                {{ label }}
-              </label>
-              <textarea
-                v-if="choice(a).decision"
-                v-model="choice(a).comment"
-                rows="2"
-                class="field"
-                :aria-label="
-                  choice(a).decision === 'request_changes'
-                    ? 'What should change'
-                    : 'A note for the author (optional)'
-                "
-                :placeholder="
-                  choice(a).decision === 'request_changes'
-                    ? 'What should change?'
-                    : 'A note for the author (optional)'
-                "
+            <template v-if="canDecide" #decide>
+              <DecisionButtons
+                v-model:decision="choice(a).decision"
+                v-model:comment="choice(a).comment"
+                :question-id="a.question_id"
               />
-            </fieldset>
-
-            <AnswerThread
-              :assignment-id="id"
-              :question-id="a.question_id"
-              :comments="a.comments"
-              :can-comment="canComment"
-              :can-stance="canVote"
-              @posted="refresh"
-            />
-          </li>
+            </template>
+          </ReviewAnswerCard>
         </ol>
       </div>
 
       <p v-if="!answers.length" class="mt-6 text-muted">There are no answers to read here.</p>
 
-      <div v-if="canDecide" class="mt-6 flex justify-end">
-        <button type="button" class="btn" :disabled="!decided" @click="confirming = true">
+      <div
+        v-if="canDecide && answers.length"
+        class="sticky bottom-0 z-10 mt-6 flex flex-wrap items-center justify-end gap-x-5 gap-y-2 border-t border-line bg-surface/95 px-4 py-3 shadow-[0_-4px_12px_rgb(0_0_0/0.05)] backdrop-blur"
+        data-testid="decision-bar"
+      >
+        <p class="flex flex-wrap gap-x-3 gap-y-1 text-sm">
+          <span class="font-medium text-success">{{ count('approve') }} approve</span>
+          <span class="font-medium text-warn">{{ count('request_changes') }} changes</span>
+          <span class="font-medium text-danger">{{ count('reject') }} reject</span>
+          <span v-if="undecided" class="text-muted">{{ undecided }} to go</span>
+        </p>
+        <button type="button" class="btn !px-6" :disabled="!decided" @click="confirming = true">
           Submit decisions
         </button>
       </div>
