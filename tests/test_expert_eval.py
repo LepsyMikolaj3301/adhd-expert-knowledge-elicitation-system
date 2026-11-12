@@ -2,9 +2,8 @@
 
 import numpy as np
 import pytest
+from elicitation_units import _context_sentence
 from expert_metrics import Item, bootstrap, ceiling, paired_bootstrap, score_query, tokens
-
-from app.elicitation.units import _context_sentence
 
 
 def items(*ids: str, shown: str = "x" * 40) -> list[Item]:

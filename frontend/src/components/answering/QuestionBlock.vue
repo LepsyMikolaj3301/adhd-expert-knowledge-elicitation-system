@@ -53,6 +53,8 @@ const q4Box = ref<InstanceType<typeof Q4Step>>()
 
 defineExpose({
   insertChip: (n: number) => (editor.value ?? q4Box.value)?.insertChip(n),
+  /** Puts the cursor in the answer box; a question with only a rating has none. */
+  focusEnd: () => (editor.value ?? q4Box.value)?.focusEnd(),
 })
 </script>
 

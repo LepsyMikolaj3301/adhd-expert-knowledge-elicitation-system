@@ -11,9 +11,6 @@ from app.reviews.models import (
     AnswerDecision,
     AnswerVote,
     ReviewParticipant,
-    SubmissionVote,
-    UnitComment,
-    UnitDecision,
 )
 from app.users.models import User
 from app.vignettes.models import Vignette, VignetteVersion
@@ -34,9 +31,6 @@ __all__ = [
     "ProofreadRound",
     "ReviewParticipant",
     "Submission",
-    "SubmissionVote",
-    "UnitComment",
-    "UnitDecision",
     "User",
     "Vignette",
     "VignetteVersion",

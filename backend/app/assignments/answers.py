@@ -6,7 +6,7 @@ answered.
 """
 
 import re
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -21,9 +21,6 @@ PAYLOAD_FORMAT = 2
 AnswerText = Annotated[str, Field(max_length=20_000)]
 ShortText = Annotated[str, Field(max_length=2_000)]
 Direction = Literal["toward", "away", "neutral", "unclear"]
-
-# How much of a citation a chip shows when it is rendered as text.
-CHIP_QUOTE_WORDS = 8
 
 
 class Highlight(BaseModel):
@@ -87,17 +84,22 @@ def _check_highlights(highlights: list[Highlight], text: str) -> None:
             )
 
 
+def check_chips(question_id: str, text: str, numbers: set[int]) -> None:
+    """Every chip in `text` points at one of the citations `numbers`."""
+    for chip in map(int, CHIP_RE.findall(text)):
+        if chip not in numbers:
+            raise invalid(
+                "unknown_chip",
+                f"{question_id} cites [{chip}], which is not in your citations.",
+                {"question_id": question_id, "chip": chip},
+            )
+
+
 def _check_citations_complete(payload: AnswerPayload) -> None:
     """Every chip points at a citation, and every citation has a direction."""
     numbers = {highlight.chip for highlight in payload.highlights}
     for question_id, answer in payload.answers.items():
-        for chip in map(int, CHIP_RE.findall(answer)):
-            if chip not in numbers:
-                raise invalid(
-                    "unknown_chip",
-                    f"{question_id} cites [{chip}], which is not in your citations.",
-                    {"question_id": question_id, "chip": chip},
-                )
+        check_chips(question_id, answer, numbers)
     if undirected := [h.chip for h in payload.highlights if h.direction is None]:
         raise invalid(
             "highlight_no_direction",
@@ -114,18 +116,6 @@ def check_draft(payload: AnswerPayload, question_ids: list[str], text: str) -> N
 def count_words(text: str) -> int:
     """Different words, so that "test test test" counts as one. A chip is not a word."""
     return len(set(re.findall(r"\w+", CHIP_RE.sub(" ", text).lower())))
-
-
-def render_chips(answer: str, highlights: list[dict[str, Any]]) -> str:
-    """An answer as plain text: each chip becomes «the first words of its citation…»."""
-    by_chip = {highlight["chip"]: highlight["text"] for highlight in highlights}
-
-    def quote(match: re.Match[str]) -> str:
-        words = by_chip[int(match.group(1))].split()
-        cut = len(words) > CHIP_QUOTE_WORDS
-        return f"«{' '.join(words[:CHIP_QUOTE_WORDS])}{'…' if cut else ''}»"
-
-    return CHIP_RE.sub(quote, answer)
 
 
 def _incomplete(message: str) -> Exception:

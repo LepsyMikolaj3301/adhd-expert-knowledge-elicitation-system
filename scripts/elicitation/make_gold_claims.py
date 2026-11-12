@@ -21,13 +21,13 @@ from pathlib import Path
 from typing import Any
 
 from chips_schema import load_document
+from elicitation_schema import ReferenceClaim, Response, Vignette
 from llm_clients import AwaitingResponse, GenRequest, InboxGenerator
 from make_fixtures import Rejected, fixture_dir, parse_json, write_json
 from prompt_loader import load_prompt
 from pydantic import ValidationError
 
-from app.elicitation.questions import QUESTIONS_BY_ID, describe_shift, render_question
-from app.elicitation.schema import ReferenceClaim, Response, Vignette
+from app.vignettes.questions import QUESTIONS, describe_shift, render_question
 
 ROOT = Path(__file__).resolve().parents[2]
 PROMPT = "Gold_reference_claims.v1"
@@ -36,7 +36,7 @@ PROMPT = "Gold_reference_claims.v1"
 def answers_block(v: Vignette, r: Response) -> str:
     parts = []
     for q in v.question_ids:
-        question = f"{q}: {render_question(QUESTIONS_BY_ID[q], v.q4_whatif)}"
+        question = f"{q}: {render_question(QUESTIONS[q], v.q4_whatif)}"
         if q == "Q4" and r.q4 is not None:
             lines = [question]
             if r.q4.hypothesis:

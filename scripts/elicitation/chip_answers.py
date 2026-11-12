@@ -14,13 +14,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import answer_vignettes as av
-from chips_schema import CHIP_RE, Q1_CHIPS, ChipDocument, ChipResponse, Highlight
+from chips_schema import CHIP_RE, ChipDocument, ChipResponse, Highlight
+from elicitation_schema import ShiftAnswer, Vignette, is_synthetic_id
 from make_fixtures import CHIP_SOURCE, fixture_dir, write_json
 
 from app.assignments.answers import count_words
-from app.elicitation.questions import QUESTIONS_BY_ID, render_question
-from app.elicitation.schema import ShiftAnswer, Vignette, is_synthetic_id
-from app.vignettes.questions import HYPOTHESIS_MIN_WORDS, QUESTION_IDS, QUESTIONS
+from app.vignettes.questions import HYPOTHESIS_MIN_WORDS, QUESTION_IDS, QUESTIONS, render_question
 
 SOURCE = CHIP_SOURCE
 REVIEW = "review"
@@ -71,7 +70,7 @@ def open_session(
 
 
 def question_text(qid: str, v: Vignette) -> str:
-    return Q1_CHIPS if qid == "Q1" else render_question(QUESTIONS_BY_ID[qid], v.q4_whatif)
+    return render_question(QUESTIONS[qid], v.q4_whatif)
 
 
 # --- citations ----------------------------------------------------------------------------------
@@ -85,10 +84,14 @@ def _find_passage(text: str, pasted: str) -> tuple[int, int] | None:
         return None
     start, end = match.span()
     # A selection that stopped inside a word still means the word.
-    while start > 0 and _WORD_CHARACTER.match(text[start]) and _WORD_CHARACTER.match(text[start - 1]):
+    while (
+        start > 0 and _WORD_CHARACTER.match(text[start]) and _WORD_CHARACTER.match(text[start - 1])
+    ):
         start -= 1
     while (
-        end < len(text) and _WORD_CHARACTER.match(text[end - 1]) and _WORD_CHARACTER.match(text[end])
+        end < len(text)
+        and _WORD_CHARACTER.match(text[end - 1])
+        and _WORD_CHARACTER.match(text[end])
     ):
         end += 1
     return start, end
@@ -188,7 +191,7 @@ def _q4_problem(entry: dict) -> str | None:
 
 def step_problem(v: Vignette, entry: dict, qid: str) -> str | None:
     """The first thing stopping the expert from leaving this question, in words they can act on."""
-    kind = QUESTIONS_BY_ID[qid].kind
+    kind = QUESTIONS[qid].kind
     if kind == "shift":
         return _q4_problem(entry)
     if kind == "rating_1_5":

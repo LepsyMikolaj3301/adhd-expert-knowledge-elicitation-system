@@ -4,9 +4,8 @@ import json
 from typing import Any
 
 import make_fixtures
+from elicitation_schema import ElicitationDocument, Vignette
 from llm_clients import GenRequest
-
-from app.elicitation.schema import ElicitationDocument, Vignette
 
 CUE = "tomorrow turns into the next week"
 FAKE_VIGNETTE: dict[str, Any] = {

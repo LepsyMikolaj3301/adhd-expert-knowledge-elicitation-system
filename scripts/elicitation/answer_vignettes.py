@@ -25,30 +25,30 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from make_fixtures import fixture_dir, write_json
-from prompt_toolkit import PromptSession
-from prompt_toolkit.formatted_text import HTML
-
-from app.elicitation.questions import (
-    GATE,
-    Q4_HYPOTHESIS,
-    Q4_TOWARD,
-    Q4_WHY,
-    QUESTIONS_BY_ID,
-    SHIFT_LABELS,
-    SHIFT_LEAD,
-    TOWARD_LABELS,
-    describe_shift,
-    render_question,
-)
-from app.elicitation.schema import (
+from elicitation_schema import (
     ElicitationDocument,
     Response,
     ShiftAnswer,
     Vignette,
     is_synthetic_id,
 )
-from app.elicitation.units import MIN_QUOTE_WORDS, _quotes
+from elicitation_units import MIN_QUOTE_WORDS, _quotes
+from make_fixtures import fixture_dir, write_json
+from prompt_toolkit import PromptSession
+from prompt_toolkit.formatted_text import HTML
+
+from app.vignettes.questions import (
+    GATE,
+    Q4_HYPOTHESIS,
+    Q4_TOWARD,
+    Q4_WHY,
+    QUESTIONS,
+    SHIFT_LABELS,
+    SHIFT_LEAD,
+    TOWARD_LABELS,
+    describe_shift,
+    render_question,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "data/fixtures"
@@ -360,7 +360,7 @@ def ask_line(session: PromptSession, label: str) -> str:
 
 def ask_q4(session: PromptSession, line: PromptSession, v: Vignette, entry: dict) -> None:
     """Q4: hypothesis line, the -2..+2 scale, a direction for +1/+2, a why unless 0."""
-    question = render_question(QUESTIONS_BY_ID["Q4"], v.q4_whatif)
+    question = render_question(QUESTIONS["Q4"], v.q4_whatif)
     print(f"\nQ4: {question}")
     old = entry.get("q4") or {}
     if old.get("hypothesis"):
@@ -400,7 +400,7 @@ def ask_q4(session: PromptSession, line: PromptSession, v: Vignette, entry: dict
 def ask_rating(session: PromptSession) -> tuple[int | None, bool]:
     while True:
         raw = session.prompt(
-            HTML("\n<b>Q6</b> " + QUESTIONS_BY_ID["Q6"].text.replace("&", "&amp;") + "\n&gt; ")
+            HTML("\n<b>Q6</b> " + QUESTIONS["Q6"].text.replace("&", "&amp;") + "\n&gt; ")
         ).strip().lower()  # fmt: skip
         if raw == ":quit":
             raise Quit
@@ -422,7 +422,7 @@ def answer_vignette(
     print(v.text)
     gate = gate_ids(v)
     for qid in v.question_ids:
-        kind = QUESTIONS_BY_ID[qid].kind
+        kind = QUESTIONS[qid].kind
         if qid not in gate and not gate_locked(entry):
             pass_gate(entry)  # every gate question is answered by now
             save()
@@ -432,7 +432,7 @@ def answer_vignette(
             ):
                 continue
             entry["answers"][qid] = ask(
-                session, f"{qid}: {render_question(QUESTIONS_BY_ID[qid], v.q4_whatif)}",
+                session, f"{qid}: {render_question(QUESTIONS[qid], v.q4_whatif)}",
                 required=qid in gate,
             )  # fmt: skip
         elif kind == "shift":
@@ -442,7 +442,7 @@ def answer_vignette(
         elif "rating" not in entry:
             entry["rating"], entry["insufficient"] = ask_rating(session)
         save()
-    open_ids = [q for q in v.question_ids if QUESTIONS_BY_ID[q].kind == "open"]
+    open_ids = [q for q in v.question_ids if QUESTIONS[q].kind == "open"]
     while True:  # review
         locked = gate_locked(entry)
         print("\n" + "-" * 100 + "\nYour answers:")

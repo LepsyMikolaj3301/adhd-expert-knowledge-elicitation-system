@@ -6,7 +6,6 @@ from datetime import timedelta
 from api_helpers import admin_api, answer_and_submit, assign, expert_api, published_version
 from sqlalchemy import select, text
 
-from app.assignments.states import Action
 from app.core.db import session_factory
 from app.jobs import handlers, queue, worker
 from app.jobs.models import Job, JobKind, JobStatus
@@ -68,15 +67,3 @@ async def test_the_heartbeat_keeps_a_long_job_from_being_taken_over(monkeypatch)
     async with session_factory()() as db:
         job = await db.scalar(select(Job))
     assert job is not None and job.status == JobStatus.DONE
-
-
-async def test_a_handler_can_choose_how_its_job_ends(monkeypatch):
-    admin, _, assignment_id = await _submitted()
-
-    async def record(db, assignment, prepared):
-        return Action.PROOFREAD_FAILED
-
-    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, record)
-    await run_once()
-    view = await admin.ok("GET", f"/assignments/{assignment_id}")
-    assert view["state"] == "processing_failed"

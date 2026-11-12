@@ -383,10 +383,10 @@ distractibility, and both said only the pre-bereavement baseline separates them 
 
 ## Code that has to change
 
-- `QuestionId` is a fixed set of literals in [schema.py](../backend/app/elicitation/schema.py) and
-  `QUESTIONS` a fixed tuple in [questions.py](../backend/app/elicitation/questions.py): questions need
+- `QuestionId` is a fixed set of literals in [schema.py](../scripts/elicitation/elicitation_schema.py) and
+  `QUESTIONS` a fixed tuple in [questions.py](../backend/app/vignettes/questions.py): questions need
   to become versioned rows, and a response must record the version it answered.
-- `QUESTION_GIST` is hard-coded in [units.py](../backend/app/elicitation/units.py); the header must come
+- `QUESTION_GIST` is hard-coded in [units.py](../scripts/elicitation/elicitation_units.py); the header must come
   from the question row.
 - `Response.quoted_fragments` (the expert's highlights) is not used by `units.py`; atoms use it as the
   first source of cues.

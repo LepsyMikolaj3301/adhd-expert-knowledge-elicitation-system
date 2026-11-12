@@ -5,7 +5,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 import { api, type UserAdmin } from '@/api/client'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import PseudonymChip from '@/components/PseudonymChip.vue'
-import { describeError } from '@/copy'
+import { describeAdminError } from '@/copy'
 
 const users = ref<UserAdmin[]>([])
 const loading = ref(true)
@@ -14,7 +14,6 @@ const form = ref({
   email: '',
   display_name: '',
   role: 'expert' as UserAdmin['role'],
-  is_synthetic: false,
 })
 const invite = ref<{ name: string; url: string } | null>(null)
 const copied = ref('')
@@ -31,7 +30,7 @@ async function load() {
     const { data } = await api.GET('/api/v1/users')
     users.value = data ?? []
   } catch (e) {
-    error.value = describeError(e)
+    error.value = describeAdminError(e)
   } finally {
     loading.value = false
   }
@@ -43,7 +42,7 @@ async function act(call: () => Promise<void>) {
   try {
     await call()
   } catch (e) {
-    error.value = describeError(e)
+    error.value = describeAdminError(e)
   }
   await load()
 }
@@ -158,12 +157,6 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warn))
         </select>
       </label>
       <button class="btn">Add account</button>
-      <details class="text-sm sm:col-span-4">
-        <summary class="cursor-pointer">Advanced</summary>
-        <label class="mt-2 flex items-center gap-2"
-          ><input v-model="form.is_synthetic" type="checkbox" /> Test account (synthetic)</label
-        >
-      </details>
     </form>
 
     <p v-if="loading" class="mt-6 text-muted">Loading…</p>

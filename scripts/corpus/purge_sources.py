@@ -12,10 +12,10 @@ import asyncio
 from pathlib import Path
 
 import asyncpg
+from sources import load_manifest
+from storage import s3_delete_prefix, s3_list_keys
 
 from app.settings import settings
-from app.sources import load_manifest
-from app.storage import s3_delete_prefix, s3_list_keys
 
 PREFIXES = ("raw/", "parsed/", "chunked/")
 

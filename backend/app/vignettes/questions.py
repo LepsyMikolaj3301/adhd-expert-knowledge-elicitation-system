@@ -1,4 +1,5 @@
-"""The base questions and the wording of the Q4 step. All answers must be given to the same text."""
+"""The six base questions and the wording of the Q4 step. All answers must be given to the same
+text. The one copy: the API, the worker and the scripts all read it."""
 
 from dataclasses import dataclass
 from typing import Literal, get_args
@@ -67,23 +68,36 @@ QUESTIONS: dict[str, Question] = {
 # Like min_words, used by scripts/elicitation only.
 HYPOTHESIS_MIN_WORDS = 3
 
+# Q4-Q6 are shown only once every asked gate question has a non-blank answer; after that the gate
+# answers are locked, so the "hypothesis so far" is not rewritten after seeing the what-if.
+GATE = ("Q1", "Q2", "Q3")
+
+# The wording of the Q4 step, shared by the web app, the terminal and notebook scripts and prompts.
+Q4_HYPOTHESIS = "Your working hypothesis, in one sentence"
+SHIFT_LEAD = "With this, my hypothesis…"
+SHIFT_LABELS = {
+    -2: "is strongly reinforced",
+    -1: "is somewhat reinforced",
+    0: "is unchanged",
+    1: "partly changes",
+    2: "changes completely",
+}
+Q4_TOWARD = "Towards…"
+TOWARD_LABELS = {
+    "more_adhd": "more ADHD-like",
+    "less_adhd": "less ADHD-like",
+    "other": "another explanation",
+}
+Q4_WHY = "Why?"
+
+# What the API sends to the frontend (JSON keys are strings).
 Q4_WORDING = {
-    "hypothesis": "Your working hypothesis, in one sentence",
-    "shift_lead": "With this, my hypothesis…",
-    "shift_labels": {
-        "-2": "is strongly reinforced",
-        "-1": "is somewhat reinforced",
-        "0": "is unchanged",
-        "1": "partly changes",
-        "2": "changes completely",
-    },
-    "toward": "Towards…",
-    "toward_labels": {
-        "more_adhd": "more ADHD-like",
-        "less_adhd": "less ADHD-like",
-        "other": "another explanation",
-    },
-    "why": "Why?",
+    "hypothesis": Q4_HYPOTHESIS,
+    "shift_lead": SHIFT_LEAD,
+    "shift_labels": {str(shift): label for shift, label in SHIFT_LABELS.items()},
+    "toward": Q4_TOWARD,
+    "toward_labels": TOWARD_LABELS,
+    "why": Q4_WHY,
 }
 
 
@@ -93,3 +107,11 @@ def render_question(question: Question, q4_whatif: str | None) -> str:
     if not q4_whatif:
         raise ValueError("Q4 needs a what-if")
     return question.text.format(whatif=q4_whatif.strip().rstrip("?."))
+
+
+def describe_shift(shift: int, toward: str | None = None, other: str | None = None) -> str:
+    """'+1 partly changes, towards less ADHD-like': a Q4 answer in one line."""
+    out = f"{shift:+d} {SHIFT_LABELS[shift]}" if shift else f"0 {SHIFT_LABELS[0]}"
+    if toward:
+        out += f", towards {other if toward == 'other' and other else TOWARD_LABELS[toward]}"
+    return out

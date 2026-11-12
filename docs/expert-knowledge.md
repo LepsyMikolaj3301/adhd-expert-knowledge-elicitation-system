@@ -42,7 +42,7 @@ no longer needed for safety; it can come back as an optional "is this rule what 
 
 ## What is built
 
-- [units.py](../backend/app/elicitation/units.py) (no model calls, tested in
+- [units.py](../scripts/elicitation/elicitation_units.py) (no model calls, tested in
   [test_units.py](../tests/test_units.py)): `build_units(doc, role)` returns `ExpertUnit`s.
   - **Segment.** Split at enumerators and labels (`(a)`, `HOW:`, `Over:`, `Under:`, `1.`, `-`);
     otherwise a sentence with a quote not seen before starts a new point (Q1 always, other answers

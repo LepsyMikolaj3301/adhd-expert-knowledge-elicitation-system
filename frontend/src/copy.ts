@@ -111,6 +111,143 @@ export const INTRO = {
   continue: 'I understand, continue',
 } as const
 
+/** The case on the answer and review screens: who it is about, then the text itself. */
+export const CASE_TEXT = {
+  summaryHeading: 'About the patient',
+  heading: 'Patient text',
+  textType: 'Written as',
+  answerLead: 'This is the text you analyse. Your answers and quotes come from it.',
+  reviewLead: 'The text the answers are about.',
+} as const
+
+type ByRole<T> = { expert: T; admin: T }
+
+/**
+ * The home page: what PsyKnowHow is, in the order a newcomer needs it. `about` is always
+ * visible; `more` sits behind "Learn more". Written for a busy clinician: short sentences.
+ */
+export const HOME = {
+  tagline: 'Expert interviews for clinical knowledge',
+  about: {
+    heading: 'What is PsyKnowHow?',
+    text: {
+      expert: [
+        'PsyKnowHow is a written expert interview. Instead of a conversation, you answer questions about short case texts, at your own pace.',
+        'Experienced clinicians notice things that textbooks and guidelines leave out. We want to capture that knowledge in your own words, together with the exact words in the text your reading rests on.',
+        "You work in two places: My cases, where you answer the cases assigned to you, and Reviews, where you read and advise on colleagues' answers.",
+      ],
+      admin: [
+        "PsyKnowHow collects clinicians' knowledge as a written expert interview. Experts answer short case texts, colleagues review the answers, and you decide which answers enter the knowledge base an AI assistant can cite.",
+      ],
+    } as ByRole<readonly string[]>,
+  },
+  more: {
+    sections: [
+      {
+        id: 'why',
+        heading: 'Why written cases',
+        text: 'A short, concrete text brings out how you actually reason, which a general question would not.',
+      },
+      {
+        id: 'flow',
+        heading: 'How a case goes',
+        text: 'Each case moves through four steps. You can leave and come back at any point before you submit.',
+      },
+      {
+        id: 'review',
+        heading: 'How review works',
+        text: 'Colleagues approve or disapprove each answer and say why. Votes are advice: the study team makes the final decision. An answer can be sent back to its author for another round.',
+      },
+      {
+        id: 'answers',
+        heading: 'What happens to answers',
+        text: 'Approved answers go into the knowledge base.',
+      },
+    ],
+    instructions: 'Read the full instructions',
+  },
+  learnMore: 'Learn more',
+  privacy: {
+    heading: 'Your data and GDPR',
+    text: 'Placeholder: how PsyKnowHow processes your personal data under the GDPR, who to contact and your rights will be described here.',
+  },
+  sectionsHeading: 'Your sections',
+  cards: {
+    cases: {
+      title: { expert: 'My cases', admin: 'Assignments' },
+      text: {
+        expert:
+          'Short texts written like a clinical vignette: a forum post, a journal entry or an email. Quote the words that matter and say what they suggest to you.',
+        admin: 'Cases given to experts, and where each one stands.',
+      },
+      action: { expert: 'Open My cases', admin: 'Open Assignments' },
+    },
+    reviews: {
+      title: { expert: 'Reviews', admin: 'Reviews' },
+      text: {
+        expert:
+          "Read colleagues' answers, approve or disapprove each one and say why. Your vote is advice; the study team decides.",
+        admin: 'Follow the discussions and decide which answers enter the knowledge base.',
+      },
+      action: { expert: 'Open Reviews', admin: 'Open Reviews' },
+    },
+  },
+} as const
+
+/** The reminder under the heading of My cases (Assignments, for the study team). */
+export const CASES_INTRO = {
+  expert: {
+    lead: 'Each case is a short text, like a clinical vignette. Read it, quote the words your reading rests on, and explain why they matter.',
+    more: {
+      statusHeading: 'What the status means',
+      statuses: [
+        { term: 'Not started', text: "You haven't opened the case yet." },
+        { term: 'In progress', text: 'You have started. Your work is saved as you go.' },
+        {
+          term: 'Proofreading…',
+          text: 'We are correcting spelling and grammar. This takes a minute or two.',
+        },
+        {
+          term: 'Ready to check',
+          text: 'Read the edited text, change what you want, and send it for review.',
+        },
+        { term: 'In review', text: 'Colleagues are reading it. Nothing more for you to do.' },
+      ],
+    },
+  },
+  admin: {
+    lead: 'Give cases to experts and follow each one through answering, proofreading and review.',
+  },
+} as const
+
+/** The reminder under the heading of Reviews. */
+export const REVIEWS_INTRO = {
+  expert: {
+    lead: "Colleagues' answered cases, for you to read and advise on. Approve or disapprove each answer or say why in a comment.",
+    more: [
+      {
+        term: 'Open and Closed',
+        text: 'Open reviews are still taking votes. Closed ones have been decided by the study team.',
+      },
+      {
+        term: 'Your three lists',
+        text: "Waiting for your vote: answers you haven't judged yet. You've voted: reviews where every answer has your vote. Your submissions: your own answers, which you can read and comment on but not vote on.",
+      },
+      {
+        term: 'Votes are advice',
+        text: 'The study team makes the final decision. You can change a vote until the review closes.',
+      },
+      {
+        term: 'What follows',
+        text: 'An answer can be sent back to its author for another round. Approved answers go into the knowledge base.',
+      },
+    ],
+  },
+  admin: {
+    lead: 'Follow the discussions, then decide: approve, reject or send back to the author.',
+  },
+} as const
+
 export function directionLabel(direction: Direction | null | undefined): string {
   return DIRECTIONS.find((d) => d.value === direction)?.label ?? ''
 }
@@ -172,8 +309,37 @@ function questionNumbers(value: unknown): string[] {
     : []
 }
 
-/** What went wrong, in words an expert can act on. Never the server's own wording. */
-export function describeError(error: unknown): string {
+/** Which thing a 404 was about. The server names it in `details.resource`. */
+function notFoundMessage(resource: unknown): string {
+  switch (resource) {
+    case undefined:
+    case 'Assignment':
+    case 'Submission':
+    case 'Findings':
+    case 'Proofread':
+      return "We can't find this case in your list. It may have been reassigned."
+    case 'Vignette':
+    case 'Vignette version':
+      return 'This case text no longer exists. Please reload the page.'
+    case 'User':
+    case 'Person':
+      return "This account can't be found. Please reload the page."
+    case 'Review':
+    case 'Review round':
+    case 'Answer':
+      return "This review can't be found. It may have been closed. Please reload the page."
+    default:
+      return `${String(resource)} can't be found.`
+  }
+}
+
+/**
+ * What went wrong, in words the reader can act on. Our own wording for the codes we know. For a
+ * code we have no wording for, an expert gets the calm fallback, because the server's messages
+ * use the old terms. The admin knows those terms, so `describeAdminError` shows the server's
+ * message there instead. Unexpected failures (`internal_error`, `http_error`) never show it.
+ */
+export function describeError(error: unknown, { serverWording = false } = {}): string {
   if (!(error instanceof ApiError)) return SAFE_FALLBACK
   switch (error.code) {
     case 'not_editable':
@@ -223,12 +389,39 @@ export function describeError(error: unknown): string {
     case 'cannot_deactivate_self':
       return "You can't deactivate your own account."
     case 'not_found':
-      return "We can't find this case in your list. It may have been reassigned."
+      return notFoundMessage(error.details?.resource)
+    case 'validation_error':
+      return error.message
+    case 'already_assigned':
+      return 'This expert already has this case.'
+    case 'illegal_transition': {
+      const state = error.details?.state as AssignmentSummary['state'] | undefined
+      const label = state ? ASSIGNMENT_STATE_LABELS[state] : undefined
+      return label
+        ? `This can't be done while the assignment is "${label}". The list shows its current state.`
+        : "This can't be done in the assignment's current state. Please reload the page."
+    }
+    case 'draft_conflict':
+      return 'This was changed in another tab or device. Please reload to see the latest.'
+    case 'invalid_invite':
+      return 'This invite link is not valid or was already used. Ask the study team for a new one.'
+    case 'not_authenticated':
+      return 'Please sign in again.'
     case 'unavailable':
       return "We can't reach the server right now. Please try again in a moment."
-    default:
+    case 'embedding_unavailable':
+      return "The embedding model can't be reached, so search is off right now. The list of units still works."
+    case 'internal_error':
+    case 'http_error':
       return SAFE_FALLBACK
+    default:
+      return serverWording && error.message ? error.message : SAFE_FALLBACK
   }
+}
+
+/** For the admin's screens: our wording where we have it, otherwise what the server said. */
+export function describeAdminError(error: unknown): string {
+  return describeError(error, { serverWording: true })
 }
 
 /** Why a save was refused. The same words as any other error. */
@@ -309,8 +502,16 @@ export function activityText(a: ActivityItem): string {
 
 export const FRAMING_LABELS: Record<string, string> = {
   forum_post: 'Forum post',
-  personal_journal: 'Personal journal',
+  personal_journal: 'Journal entry',
   email: 'Email',
+}
+
+/** How a sentence of an answer came to be in a knowledge unit, as the study team reads it. */
+export const FILED_BY_LABELS: Record<string, string> = {
+  chip: 'cited by the expert',
+  quote: 'quotes the patient',
+  llm: 'filed by the model',
+  expert: 'moved by the expert',
 }
 
 /** What the study team reads in an assignment's status. */

@@ -7,10 +7,10 @@ alone: a header from the session metadata and the vignette sentence each quote c
 import re
 from difflib import SequenceMatcher
 
+from elicitation_schema import ElicitationDocument, Response, Vignette
 from pydantic import BaseModel, ConfigDict
 
-from app.elicitation.questions import describe_shift
-from app.elicitation.schema import ElicitationDocument, Response, Vignette
+from app.vignettes.questions import describe_shift
 from expert_knowledge_core.notes import FRAMING_LABEL
 
 SEGMENTER_VERSION = 1

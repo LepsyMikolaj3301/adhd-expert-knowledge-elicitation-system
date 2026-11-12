@@ -13,7 +13,7 @@ from app.assignments.states import JOB_STATES, TERMINAL_STATES, Action, Actor, S
 from app.core.errors import DomainError
 from app.jobs.models import JobKind
 
-EXPECTED_TABLES = 21
+EXPECTED_TABLES = 18
 A, E, R, S = Actor.ADMIN, Actor.ASSIGNEE, Actor.REVIEWER, Actor.SYSTEM
 
 WORKFLOW = {

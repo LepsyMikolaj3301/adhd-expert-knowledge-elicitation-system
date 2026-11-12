@@ -3,12 +3,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
 import HomeView from '@/views/HomeView.vue'
-import PlaceholderView from '@/views/PlaceholderView.vue'
 
 import { guardRoute } from './guard'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // A link to #my-cases lands on that section; any other new page starts at the top.
+  scrollBehavior: (to, _from, saved) => saved ?? (to.hash ? { el: to.hash, top: 72 } : { top: 0 }),
   routes: [
     {
       path: '/login',
@@ -27,7 +28,8 @@ const router = createRouter({
       component: AppLayout,
       meta: { requiresAuth: true },
       children: [
-        { path: '', name: 'home', component: HomeView },
+        // `wide`: the home page lays out its own top panel edge to edge.
+        { path: '', name: 'home', component: HomeView, meta: { wide: true } },
         {
           path: 'assignments',
           name: 'assignments',
@@ -39,6 +41,12 @@ const router = createRouter({
           component: () => import('@/views/AnswerView.vue'),
           props: true,
           meta: { wide: true, roles: ['expert'], keepOnExpiry: true, needsIntro: true },
+        },
+        {
+          path: 'about',
+          name: 'about',
+          component: () => import('@/views/AboutView.vue'),
+          meta: { title: 'About' },
         },
         {
           path: 'instructions',
@@ -86,8 +94,8 @@ const router = createRouter({
         {
           path: 'knowledge',
           name: 'knowledge',
-          component: PlaceholderView,
-          meta: { title: 'Knowledge base', roles: ['admin'] },
+          component: () => import('@/views/KnowledgeView.vue'),
+          meta: { roles: ['admin'] },
         },
         {
           path: 'account',

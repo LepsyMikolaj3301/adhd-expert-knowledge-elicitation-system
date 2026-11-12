@@ -240,8 +240,8 @@ backend/migrations/  Alembic, manages only the `app` Postgres schema
 ```
 
 Each feature has `router.py` (HTTP only), `schemas.py` (one view per audience), `models.py` and
-`service.py` (rules and transactions; routers commit). The new code doesn't import
-`app.elicitation` or `scripts/`: those keep working for the fixtures and experiments.
+`service.py` (rules and transactions; routers commit). The backend doesn't import
+`scripts/`: the fixture schema, unit builder and experiments live there.
 
 ## Running it
 

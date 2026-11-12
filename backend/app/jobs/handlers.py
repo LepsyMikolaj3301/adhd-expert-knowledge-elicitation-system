@@ -8,7 +8,6 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assignments.models import Assignment, Submission
-from app.assignments.states import Action
 from app.core.db import session_factory
 from app.core.security import content_hash
 from app.jobs.errors import (  # noqa: F401  (PermanentJobError is also imported from here)
@@ -24,26 +23,14 @@ from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
 from app.proofread import service as proofread_service
 from app.reviews.models import AnswerDecision, DecisionValue
 from app.users.models import User
+from app.vignettes.service import version_and_code
 
 # What a job does has two parts. `PREPARE[kind](assignment_id)` is the slow part (models, network):
 # it runs with no transaction and no lock open, and returns what `HANDLERS[kind]` needs. The
 # handler then records the result, under the assignment lock, in the transaction that also moves
-# the workflow on. It may return the action to use instead of the job's usual success action.
+# the workflow on. A job that fails raises; the worker retries it or fails the assignment.
 Prepare = Callable[[UUID], Awaitable[Any]]
-Handler = Callable[[AsyncSession, Assignment, Any], Awaitable[Action | None]]
-PREPARE: dict[JobKind, Prepare] = {}
-
-
-async def prepare_proofread(assignment_id: UUID) -> dict[str, Any]:
-    """Proofreads the submitted answers and links their lines to the citations. The slow part
-    (LanguageTool, the models) runs with no transaction open."""
-    return await proofread_service.prepare(assignment_id)
-
-
-async def proofread(db: AsyncSession, assignment: Assignment, prepared: Any) -> Action | None:
-    """Saves the proofread answers for the author to check."""
-    await proofread_service.record(db, assignment, prepared)
-    return None
+Handler = Callable[[AsyncSession, Assignment, Any], Awaitable[None]]
 
 
 def unit_content_hash(embed_text: str, embed_text_combined: str) -> str:
@@ -51,7 +38,7 @@ def unit_content_hash(embed_text: str, embed_text_combined: str) -> str:
     return content_hash(embed_text + "\n" + embed_text_combined)
 
 
-async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None) -> Action | None:
+async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None) -> None:
     """Cuts the answers the admin approved into units (steps 6 and 7 of
     docs/new-chips-knowledge.md), from their lines as the author linked them. The units are
     approved with their answers; nobody reads them before ingestion."""
@@ -61,7 +48,7 @@ async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None
     assert expert is not None
     if submission is None or round_ is None:
         raise NoFindings
-    version, code = await proofread_service.version_and_code(db, assignment.vignette_version_id)
+    version, code = await version_and_code(db, assignment.vignette_version_id)
     approved = set(
         await db.scalars(
             select(AnswerDecision.question_id).where(
@@ -134,7 +121,6 @@ async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None
         )
         for ordinal, unit in enumerate(units, start=1)
     )
-    return None
 
 
 async def prepare_ingest(assignment_id: UUID) -> ingest_module.Ingestion:
@@ -146,7 +132,7 @@ async def prepare_ingest(assignment_id: UUID) -> ingest_module.Ingestion:
 
 async def ingest(
     db: AsyncSession, assignment: Assignment, prepared: ingest_module.Ingestion
-) -> Action | None:
+) -> None:
     """Writes the approved units into the RAG tables and marks them ingested."""
     await ingest_module.write(db, prepared)
     await db.execute(
@@ -157,14 +143,16 @@ async def ingest(
         )
         .values(status=UnitStatus.INGESTED)
     )
-    return None
 
 
-PREPARE[JobKind.PROOFREAD] = prepare_proofread
-PREPARE[JobKind.INGEST] = prepare_ingest
+# Proofreading and ingestion have a slow part; cutting into units does not.
+PREPARE: dict[JobKind, Prepare] = {
+    JobKind.PROOFREAD: proofread_service.prepare,
+    JobKind.INGEST: prepare_ingest,
+}
 
 HANDLERS: dict[JobKind, Handler] = {
-    JobKind.PROOFREAD: proofread,
+    JobKind.PROOFREAD: proofread_service.record,
     JobKind.PROCESS: process,
     JobKind.INGEST: ingest,
 }

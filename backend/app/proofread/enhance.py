@@ -6,14 +6,10 @@ that fails is dropped and the proofread answer stands. The author sees the resul
 original and edits it before anyone reads it.
 """
 
-import json
-import re
 from collections import Counter
-from typing import Any
-
-import httpx
 
 from app.assignments.answers import CHIP_RE
+from app.ollama import chat_json, parse_json_object
 from app.prompts import load_prompt
 from app.settings import settings
 
@@ -25,33 +21,13 @@ GROWTH, SLACK_WORDS = 2.5, 40
 
 async def ask(system: str | None, user: str) -> str:
     """One chat call to Ollama in JSON mode. Tests replace this function."""
-    messages = [{"role": "user", "content": user}]
-    if system:
-        messages.insert(0, {"role": "system", "content": system})
-    body: dict[str, Any] = {
-        "model": settings.enhance_model,
-        "messages": messages,
-        "stream": False,
-        "think": False,
-        "format": "json",
-        "options": {"seed": 1, **OPTIONS},
-    }
-    async with httpx.AsyncClient(
-        base_url=settings.ollama_base_url, timeout=settings.ollama_request_timeout
-    ) as client:
-        response = await client.post("/api/chat", json=body)
-        response.raise_for_status()
-        return response.json()["message"]["content"]
+    return await chat_json(settings.enhance_model, system, user, {"seed": 1, **OPTIONS})
 
 
 def check_reply(raw: str, answer: str) -> str | None:
     """The edited answer, or None when the reply can't be used."""
-    raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
-    text = data.get("answer") if isinstance(data, dict) else None
+    data = parse_json_object(raw)
+    text = data.get("answer") if data else None
     if not isinstance(text, str) or not text.strip():
         return None
     text = text.strip()

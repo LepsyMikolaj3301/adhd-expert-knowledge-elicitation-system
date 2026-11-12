@@ -86,4 +86,9 @@ docker compose --profile preview up -d --build frontend-preview   # http://local
   block in `render.yaml` is ready; Render workers need a paid plan. Migration `0003` also runs
   `CREATE EXTENSION vector` (Neon allows it) for the `chips` schema.
 - nginx does not verify the backend's TLS certificate (`proxy_ssl_verify` is off).
-- Ollama and S3 settings are only used by scripts, not by the API, so Render needs neither.
+- S3 settings are only used by scripts, not by the API, so Render needs none.
+- The API needs Ollama for one thing: the admin's test search (Knowledge base > Test search)
+  embeds what the admin types with bge-m3. Without a reachable `OLLAMA_BASE_URL` that search
+  answers 503 `embedding_unavailable` and says so; the list of units and everything else work.
+  The search also reads `chips` through its own connection to `DATABASE_URL` (the pooled Neon
+  URL works: prepared statements are off).

@@ -71,7 +71,7 @@ class AnswerFindings(Base):
     assignment_id: Mapped[UUID] = mapped_column(
         ForeignKey("app.assignments.id", ondelete="CASCADE"), primary_key=True
     )
-    # app.knowledge.findings.build_record plus `corrections`: ids and kinds, never answer text.
+    # app.knowledge.findings.record_from_lines plus `corrections`: ids and kinds, never answer text.
     record: Mapped[dict[str, Any]] = mapped_column(JSONB)
     version: Mapped[int] = mapped_column(Integer, default=1)
     check_outcome: Mapped[str | None] = mapped_column(String(16))  # completed | skipped

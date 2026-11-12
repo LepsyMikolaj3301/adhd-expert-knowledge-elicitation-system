@@ -18,11 +18,10 @@ import sys
 from pathlib import Path
 
 from chips_schema import load_document
+from elicitation_units import ExpertUnit, build_units, render_unit
 from llm_clients import CachedGenerator, GenRequest, ModelRefused, OllamaGenerator
 from make_fixtures import PERSONAS, Rejected, fixture_dir, parse_json, write_json
 from prompt_loader import load_prompt
-
-from app.elicitation.units import ExpertUnit, build_units, render_unit
 
 ROOT = Path(__file__).resolve().parents[2]
 PROMPT = "Expert_unit_keys.v1"

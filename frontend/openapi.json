@@ -543,6 +543,25 @@
         "title": "CaseCounts",
         "type": "object"
       },
+      "CitedTogether": {
+        "description": "A quote cited together with the unit's own, shown beside the unit's text.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "CitedTogether",
+        "type": "object"
+      },
       "CommentCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1347,6 +1366,10 @@
             "title": "Reviews Waiting",
             "type": "array"
           },
+          "reviews_waiting_total": {
+            "title": "Reviews Waiting Total",
+            "type": "integer"
+          },
           "unread_activity": {
             "title": "Unread Activity",
             "type": "integer"
@@ -1356,6 +1379,7 @@
           "next_up",
           "next_up_total",
           "reviews_waiting",
+          "reviews_waiting_total",
           "recent_reviews",
           "activity",
           "unread_activity"
@@ -1393,12 +1417,123 @@
         "title": "InvitedUser",
         "type": "object"
       },
+      "KnowledgeHit": {
+        "properties": {
+          "matched_sentence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Sentence"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "similarity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Similarity"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/KnowledgeUnitListItem"
+          }
+        },
+        "required": [
+          "rank",
+          "score",
+          "similarity",
+          "matched_sentence",
+          "unit"
+        ],
+        "title": "KnowledgeHit",
+        "type": "object"
+      },
+      "KnowledgeSearchRequest": {
+        "properties": {
+          "k": {
+            "default": 8,
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "K",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "question",
+            "enum": [
+              "question",
+              "patient_text"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "query": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "KnowledgeSearchRequest",
+        "type": "object"
+      },
+      "KnowledgeSearchResponse": {
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/KnowledgeHit"
+            },
+            "title": "Hits",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hits"
+        ],
+        "title": "KnowledgeSearchResponse",
+        "type": "object"
+      },
       "KnowledgeUnitListItem": {
         "properties": {
           "assignment_id": {
             "format": "uuid",
             "title": "Assignment Id",
             "type": "string"
+          },
+          "classifier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classifier"
+          },
+          "context": {
+            "items": {
+              "$ref": "#/components/schemas/CitedTogether"
+            },
+            "title": "Context",
+            "type": "array"
           },
           "created_at": {
             "format": "date-time",
@@ -1408,6 +1543,12 @@
           "direction": {
             "anyOf": [
               {
+                "enum": [
+                  "toward",
+                  "away",
+                  "neutral",
+                  "unclear"
+                ],
                 "type": "string"
               },
               {
@@ -1416,9 +1557,68 @@
             ],
             "title": "Direction"
           },
+          "embed_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed Text"
+          },
+          "embed_text_combined": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed Text Combined"
+          },
+          "expert_is_synthetic": {
+            "title": "Expert Is Synthetic",
+            "type": "boolean"
+          },
           "expert_pseudonym": {
             "title": "Expert Pseudonym",
             "type": "string"
+          },
+          "findings_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findings Version"
+          },
+          "framing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Framing"
+          },
+          "highlight_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highlight Id"
           },
           "id": {
             "format": "uuid",
@@ -1451,9 +1651,27 @@
             ],
             "title": "Patient Words"
           },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
           "review_round": {
             "title": "Review Round",
             "type": "integer"
+          },
+          "sentences": {
+            "items": {
+              "$ref": "#/components/schemas/UnitSentence"
+            },
+            "title": "Sentences",
+            "type": "array"
           },
           "status": {
             "$ref": "#/components/schemas/UnitStatus"
@@ -1477,14 +1695,24 @@
           "vignette_code",
           "vignette_version",
           "expert_pseudonym",
+          "expert_is_synthetic",
           "ordinal",
           "review_round",
           "text",
           "kind",
+          "highlight_id",
           "direction",
           "patient_words",
           "status",
-          "created_at"
+          "created_at",
+          "embed_text",
+          "embed_text_combined",
+          "sentences",
+          "context",
+          "framing",
+          "classifier",
+          "prompt",
+          "findings_version"
         ],
         "title": "KnowledgeUnitListItem",
         "type": "object"
@@ -1505,6 +1733,12 @@
           "direction": {
             "anyOf": [
               {
+                "enum": [
+                  "toward",
+                  "away",
+                  "neutral",
+                  "unclear"
+                ],
                 "type": "string"
               },
               {
@@ -2501,6 +2735,36 @@
         "title": "SubmissionView",
         "type": "object"
       },
+      "UnitSentence": {
+        "properties": {
+          "assigned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned By"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "question_id": {
+            "title": "Question Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "question_id",
+          "assigned_by"
+        ],
+        "title": "UnitSentence",
+        "type": "object"
+      },
       "UnitStatus": {
         "enum": [
           "pending",
@@ -2580,11 +2844,6 @@
             "format": "email",
             "title": "Email",
             "type": "string"
-          },
-          "is_synthetic": {
-            "default": false,
-            "title": "Is Synthetic",
-            "type": "boolean"
           },
           "role": {
             "$ref": "#/components/schemas/Role"
@@ -4510,6 +4769,48 @@
           }
         },
         "summary": "List Knowledge Units",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge-units/search": {
+      "post": {
+        "description": "Runs the platform's retrievers over the ingested units, for the admin to see what a\nquestion or a patient's text finds. A POST, so that typed text stays out of URLs and logs.",
+        "operationId": "search_knowledge_units_api_v1_knowledge_units_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeSearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Search Knowledge Units",
         "tags": [
           "knowledge"
         ]

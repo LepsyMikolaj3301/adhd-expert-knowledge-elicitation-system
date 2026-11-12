@@ -135,7 +135,7 @@ watch(
       <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
         <table class="w-full border-collapse text-left text-sm">
           <thead>
-            <tr class="text-xs font-medium tracking-wide text-muted uppercase">
+            <tr class="eyebrow font-medium">
               <th scope="col" class="pb-1 pr-4 font-medium">Quote</th>
               <th scope="col" class="w-52 border-l border-line pb-1 pl-3 font-medium xl:w-60">
                 <div ref="helpRoot" class="relative flex items-center gap-1.5">

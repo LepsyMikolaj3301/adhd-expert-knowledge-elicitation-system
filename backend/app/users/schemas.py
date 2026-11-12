@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
@@ -43,13 +43,6 @@ class UserCreate(BaseModel):
     email: EmailStr
     display_name: str = Field(min_length=1, max_length=200)
     role: Role
-    is_synthetic: bool = False
-
-    @model_validator(mode="after")
-    def _synthetic_is_expert(self) -> Self:
-        if self.is_synthetic and self.role != Role.EXPERT:
-            raise ValueError("only experts can be synthetic")
-        return self
 
 
 class UserUpdate(BaseModel):

@@ -7,20 +7,20 @@ Records are plain dicts (JSON in, JSON out). One record per response:
   flags       checks that only flag (coverage, direction vs text)
 Step 3 (the classifier, ids only) happens outside this module; `apply_classification` takes its
 output. Sentence splitting and quote matching are written here because the B1 helpers in
-app.elicitation.units are tuned to other inputs (sentence starts, a fixed 0.8 ratio).
+scripts/elicitation/elicitation_units.py are tuned to other inputs (sentence starts, a fixed 0.8
+ratio).
 
 This is the one copy of the pipeline: the web application's worker uses it, and so do the scripts
 (scripts/elicitation/chip_findings.py re-exports it). What the retrieval side shares with it
 (sentence splitting, chip rendering, the units' header, packing) lives in
-expert_knowledge_core.notes. `assign` and `build_record` take anything shaped like `Response`, so
-the scripts' own ChipResponse works too.
+expert_knowledge_core.notes.
 """
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher
-from typing import Any, Protocol
+from typing import Any
 
 from app.vignettes.questions import QUESTIONS
 from expert_knowledge_core.notes import (  # noqa: F401  (re-exported: the scripts and app modules use findings.<name>)
@@ -71,24 +71,6 @@ class Response:
     highlights: list[Highlight]
     rating: int | None
     insufficient_information: bool
-
-
-class ResponseLike(Protocol):
-    """What `assign`, `build_record` and `record_from_lines` read from a response: the dataclass
-    above, or a pydantic response of the elicitation schema (the scripts' chips_schema.py)."""
-
-    @property
-    def vignette_id(self) -> str: ...
-    @property
-    def vignette_version(self) -> int: ...
-    @property
-    def answers(self) -> Mapping[Any, str]: ...
-    @property
-    def highlights(self) -> Sequence[Any]: ...
-    @property
-    def rating(self) -> int | None: ...
-    @property
-    def insufficient_information(self) -> bool: ...
 
 
 def is_filed(question_id: str) -> bool:
@@ -190,23 +172,6 @@ def link_text(text: str, highlights: list[dict], vignette: str) -> tuple[list[st
     return targets, "quote" if targets else None
 
 
-def assign(resp: ResponseLike, vignette: str) -> tuple[list[dict], list[dict]]:
-    """Rules 1-3 of the doc: chips, then quotes matching a highlight, then quotes matching only the
-    vignette (an implicit highlight). Sentences left over have no targets and `assigned_by` None."""
-    highlights = expert_highlights(resp.highlights)
-    sentences: list[dict[str, Any]] = []
-    for qid in sorted(resp.answers):
-        answer = resp.answers[qid]
-        for idx, (a, b) in enumerate(split_sentences(answer), 1):
-            text = answer[a:b]
-            targets, by = link_text(text, highlights, vignette)
-            sentences.append(
-                dict(id=f"{qid}.{idx}", question_id=qid, idx=idx, span=[a, b], text=text,
-                     targets=targets, assigned_by=by)
-            )  # fmt: skip
-    return highlights, sentences
-
-
 def unresolved(sentences: list[dict]) -> list[str]:
     return [s["id"] for s in sentences if not s["targets"]]
 
@@ -301,30 +266,8 @@ def build_units(rec: dict) -> list[dict]:
     return units
 
 
-def build_record(
-    resp: ResponseLike, vignette: str, session_id: str, expert_id: str, role: str | None,
-    framing: str, population: str, labels: dict[str, list[str]] | None = None,
-) -> dict:  # fmt: skip
-    """Steps 2-7 for one response. `labels` is the classifier's output (None: none needed)."""
-    highlights, sentences = assign(resp, vignette)
-    left = unresolved(sentences)
-    if left and labels is None:
-        raise ValueError(f"{len(left)} sentences need the classifier: {left}")
-    fallback = apply_classification(sentences, labels or {})
-    rec = dict(
-        version=FINDINGS_VERSION, session_id=session_id, expert_id=expert_id,
-        vignette_id=resp.vignette_id, vignette_version=resp.vignette_version,
-        meta=dict(role=role, framing=framing, population=population, rating=resp.rating,
-                  insufficient=resp.insufficient_information),
-        highlights=highlights, sentences=sentences, fallback=fallback,
-    )  # fmt: skip
-    rec["flags"] = check(highlights, sentences)
-    rec["units"] = build_units(rec)
-    return rec
-
-
 def record_from_lines(
-    resp: ResponseLike, lines: dict[str, list[dict]], highlights: list[dict], session_id: str,
+    resp: Response, lines: dict[str, list[dict]], highlights: list[dict], session_id: str,
     expert_id: str, role: str | None, framing: str, population: str,
 ) -> dict:  # fmt: skip
     """Steps 6-7 from answers whose lines were already linked (the proofread check): each line is
@@ -354,51 +297,3 @@ def record_from_lines(
     rec["flags"] = check(rec["highlights"], sentences)
     rec["units"] = build_units(rec)
     return rec
-
-
-# --- step 9: packing ---------------------------------------------------------------------------
-
-
-# --- step 5: the expert's corrections ----------------------------------------------------------
-
-
-def apply_corrections(
-    rec: dict, sentences: dict[str, list[str]], directions: dict[str, str], at: str
-) -> tuple[int, int]:
-    """Re-files sentences and changes directions in `rec` (already validated by the caller).
-    Returns (sentences moved, directions changed); changes that change nothing don't count.
-
-    What happened is appended to `rec["corrections"]` as ids and kinds, never as text: it feeds
-    the audit trail and the evaluation events. Then the flags and the units are recomputed, so the
-    record is always consistent with what the expert sees.
-    """
-    by_sentence = {s["id"]: s for s in rec["sentences"]}
-    by_highlight = {h["id"]: h for h in rec["highlights"]}
-    moved = changed = 0
-    for sid, targets in sentences.items():
-        new = list(dict.fromkeys(targets))
-        sentence = by_sentence[sid]
-        if new == sentence["targets"]:
-            continue
-        rec["corrections"].append(
-            dict(kind="sentence_moved", sentence=sid, before=sentence["targets"], after=new, at=at)
-        )
-        sentence["targets"], sentence["assigned_by"] = new, "expert"
-        moved += 1
-    for hid, direction in directions.items():
-        highlight = by_highlight[hid]
-        if direction == highlight["direction"]:
-            continue
-        flagged = any(f["kind"] == "direction" and f["highlight"] == hid for f in rec["flags"])
-        rec["corrections"].append(
-            dict(kind="toggle_changed", highlight=hid, before=highlight["direction"],
-                 after=direction, after_flag=flagged, at=at)
-        )  # fmt: skip
-        highlight["direction"] = direction
-        highlight["direction_changed_after_flag"] = flagged or highlight.get(
-            "direction_changed_after_flag", False
-        )
-        changed += 1
-    rec["flags"] = check(rec["highlights"], rec["sentences"])
-    rec["units"] = build_units(rec)
-    return moved, changed

@@ -13,12 +13,7 @@ from chat_expert import (
     parse_scores,
     siblings,
 )
-from eval_expert_generation import load_judgments
-from make_fixtures import Rejected
-from make_gold_claims import answers_block, check_claims
-from rag_common import parse_sample_judgment
-
-from app.elicitation.schema import (
+from elicitation_schema import (
     ElicitationDocument,
     QuestionId,
     Response,
@@ -27,6 +22,10 @@ from app.elicitation.schema import (
     VignetteDesign,
     content_hash,
 )
+from eval_expert_generation import load_judgments
+from make_fixtures import Rejected
+from make_gold_claims import answers_block, check_claims
+from rag_common import parse_sample_judgment
 
 TEXT = (
     "I kept forgetting to draft this email all week. The deadline is Friday and the numbers "

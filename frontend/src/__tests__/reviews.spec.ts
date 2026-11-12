@@ -3,7 +3,7 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 import type { ReviewItem, User } from '@/api/client'
-import { activityText, describeError, speakerLabel } from '@/copy'
+import { activityText, describeAdminError, describeError, speakerLabel } from '@/copy'
 import { ApiError } from '@/api/client'
 import router from '@/router'
 import { useAuthStore } from '@/stores/auth'
@@ -81,6 +81,30 @@ describe('wording', () => {
     expect(describeError(err('email_taken'))).toContain('already')
   })
 
+  it('says what was not found, and what a conflict is about', () => {
+    const err = (code: string, details?: Record<string, unknown>, status = 404) =>
+      new ApiError(status, { code, message: 'Server words.', details })
+    expect(describeError(err('not_found', { resource: 'Assignment' }))).toContain('your list')
+    expect(describeError(err('not_found', { resource: 'User' }))).toContain('account')
+    expect(describeError(err('not_found', { resource: 'Vignette version' }))).toContain('case text')
+    expect(describeError(err('not_found', { resource: 'Review round' }))).toContain('review')
+    expect(describeError(err('already_assigned', undefined, 409))).toBe(
+      'This expert already has this case.',
+    )
+    expect(describeError(err('illegal_transition', { state: 'cancelled' }, 409))).toContain(
+      'Cancelled',
+    )
+  })
+
+  it('shows the admin the server wording for a code it has none for, but never for a crash', () => {
+    const err = (code: string) => new ApiError(409, { code, message: 'Version is not published.' })
+    expect(describeAdminError(err('version_not_published'))).toBe('Version is not published.')
+    expect(describeError(err('version_not_published'))).toContain('Your text is safe')
+    expect(describeError(err('validation_error'))).toBe('Version is not published.')
+    expect(describeAdminError(err('internal_error'))).toContain('Your text is safe')
+    expect(describeAdminError(err('http_error'))).toContain('Your text is safe')
+  })
+
   it('names speakers by role, and never calls a feed item by its kind', () => {
     expect(speakerLabel({ kind: 'author', pseudonym: null })).toBe('Author')
     expect(speakerLabel({ kind: 'reviewer', pseudonym: 'E07' })).toBe('E07')
@@ -112,7 +136,7 @@ describe('ReviewsView', () => {
     await flushPromises()
     const titles = wrapper!.findAll('[data-testid="group"] h2').map((h) => h.text())
     expect(titles).toEqual(['Waiting for your vote', "You've voted", 'Your submissions'])
-    expect(wrapper!.get('a').attributes('href')).toBe('/reviews/a1')
+    expect(wrapper!.get('[data-testid="group"] a').attributes('href')).toBe('/reviews/a1')
     const waiting = wrapper!.findAll('[data-testid="group"]')[0]!
     expect(waiting.text()).toContain('3 answers')
     expect(waiting.findAll('a').map((a) => a.attributes('href'))).toEqual([
@@ -330,6 +354,43 @@ describe('an admin reading a review', () => {
       'The whole patient text.',
     )
     expect(wrapper!.get('[data-testid="patient-summary"]').text()).toContain('A student.')
+    expect(wrapper!.get('[data-testid="text-type"]').text()).toBe('Written as: Journal entry')
+  })
+
+  it('shows every quote with its direction, and lights one up when pointed at', async () => {
+    logIn(admin)
+    stubFetch((url) => {
+      if (url.endsWith('/answers')) return jsonResponse(200, answers())
+      return jsonResponse(200, {
+        audience: 'admin',
+        id: 'a1',
+        state: 'peer_review',
+        review_round: 1,
+        vignette: {
+          code: 'V001',
+          version: 1,
+          text: 'The patient text.',
+          framing: 'email',
+          patient_summary: 'A student.',
+          word_count: 3,
+        },
+        expert_id: 'e1',
+        expert_pseudonym: 'E01',
+        vignette_version: 1,
+        vignette_version_id: 'v1',
+        allowed_actions: ['comment'],
+      })
+    })
+    mountView(ReviewView, { id: 'a1' })
+    await flushPromises()
+    const rows = wrapper!.findAll('[data-testid="citation"]')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.text()).toContain('patient')
+    expect(rows[0]!.text()).toContain('Points away from ADHD traits')
+    expect(rows[0]!.find('select').exists()).toBe(false)
+    expect(wrapper!.find('[data-testid="vignette-text"] mark').exists()).toBe(false)
+    await rows[0]!.trigger('mouseenter')
+    expect(wrapper!.get('[data-testid="vignette-text"] mark').text()).toBe('patient')
   })
 })
 
@@ -351,6 +412,7 @@ describe('HomeView', () => {
         ],
         next_up_total: 7,
         reviews_waiting: [],
+        reviews_waiting_total: 0,
         recent_reviews: [],
         activity: [],
         unread_activity: 0,
@@ -359,9 +421,87 @@ describe('HomeView', () => {
     mountView(HomeView)
     await flushPromises()
     expect(wrapper!.get('[data-testid="next-up"] a.btn').text()).toBe('Check')
-    expect(wrapper!.get('[data-testid="next-up"]').text()).toContain('See all 7')
+    expect(wrapper!.get('[data-testid="next-up"]').text()).toContain('and 6 more cases')
     expect(wrapper!.get('[data-testid="waiting"]').text()).toContain('Nothing is waiting for you.')
     expect(wrapper!.get('[data-testid="news"]').text()).toContain('Nothing new yet.')
+  })
+
+  it('shows at most three items per card, and recent reviews only when nothing is waiting', async () => {
+    logIn(expert)
+    const review = (n: number) => ({
+      assignment_id: `r${n}`,
+      vignette_code: `V00${n}`,
+      state: 'peer_review',
+      answer_count: 2,
+      approvals: 0,
+      disapprovals: 0,
+      comment_count: 0,
+    })
+    const home = (waiting: number[], recent: number[]) => ({
+      next_up: [],
+      next_up_total: 0,
+      reviews_waiting: waiting.slice(0, 5).map(review),
+      reviews_waiting_total: waiting.length,
+      recent_reviews: recent.map(review),
+      activity: [],
+      unread_activity: 0,
+    })
+    stubFetch(() => jsonResponse(200, home([1, 2, 3, 4, 5, 7, 8, 9, 1, 2, 3, 4], [6])))
+    mountView(HomeView)
+    await flushPromises()
+    expect(wrapper!.get('[data-testid="waiting"]').text()).toContain('12 waiting for your vote')
+    expect(wrapper!.get('[data-testid="waiting"]').findAll('li')).toHaveLength(3)
+    expect(wrapper!.get('[data-testid="more-reviews"]').text()).toBe('and 9 more')
+    expect(wrapper!.find('[data-testid="recent"]').exists()).toBe(false)
+    wrapper!.unmount()
+
+    stubFetch(() => jsonResponse(200, home([], [6, 7])))
+    mountView(HomeView)
+    await flushPromises()
+    expect(wrapper!.get('[data-testid="recent"]').findAll('li')).toHaveLength(2)
+  })
+
+  it('still shows the cards, with their buttons, when the updates cannot be loaded', async () => {
+    logIn(expert)
+    stubFetch(() => jsonResponse(500, { detail: 'broken' }))
+    mountView(HomeView)
+    await flushPromises()
+    expect(wrapper!.get('[role="alert"]').text()).toContain("couldn't load")
+    expect(wrapper!.findAll('[data-testid="sections"] a.btn').map((a) => a.text())).toEqual([
+      'Open My cases',
+      'Open Reviews',
+    ])
+  })
+
+  it("shows five updates at a time under What's new, and the privacy placeholder", async () => {
+    logIn(expert)
+    stubFetch(() =>
+      jsonResponse(200, {
+        next_up: [],
+        next_up_total: 0,
+        reviews_waiting: [],
+        reviews_waiting_total: 0,
+        recent_reviews: [],
+        unread_activity: 0,
+        activity: Array.from({ length: 12 }, (_, n) => ({
+          kind: 'case_assigned',
+          assignment_id: `a${n}`,
+          vignette_code: `V${n}`,
+          unread: false,
+          at: '2026-11-04T09:00:00Z',
+        })),
+      }),
+    )
+    mountView(HomeView)
+    await flushPromises()
+    const items = () => wrapper!.get('[data-testid="news"]').findAll('li')
+    expect(items()).toHaveLength(5)
+    await wrapper!.get('[data-testid="news-more"]').trigger('click')
+    expect(items()).toHaveLength(10)
+    await wrapper!.get('[data-testid="news-more"]').trigger('click')
+    expect(items()).toHaveLength(12)
+    expect(wrapper!.find('[data-testid="news-more"]').exists()).toBe(false)
+    expect(wrapper!.get('[data-testid="gdpr"]').text()).toContain('GDPR')
   })
 
   it('links a comment to its thread, and marks the feed as seen up to the newest item', async () => {
@@ -373,6 +513,7 @@ describe('HomeView', () => {
         next_up: [],
         next_up_total: 0,
         reviews_waiting: [],
+        reviews_waiting_total: 0,
         recent_reviews: [],
         unread_activity: 1,
         activity: [

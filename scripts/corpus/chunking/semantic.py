@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from app.chunking.base import (
+from app.embeddings import Embedder
+from chunking.base import (
     Chunk,
     TokenCounter,
     Unit,
@@ -10,8 +11,7 @@ from app.chunking.base import (
     document_units,
     split_oversized,
 )
-from app.chunking.config import CHUNKER_VERSION, BreakpointConfig, SemanticConfig
-from app.embeddings import Embedder
+from chunking.config import CHUNKER_VERSION, BreakpointConfig, SemanticConfig
 
 
 def breakpoint_mask(distances: np.ndarray, cfg: BreakpointConfig) -> np.ndarray:

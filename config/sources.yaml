@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------
 # Consumed by scripts/corpus/fetch_sources.py (download -> data/raw/<id>/) and
 # scripts/corpus/upload_raw_documents.py (data/raw/ -> s3://$S3_BUCKET/raw/).
-# Schema + validation: backend/app/sources.py. Live results of a run are in
+# Schema + validation: scripts/corpus/sources.py. Live results of a run are in
 # data/raw/_fetch_report.json; per-source details in data/raw/<id>/meta.json.
 #
 # Rules:

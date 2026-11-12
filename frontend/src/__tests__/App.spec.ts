@@ -45,6 +45,7 @@ describe('App', () => {
               next_up: [],
               next_up_total: 0,
               reviews_waiting: [],
+              reviews_waiting_total: 0,
               recent_reviews: [],
               activity: [],
               unread_activity: 0,
@@ -59,7 +60,7 @@ describe('App', () => {
 
     expect(router.currentRoute.value.name).toBe('home')
     expect(wrapper.get('[data-testid="site-name"]').text()).toBe(SITE_NAME)
-    expect(wrapper.get('h1').text()).toBe(`Welcome, ${expert.display_name}`)
+    expect(wrapper.get('h1').text()).toBe(SITE_NAME)
     expect(wrapper.find('nav').exists()).toBe(true)
   })
 })

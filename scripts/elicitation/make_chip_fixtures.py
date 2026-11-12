@@ -31,8 +31,8 @@ from chips_schema import (
     ChipDocument,
     ChipResponse,
     Highlight,
-    question_text,
 )
+from elicitation_schema import ReferenceClaim, VariantInfo, Vignette, content_hash
 from llm_clients import CachedGenerator, GenRequest, InboxGenerator, OllamaGenerator
 from make_fixtures import (
     ANSWER_OPTIONS,
@@ -53,7 +53,7 @@ from make_fixtures import (
 from prompt_loader import load_prompt
 from pydantic import ValidationError
 
-from app.elicitation.schema import ReferenceClaim, VariantInfo, Vignette, content_hash
+from app.vignettes.questions import QUESTIONS
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data/fixtures_chips"
@@ -186,7 +186,7 @@ def make_vignettes(gen: Gen, inbox: Path, only: list[str] | None) -> list[Vignet
 
 def answer_request(v: Vignette, kind: str, persona_id: str, persona: str) -> GenRequest:
     questions = "\n".join(
-        f"{q}: {question_text(q)}" + (" (answer in overall_rating)" if q == "Q6" else "")
+        f"{q}: {QUESTIONS[q].text}" + (" (answer in overall_rating)" if q == "Q6" else "")
         for q in v.question_ids
     )
     p = load_prompt(ANSWER_PROMPT).fill(

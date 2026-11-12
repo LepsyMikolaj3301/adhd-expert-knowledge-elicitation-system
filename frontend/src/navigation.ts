@@ -25,9 +25,9 @@ const EXPERT: NavItem[] = [
 const ADMIN: NavItem[] = [
   HOME,
   {
-    label: 'Vignettes',
+    label: 'All cases',
     to: '/vignettes',
-    blurb: 'Write vignettes, publish them and assign them to experts.',
+    blurb: 'Write cases, publish them and assign them to experts.',
   },
   {
     label: 'Reviews',
@@ -40,7 +40,11 @@ const ADMIN: NavItem[] = [
     blurb: "Follow each expert's progress and assign vignettes.",
   },
   { label: 'Experts', to: '/experts', blurb: 'Invite experts and manage their accounts.' },
-  { label: 'Knowledge base', to: '/knowledge', blurb: 'Browse the accepted knowledge units.' },
+  {
+    label: 'Knowledge base',
+    to: '/knowledge',
+    blurb: 'Browse the ingested knowledge units and test the search.',
+  },
 ]
 
 /** What the side panel and the home page list. The API still enforces every permission. */

@@ -33,6 +33,9 @@ export type NextUpItem = components['schemas']['NextUpItem']
 export type PersonView =
   components['schemas']['PersonAdminCard'] | components['schemas']['PersonCard']
 export type QuestionTemplate = components['schemas']['QuestionTemplate']
+export type KnowledgeUnit = components['schemas']['KnowledgeUnitListItem']
+export type KnowledgeHit = components['schemas']['KnowledgeHit']
+export type KnowledgeSearchMode = components['schemas']['KnowledgeSearchRequest']['mode']
 export type State = AssignmentSummary['state']
 type ErrorBody = components['schemas']['ErrorResponse']
 

@@ -18,9 +18,8 @@ let timer: ReturnType<typeof setInterval> | undefined
 function badge(to: string): string {
   const d = home.data
   if (to === '/') return d?.unread_activity ? '●' : ''
-  const waiting = d?.reviews_waiting?.length ?? 0
-  if (to !== '/reviews' || !waiting) return ''
-  return waiting >= 5 ? '5+' : String(waiting)
+  const waiting = d?.reviews_waiting_total ?? 0
+  return to === '/reviews' && waiting ? String(waiting) : ''
 }
 const badgeLabel = (to: string) =>
   to === '/' ? 'new updates' : `${badge(to)} reviews waiting for you`
@@ -48,23 +47,26 @@ function isCurrent(to: string, isActive: boolean, isExactActive: boolean): boole
 }
 
 /**
- * On a wide screen the current item takes the page colour and runs into the content, like a
- * folder tab. On a narrow screen the panel is a top bar and the current item is underlined.
+ * Every item is light text on the dark panel. The translucent pill behind the current one is a
+ * single element that the browser slides from item to item: the current item is the CSS anchor
+ * the pill is positioned on (see the style below), so nothing is measured here. The text never
+ * changes colour on the way, and a browser without anchor positioning gets the plain background.
  */
 function tabClass(active: boolean): string {
   const base =
-    'flex items-center gap-2 border-b-2 px-4 py-2.5 text-[0.95rem] whitespace-nowrap no-underline hover:no-underline focus-visible:-outline-offset-2 md:ml-3 md:rounded-l-lg md:border-b-0'
+    'relative z-10 mx-1 flex items-center gap-2 rounded-full px-4 py-2.5 text-[0.95rem] whitespace-nowrap no-underline hover:no-underline focus-visible:outline-white md:mx-3'
   return active
-    ? `${base} border-white text-white md:bg-page md:text-ink focus-visible:outline-action`
-    : `${base} border-transparent text-on-ink hover:bg-ink-raised hover:text-white focus-visible:outline-white`
+    ? `${base} text-white [anchor-name:--nav-current] not-supports-[anchor-name:--a]:bg-white/15`
+    : `${base} text-on-ink hover:bg-white/10 hover:text-white`
 }
 </script>
 
 <template>
   <div class="min-h-screen md:grid md:grid-cols-[15rem_1fr]">
     <aside
-      class="flex flex-wrap items-center bg-ink text-on-ink md:sticky md:top-0 md:h-screen md:flex-col md:flex-nowrap md:items-stretch"
+      class="relative flex flex-wrap items-center bg-ink text-on-ink md:sticky md:top-0 md:h-screen md:flex-col md:flex-nowrap md:items-stretch"
     >
+      <span class="nav-pill" aria-hidden="true" data-testid="nav-highlight" />
       <RouterLink
         to="/"
         data-testid="site-name"
@@ -78,7 +80,7 @@ function tabClass(active: boolean): string {
           :href="href"
           data-testid="account-link"
           :aria-current="isActive ? 'page' : undefined"
-          :class="[tabClass(isActive), 'mr-2 md:order-last md:mr-0 md:mb-4']"
+          :class="[tabClass(isActive), 'md:order-last md:mb-4']"
           @click="navigate"
         >
           <svg
@@ -104,7 +106,7 @@ function tabClass(active: boolean): string {
 
       <nav
         aria-label="Main"
-        class="order-last flex w-full overflow-x-auto md:order-none md:block md:flex-1 md:overflow-visible"
+        class="order-last flex w-full overflow-x-auto pb-2 md:order-none md:block md:flex-1 md:overflow-visible md:pb-0"
       >
         <RouterLink
           v-for="item in items"
@@ -139,3 +141,36 @@ function tabClass(active: boolean): string {
     <SignInAgainDialog v-if="auth.sessionEnded" />
   </div>
 </template>
+
+<style scoped>
+/* Sits on whichever item holds the anchor name, and follows it when the name moves. */
+.nav-pill {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.15);
+  position-anchor: --nav-current;
+  top: anchor(top);
+  left: anchor(left);
+  width: anchor-size(width);
+  height: anchor-size(height);
+  transition:
+    top 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+    left 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+    width 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+    height 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-pill {
+    transition: none;
+  }
+}
+
+@supports not (anchor-name: --a) {
+  .nav-pill {
+    display: none;
+  }
+}
+</style>

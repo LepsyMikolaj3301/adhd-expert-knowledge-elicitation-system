@@ -54,6 +54,8 @@ class HomeView(BaseModel):
     next_up_total: int
     # Open reviews the viewer has yet to vote on every answer of (for the admin: every open one).
     reviews_waiting: list[ReviewItem]
+    # All of them: `reviews_waiting` stops at the first few.
+    reviews_waiting_total: int
     recent_reviews: list[ReviewItem]
     activity: list[ActivityItem]
     # Counted among the items in `activity`.

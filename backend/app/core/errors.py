@@ -36,7 +36,9 @@ class DomainError(Exception):
 
 
 def not_found(what: str = "Resource") -> DomainError:
-    return DomainError("not_found", f"{what} not found.", status.HTTP_404_NOT_FOUND)
+    return DomainError(
+        "not_found", f"{what} not found.", status.HTTP_404_NOT_FOUND, {"resource": what}
+    )
 
 
 def invalid(code: str, message: str, details: dict[str, Any] | None = None) -> DomainError:
@@ -45,6 +47,31 @@ def invalid(code: str, message: str, details: dict[str, Any] | None = None) -> D
 
 def forbidden(message: str = "You may not do this.") -> DomainError:
     return DomainError("forbidden", message, status.HTTP_403_FORBIDDEN)
+
+
+def _field_name(loc: list[Any]) -> str:
+    """The last named part of a pydantic location: ['body', 'display_name'] -> 'Display name'."""
+    names = [
+        part for part in loc if isinstance(part, str) and part not in ("body", "query", "path")
+    ]
+    if not names:
+        return "The request"
+    text = names[-1].replace("_", " ")
+    return text[:1].upper() + text[1:]
+
+
+def _validation_message(errors: list[dict[str, Any]]) -> str:
+    if not errors:
+        return "The request is not valid."
+    first = errors[0]
+    reason = str(first["msg"]).removeprefix("Value error, ")
+    message = f"{_field_name(first['loc'])}: {reason}"
+    if not message.endswith((".", "!", "?")):
+        message += "."
+    more = len(errors) - 1
+    if more:
+        message += f" (and {more} more problem{'s' if more > 1 else ''})"
+    return message
 
 
 def safe_traceback(exc: BaseException) -> str:
@@ -122,7 +149,7 @@ def install_error_handlers(app: FastAPI) -> None:
         return _response(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             "validation_error",
-            "The request is not valid.",
+            _validation_message(errors),
             {"errors": errors},
         )
 

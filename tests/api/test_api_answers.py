@@ -27,7 +27,7 @@ from api_helpers import (
 from conftest import alembic_config
 from sqlalchemy import select, text
 
-from app.assignments.answers import count_words, render_chips
+from app.assignments.answers import count_words
 from app.assignments.models import Submission
 from app.core.db import session_factory
 from app.knowledge.models import KnowledgeUnit
@@ -326,17 +326,6 @@ async def test_the_submission_keeps_citations_and_chips():
     assert stored["highlights"] == citations
     assert stored["answers"]["Q5"].startswith("⟦h2⟧ ")
     assert "locked_highlights" not in stored and "gate_passed_at" not in stored
-
-
-def test_chips_render_as_the_first_eight_words_of_their_citation():
-    citations = [
-        {"chip": 1, "text": "one two three four five six seven eight nine"},
-        {"chip": 2, "text": "short quote"},
-    ]
-    assert render_chips("⟦h1⟧ and ⟦h2⟧.", citations) == (
-        "«one two three four five six seven eight…» and «short quote»."
-    )
-    assert render_chips("No chips here.", []) == "No chips here."
 
 
 async def test_units_show_quotes_instead_of_chip_tokens():

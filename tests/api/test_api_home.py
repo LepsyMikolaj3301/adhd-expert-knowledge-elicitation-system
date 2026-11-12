@@ -59,6 +59,7 @@ async def test_a_new_account_has_an_empty_home():
         "next_up": [],
         "next_up_total": 0,
         "reviews_waiting": [],
+        "reviews_waiting_total": 0,
         "recent_reviews": [],
         "activity": [],
         "unread_activity": 0,

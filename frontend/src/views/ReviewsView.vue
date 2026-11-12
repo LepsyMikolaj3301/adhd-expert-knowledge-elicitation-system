@@ -3,12 +3,18 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { api, type ReviewItem } from '@/api/client'
+import PageIntro from '@/components/PageIntro.vue'
 import PseudonymChip from '@/components/PseudonymChip.vue'
-import { describeError, tallyLabel } from '@/copy'
+import SegmentedToggle from '@/components/SegmentedToggle.vue'
+import { describeError, REVIEWS_INTRO, tallyLabel } from '@/copy'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
-const isAdmin = computed(() => auth.user?.role === 'admin')
+const isAdmin = computed(() => auth.role === 'admin')
+const STATUSES = [
+  { value: 'open', label: 'Open' },
+  { value: 'closed', label: 'Closed' },
+] as const
 const status = ref<'open' | 'closed'>('open')
 const items = ref<ReviewItem[]>([])
 const loading = ref(true)
@@ -52,18 +58,13 @@ watch(status, load)
 <template>
   <div>
     <h1>Reviews</h1>
-    <div class="mt-4 flex gap-2" role="group" aria-label="Show">
-      <button
-        v-for="s in ['open', 'closed'] as const"
-        :key="s"
-        type="button"
-        :class="status === s ? 'btn' : 'btn-quiet'"
-        :aria-pressed="status === s"
-        @click="status = s"
-      >
-        {{ s === 'open' ? 'Open' : 'Closed' }}
-      </button>
-    </div>
+    <PageIntro
+      class="mt-2"
+      :lead="REVIEWS_INTRO[auth.role].lead"
+      :more-to="isAdmin ? undefined : '/about#reviews'"
+      testid="page-intro"
+    />
+    <SegmentedToggle v-model="status" class="mt-4" label="Show" :options="STATUSES" />
 
     <p v-if="error" class="alert mt-6" role="alert">{{ error }}</p>
     <p v-if="loading" class="mt-6 text-muted">Loading…</p>

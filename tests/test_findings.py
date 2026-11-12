@@ -1,5 +1,6 @@
 """The chip logic inside the backend: sentences, citations, units. No models, no database."""
 
+import chip_findings
 import pytest
 
 from app.knowledge import findings
@@ -29,7 +30,7 @@ def response(answers: dict[str, str]) -> findings.Response:
 
 
 def build(answers: dict[str, str], labels: dict[str, list[str]] | None = None) -> dict:
-    return findings.build_record(
+    return chip_findings.build_record(
         response(answers), TEXT, "S1", "E1", None, "personal_journal", "adult", labels
     )
 

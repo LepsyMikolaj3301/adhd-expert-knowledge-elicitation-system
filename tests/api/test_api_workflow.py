@@ -27,6 +27,7 @@ from app.jobs import handlers, worker
 from app.jobs.models import Job, JobKind, JobStatus
 from app.jobs.queue import MAX_ATTEMPTS
 from app.jobs.worker import run_once
+from app.proofread import service as proofread_service
 from app.settings import settings
 
 
@@ -134,7 +135,7 @@ async def test_failed_job_retries_then_fails_and_admin_retry_recovers(monkeypatc
     assert "the-answer-text" not in caplog.text
 
     await expert.fails("POST", f"/assignments/{assignment_id}/retry", 403, "forbidden")
-    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, handlers.proofread)
+    monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, proofread_service.record)
     view = await admin.ok("POST", f"/assignments/{assignment_id}/retry")
     assert view["state"] == "proofreading"
     assert await run_jobs() == 1

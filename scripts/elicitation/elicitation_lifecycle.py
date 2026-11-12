@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 
-from app.elicitation.schema import ElicitationDocument
+from elicitation_schema import ElicitationDocument
 
 
 class DocumentStatus(StrEnum):

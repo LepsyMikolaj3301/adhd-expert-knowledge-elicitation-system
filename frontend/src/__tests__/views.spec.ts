@@ -184,6 +184,40 @@ describe('AssignmentsView', () => {
     wrapper.unmount()
   })
 
+  it('lets the admin filter by status, expert and case, and clear the filters', async () => {
+    logIn(admin)
+    const rows = [
+      summary({ id: 'a1', state: 'assigned', expert_pseudonym: 'E07', vignette_code: 'V001' }),
+      summary({ id: 'a2', state: 'in_progress', expert_pseudonym: 'E07', vignette_code: 'V002' }),
+      summary({ id: 'a3', state: 'in_progress', expert_pseudonym: 'E12', vignette_code: 'V002' }),
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => jsonResponse(200, rows)),
+    )
+    const wrapper = mountView(AssignmentsView)
+    await flushPromises()
+    const count = () => wrapper.findAll('[data-testid="assignment"]').length
+    expect(count()).toBe(3)
+    expect(wrapper.find('[data-testid="clear-filters"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="filter-state"]').setValue('in_progress')
+    expect(count()).toBe(2)
+    expect(wrapper.get('[data-testid="filter-count"]').text()).toBe('Showing 2 of 3')
+
+    await wrapper.get('[data-testid="filter-expert"]').setValue('E12')
+    expect(count()).toBe(1)
+
+    await wrapper.get('[data-testid="filter-vignette"]').setValue('V001')
+    expect(count()).toBe(0)
+    expect(wrapper.get('[data-testid="no-match"]').text()).toContain('No assignments match')
+
+    await wrapper.get('[data-testid="clear-filters"]').trigger('click')
+    expect(count()).toBe(3)
+    expect(wrapper.find('[data-testid="no-match"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('shows a dash when the admin has nothing to do on a row', async () => {
     logIn(admin)
     vi.stubGlobal(

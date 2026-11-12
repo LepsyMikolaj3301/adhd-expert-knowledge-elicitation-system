@@ -11,6 +11,7 @@ import {
 } from '@/api/client'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import CaseCard from '@/components/CaseCard.vue'
+import { describeAdminError } from '@/copy'
 
 const props = defineProps<{ assignments: AssignmentSummary[] }>()
 const emit = defineEmits<{ done: []; cancel: [] }>()
@@ -36,10 +37,11 @@ const held = computed(
 )
 
 function explain(e: unknown): string {
-  if (!(e instanceof ApiError)) return 'Something went wrong. Please try again.'
+  if (!(e instanceof ApiError)) return describeAdminError(e)
   const ids = (e.details?.expert_ids ?? []) as string[]
   const names = ids.map((id) => users.value.find((u) => u.id === id)?.display_name ?? id)
-  return names.length ? `${e.message} ${names.join(', ')}.` : e.message
+  const message = describeAdminError(e)
+  return names.length ? `${message} ${names.join(', ')}.` : message
 }
 
 async function submit() {

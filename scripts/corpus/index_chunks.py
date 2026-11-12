@@ -24,11 +24,14 @@ from pathlib import Path, PurePosixPath
 import asyncpg
 import numpy as np
 from pgvector.asyncpg import register_vector
+from sources import excluded_source_ids
+from storage import s3_get, s3_list_keys, s3_put, s3_settings
 
 from app.indexing import IndexingConfig, bm25, build_embedder, load_indexing_config
 from app.settings import settings
-from app.sources import excluded_source_ids
-from app.storage import s3_get, s3_list_keys, s3_put
+
+# Bump when the indexed rows change for the same config, so documents are re-indexed.
+INDEXER_VERSION = "1"
 
 INSERT_CHUNK = """
 INSERT INTO chunks (
@@ -93,7 +96,7 @@ async def document_id_of(conn: asyncpg.Connection, document: dict) -> str | None
     # registered (or re-registered) after chunking.
     row = await conn.fetchrow(
         "SELECT id FROM documents WHERE s3_bucket = $1 AND s3_key = $2",
-        settings.s3_bucket,
+        s3_settings.s3_bucket,
         document["source"]["file"]["key"],
     )
     return str(row["id"]) if row else None
@@ -125,15 +128,23 @@ def chunk_rows(
             cfg.embeddings.model,
             key,
             sha,
-            cfg.config_hash(),
+            indexing_hash(cfg),
         )
         for c, vector in zip(document["chunks"], vectors, strict=True)
     ]
 
 
+def indexing_hash(cfg: IndexingConfig) -> str:
+    """Hash of everything that changes the stored dense vectors. `sparse` is left out: the BM25
+    weights are refitted over the whole corpus on every index run, so changing them never needs a
+    re-embedding."""
+    payload = {"version": INDEXER_VERSION, **cfg.model_dump(mode="json", exclude={"sparse"})}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:12]
+
+
 async def run(args: argparse.Namespace) -> int:
     cfg = load_indexing_config(args.config)
-    config_hash = cfg.config_hash()
+    config_hash = indexing_hash(cfg)
     excluded = excluded_source_ids()
     keys = chunked_keys(args.prefix)
     for key in [k for k in keys if PurePosixPath(k).parts[-2] in excluded]:

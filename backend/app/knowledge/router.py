@@ -1,15 +1,17 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Query
-from sqlalchemy import select
 
-from app.assignments.models import Assignment
 from app.auth.dependencies import AdminUser
 from app.core.db import DbSession
+from app.knowledge import search as knowledge_search
 from app.knowledge.models import KnowledgeUnit, UnitStatus
-from app.knowledge.schemas import KnowledgeUnitListItem
-from app.users.models import User
-from app.vignettes.models import Vignette, VignetteVersion
+from app.knowledge.schemas import (
+    KnowledgeSearchRequest,
+    KnowledgeSearchResponse,
+    KnowledgeUnitListItem,
+)
+from app.knowledge.service import unit_items
 
 router = APIRouter(tags=["knowledge"])
 
@@ -22,34 +24,14 @@ async def list_knowledge_units(
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[KnowledgeUnitListItem]:
-    query = (
-        select(KnowledgeUnit, Vignette.code, VignetteVersion.version, User.pseudonym)
-        .join(Assignment, Assignment.id == KnowledgeUnit.assignment_id)
-        .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
-        .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-        .join(User, User.id == Assignment.expert_id)
-        .order_by(KnowledgeUnit.created_at.desc(), KnowledgeUnit.ordinal, KnowledgeUnit.id)
-        .limit(limit)
-        .offset(offset)
-    )
-    if unit_status is not None:
-        query = query.where(KnowledgeUnit.status == unit_status)
-    rows = (await db.execute(query)).all()
-    return [
-        KnowledgeUnitListItem(
-            id=unit.id,
-            assignment_id=unit.assignment_id,
-            vignette_code=code,
-            vignette_version=version,
-            expert_pseudonym=pseudonym,
-            ordinal=unit.ordinal,
-            review_round=unit.review_round,
-            text=unit.text,
-            kind=unit.kind,
-            direction=unit.direction,
-            patient_words=unit.patient_words,
-            status=unit.status,
-            created_at=unit.created_at,
-        )
-        for unit, code, version, pseudonym in rows
-    ]
+    conditions = [KnowledgeUnit.status == unit_status] if unit_status is not None else []
+    return await unit_items(db, *conditions, limit=limit, offset=offset)
+
+
+@router.post("/knowledge-units/search")
+async def search_knowledge_units(
+    request: KnowledgeSearchRequest, db: DbSession, _: AdminUser
+) -> KnowledgeSearchResponse:
+    """Runs the platform's retrievers over the ingested units, for the admin to see what a
+    question or a patient's text finds. A POST, so that typed text stays out of URLs and logs."""
+    return await knowledge_search.search(db, request)

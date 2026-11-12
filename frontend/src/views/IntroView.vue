@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import StepFlow from '@/components/StepFlow.vue'
 import { acknowledgeIntro } from '@/intro'
 import { DIRECTIONS, INTRO } from '@/copy'
 import { safeNextPath } from '@/router/guard'
@@ -51,23 +52,7 @@ async function carryOn() {
       </h2>
       <p class="mt-2 font-medium text-ink">{{ INTRO.structure.lead }}</p>
 
-      <ol
-        class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"
-        aria-label="The order of a case"
-        data-testid="intro-flow"
-      >
-        <template v-for="(label, i) in INTRO.structure.flow" :key="label">
-          <li
-            class="rounded-sm border px-2 py-1"
-            :class="label === 'Check' ? 'border-action font-semibold text-ink' : 'border-line'"
-          >
-            {{ label }}
-          </li>
-          <li v-if="i < INTRO.structure.flow.length - 1" aria-hidden="true" class="text-muted">
-            →
-          </li>
-        </template>
-      </ol>
+      <StepFlow class="mt-3" :steps="INTRO.structure.flow" current="Check" testid="intro-flow" />
 
       <dl class="mt-4 space-y-3">
         <div v-for="item in INTRO.structure.steps" :key="item.term">

@@ -19,13 +19,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "elicitation"))
 import chip_findings as cf  # noqa: E402
 from build_chip_units import load_built  # noqa: E402
 from chips_schema import ChipDocument, to_legacy  # noqa: E402
+from elicitation_units import build_units  # noqa: E402
 from expert_metrics import Item  # noqa: E402
 from expert_retrieval import LEAN, Searcher, build_indexes, make_embed  # noqa: E402
 from make_fixtures import fixture_dir  # noqa: E402
 from make_unit_keys import role_for  # noqa: E402
 from rag_common import RRF_K  # noqa: E402
 
-from app.elicitation.units import build_units  # noqa: E402
 from expert_knowledge_core.retrieval import (  # noqa: E402
     CONTEXT_BONUS,
     NEAR_DUPLICATE,

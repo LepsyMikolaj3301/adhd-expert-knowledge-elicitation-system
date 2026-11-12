@@ -7,7 +7,7 @@ Each source's `attempts` are tried in order; the first one whose response passes
 check is saved unmodified next to a meta.json. Sources whose saved files still match the sha256
 in meta.json are skipped unless --force is given. ICD-API sources need ICD_CLIENT_ID and
 ICD_CLIENT_SECRET (read from the environment or .env) and are skipped without them; `manual`
-sources are copied from data/manual/. The manifest is validated against app.sources.Manifest
+sources are copied from data/manual/. The manifest is validated against sources.Manifest
 on load. Set CONTACT_EMAIL so the User-Agent carries a contact address.
 """
 
@@ -25,8 +25,7 @@ from urllib.parse import urlencode
 
 import httpx
 from dotenv import load_dotenv
-
-from app.sources import EuropePmcAttempt, HttpAttempt, Source, load_manifest
+from sources import EuropePmcAttempt, HttpAttempt, Source, load_manifest
 
 EUROPEPMC = "https://www.ebi.ac.uk/europepmc/webservices/rest"
 EXTENSIONS = {"pdf": ".pdf", "xml": ".xml", "html": ".html", "json": ".json"}

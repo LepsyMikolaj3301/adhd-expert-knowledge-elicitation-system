@@ -1,9 +1,9 @@
 """Chunking methods. See config/chunking.yaml for how to add one."""
 
-from app.chunking.base import Chunk, Chunker, TokenCounter
-from app.chunking.config import ChunkingConfig, load_chunking_config
-from app.chunking.semantic import SemanticChunker
 from app.embeddings import OllamaEmbedder
+from chunking.base import Chunk, Chunker, TokenCounter
+from chunking.config import ChunkingConfig, load_chunking_config
+from chunking.semantic import SemanticChunker
 
 __all__ = ["Chunk", "Chunker", "ChunkingConfig", "build_chunker", "load_chunking_config"]
 

@@ -29,6 +29,8 @@ import {
 import { plainText } from '@/answering/plainText'
 import { useAnswerDraft } from '@/answering/useAnswerDraft'
 import type { Citation, Direction, LinkedHighlight, Q4Answer, QuestionView } from '@/api/client'
+import CasePanel from '@/components/answering/CasePanel.vue'
+import CiteHelp from '@/components/answering/CiteHelp.vue'
 import CitationTable from '@/components/answering/CitationTable.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import ProofreadStep from '@/components/answering/ProofreadStep.vue'
@@ -39,9 +41,9 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue'
 import UnsavedText from '@/components/answering/UnsavedText.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
 import {
+  CASE_TEXT,
   describeError,
   directionNeeded,
-  FRAMING_LABELS,
   notMentioned,
   removalNote,
   renumberNote,
@@ -195,6 +197,7 @@ function edited() {
 }
 
 function setAnswer(id: string, text: string) {
+  step.value = id
   payload.value.answers = { ...payload.value.answers, [id]: text }
   edited()
 }
@@ -262,12 +265,44 @@ async function showStep(id: StepId) {
   else column.value?.querySelector(`[data-question="${id}"]`)?.scrollIntoView?.({ block: 'start' })
 }
 
+// The scroll a jump starts must not be read as the person scrolling to a neighbour.
+let jumping = false
+let jumpTimer: ReturnType<typeof setTimeout> | undefined
+
 function go(id: StepId) {
   actionError.value = ''
   activeChip.value = null
   saveQuietly()
   step.value = id
-  void showStep(id)
+  jumping = true
+  clearTimeout(jumpTimer)
+  jumpTimer = setTimeout(() => (jumping = false), 600)
+  // The cursor goes with the view, so typing carries on in the question that was chosen.
+  void showStep(id).then(() => id !== REVIEW && blocks.get(id)?.focusEnd())
+}
+
+/**
+ * Scrolling the questions moves the rail: the question whose top is the last above 40% of the way
+ * down the visible area is the one being read. At the very bottom it is the last question.
+ * shortcut: reads a few rectangles per scroll event; with many more questions this wants an
+ * IntersectionObserver.
+ */
+function followScroll() {
+  if (jumping || step.value === REVIEW || !editable.value) return
+  const scroller =
+    column.value && getComputedStyle(column.value).overflowY === 'auto' ? column.value : null
+  const top = scroller ? scroller.getBoundingClientRect().top : 0
+  const height = scroller ? scroller.clientHeight : window.innerHeight
+  const line = top + height * 0.4
+  const atEnd = scroller
+    ? scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2
+    : window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2
+  let current: string | undefined
+  for (const q of questions.value) {
+    const el = blocks.get(q.id)?.$el as Element | undefined
+    if (el && (atEnd || el.getBoundingClientRect().top <= line)) current = q.id
+  }
+  if (current) step.value = current
 }
 
 /**
@@ -381,6 +416,8 @@ watch(
 onMounted(() => {
   void load()
   window.addEventListener('beforeunload', warnBeforeClosing)
+  // Capture: scroll events do not bubble, and the questions may scroll in their own column.
+  window.addEventListener('scroll', followScroll, { capture: true, passive: true })
 })
 
 onUnmounted(() => {
@@ -388,6 +425,8 @@ onUnmounted(() => {
   clearTimeout(pulseTimer)
   clearInterval(pollTimer)
   window.removeEventListener('beforeunload', warnBeforeClosing)
+  window.removeEventListener('scroll', followScroll, { capture: true })
+  clearTimeout(jumpTimer)
 })
 
 onBeforeRouteLeave(async () => {
@@ -414,7 +453,6 @@ onBeforeRouteLeave(async () => {
           <RouterLink to="/assignments">My cases</RouterLink>
           <span class="px-1.5 text-muted">/</span>
           <span class="font-medium text-ink">Case {{ vignette.code }}</span>
-          <span class="pl-3 text-muted">{{ FRAMING_LABELS[vignette.framing] }}</span>
         </p>
         <StepRail
           v-if="editable"
@@ -460,23 +498,20 @@ onBeforeRouteLeave(async () => {
       >
         <!-- The patient's words and the citations stay in view while the expert writes. -->
         <div class="flex flex-col gap-4 lg:sticky lg:top-4 lg:h-[calc(100vh-6rem)]">
-          <div
-            class="min-h-0 overflow-y-auto rounded-sm border border-line bg-surface lg:max-h-[60%] lg:shrink-0"
+          <CasePanel
+            :summary="vignette.patient_summary"
+            :framing="vignette.framing"
+            :lead="CASE_TEXT.answerLead"
+            text-class="min-h-0 overflow-y-auto lg:max-h-[55%] lg:shrink-0"
           >
-            <p
-              v-if="vignette.patient_summary"
-              class="px-5 pt-4 text-sm text-muted"
-              data-testid="patient-summary"
-            >
-              About the patient: {{ vignette.patient_summary }}
-            </p>
             <VignetteText
               :text="vignette.text"
               :active="activeMark"
               :can-cite="editable"
               @cite="onCite"
             />
-          </div>
+          </CasePanel>
+          <CiteHelp v-if="editable" class="shrink-0" />
           <p v-if="notice" class="text-sm text-danger" role="status">{{ notice }}</p>
           <CitationTable
             class="lg:flex-1"
@@ -565,9 +600,9 @@ onBeforeRouteLeave(async () => {
                   :flash-key="flashKey"
                   @focusin="step = q.id"
                   @answer="setAnswer(q.id, $event)"
-                  @q4="setQ4"
-                  @rate="setRating"
-                  @insufficient="setInsufficient"
+                  @q4="((step = q.id), setQ4($event))"
+                  @rate="((step = q.id), setRating($event))"
+                  @insufficient="((step = q.id), setInsufficient())"
                   @active="activeChip = $event"
                 />
               </div>

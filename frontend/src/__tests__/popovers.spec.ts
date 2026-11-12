@@ -18,27 +18,37 @@ describe('CaseCard', () => {
     opening: 'I could not sleep…',
   }
 
-  it('shows the summary and the opening of the text on hover or focus', async () => {
+  it('shows the summary and the opening of the text only after a click', async () => {
     const wrapper = mount(CaseCard, { props })
     expect(wrapper.text()).toBe('Case V001 v2')
     expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(false)
 
     await wrapper.trigger('mouseenter')
+    expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="case-trigger"]').trigger('click')
     expect(wrapper.get('[data-testid="case-summary"]').text()).toBe('A student before an exam.')
     expect(wrapper.get('[data-testid="case-opening"]').text()).toBe('I could not sleep…')
     expect(wrapper.text()).toContain('Email · 130 words')
 
-    await wrapper.trigger('mouseleave')
+    await wrapper.get('[data-testid="case-trigger"]').trigger('click')
     expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(false)
-    await wrapper.trigger('focusin')
-    expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(true)
   })
 
-  it('closes on Escape', async () => {
+  it('closes on Escape and on a click outside', async () => {
     const wrapper = mount(CaseCard, { props, attachTo: document.body })
-    await wrapper.trigger('mouseenter')
+    const trigger = wrapper.get('[data-testid="case-trigger"]')
+    await trigger.trigger('click')
     expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(true)
-    await wrapper.trigger('mouseleave')
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(false)
+
+    await trigger.trigger('click')
+    document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="case-summary"]').exists()).toBe(false)
     wrapper.unmount()
   })
 })

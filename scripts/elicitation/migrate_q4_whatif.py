@@ -28,16 +28,16 @@ import sys
 from pathlib import Path
 
 import export_schema
-from make_fixtures import FIXTURES, ROOT, SOURCES, edge_cases, fixture_dir, write_json
-
-from app.elicitation.questions import QUESTIONS
-from app.elicitation.schema import (
+from elicitation_schema import (
     SCHEMA_VERSION,
     ElicitationDocument,
     ReferenceClaim,
     Vignette,
     content_hash,
 )
+from make_fixtures import FIXTURES, ROOT, SOURCES, edge_cases, fixture_dir, write_json
+
+from app.vignettes.questions import QUESTIONS
 
 TIERS = ("bronze", "silver", "gold")
 TEMPLATE = FIXTURES / "q4_whatifs.json"
@@ -79,7 +79,7 @@ def save(path: Path, data) -> bool:
 
 def with_q4(question_ids: list[str], ask: bool) -> list[str]:
     ids = set(question_ids) - {"Q4"} | ({"Q4"} if ask else set())
-    return [q.id for q in QUESTIONS if q.id in ids]
+    return [q.id for q in QUESTIONS.values() if q.id in ids]
 
 
 # --- template ----------------------------------------------------------------------------------

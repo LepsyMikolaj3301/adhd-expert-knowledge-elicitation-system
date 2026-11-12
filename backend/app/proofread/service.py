@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.assignments.answers import CHIP_RE
+from app.assignments.answers import check_chips
 from app.assignments.models import Assignment, Submission
 from app.assignments.state_machine import check_transition, transition
 from app.assignments.states import Action, Actor, State
@@ -29,21 +29,11 @@ from app.proofread.schemas import (
 )
 from app.settings import settings
 from app.users.models import User
-from app.vignettes.models import Vignette, VignetteVersion
+from app.vignettes.models import VignetteVersion
 from app.vignettes.questions import QUESTIONS, QuestionId, render_question
+from app.vignettes.service import version_and_code
 
 # --- reading --------------------------------------------------------------------------------
-
-
-async def version_and_code(db: AsyncSession, version_id: UUID) -> tuple[VignetteVersion, str]:
-    row = (
-        await db.execute(
-            select(VignetteVersion, Vignette.code)
-            .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-            .where(VignetteVersion.id == version_id)
-        )
-    ).one()
-    return row[0], row[1]
 
 
 async def get_round(
@@ -151,16 +141,6 @@ async def view(
 # --- the author's edits ---------------------------------------------------------------------
 
 
-def _check_chips(question_id: str, text: str, chips: set[int]) -> None:
-    for chip in map(int, CHIP_RE.findall(text)):
-        if chip not in chips:
-            raise invalid(
-                "unknown_chip",
-                f"{question_id} cites [{chip}], which is not in your citations.",
-                {"question_id": question_id, "chip": chip},
-            )
-
-
 def _check_overrides(
     overrides: dict[QuestionId, dict[str, list[str]]], highlights: list[dict]
 ) -> None:
@@ -214,7 +194,7 @@ async def save(
     chips = {h["chip"] for h in highlights if h["chip"] is not None}
     _check_overrides(body.overrides, highlights)
     for question_id, text in body.answers.items():
-        _check_chips(question_id, text, chips)
+        check_chips(question_id, text, chips)
     for row in rows:
         text = body.answers.get(row.question_id, row.final)
         overrides = body.overrides.get(row.question_id, {})

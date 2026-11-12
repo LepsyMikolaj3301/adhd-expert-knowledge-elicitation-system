@@ -10,13 +10,10 @@ files it under `case`. A model that can't be reached is different: that raises, 
 and is retried, instead of quietly filing everything under `case`.
 """
 
-import json
-import re
 from typing import Any
 
-import httpx
-
 from app.knowledge import findings
+from app.ollama import chat_json, parse_json_object
 from app.prompts import Prompt, load_prompt
 from app.settings import settings
 
@@ -50,21 +47,12 @@ def prompt_for(
     )
 
 
-def _parse(raw: str) -> dict | None:
-    raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
-    return data if isinstance(data, dict) else None
-
-
 def check_labels(
     raw: str, sentences: list[dict], left: list[str], allowed: set[str]
 ) -> tuple[dict[str, list[str]], list[str]]:
     """(valid entries, errors). A valid entry is a non-empty list of allowed ids; `prev` alone and
     never for the first sentence of an answer. The errors never quote the reply."""
-    data = _parse(raw)
+    data = parse_json_object(raw)
     if data is None:
         return {}, ["the reply is not a JSON object"]
     first = {
@@ -91,23 +79,7 @@ def check_labels(
 
 async def ask(system: str | None, user: str, seed: int) -> str:
     """One chat call to Ollama in JSON mode. Tests replace this function."""
-    messages = [{"role": "user", "content": user}]
-    if system:
-        messages.insert(0, {"role": "system", "content": system})
-    body: dict[str, Any] = {
-        "model": settings.classifier_model,
-        "messages": messages,
-        "stream": False,
-        "think": False,
-        "format": "json",
-        "options": {"seed": seed, **OPTIONS},
-    }
-    async with httpx.AsyncClient(
-        base_url=settings.ollama_base_url, timeout=settings.ollama_request_timeout
-    ) as client:
-        response = await client.post("/api/chat", json=body)
-        response.raise_for_status()
-        return response.json()["message"]["content"]
+    return await chat_json(settings.classifier_model, system, user, {"seed": seed, **OPTIONS})
 
 
 async def classify(

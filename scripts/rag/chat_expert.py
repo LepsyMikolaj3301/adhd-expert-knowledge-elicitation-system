@@ -26,6 +26,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
+from elicitation_units import sentences
 from eval_expert_generation import EXPERT_SYSTEM_PROMPT, build_prompt, checks
 from eval_expert_units import parse
 from expert_metrics import fill_budget
@@ -44,7 +45,6 @@ from rag_common import (
     write_json,
 )
 
-from app.elicitation.units import sentences
 from expert_knowledge_core.prompts import PATIENT_SYSTEM_PROMPT, build_patient_prompt  # noqa: F401
 
 RUNS = ROOT / "data/eval/expert_runs"

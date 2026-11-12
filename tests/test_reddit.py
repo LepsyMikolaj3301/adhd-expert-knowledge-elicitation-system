@@ -2,10 +2,9 @@ import json
 
 import make_fixtures
 import pytest
+from elicitation_schema import MAX_WORDS, MIN_WORDS, Vignette
 from leak_terms import find_leaks
 from reddit_posts import clean_post, load_pool, pick_posts, trait_score
-
-from app.elicitation.schema import MAX_WORDS, MIN_WORDS, Vignette
 
 SENT = "I put off the start again and then the deadline was suddenly here, so I was late. "
 

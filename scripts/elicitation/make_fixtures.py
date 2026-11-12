@@ -43,6 +43,22 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
+from elicitation_schema import (
+    MAX_WORDS,
+    MIN_WORDS,
+    SCHEMA_VERSION,
+    Confounder,
+    ElicitationDocument,
+    PlantedCue,
+    QuestionId,
+    ReferenceClaim,
+    Response,
+    ShiftAnswer,
+    VariantInfo,
+    Vignette,
+    VignetteDesign,
+    content_hash,
+)
 from leak_terms import find_leaks
 from llm_clients import (
     AwaitingResponse,
@@ -59,23 +75,7 @@ from pydantic import ValidationError
 from reddit_posts import load_pool as load_reddit_pool
 from reddit_posts import pick_posts
 
-from app.elicitation.questions import QUESTIONS, SHIFT_LABELS, TOWARD_LABELS, render_question
-from app.elicitation.schema import (
-    MAX_WORDS,
-    MIN_WORDS,
-    SCHEMA_VERSION,
-    Confounder,
-    ElicitationDocument,
-    PlantedCue,
-    QuestionId,
-    ReferenceClaim,
-    Response,
-    ShiftAnswer,
-    VariantInfo,
-    Vignette,
-    VignetteDesign,
-    content_hash,
-)
+from app.vignettes.questions import QUESTIONS, SHIFT_LABELS, TOWARD_LABELS, render_question
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "data/fixtures"
@@ -428,7 +428,7 @@ def q4_whatif_from(data: dict) -> str | None:
 
 def question_ids(q4_whatif: str | None) -> list[QuestionId]:
     """All questions; Q4 only when there is a what-if to ask about."""
-    return [q.id for q in QUESTIONS if q.id != "Q4" or q4_whatif]
+    return [q.id for q in QUESTIONS.values() if q.id != "Q4" or q4_whatif]
 
 
 def quoted_strings(text: str) -> list[str]:
@@ -473,7 +473,9 @@ def answer_pieces(data: dict, vignette: Vignette, kind: str):
     answers = data.get("answers")
     if not isinstance(answers, dict):
         raise Rejected("no 'answers' object")
-    open_ids = [q.id for q in QUESTIONS if q.kind == "open" and q.id in vignette.question_ids]
+    open_ids = [
+        q.id for q in QUESTIONS.values() if q.kind == "open" and q.id in vignette.question_ids
+    ]
     clean = {}
     for qid in open_ids:
         value = answers.get(qid)
@@ -715,7 +717,7 @@ def answer_request(
 ) -> GenRequest:
     questions = "\n".join(
         f"{q.id}: {render_question(q, vignette.q4_whatif)}" + (Q4_SCALE if q.id == "Q4" else "")
-        for q in QUESTIONS
+        for q in QUESTIONS.values()
         if q.id in vignette.question_ids
     )
     p = load_prompt(prompt).fill(

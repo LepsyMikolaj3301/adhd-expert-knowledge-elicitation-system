@@ -1,7 +1,7 @@
 # ElicitationDocument
 
 One expert's output from one session on the web platform: the vignettes they were shown, in order,
-and their written answers. **It is the unit the backend ingests.** Code: `backend/app/elicitation/schema.py`;
+and their written answers. **It is the unit the backend ingests.** Code: `scripts/elicitation/elicitation_schema.py`;
 JSON Schema: `data/schemas/elicitation_document.schema.json` (regenerate with `python scripts/elicitation/export_schema.py`).
 
 A document is immutable once submitted. Everything derived from it (extracted claims, member-check
@@ -57,7 +57,7 @@ how far to trust it depends on the tier, see [fixtures.md](fixtures.md).
 
 **Replaced for the web application:** the workflow of submitted answers is now in
 [backend-workflow.md](backend-workflow.md). The older states below remain in
-`backend/app/elicitation/lifecycle.py` only for the existing fixtures, scripts and their tests.
+`scripts/elicitation/elicitation_lifecycle.py` only for the existing fixtures, scripts and their tests.
 
 ```
 submitted → extracted → member_checked → approved

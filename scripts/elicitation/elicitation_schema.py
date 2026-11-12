@@ -13,11 +13,12 @@ from typing import Literal, Self
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
+from app.vignettes.questions import GATE, QUESTIONS, QuestionId
+
 SCHEMA_VERSION = "1.1"  # 1.1: Q4 is a what-if scale (ShiftAnswer), Q1-Q3 gate
 SYNTHETIC_PREFIX = "SYN-"
 MIN_WORDS, MAX_WORDS = 120, 250
 
-QuestionId = Literal["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"]
 Strength = Literal["weak", "moderate", "strong"]
 # "general": traits shown through mundane content. "text_analysis": probes how a clinician reads
 # traits in a patient's own text - expert knowledge that the RAG corpus (criteria, guidelines,
@@ -37,14 +38,6 @@ def content_hash(text: str) -> str:
 
 def is_synthetic_id(expert_id: str) -> bool:
     return expert_id.startswith(SYNTHETIC_PREFIX)
-
-
-class Question(_Model):
-    id: QuestionId
-    # Q4 contains "{whatif}", filled from Vignette.q4_whatif.
-    text: str = Field(min_length=1)
-    # shift: a -2..+2 scale (Response.q4) plus an optional why (answers["Q4"])
-    kind: Literal["open", "rating_1_5", "shift"]
 
 
 class PlantedCue(_Model):
@@ -235,9 +228,6 @@ class ElicitationDocument(_Model):
 
     @model_validator(mode="after")
     def _check(self) -> Self:
-        # lazy: questions.py imports Question from this module
-        from app.elicitation.questions import GATE, QUESTIONS_BY_ID
-
         if self.is_synthetic != is_synthetic_id(self.expert_id):
             raise ValueError(
                 f"synthetic_flag_mismatch: is_synthetic={self.is_synthetic} "
@@ -266,7 +256,7 @@ class ElicitationDocument(_Model):
             for qid in r.answers:
                 if qid not in v.question_ids:
                     raise ValueError(f"question_not_asked: {qid} was not asked for {v.id}")
-                if QUESTIONS_BY_ID[qid].kind == "rating_1_5":
+                if QUESTIONS[qid].kind == "rating_1_5":
                     raise ValueError(f"answer_to_rating_question: {qid} is answered via rating")
             if (r.rating is not None or r.insufficient_information) and "Q6" not in v.question_ids:
                 raise ValueError(f"question_not_asked: Q6 was not asked for {v.id}")

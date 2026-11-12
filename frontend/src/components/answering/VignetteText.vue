@@ -3,7 +3,6 @@ import { computed, nextTick, ref, watch } from 'vue'
 
 import { segmentsFor } from '@/answering/highlights'
 import { inkOf } from '@/answering/quoteFocus'
-import InfoPopover from '@/components/InfoPopover.vue'
 
 const props = defineProps<{
   text: string
@@ -75,23 +74,6 @@ watch(shown, async (citation) => {
 
 <template>
   <div class="px-5 py-5 md:px-7">
-    <div v-if="canCite" class="mb-3 text-sm text-muted">
-      <InfoPopover mode="hover">
-        <template #trigger="{ panelId }">
-          <span
-            class="cursor-help underline decoration-dotted underline-offset-4"
-            tabindex="0"
-            :aria-describedby="panelId"
-            data-testid="cite-help"
-            >How to add a quote</span
-          >
-        </template>
-        <p class="text-ink">
-          Select words in the text below. They become a quote as soon as you let go.
-        </p>
-        <p class="text-muted">Then choose its direction in the list of quotes.</p>
-      </InfoPopover>
-    </div>
     <p ref="root" class="patient-text" data-testid="vignette-text" @pointerdown="onPointerDown">
       <span>{{ parts.before }}</span
       ><mark

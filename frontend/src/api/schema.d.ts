@@ -392,6 +392,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/knowledge-units/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search Knowledge Units
+         * @description Runs the platform's retrievers over the ingested units, for the admin to see what a
+         *     question or a patient's text finds. A POST, so that typed text stays out of URLs and logs.
+         */
+        post: operations["search_knowledge_units_api_v1_knowledge_units_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -863,6 +884,16 @@ export interface components {
             /** Stopped */
             stopped: number;
         };
+        /**
+         * CitedTogether
+         * @description A quote cited together with the unit's own, shown beside the unit's text.
+         */
+        CitedTogether: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+        };
         /** CommentCreate */
         CommentCreate: {
             /** Body */
@@ -1152,6 +1183,8 @@ export interface components {
             recent_reviews: components["schemas"]["ReviewItem"][];
             /** Reviews Waiting */
             reviews_waiting: components["schemas"]["ReviewItem"][];
+            /** Reviews Waiting Total */
+            reviews_waiting_total: number;
             /** Unread Activity */
             unread_activity: number;
         };
@@ -1166,6 +1199,39 @@ export interface components {
             invite_path: string;
             user: components["schemas"]["UserAdminView"];
         };
+        /** KnowledgeHit */
+        KnowledgeHit: {
+            /** Matched Sentence */
+            matched_sentence: string | null;
+            /** Rank */
+            rank: number;
+            /** Score */
+            score: number;
+            /** Similarity */
+            similarity: number | null;
+            unit: components["schemas"]["KnowledgeUnitListItem"];
+        };
+        /** KnowledgeSearchRequest */
+        KnowledgeSearchRequest: {
+            /**
+             * K
+             * @default 8
+             */
+            k: number;
+            /**
+             * Mode
+             * @default question
+             * @enum {string}
+             */
+            mode: "question" | "patient_text";
+            /** Query */
+            query: string;
+        };
+        /** KnowledgeSearchResponse */
+        KnowledgeSearchResponse: {
+            /** Hits */
+            hits: components["schemas"]["KnowledgeHit"][];
+        };
         /** KnowledgeUnitListItem */
         KnowledgeUnitListItem: {
             /**
@@ -1173,15 +1239,31 @@ export interface components {
              * Format: uuid
              */
             assignment_id: string;
+            /** Classifier */
+            classifier: string | null;
+            /** Context */
+            context: components["schemas"]["CitedTogether"][];
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
             /** Direction */
-            direction: string | null;
+            direction: ("toward" | "away" | "neutral" | "unclear") | null;
+            /** Embed Text */
+            embed_text: string | null;
+            /** Embed Text Combined */
+            embed_text_combined: string | null;
+            /** Expert Is Synthetic */
+            expert_is_synthetic: boolean;
             /** Expert Pseudonym */
             expert_pseudonym: string;
+            /** Findings Version */
+            findings_version: number | null;
+            /** Framing */
+            framing: string | null;
+            /** Highlight Id */
+            highlight_id: string | null;
             /**
              * Id
              * Format: uuid
@@ -1193,8 +1275,12 @@ export interface components {
             ordinal: number;
             /** Patient Words */
             patient_words: string | null;
+            /** Prompt */
+            prompt: string | null;
             /** Review Round */
             review_round: number;
+            /** Sentences */
+            sentences: components["schemas"]["UnitSentence"][];
             status: components["schemas"]["UnitStatus"];
             /** Text */
             text: string;
@@ -1208,7 +1294,7 @@ export interface components {
             /** Chip */
             chip: number | null;
             /** Direction */
-            direction: string | null;
+            direction: ("toward" | "away" | "neutral" | "unclear") | null;
             /** Id */
             id: string;
             /** Origin */
@@ -1589,6 +1675,15 @@ export interface components {
             /** Vignette Hash */
             vignette_hash: string;
         };
+        /** UnitSentence */
+        UnitSentence: {
+            /** Assigned By */
+            assigned_by: string | null;
+            /** Id */
+            id: string;
+            /** Question Id */
+            question_id: string;
+        };
         /**
          * UnitStatus
          * @enum {string}
@@ -1632,11 +1727,6 @@ export interface components {
              * Format: email
              */
             email: string;
-            /**
-             * Is Synthetic
-             * @default false
-             */
-            is_synthetic: boolean;
             role: components["schemas"]["Role"];
         };
         /** UserUpdate */
@@ -2602,6 +2692,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["KnowledgeUnitListItem"][];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    search_knowledge_units_api_v1_knowledge_units_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeSearchResponse"];
                 };
             };
             /** @description Client Error */

@@ -24,10 +24,10 @@ from pathlib import Path
 
 import asyncpg
 from botocore.exceptions import ClientError
+from sources import excluded_source_ids
+from storage import get_s3_client, s3_settings
 
 from app.settings import settings
-from app.sources import excluded_source_ids
-from app.storage import get_s3_client
 
 UPSERT_DOCUMENT = """
 INSERT INTO documents (origin, source_id, title, s3_bucket, s3_key, filename, content_type,
@@ -60,7 +60,7 @@ class SourceFile:
 
 def remote_sha256(key: str) -> str | None:
     try:
-        head = get_s3_client().head_object(Bucket=settings.s3_bucket, Key=key)
+        head = get_s3_client().head_object(Bucket=s3_settings.s3_bucket, Key=key)
     except ClientError as e:
         if e.response["Error"]["Code"] in ("404", "NoSuchKey", "NotFound"):
             return None
@@ -89,7 +89,7 @@ async def register(documents: list[tuple[str, Path, SourceFile]]) -> None:
                     UPSERT_DOCUMENT,
                     meta["source_id"],
                     meta.get("title"),
-                    settings.s3_bucket,
+                    s3_settings.s3_bucket,
                     key,
                     path.name,
                     record.get("content_type"),
@@ -152,7 +152,7 @@ def main() -> None:
             content_type = found.record.get("content_type") or content_type
         s3.upload_file(
             str(path),
-            settings.s3_bucket,
+            s3_settings.s3_bucket,
             key,
             ExtraArgs={"ContentType": content_type, "Metadata": metadata},
         )

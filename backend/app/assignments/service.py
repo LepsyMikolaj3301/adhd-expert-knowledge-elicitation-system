@@ -41,7 +41,7 @@ from app.reviews.models import ReviewParticipant
 from app.users.models import Role, User
 from app.vignettes.models import VersionStatus, Vignette, VignetteVersion
 from app.vignettes.questions import Q4_WORDING, QUESTIONS, render_question
-from app.vignettes.service import opening_words
+from app.vignettes.service import opening_words, version_and_code
 
 # Events of the discussion, which the author's timeline leaves out: it is for the workflow.
 REVIEW_CHATTER = ("review_opened", "comment_added", "vote_cast")
@@ -88,15 +88,12 @@ async def _require_opened(
         )
 
 
-async def load(
-    db: AsyncSession, assignment_id: UUID, viewer: User, *, allow_unopened: bool = False
-) -> tuple[Assignment, Actor]:
+async def load(db: AsyncSession, assignment_id: UUID, viewer: User) -> tuple[Assignment, Actor]:
     assignment = await db.get(Assignment, assignment_id)
     if assignment is None:
         raise not_found("Assignment")
     actor = await actor_for(db, assignment, viewer)
-    if not allow_unopened:
-        await _require_opened(db, assignment, actor, viewer)
+    await _require_opened(db, assignment, actor, viewer)
     return assignment, actor
 
 
@@ -128,21 +125,10 @@ def _visible_questions(version: VignetteVersion) -> list[QuestionView]:
     return views
 
 
-async def _version_and_code(db: AsyncSession, version_id: UUID) -> tuple[VignetteVersion, str]:
-    row = (
-        await db.execute(
-            select(VignetteVersion, Vignette.code)
-            .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-            .where(VignetteVersion.id == version_id)
-        )
-    ).one()
-    return row[0], row[1]
-
-
 async def build_view(
     db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User
 ) -> ExpertAssignment | AdminAssignment | PeerAssignment:
-    version, code = await _version_and_code(db, assignment.vignette_version_id)
+    version, code = await version_and_code(db, assignment.vignette_version_id)
     actions = allowed_actions(assignment.state, actor)
     words = len(version.text.split())
     if actor == Actor.ASSIGNEE:
@@ -173,6 +159,14 @@ async def build_view(
             started_at=assignment.started_at,
             submitted_at=assignment.submitted_at,
         )
+    peer_vignette = PeerVignette(
+        code=code,
+        version=version.version,
+        text=version.text,
+        framing=version.framing,  # ty: ignore[invalid-argument-type]
+        patient_summary=version.patient_summary,
+        word_count=words,
+    )
     if actor == Actor.REVIEWER:
         return PeerAssignment(
             id=assignment.id,
@@ -180,14 +174,7 @@ async def build_view(
             review_round=assignment.review_round,
             allowed_actions=actions,
             updated_at=assignment.updated_at,
-            vignette=PeerVignette(
-                code=code,
-                version=version.version,
-                text=version.text,
-                framing=version.framing,  # ty: ignore[invalid-argument-type]
-                patient_summary=version.patient_summary,
-                word_count=words,
-            ),
+            vignette=peer_vignette,
         )
     expert = await db.get(User, assignment.expert_id)
     assert expert is not None
@@ -202,14 +189,7 @@ async def build_view(
         vignette_code=code,
         vignette_version=version.version,
         vignette_version_id=version.id,
-        vignette=PeerVignette(
-            code=code,
-            version=version.version,
-            text=version.text,
-            framing=version.framing,  # ty: ignore[invalid-argument-type]
-            patient_summary=version.patient_summary,
-            word_count=words,
-        ),
+        vignette=peer_vignette,
         started_at=assignment.started_at,
         submitted_at=assignment.submitted_at,
     )
@@ -368,7 +348,7 @@ async def save_draft(
             "This draft was saved elsewhere. Reload it before continuing.",
             details={"current_version": draft.version},
         )
-    version, _ = await _version_and_code(db, assignment.vignette_version_id)
+    version, _ = await version_and_code(db, assignment.vignette_version_id)
     check_draft(payload, version.question_ids, version.text)
     draft.payload = payload.model_dump(mode="json")
     draft.version += 1
@@ -379,7 +359,7 @@ async def save_draft(
 async def submit(db: AsyncSession, assignment: Assignment, actor: Actor, viewer: User) -> None:
     check_transition(assignment.state, Action.SUBMIT, actor)
     draft = await _draft(db, assignment)
-    version, code = await _version_and_code(db, assignment.vignette_version_id)
+    version, code = await version_and_code(db, assignment.vignette_version_id)
     clean = clean_submission(
         AnswerPayload.model_validate(draft.payload), version.question_ids, version.text
     )

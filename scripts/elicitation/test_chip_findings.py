@@ -12,8 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import chip_findings as cf  # noqa: E402
 from chips_schema import ChipDocument, to_legacy  # noqa: E402
-
-from app.elicitation.schema import Vignette, VignetteDesign, content_hash  # noqa: E402
+from elicitation_schema import Vignette, VignetteDesign, content_hash  # noqa: E402
 
 FRAGS = [
     ("numbers on screen keep looking like they are moving when I blink", "away"),

@@ -44,10 +44,10 @@ from docling_core.types.doc import (
 
 # lxml's etree is a compiled extension, which ty cannot read; it imports fine at runtime.
 from lxml import etree  # ty: ignore[unresolved-import]
+from sources import excluded_source_ids
+from storage import get_s3_client, s3_get, s3_head, s3_put, s3_settings
 
 from app.settings import settings
-from app.sources import excluded_source_ids
-from app.storage import get_s3_client, s3_get, s3_head, s3_put
 
 PARSER_VERSION = "3"
 SCHEMA_VERSION = 1
@@ -116,7 +116,7 @@ BOILERPLATE_HEADINGS = re.compile(
 def list_source_ids(prefix: str) -> list[str]:
     ids = set()
     paginator = get_s3_client().get_paginator("list_objects_v2")
-    for page in paginator.paginate(Bucket=settings.s3_bucket, Prefix=prefix):
+    for page in paginator.paginate(Bucket=s3_settings.s3_bucket, Prefix=prefix):
         for obj in page.get("Contents", []):
             parts = PurePosixPath(obj["Key"][len(prefix) :]).parts
             if len(parts) == 2 and parts[1] == "meta.json":
@@ -529,7 +529,7 @@ async def set_status(conn: asyncpg.Connection, key: str, status: str, detail: st
     await conn.execute(
         "UPDATE documents SET status = $3, status_detail = $4, updated_at = now() "
         "WHERE s3_bucket = $1 AND s3_key = $2",
-        settings.s3_bucket,
+        s3_settings.s3_bucket,
         key,
         status,
         detail,

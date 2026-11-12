@@ -15,6 +15,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "elicitation"))
 from chips_schema import load_document  # noqa: E402
+from elicitation_units import ExpertUnit, render_unit, sentences  # noqa: E402
 from expert_metrics import Item  # noqa: E402
 from llm_clients import AwaitingResponse, GenRequest, InboxGenerator  # noqa: E402
 from make_fixtures import fixture_dir  # noqa: E402
@@ -22,7 +23,6 @@ from make_unit_keys import ROOT  # noqa: E402
 from prompt_loader import load_prompt  # noqa: E402
 from rag_common import FUSION_DEPTH, RRF_K  # noqa: E402
 
-from app.elicitation.units import ExpertUnit, render_unit, sentences  # noqa: E402
 from app.indexing import bm25  # noqa: E402
 
 N_QUERIES = 40

@@ -472,11 +472,11 @@ Found in `DOC-SYN-0002`:
 ## Code that has to change
 
 - `Response.quoted_fragments: list[str]` → `highlights: list[Highlight]` (span, chip, direction) in
-  [schema.py](../backend/app/elicitation/schema.py); answers keep `⟦hN⟧` tokens. A legacy adapter turns
+  [schema.py](../scripts/elicitation/elicitation_schema.py); answers keep `⟦hN⟧` tokens. A legacy adapter turns
   `quoted_fragments` into highlights with `direction=None`.
 - `QuestionId` literals and the `QUESTIONS` tuple → versioned question rows (as in
   [expert-atoms.md](expert-atoms.md)).
-- New `findings.py` beside [units.py](../backend/app/elicitation/units.py): sentence split, chip and
+- New `findings.py` beside [units.py](../scripts/elicitation/elicitation_units.py): sentence split, chip and
   quote assignment (reusing the difflib anchoring from `units.py`), checks, unit building, chip
   rendering. No model calls; tested like `test_units.py`.
 - New classifier prompt `prompts/Expert_sentence_targets.v1.md` and a script that runs it per response.

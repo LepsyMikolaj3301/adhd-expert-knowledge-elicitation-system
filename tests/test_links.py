@@ -1,5 +1,7 @@
 """Linking the lines of an answer to citations, and cutting linked lines into units."""
 
+import chip_findings
+
 from app.knowledge import findings
 from app.proofread import links
 
@@ -75,7 +77,7 @@ def test_linked_lines_cut_into_the_same_units_as_filed_sentences():
         insufficient_information=False,
     )
     args = ("s1", "e1", None, "personal_journal", "adult")
-    filed = findings.build_record(response, VIGNETTE, *args, labels={"Q2.1": ["case"]})
+    filed = chip_findings.build_record(response, VIGNETTE, *args, labels={"Q2.1": ["case"]})
     hs = findings.expert_highlights(response.highlights)
     lines = {
         "Q1": [{"text": answers["Q1"], "targets": ["h1"], "assigned_by": "chip"}],

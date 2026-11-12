@@ -6,25 +6,16 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
+
+from app.indexing.config import EmbeddingConfig, Model
 
 # Bump when a chunker's output changes for the same config, so outputs are redone.
 CHUNKER_VERSION = "1"
 
 
-class Model(BaseModel):
-    # Reject unknown keys so a typo in the YAML fails on load instead of mid-run.
-    model_config = ConfigDict(extra="forbid")
-
-
 class DocumentFilter(Model):
     skip_roles: list[str] = []
-
-
-class EmbeddingConfig(Model):
-    model: str
-    batch_size: int = Field(64, gt=0)
-    truncate: bool = True
 
 
 class BreakpointConfig(Model):

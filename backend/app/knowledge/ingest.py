@@ -32,7 +32,7 @@ from app.knowledge.findings import CASE
 from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
 from app.settings import settings
 from app.users.models import User
-from app.vignettes.models import Vignette, VignetteVersion
+from app.vignettes.service import version_and_code
 
 TIER = "app"  # chips.vignettes is keyed by tier; the experiments used bronze and silver
 BM25_LOCK = 4_715_331_001  # BM25 weights are corpus-wide, so only one ingestion refits at a time
@@ -120,13 +120,7 @@ async def load(db: AsyncSession, assignment_id: UUID) -> Ingestion:
     row = await db.get(AnswerFindings, assignment_id)
     if row is None:
         raise NoFindings
-    version, code = (
-        await db.execute(
-            select(VignetteVersion, Vignette.code)
-            .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
-            .where(VignetteVersion.id == assignment.vignette_version_id)
-        )
-    ).one()
+    version, code = await version_and_code(db, assignment.vignette_version_id)
 
     record = row.record
     kept_highlights = {u.highlight_id for u in units if u.highlight_id} | {

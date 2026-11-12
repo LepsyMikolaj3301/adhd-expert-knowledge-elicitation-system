@@ -2,21 +2,24 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
-import { markFor, provideQuoteFocus } from '@/answering/quoteFocus'
+import { chipFocus, markFor, provideQuoteFocus } from '@/answering/quoteFocus'
 import {
   api,
   ApiError,
   type AnswerVote,
+  type Citation,
   type QuestionId,
   type ReviewAnswer,
   type ReviewAnswersView,
 } from '@/api/client'
 import AnswerThread from '@/components/answering/AnswerThread.vue'
+import CasePanel from '@/components/answering/CasePanel.vue'
 import ChipText from '@/components/answering/ChipText.vue'
+import CitationTable from '@/components/answering/CitationTable.vue'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import QuoteTag from '@/components/answering/QuoteTag.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
-import { describeError, questionLabel, reviewOutcome, tallyLabel } from '@/copy'
+import { CASE_TEXT, describeError, questionLabel, reviewOutcome, tallyLabel } from '@/copy'
 
 const REFRESH_MS = 30_000
 type Decision = 'approve' | 'reject' | 'request_changes'
@@ -61,6 +64,18 @@ const code = computed(() => view.value?.vignette.code ?? '')
 const caseText = computed(() => view.value?.vignette.text ?? '')
 const summary = computed(() => view.value?.vignette.patient_summary ?? '')
 const activeMark = computed(() => markFor(focus.value, highlights.value))
+const activeChip = chipFocus(focus)
+/** The author's own numbered quotes, as the table showed them while answering. */
+const citations = computed<Citation[]>(() =>
+  highlights.value
+    .filter((h) => h.chip !== null)
+    .map((h) => ({
+      chip: h.chip as number,
+      span: h.span,
+      text: h.text,
+      direction: h.direction,
+    })),
+)
 const canComment = computed(() => actions.value.includes('comment') && !viewingOld.value)
 const canVote = computed(() => actions.value.includes('vote') && !viewingOld.value)
 const canDecide = computed(() => actions.value.includes('decide_answers') && !viewingOld.value)
@@ -217,11 +232,7 @@ onUnmounted(() => clearInterval(timer))
       </header>
 
       <p v-if="error" class="alert mt-3" role="alert">{{ error }}</p>
-      <p
-        v-if="outcome"
-        class="mt-3 rounded-md border border-line bg-surface px-3 py-2"
-        data-testid="outcome"
-      >
+      <p v-if="outcome" class="mt-3 card px-3 py-2" data-testid="outcome">
         {{ outcome }}
       </p>
       <p v-if="viewingOld" class="mt-3 text-sm text-muted">
@@ -238,12 +249,23 @@ onUnmounted(() => clearInterval(timer))
       <div class="mt-4 grid gap-8 lg:items-start" :class="caseText ? 'lg:grid-cols-2' : ''">
         <div
           v-if="caseText"
-          class="rounded-sm border border-line bg-surface lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto"
+          class="flex flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto"
         >
-          <p v-if="summary" class="px-5 pt-4 text-sm text-muted" data-testid="patient-summary">
-            About the patient: {{ summary }}
-          </p>
-          <VignetteText :text="caseText" :active="activeMark" :can-cite="false" />
+          <CasePanel
+            :summary="summary"
+            :framing="view.vignette.framing"
+            :lead="CASE_TEXT.reviewLead"
+          >
+            <VignetteText :text="caseText" :active="activeMark" :can-cite="false" />
+          </CasePanel>
+          <CitationTable
+            :citations="citations"
+            :editable="false"
+            :can-insert="false"
+            :counts="{}"
+            :pulse-chip="null"
+            @active="activeChip = $event"
+          />
         </div>
 
         <ol class="min-w-0 space-y-6">
@@ -251,7 +273,7 @@ onUnmounted(() => clearInterval(timer))
             v-for="a in answers"
             :id="`answer-${a.question_id}`"
             :key="a.question_id"
-            class="rounded-md border border-line bg-surface p-4"
+            class="card p-4"
             data-testid="answer"
           >
             <h2 class="text-base">

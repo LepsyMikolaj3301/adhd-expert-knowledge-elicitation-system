@@ -16,9 +16,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from elicitation_schema import MAX_WORDS, MIN_WORDS
 from leak_terms import find_leaks
-
-from app.elicitation.schema import MAX_WORDS, MIN_WORDS
 
 # Stripped from real posts on top of LEAK_TERMS (these would be too strict for model output).
 _EXTRA = re.compile(

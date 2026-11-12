@@ -32,7 +32,10 @@ function signed(value: number): string {
 }
 
 const editor = ref<InstanceType<typeof ChipEditor>>()
-defineExpose({ insertChip: (n: number) => editor.value?.insertChip(n) })
+defineExpose({
+  insertChip: (n: number) => editor.value?.insertChip(n),
+  focusEnd: () => editor.value?.focusEnd(),
+})
 </script>
 
 <template>

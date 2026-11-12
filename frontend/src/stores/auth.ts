@@ -9,6 +9,10 @@ export const useAuthStore = defineStore('auth', () => {
   /** The server ended the session while the user was on a page that must not be left. */
   const sessionEnded = ref(false)
   const isLoggedIn = computed(() => user.value !== null)
+  /** Which side of the app the person is on. Experts and logged-out visitors read as `expert`. */
+  const role = computed<'admin' | 'expert'>(() =>
+    user.value?.role === 'admin' ? 'admin' : 'expert',
+  )
 
   /** Ask the server who is logged in. The cookie is HttpOnly, so this is the only way to know. */
   async function load(): Promise<void> {
@@ -60,6 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
     loaded,
     sessionEnded,
     isLoggedIn,
+    role,
     load,
     login,
     acceptInvite,

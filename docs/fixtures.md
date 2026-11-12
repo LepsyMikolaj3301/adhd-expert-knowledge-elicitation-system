@@ -120,7 +120,7 @@ python scripts/rag/chat_expert.py --rater mk --tier gold   # [--source reddit] h
 - The `bad_quote` answer kind is made in code: the model writes a clean answer and the script drops
   the middle word of one quoted fragment in Q1. The reference claim keeps the exact span.
 - All generation code (model clients, prompt loader, leak terms, Reddit reader) lives in
-  `scripts/elicitation/`. `backend/app/elicitation/` has only the schema, questions and lifecycle rules.
+  `scripts/elicitation/`, with the fixture schema (`elicitation_schema.py`), unit builder and lifecycle rules.
 
 ## Tracks
 

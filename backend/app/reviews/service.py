@@ -41,6 +41,7 @@ from app.reviews.schemas import (
 from app.users.models import Role, User
 from app.vignettes.models import Vignette, VignetteVersion
 from app.vignettes.questions import QUESTIONS, render_question
+from app.vignettes.service import version_and_code
 
 
 def speaker_for(
@@ -106,7 +107,7 @@ async def list_answers(
         raise not_found("Review round")
     round_ = await proofread.get_round(db, assignment.id, wanted)
     assert round_ is not None
-    version, _ = await proofread.version_and_code(db, assignment.vignette_version_id)
+    version, _ = await version_and_code(db, assignment.vignette_version_id)
     rows = await proofread.revisions(db, assignment.id, wanted, version.question_ids)
 
     comments: dict[str, list[CommentView]] = defaultdict(list)
@@ -451,7 +452,7 @@ async def submit_decisions(
     """
     check_transition(assignment.state, Action.APPROVE_ANSWERS, actor)
     _require_comments(decisions)
-    version, _ = await proofread.version_and_code(db, assignment.vignette_version_id)
+    version, _ = await version_and_code(db, assignment.vignette_version_id)
     rows = await proofread.revisions(
         db, assignment.id, assignment.review_round, version.question_ids
     )

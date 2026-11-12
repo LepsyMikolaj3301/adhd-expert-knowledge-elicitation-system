@@ -16,10 +16,9 @@ import re
 from pathlib import Path
 from typing import Literal, Self
 
+from elicitation_schema import ElicitationDocument, QuestionId, Response, _Model
 from pydantic import Field, model_validator
 
-from app.elicitation.questions import QUESTIONS_BY_ID
-from app.elicitation.schema import ElicitationDocument, QuestionId, Response, _Model
 from expert_knowledge_core.notes import CHIP_RE
 
 CHIP_VERSION = "1.1-chips"
@@ -27,17 +26,6 @@ Direction = Literal["toward", "away", "neutral", "unclear"]
 DIRECTIONS = ("toward", "away", "neutral", "unclear")
 # no Q4: out of scope for the chip test
 CHIP_QUESTIONS: tuple[QuestionId, ...] = ("Q1", "Q2", "Q3", "Q5", "Q6")
-
-# Q1 asks which fragments matter in either direction ("could be ADHD" primes positive readings)
-Q1_CHIPS = (
-    "Which fragments of the text matter for your reading of ADHD-related traits, in either "
-    "direction: pointing toward them, pointing away from them, or just ordinary? For each: what "
-    "does it show, and why does this wording suggest it?"
-)
-
-
-def question_text(qid: str) -> str:
-    return Q1_CHIPS if qid == "Q1" else QUESTIONS_BY_ID[qid].text
 
 
 class Highlight(_Model):

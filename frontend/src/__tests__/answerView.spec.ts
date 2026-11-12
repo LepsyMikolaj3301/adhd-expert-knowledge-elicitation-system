@@ -128,6 +128,17 @@ function serve(initial: ExpertAssignment) {
         current = { ...current, state: 'proofreading', allowed_actions: [], submitted_at: 'now' }
       } else if (url.endsWith('/assignments')) {
         return jsonResponse(200, [])
+      } else if (url.endsWith('/proofread')) {
+        // Nothing proofread yet: the shape the page expects, not the assignment.
+        return jsonResponse(200, {
+          items: [],
+          highlights: [],
+          flags: [],
+          passes: {},
+          feedback: [],
+          editable: false,
+          submitted_at: null,
+        })
       }
       return jsonResponse(200, current)
     }),
@@ -226,6 +237,16 @@ afterEach(() => {
 })
 
 describe('the vignette text', () => {
+  it('labels the patient text, with the summary in a box of its own above it', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    const summary = app().get('[data-testid="patient-summary"]')
+    expect(summary.text()).toContain('About the patient')
+    expect(summary.text()).toContain('A student.')
+    expect(summary.element.contains(app().get('[data-testid="vignette-text"]').element)).toBe(false)
+    expect(app().text()).toContain('Patient text')
+    expect(app().text()).toContain('This is the text you analyse')
+  })
+
   it('shows the patient text exactly as written, with nothing lit', async () => {
     await open(assignment({ answers: {}, highlights: [citation(1, 'barely slept')] }))
     expect(app().get('[data-testid="vignette-text"]').element.textContent).toBe(TEXT)
@@ -292,6 +313,39 @@ describe('the vignette text', () => {
     await selectInText('barely slept')
     expect(rows()).toHaveLength(0)
   })
+
+  it('puts "How to add a quote" under the text box, and only while quotes can be added', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    const help = app().get('[data-testid="cite-help"]')
+    expect(help.text()).toBe('How to add a quote')
+    expect(
+      app().get('[aria-labelledby="h-patient-text"]').find('[data-testid="cite-help"]').exists(),
+    ).toBe(false)
+    wrapper?.unmount()
+    await open(
+      assignment(
+        { answers: FIRST_ANSWERS, highlights: [] },
+        { state: 'processing', allowed_actions: [], submitted_at: 'now' },
+      ),
+    )
+    expect(app().find('[data-testid="cite-help"]').exists()).toBe(false)
+  })
+
+  it('shows a cursor selecting words in the help, once it is open', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    expect(app().find('[data-testid="cite-demo"]').exists()).toBe(false)
+    await app().get('[data-testid="cite-help"]').trigger('focusin')
+    const demo = app().get('[data-testid="cite-demo"]')
+    expect(demo.find('svg.cursor').exists()).toBe(true)
+    expect(demo.get('.words').text()).toContain('lose my keys')
+  })
+
+  it('says how the text was written in the text box, not in the breadcrumb', async () => {
+    await open(assignment({}))
+    const box = app().get('[aria-labelledby="h-patient-text"]')
+    expect(box.get('[data-testid="text-type"]').text()).toBe('Written as: Journal entry')
+    expect(app().get('header').text()).not.toContain('Journal entry')
+  })
 })
 
 describe('the side panel', () => {
@@ -346,6 +400,63 @@ describe('moving through the questions', () => {
     await open(assignment({ answers: {}, highlights: [] }))
     await block('Q2').trigger('focusin')
     expect(currentStep()).toBe('Q2')
+  })
+
+  it('follows what is typed, even when the cursor never left the box', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    await step('Q3').trigger('click')
+    expect(currentStep()).toBe('Q3')
+    app().findAllComponents(ChipEditor)[1]?.vm.$emit('update:modelValue', 'a few words')
+    await flushPromises()
+    expect(currentStep()).toBe('Q2')
+  })
+
+  it('follows the scrolling, but not the scroll that a click in the rail starts', async () => {
+    const top: Record<string, number> = { Q1: -600, Q2: 100, Q3: 900 }
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return { top: top[this.getAttribute('data-question') ?? ''] ?? 5000 } as DOMRect
+    })
+    // jsdom has no layout: a page that is taller than the window, so it is not "at the end".
+    vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(9000)
+    try {
+      await open(assignment({ answers: {}, highlights: [] }))
+      window.dispatchEvent(new Event('scroll'))
+      await flushPromises()
+      expect(currentStep()).toBe('Q2')
+      await step('Q3').trigger('click')
+      top.Q2 = -900
+      top.Q3 = 100
+      window.dispatchEvent(new Event('scroll'))
+      await flushPromises()
+      expect(currentStep()).toBe('Q3')
+      top.Q3 = 900
+      top.Q2 = 100
+      window.dispatchEvent(new Event('scroll'))
+      await flushPromises()
+      // Still inside the moment after the click: the jump's own scroll is not read.
+      expect(currentStep()).toBe('Q3')
+    } finally {
+      vi.restoreAllMocks()
+    }
+  })
+
+  it('puts the cursor in the question picked in the rail', async () => {
+    const focused: (string | null | undefined)[] = []
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      focused.push(this.closest('[data-question]')?.getAttribute('data-question'))
+    })
+    try {
+      await open(assignment({ answers: {}, highlights: [] }))
+      await step('Q3').trigger('click')
+      // The editor puts its cursor in on the next animation frame.
+      await vi.waitFor(() => expect(focused).toContain('Q3'))
+    } finally {
+      focus.mockRestore()
+    }
   })
 
   it('asks for every answer before the review', async () => {

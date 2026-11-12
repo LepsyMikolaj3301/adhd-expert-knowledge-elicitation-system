@@ -241,7 +241,7 @@ watch(() => props.id, open)
 <template>
   <div>
     <p class="text-sm">
-      <RouterLink to="/vignettes">Vignettes</RouterLink>
+      <RouterLink to="/vignettes">All cases</RouterLink>
       <span class="px-1.5 text-muted">/</span>
       <span class="font-medium text-ink">{{ isNew ? 'New' : code }}</span>
     </p>

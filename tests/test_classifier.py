@@ -2,6 +2,7 @@
 
 import json
 
+import chip_findings
 import pytest
 
 from app.knowledge import classifier, findings
@@ -22,7 +23,7 @@ def setup_case():
         rating=None,
         insufficient_information=False,
     )
-    highlights, sentences = findings.assign(resp, TEXT)
+    highlights, sentences = chip_findings.assign(resp, TEXT)
     return highlights, sentences, findings.unresolved(sentences)
 
 

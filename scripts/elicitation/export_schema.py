@@ -6,7 +6,7 @@ Usage: python scripts/elicitation/export_schema.py
 import json
 from pathlib import Path
 
-from app.elicitation.schema import ElicitationDocument
+from elicitation_schema import ElicitationDocument
 
 OUT = Path(__file__).resolve().parents[2] / "data" / "schemas" / "elicitation_document.schema.json"
 

@@ -227,6 +227,7 @@ async def home(db: AsyncSession, viewer: User) -> HomeView:
         next_up=next_up,
         next_up_total=total,
         reviews_waiting=waiting[:WAITING],
+        reviews_waiting_total=len(waiting),
         recent_reviews=await reviews.list_reviews(db, viewer, limit=RECENT),
         activity=activity,
         unread_activity=sum(item.unread for item in activity),

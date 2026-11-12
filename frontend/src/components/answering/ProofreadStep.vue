@@ -108,7 +108,7 @@ const saveLabel = computed(
 
 function apply(next: ProofreadView, sent: Record<string, string> = {}) {
   view.value = next
-  emit('highlights', next.highlights)
+  emit('highlights', next.highlights ?? [])
   for (const item of next.items) {
     const qid = item.question_id
     // Keep what was typed while the save was on its way.
@@ -300,9 +300,7 @@ onUnmounted(() => clearTimeout(timer))
 
         <div class="mt-4 grid gap-4 xl:grid-cols-2">
           <div class="min-w-0">
-            <h3 class="font-sans text-xs font-semibold tracking-wide text-muted uppercase">
-              What you wrote, and what changed
-            </h3>
+            <h3 class="eyebrow">What you wrote, and what changed</h3>
             <div
               class="mt-1 rounded-sm border border-line bg-page px-4 py-3 text-[0.95rem]"
               data-testid="original"
@@ -323,9 +321,7 @@ onUnmounted(() => clearTimeout(timer))
             </p>
           </div>
           <div class="min-w-0">
-            <h3 class="font-sans text-xs font-semibold tracking-wide text-muted uppercase">
-              Edited answer
-            </h3>
+            <h3 class="eyebrow">Edited answer</h3>
             <div v-if="editable" class="mt-1">
               <ChipEditor
                 :model-value="texts[item.question_id] ?? ''"
@@ -350,7 +346,7 @@ onUnmounted(() => clearTimeout(timer))
         </div>
 
         <div v-if="item.linked" class="mt-5" data-testid="lines">
-          <h3 class="font-sans text-xs font-semibold tracking-wide text-muted uppercase">
+          <h3 class="eyebrow">
             What each sentence is about
             <span
               v-if="linesStale(item.question_id)"

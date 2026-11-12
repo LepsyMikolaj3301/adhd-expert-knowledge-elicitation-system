@@ -1,11 +1,11 @@
 # ============================================================================
 # Chunking config — consumed by scripts/corpus/chunk_parsed_documents.py
 # (s3://$S3_BUCKET/parsed/ -> s3://$S3_BUCKET/chunked/).
-# Schema + validation: backend/app/chunking/config.py.
+# Schema + validation: scripts/corpus/chunking/config.py.
 #
-# Adding a chunking method: write backend/app/chunking/<name>.py, add its
+# Adding a chunking method: write scripts/corpus/chunking/<name>.py, add its
 # config model/field and `method` literal in config.py, register it in
-# backend/app/chunking/__init__.py, then add a sibling block below.
+# scripts/corpus/chunking/__init__.py, then add a sibling block below.
 # Changing anything the active method uses re-chunks all documents (the
 # config hash is stored on every output object).
 # ============================================================================

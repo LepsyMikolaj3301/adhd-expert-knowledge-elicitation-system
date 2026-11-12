@@ -1,23 +1,22 @@
 import json
 
 import pytest
-from leak_terms import find_leaks
-from prompt_loader import PROMPTS_DIR, PromptError, load_prompt
-from pydantic import ValidationError
-
-from app.elicitation.lifecycle import (
+from elicitation_lifecycle import (
     DocumentStatus,
     SyntheticIngestionError,
     assert_ingestible,
     check_transition,
 )
-from app.elicitation.schema import (
+from elicitation_schema import (
     MAX_WORDS,
     MIN_WORDS,
     ElicitationDocument,
     ReferenceClaim,
     Vignette,
 )
+from leak_terms import find_leaks
+from prompt_loader import PROMPTS_DIR, PromptError, load_prompt
+from pydantic import ValidationError
 
 
 def error_codes(e: ValidationError) -> set[str]:

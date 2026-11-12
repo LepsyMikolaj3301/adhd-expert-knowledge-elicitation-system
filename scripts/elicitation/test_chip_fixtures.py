@@ -8,9 +8,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent))
 
 import make_chip_fixtures as mk  # noqa: E402
+from elicitation_schema import Vignette, VignetteDesign, content_hash  # noqa: E402
 from make_fixtures import Rejected  # noqa: E402
-
-from app.elicitation.schema import Vignette, VignetteDesign, content_hash  # noqa: E402
 
 TEXT = (
     "I only opened the file at nine because I did the dishes first. The report is due on Friday "
@@ -107,7 +106,7 @@ def test_insufficient_info_may_cite_no_chip_and_has_no_rating():
 
 
 def test_variant_b_answers_may_not_mention_the_removed_newborn():
-    from app.elicitation.schema import VariantInfo
+    from elicitation_schema import VariantInfo
 
     b = vignette(VariantInfo(pair_id="S05", arm="B", change="no newborn"))
     answers = reply()["answers"] | {"Q3": "Is there a baby at home?"}

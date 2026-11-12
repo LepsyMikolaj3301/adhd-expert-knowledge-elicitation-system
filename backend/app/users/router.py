@@ -35,7 +35,6 @@ async def create_user(body: UserCreate, db: DbSession, admin: AdminUser) -> Invi
         email=body.email,
         display_name=body.display_name,
         role=body.role,
-        is_synthetic=body.is_synthetic,
         actor_id=admin.id,
     )
     invite_path = await issue_invite(db, user, admin.id)

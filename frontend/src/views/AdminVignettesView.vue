@@ -2,7 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import { api, ApiError, type VignetteAdminView } from '@/api/client'
+import { api, type VignetteAdminView } from '@/api/client'
+import { describeAdminError } from '@/copy'
 
 const STATUS = { draft: 'Draft', published: 'Published', retired: 'Retired' }
 
@@ -19,7 +20,7 @@ onMounted(async () => {
     const { data } = await api.GET('/api/v1/vignettes')
     vignettes.value = data ?? []
   } catch (e) {
-    error.value = e instanceof ApiError ? e.message : 'Could not load the vignettes.'
+    error.value = describeAdminError(e)
   } finally {
     loading.value = false
   }
@@ -29,7 +30,7 @@ onMounted(async () => {
 <template>
   <div>
     <div class="flex flex-wrap items-center justify-between gap-4">
-      <h1>Vignettes</h1>
+      <h1>All cases</h1>
       <RouterLink to="/vignettes/new" class="btn hover:no-underline">New vignette</RouterLink>
     </div>
 

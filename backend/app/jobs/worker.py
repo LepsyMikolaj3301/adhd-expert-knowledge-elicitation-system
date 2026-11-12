@@ -105,10 +105,10 @@ async def run_once() -> bool:
                 job = await _current(db, job_id, attempt)
                 if job is None:
                     return True
-                action = await HANDLERS[kind](db, assignment, prepared)
+                await HANDLERS[kind](db, assignment, prepared)
                 job.status = JobStatus.DONE
                 job.locked_until = None
-                await transition(db, assignment, action or SUCCESS_ACTION[kind], Actor.SYSTEM, None)
+                await transition(db, assignment, SUCCESS_ACTION[kind], Actor.SYSTEM, None)
                 await db.commit()
         finally:
             await _stop(heartbeat)

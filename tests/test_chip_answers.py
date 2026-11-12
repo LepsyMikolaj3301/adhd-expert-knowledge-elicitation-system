@@ -10,9 +10,8 @@ import chip_answers as ca
 import nbformat
 import pytest
 from chips_schema import ChipDocument, load_document, to_legacy
+from elicitation_schema import ElicitationDocument, Vignette, VignetteDesign
 from make_fixtures import fixture_dir
-
-from app.elicitation.schema import ElicitationDocument, Vignette, VignetteDesign
 
 CUE = "I reorganised my entire desk instead of starting the report"
 CONFOUNDER = "I have barely slept since the move"

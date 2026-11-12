@@ -3,7 +3,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from app.assignments.answers import AnswerText
+from app.assignments.answers import AnswerText, Direction
 from app.vignettes.questions import QuestionId
 
 LineText = Annotated[str, StringConstraints(max_length=5_000)]
@@ -25,7 +25,7 @@ class LinkedHighlight(BaseModel):
     text: str
     span: tuple[int, int]
     origin: str
-    direction: str | None
+    direction: Direction | None
 
 
 class ProofreadFlag(BaseModel):

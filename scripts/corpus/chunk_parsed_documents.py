@@ -25,11 +25,11 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 
 import asyncpg
+from chunking import Chunk, ChunkingConfig, build_chunker, load_chunking_config
+from sources import excluded_source_ids
+from storage import s3_get, s3_head, s3_list_keys, s3_put, s3_settings
 
-from app.chunking import Chunk, ChunkingConfig, build_chunker, load_chunking_config
 from app.settings import settings
-from app.sources import excluded_source_ids
-from app.storage import s3_get, s3_head, s3_list_keys, s3_put
 
 SCHEMA_VERSION = 1
 
@@ -96,7 +96,9 @@ def chunk_document(
 
 async def document_id_of(conn: asyncpg.Connection, raw_key: str) -> str | None:
     row = await conn.fetchrow(
-        "SELECT id FROM documents WHERE s3_bucket = $1 AND s3_key = $2", settings.s3_bucket, raw_key
+        "SELECT id FROM documents WHERE s3_bucket = $1 AND s3_key = $2",
+        s3_settings.s3_bucket,
+        raw_key,
     )
     return str(row["id"]) if row else None
 

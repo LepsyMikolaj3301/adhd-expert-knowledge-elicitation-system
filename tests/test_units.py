@@ -3,9 +3,7 @@
 from datetime import UTC, datetime
 
 import pytest
-from pydantic import ValidationError
-
-from app.elicitation.schema import (
+from elicitation_schema import (
     ElicitationDocument,
     QuestionId,
     Response,
@@ -13,7 +11,8 @@ from app.elicitation.schema import (
     VignetteDesign,
     content_hash,
 )
-from app.elicitation.units import anchor_quote, build_units, expand_shorthand, render_unit, segment
+from elicitation_units import anchor_quote, build_units, expand_shorthand, render_unit, segment
+from pydantic import ValidationError
 
 TEXT = (
     "I kept forgetting to draft this email all week. The deadline is Friday and the numbers "
@@ -174,12 +173,12 @@ def test_q4_needs_whatif_not_tied_to_text():
 
 
 def test_render_question_fills_whatif():
-    from app.elicitation.questions import QUESTIONS_BY_ID, render_question
+    from app.vignettes.questions import QUESTIONS, render_question
 
-    text = render_question(QUESTIONS_BY_ID["Q4"], "the writer had an exam earlier that day.")
+    text = render_question(QUESTIONS["Q4"], "the writer had an exam earlier that day.")
     assert text.endswith("how would it change if the writer had an exam earlier that day?")
-    with pytest.raises(ValueError, match="q4_whatif"):
-        render_question(QUESTIONS_BY_ID["Q4"], None)
+    with pytest.raises(ValueError, match="what-if"):
+        render_question(QUESTIONS["Q4"], None)
 
 
 @pytest.mark.parametrize(
@@ -194,7 +193,7 @@ def test_render_question_fills_whatif():
     ],
 )
 def test_shift_answer_rules(q4, code):
-    from app.elicitation.schema import ShiftAnswer
+    from elicitation_schema import ShiftAnswer
 
     with pytest.raises(ValidationError, match=code):
         ShiftAnswer(**q4)

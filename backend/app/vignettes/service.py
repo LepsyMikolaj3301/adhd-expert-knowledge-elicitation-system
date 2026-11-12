@@ -129,6 +129,17 @@ async def add_version(
     return version
 
 
+async def version_and_code(db: AsyncSession, version_id: UUID) -> tuple[VignetteVersion, str]:
+    row = (
+        await db.execute(
+            select(VignetteVersion, Vignette.code)
+            .join(Vignette, Vignette.id == VignetteVersion.vignette_id)
+            .where(VignetteVersion.id == version_id)
+        )
+    ).one()
+    return row[0], row[1]
+
+
 async def _lock_version(db: AsyncSession, version_id: UUID) -> VignetteVersion:
     version = await db.scalar(
         select(VignetteVersion).where(VignetteVersion.id == version_id).with_for_update()

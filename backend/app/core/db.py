@@ -72,12 +72,20 @@ def is_pooled(url: str) -> bool:
 
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
+_url: str | None = None
+
+
+def database_url() -> str:
+    """The plain URL the engine was configured with, for code that opens its own connection (the
+    retrieval package reads through psycopg). Tests configure another database than the settings."""
+    return _url or settings.database_url
 
 
 def configure_engine(url: str | None = None, **engine_options) -> AsyncEngine:
     """(Re)create the engine. Called lazily with the settings URL; tests pass their own."""
-    global _engine, _session_factory
+    global _engine, _session_factory, _url
     url = url or settings.database_url
+    _url = url
     if is_pooled(url):
         # PgBouncer in transaction mode hands each statement to any backend connection, so asyncpg's
         # per-connection prepared statements would go missing.
