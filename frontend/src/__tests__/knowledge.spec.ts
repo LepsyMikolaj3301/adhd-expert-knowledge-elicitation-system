@@ -15,6 +15,7 @@ function unit(overrides: Partial<KnowledgeUnit> = {}): KnowledgeUnit {
     assignment_id: 'a1',
     vignette_code: 'V001',
     vignette_version: 1,
+    expert_id: 'x1',
     expert_pseudonym: 'E01',
     expert_is_synthetic: false,
     ordinal: 1,
@@ -79,6 +80,16 @@ function buttonNamed(name: string) {
   return button
 }
 
+/** The confirm's own button: the unit cards have a "Remove" of their own. */
+function confirmRemove() {
+  const button = view()
+    .get('dialog')
+    .findAll('button')
+    .find((b) => b.text() === 'Remove')
+  if (!button) throw new Error('no confirm dialog')
+  return button
+}
+
 async function search(text: string) {
   await view().find('#knowledge-query').setValue(text)
   await view().find('form').trigger('submit')
@@ -95,6 +106,13 @@ const hit = (rank: number, overrides: Record<string, unknown> = {}) => ({
 })
 
 beforeEach(() => {
+  // jsdom has no modal dialogs; the confirm only needs to open.
+  HTMLDialogElement.prototype.showModal = function () {
+    this.setAttribute('open', '')
+  }
+  HTMLDialogElement.prototype.close = function () {
+    this.removeAttribute('open')
+  }
   setActivePinia(createPinia())
   const auth = useAuthStore()
   auth.user = admin
@@ -109,7 +127,7 @@ afterEach(() => {
 })
 
 describe('Knowledge base: units', () => {
-  it('lists the ingested units case by case and expert by expert', async () => {
+  it('gives an overview of cases and their answers, with units shown per answer', async () => {
     serve({
       'GET /knowledge-units': () =>
         jsonResponse(200, [
@@ -125,13 +143,27 @@ describe('Knowledge base: units', () => {
     expect(view().findAll('[data-testid="case"]')).toHaveLength(2)
     expect(view().findAll('[data-testid="expert"]')).toHaveLength(3)
     expect(view().get('[data-testid="summary"]').text()).toBe(
-      '4 units from 3 accepted answers in 2 cases.',
+      '4 units from 3 accepted answers in 2 cases. Open an answer to see its units.',
     )
+    // An overview: no unit is shown until its answer is opened.
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(0)
     const first = view().findAll('[data-testid="case"]')[0]!
     expect(first.text()).toContain('Case V001')
+    expect(first.get('[data-testid="expert-counts"]').text()).toBe(
+      '2 units (1 quote, 1 whole-case)',
+    )
+
+    const toggle = first.get('[data-testid="expert-toggle"]')
+    await toggle.trigger('click')
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(2)
+
     // Within an expert, in the order the answers were cut: the quote before the whole case.
     const kinds = first.findAll('[data-testid="unit-kind"]').map((k) => k.text())
-    expect(kinds.slice(0, 2)).toEqual(['Quote h1', 'Whole case'])
+    expect(kinds).toEqual(['Quote h1', 'Whole case'])
+
+    await toggle.trigger('click')
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(0)
   })
 
   it('shows how a unit was cut and what is embedded', async () => {
@@ -148,6 +180,7 @@ describe('Knowledge base: units', () => {
         ]),
     })
     await open()
+    await view().get('[data-testid="expert-toggle"]').trigger('click')
 
     const sentences = view()
       .findAll('[data-testid="sentence"]')
@@ -156,6 +189,80 @@ describe('Knowledge base: units', () => {
     expect(view().get('[data-testid="context"]').text()).toContain('h2 “sleep loss”')
     expect(view().get('[data-testid="unit-direction"]').text()).toBe('Points toward ADHD traits')
     expect(view().get('[data-testid="embedded"]').text()).toContain('qwen3.5:9b')
+    // The embedded texts are on show, whole, with nothing to unfold.
+    expect(view().find('[data-testid="embedded"] details').exists()).toBe(false)
+    expect(view().get('[data-testid="embed-text"]').text()).toBe(unit().embed_text)
+    expect(view().get('[data-testid="embed-text-combined"]').text()).toBe(
+      unit().embed_text_combined,
+    )
+  })
+
+  it('removes one unit after asking, and the index is refit in the background', async () => {
+    let refitting = true
+    serve({
+      'GET /knowledge-units': () =>
+        jsonResponse(200, [unit({ id: 'u1' }), unit({ id: 'u2', highlight_id: 'h2' })]),
+      'DELETE /knowledge-units/u1': () => new Response(null, { status: 204 }),
+      'GET /knowledge-units/index': () =>
+        jsonResponse(200, { state: refitting ? 'running' : 'up_to_date', last_error: null }),
+    })
+    refitting = false
+    await open()
+    expect(view().get('[data-testid="index-status"]').text()).toContain('Search index up to date')
+    await view().get('[data-testid="expert-toggle"]').trigger('click')
+
+    await view().findAll('[data-testid="remove-unit"]')[0]!.trigger('click')
+    expect(document.body.textContent).toContain('Remove this unit?')
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false)
+
+    refitting = true
+    await confirmRemove().trigger('click')
+    await flushPromises()
+    expect(calls.find((c) => c.method === 'DELETE')?.url).toBe('/api/v1/knowledge-units/u1')
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(1)
+    expect(view().get('[data-testid="index-status"]').text()).toContain('Refitting')
+  })
+
+  it("withdraws all of an expert's knowledge, in every case", async () => {
+    serve({
+      'GET /knowledge-units': () =>
+        jsonResponse(200, [
+          unit({ id: 'u1' }),
+          unit({ id: 'u2', assignment_id: 'a2', vignette_code: 'V002' }),
+          unit({ id: 'u3', assignment_id: 'a3', expert_id: 'x2', expert_pseudonym: 'E02' }),
+        ]),
+      'DELETE /knowledge-units/by-expert/x1': () => jsonResponse(200, { removed: 2 }),
+      'GET /knowledge-units/index': () => jsonResponse(200, { state: 'up_to_date' }),
+    })
+    await open()
+    await view().get('[data-testid="expert-menu"]').trigger('click')
+    await view().get('[data-testid="remove-expert"]').trigger('click')
+    expect(document.body.textContent).toContain("Remove all of E01's knowledge?")
+    expect(document.querySelector('[data-testid="remove-expert-summary"]')?.textContent).toContain(
+      '2 units from 2 cases',
+    )
+
+    await confirmRemove().trigger('click')
+    await flushPromises()
+    expect(calls.find((c) => c.method === 'DELETE')?.url).toBe(
+      '/api/v1/knowledge-units/by-expert/x1',
+    )
+    expect(view().findAll('[data-testid="expert"]')).toHaveLength(1)
+    expect(view().get('[data-testid="expert"]').text()).toContain('E02')
+  })
+
+  it('offers to refit again when a refit failed', async () => {
+    serve({
+      'GET /knowledge-units': () => jsonResponse(200, [unit()]),
+      'GET /knowledge-units/index': () =>
+        jsonResponse(200, { state: 'failed', last_error: 'RuntimeError' }),
+      'POST /knowledge-units/index/refit': () => jsonResponse(202, { state: 'queued' }),
+    })
+    await open()
+    expect(view().get('[data-testid="index-status"]').text()).toContain('RuntimeError')
+    await buttonNamed('Try again').trigger('click')
+    await flushPromises()
+    expect(calls.some((c) => c.method === 'POST' && c.url.endsWith('/index/refit'))).toBe(true)
   })
 
   it('says when nothing has been ingested', async () => {

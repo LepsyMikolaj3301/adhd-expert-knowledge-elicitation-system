@@ -98,7 +98,7 @@ class FakeModels:
         self.enhance_reply: dict[str, str] = {}  # answer -> edited answer
         self.enhance_down = False
 
-    async def check_grammar(self, text, quotes) -> dict:
+    async def check_grammar(self, text) -> dict:
         self.grammar_calls.append(text)
         if self.grammar_down:
             raise httpx.ConnectError("languagetool is down")

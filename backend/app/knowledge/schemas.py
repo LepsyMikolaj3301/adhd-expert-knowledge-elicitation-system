@@ -28,6 +28,7 @@ class KnowledgeUnitListItem(BaseModel):
     assignment_id: UUID
     vignette_code: str
     vignette_version: int
+    expert_id: UUID
     expert_pseudonym: str
     expert_is_synthetic: bool
     ordinal: int
@@ -74,3 +75,14 @@ class KnowledgeHit(BaseModel):
 
 class KnowledgeSearchResponse(BaseModel):
     hits: list[KnowledgeHit]
+
+
+class UnitsRemoved(BaseModel):
+    removed: int
+
+
+class IndexStatus(BaseModel):
+    """The BM25 refit after a removal. up_to_date also when no refit ever ran."""
+
+    state: Literal["up_to_date", "queued", "running", "failed"]
+    last_error: str | None = None  # the exception class only

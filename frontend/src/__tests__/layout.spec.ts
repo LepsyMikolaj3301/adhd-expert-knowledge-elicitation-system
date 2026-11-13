@@ -155,7 +155,7 @@ describe('sections', () => {
     const w = await open(expert, '/')
     const about = w.get('[data-testid="about"]')
     expect(about.get('h2').text()).toBe('What is PsyKnowHow?')
-    expect(about.text()).toContain('written expert interview')
+    expect(about.text()).toContain('written expert elicitation study')
     expect(w.find('details').exists()).toBe(false)
     expect(about.get('a[data-testid="learn-more"]').attributes('href')).toBe('/about')
   })
@@ -172,7 +172,9 @@ describe('sections', () => {
       .findAll('a')
       .map((a) => a.text())
     expect(chips).toEqual([
-      'Why written cases',
+      'What the study aims for',
+      'Clinical vignettes',
+      'What an answer contains',
       'How a case goes',
       'My cases',
       'Reviews',
@@ -181,6 +183,10 @@ describe('sections', () => {
     expect(w.get('#my-cases').text()).toContain('Ready to check')
     expect(w.get('#reviews').text()).toContain('Votes are advice')
     expect(w.find('a[href="/instructions"]').exists()).toBe(true)
+    expect(
+      w.get('#vignettes').find('a[href="https://doi.org/10.1016/j.ijchp.2014.12.001"]').exists(),
+    ).toBe(true)
+    expect(w.get('#answer').text()).toContain('Q4 Hypothesis revision')
   })
 
   it('words the About page for the study team, without the expert sections', async () => {

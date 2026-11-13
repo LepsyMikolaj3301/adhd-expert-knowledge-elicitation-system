@@ -1,6 +1,7 @@
 /**
  * Wording the expert reads, in one place. Clinical words, not engineering ones: "quote", not
- * "highlight" or "citation"; "reference", not "chip"; "case", not "vignette". The API's own
+ * "highlight" or "citation"; "reference", not "chip"; "case", not "vignette" (except where the
+ * About page explains the method). The API's own
  * messages use the old terms, so what an expert sees for an error comes from here, by its stable
  * `code`. The questions themselves are not here: they come from the API, worded the same for all.
  */
@@ -132,36 +133,99 @@ export const HOME = {
     heading: 'What is PsyKnowHow?',
     text: {
       expert: [
-        'PsyKnowHow is a written expert interview. Instead of a conversation, you answer questions about short case texts, at your own pace.',
-        'Experienced clinicians notice things that textbooks and guidelines leave out. We want to capture that knowledge in your own words, together with the exact words in the text your reading rests on.',
-        "You work in two places: My cases, where you answer the cases assigned to you, and Reviews, where you read and advise on colleagues' answers.",
+        'PsyKnowHow is a written expert elicitation study. You assess short clinical vignettes (first-person texts such as forum posts, diary entries or emails) and record your clinical reasoning, at your own pace.',
+        'The focus is on ADHD-related traits: which features of a narrative you weigh, how you separate them from differential explanations such as low mood, anxiety or poor sleep, and what further history you would need. Each point is anchored to the exact wording it rests on.',
+        "You work in two places: My cases, where you assess the vignettes assigned to you, and Reviews, where you peer-review colleagues' assessments.",
       ],
       admin: [
-        "PsyKnowHow collects clinicians' knowledge as a written expert interview. Experts answer short case texts, colleagues review the answers, and you decide which answers enter the knowledge base an AI assistant can cite.",
+        'PsyKnowHow is a written expert elicitation study. Clinicians assess short clinical vignettes, peers review the assessments, and you decide which answers enter the knowledge base an AI assistant can cite.',
       ],
     } as ByRole<readonly string[]>,
   },
   more: {
     sections: [
       {
-        id: 'why',
-        heading: 'Why written cases',
-        text: 'A short, concrete text brings out how you actually reason, which a general question would not.',
+        id: 'aim',
+        heading: 'What the study aims for',
+        text: [
+          'Experienced clinicians rely on cues that guidelines rarely put into words: a turn of phrase, what a person leaves out, how an account is ordered. This tacit knowledge rarely surfaces in answer to a general question, but it does when a clinician reasons through a concrete case.',
+          'The study records that reasoning in a form that can be checked and reused. Each statement is tied to the passage it rests on, says which way that passage points, and is peer-reviewed before use.',
+          'Approved answers form a knowledge base for an AI assistant. When a clinician asks a question or brings a new patient text, the assistant retrieves the relevant expert readings and cites them as clinician opinion, alongside the research literature. It supports clinical judgement; it does not make diagnoses.',
+        ],
+      },
+      {
+        id: 'vignettes',
+        heading: 'Clinical vignettes',
+        text: [
+          'A clinical vignette is a short written description of a person, built to resemble a real clinical encounter. Because every clinician reads the same text under the same conditions, their reasoning can be compared. Vignettes are an established method for studying clinical decision-making, used for example in the ICD-11 field studies on mental disorders.',
+          'The vignettes here are first-person texts of 120 to 250 words. Some contain features suggestive of ADHD-related traits, some contain features better explained by something else, and some are controls. You are not told which is which.',
+        ],
+      },
+      {
+        id: 'answer',
+        heading: 'What an answer contains',
+        text: [
+          'An answer is your assessment of one vignette, given as six questions. Each statement is linked to the quotes it rests on, and each quote is marked as pointing toward ADHD-related traits, away from them, of no bearing, or unclear.',
+        ],
       },
       {
         id: 'flow',
         heading: 'How a case goes',
-        text: 'Each case moves through four steps. You can leave and come back at any point before you submit.',
+        text: [
+          'Each case moves through four steps. You can leave and come back at any point before you submit.',
+        ],
       },
       {
         id: 'review',
         heading: 'How review works',
-        text: 'Colleagues approve or disapprove each answer and say why. Votes are advice: the study team makes the final decision. An answer can be sent back to its author for another round.',
+        text: [
+          'Colleagues approve or disapprove each answer and say why. Votes are advice: the study team makes the final decision. An answer can be sent back to its author for another round.',
+        ],
       },
       {
         id: 'answers',
         heading: 'What happens to answers',
-        text: 'Approved answers go into the knowledge base.',
+        text: [
+          'After your check, peers review each answer and the study team decides. Approved answers are split into single statements, each kept word for word with its quotes and the vignette passage it refers to, and added to the knowledge base.',
+        ],
+      },
+    ],
+    /** The six questions, paraphrased from the API's wording (backend/app/vignettes/questions.py). */
+    questions: [
+      {
+        term: 'Q1 Relevant features',
+        text: 'The passages that matter for your reading, in either direction, and why.',
+      },
+      {
+        term: 'Q2 Differential explanations',
+        text: 'Which features could equally reflect something else, and what would distinguish them.',
+      },
+      {
+        term: 'Q3 Missing information',
+        text: 'What you would need before treating these features as meaningful.',
+      },
+      {
+        term: 'Q4 Hypothesis revision',
+        text: 'How your working hypothesis changes given one added detail.',
+      },
+      {
+        term: 'Q5 Common misreadings',
+        text: 'What a less experienced clinician would likely over- or under-interpret.',
+      },
+      {
+        term: 'Q6 Overall rating',
+        text: 'How strongly the text shows ADHD-related traits, 1 to 5, or insufficient information.',
+      },
+    ],
+    referencesHeading: 'Further reading',
+    references: [
+      {
+        cite: "Evans, S. C., et al. (2015). Vignette methodologies for studying clinicians' decision-making: Validity, utility, and application in ICD-11 field studies. International Journal of Clinical and Health Psychology, 15(2), 160–170.",
+        url: 'https://doi.org/10.1016/j.ijchp.2014.12.001',
+      },
+      {
+        cite: 'Hoffman, R. R., Shadbolt, N. R., Burton, A. M., & Klein, G. (1995). Eliciting knowledge from experts: A methodological analysis. Organizational Behavior and Human Decision Processes, 62(2), 129–158.',
+        url: 'https://doi.org/10.1006/obhd.1995.1039',
       },
     ],
     instructions: 'Read the full instructions',

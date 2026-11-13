@@ -31,6 +31,10 @@ const DECISION: Record<string, { label: string; tone: string }> = {
   request_changes: { label: 'Changes requested', tone: 'border-warn/40 bg-warn/10 text-warn' },
 }
 
+/** The tally's icons, repeated on the vote buttons so the two read as one. */
+const CHECK = 'M3.5 8.5 6.5 11.5 12.5 4.5'
+const CROSS = 'M4.5 4.5l7 7M11.5 4.5l-7 7'
+
 const thread = ref<InstanceType<typeof AnswerThread>>()
 const name = computed(() => questionLabel(props.answer.question_id))
 const tally = computed(() => {
@@ -73,6 +77,7 @@ function addQuote(target: string) {
         :aria-label="tallyLabel(answer.approvals, answer.disapprovals)"
         data-testid="tally"
       >
+        <span class="text-xs font-medium text-muted" aria-hidden="true">Votes</span>
         <span
           class="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2.5 py-0.5 text-success"
           :class="{ 'ring-2 ring-success/40': answer.my_vote === 'approve' }"
@@ -88,7 +93,7 @@ function addQuote(target: string) {
             stroke-linejoin="round"
             aria-hidden="true"
           >
-            <path d="M3.5 8.5 6.5 11.5 12.5 4.5" />
+            <path :d="CHECK" />
           </svg>
           {{ answer.approvals }}
         </span>
@@ -106,7 +111,7 @@ function addQuote(target: string) {
             stroke-linecap="round"
             aria-hidden="true"
           >
-            <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" />
+            <path :d="CROSS" />
           </svg>
           {{ answer.disapprovals }}
         </span>
@@ -168,6 +173,19 @@ function addQuote(target: string) {
           :aria-pressed="answer.my_vote === 'approve'"
           @click="emit('vote', 'approve')"
         >
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path :d="CHECK" />
+          </svg>
           Approve
         </button>
         <button
@@ -181,6 +199,18 @@ function addQuote(target: string) {
           :aria-pressed="answer.my_vote === 'disapprove'"
           @click="emit('vote', 'disapprove')"
         >
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path :d="CROSS" />
+          </svg>
           Disapprove
         </button>
       </div>

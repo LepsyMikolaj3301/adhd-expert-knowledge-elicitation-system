@@ -392,6 +392,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/knowledge-units/by-expert/{expert_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Expert Knowledge
+         * @description Takes everything an expert gave out of the knowledge base, in every case: for an expert
+         *     who no longer wants their knowledge used.
+         */
+        delete: operations["remove_expert_knowledge_api_v1_knowledge_units_by_expert__expert_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge-units/index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Index Status
+         * @description Whether the search index has caught up with the last removal (the BM25 refit job).
+         */
+        get: operations["index_status_api_v1_knowledge_units_index_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge-units/index/refit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refit Index
+         * @description Queues a BM25 refit by hand, e.g. after one failed.
+         */
+        post: operations["refit_index_api_v1_knowledge_units_index_refit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge-units/search": {
         parameters: {
             query?: never;
@@ -408,6 +469,27 @@ export interface paths {
          */
         post: operations["search_knowledge_units_api_v1_knowledge_units_search_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge-units/{unit_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Knowledge Unit
+         * @description Takes one ingested unit out of the knowledge base. Retrieval stops finding it at once;
+         *     the BM25 weights are refit by the worker.
+         */
+        delete: operations["remove_knowledge_unit_api_v1_knowledge_units__unit_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1188,6 +1270,19 @@ export interface components {
             /** Unread Activity */
             unread_activity: number;
         };
+        /**
+         * IndexStatus
+         * @description The BM25 refit after a removal. up_to_date also when no refit ever ran.
+         */
+        IndexStatus: {
+            /** Last Error */
+            last_error?: string | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "up_to_date" | "queued" | "running" | "failed";
+        };
         /** InviteIssued */
         InviteIssued: {
             /** Invite Path */
@@ -1254,6 +1349,11 @@ export interface components {
             embed_text: string | null;
             /** Embed Text Combined */
             embed_text_combined: string | null;
+            /**
+             * Expert Id
+             * Format: uuid
+             */
+            expert_id: string;
             /** Expert Is Synthetic */
             expert_is_synthetic: boolean;
             /** Expert Pseudonym */
@@ -1688,7 +1788,12 @@ export interface components {
          * UnitStatus
          * @enum {string}
          */
-        UnitStatus: "pending" | "approved" | "rejected" | "ingested" | "superseded";
+        UnitStatus: "pending" | "approved" | "rejected" | "ingested" | "superseded" | "removed";
+        /** UnitsRemoved */
+        UnitsRemoved: {
+            /** Removed */
+            removed: number;
+        };
         /**
          * UserAdminView
          * @description What the admin sees: also whether the person has yet to accept their invite.
@@ -2705,6 +2810,95 @@ export interface operations {
             };
         };
     };
+    remove_expert_knowledge_api_v1_knowledge_units_by_expert__expert_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expert_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitsRemoved"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    index_status_api_v1_knowledge_units_index_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndexStatus"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    refit_index_api_v1_knowledge_units_index_refit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndexStatus"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     search_knowledge_units_api_v1_knowledge_units_search_post: {
         parameters: {
             query?: never;
@@ -2726,6 +2920,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["KnowledgeSearchResponse"];
                 };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_knowledge_unit_api_v1_knowledge_units__unit_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unit_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Client Error */
             "4XX": {

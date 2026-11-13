@@ -12,7 +12,7 @@ from app.assignments.state_machine import lock_assignment, transition
 from app.assignments.states import Action, Actor
 from app.core.db import session_factory, utcnow
 from app.core.errors import safe_traceback
-from app.jobs.handlers import HANDLERS, PREPARE, PermanentJobError
+from app.jobs.handlers import CORPUS_HANDLERS, HANDLERS, PREPARE, PermanentJobError
 from app.jobs.models import Job, JobKind, JobStatus
 from app.jobs.queue import LEASE, MAX_ATTEMPTS, next_job
 
@@ -35,6 +35,8 @@ async def _fail(db, job: Job, error: str) -> None:
     job.status = JobStatus.FAILED
     job.locked_until = None
     job.last_error = error
+    if job.assignment_id is None:  # a corpus job: no workflow to move on
+        return
     assignment = await lock_assignment(db, job.assignment_id)
     await transition(
         db, assignment, FAILURE_ACTION[job.kind], Actor.SYSTEM, None, {"job_id": str(job.id)}
@@ -98,6 +100,16 @@ async def run_once() -> bool:
     heartbeat = asyncio.create_task(_heartbeat(job_id, attempt))
     try:
         try:
+            if assignment_id is None:
+                async with factory() as db:
+                    job = await _current(db, job_id, attempt)
+                    if job is None:
+                        return True
+                    await CORPUS_HANDLERS[kind](db)
+                    job.status = JobStatus.DONE
+                    job.locked_until = None
+                    await db.commit()
+                return True
             prepare = PREPARE.get(kind)
             prepared = await prepare(assignment_id) if prepare else None
             async with factory() as db:
@@ -122,7 +134,8 @@ async def run_once() -> bool:
         )
         error = type(exc).__name__
         async with factory() as db:
-            await lock_assignment(db, assignment_id)  # same lock order as the success path
+            if assignment_id is not None:
+                await lock_assignment(db, assignment_id)  # same lock order as the success path
             job = await _current(db, job_id, attempt)
             if job is not None:
                 if isinstance(exc, PermanentJobError) or attempt >= MAX_ATTEMPTS:

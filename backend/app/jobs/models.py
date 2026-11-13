@@ -12,6 +12,8 @@ class JobKind(StrEnum):
     PROOFREAD = "proofread"
     PROCESS = "process"
     INGEST = "ingest"
+    # Corpus-wide, no assignment: refits BM25 after units were removed.
+    REFIT = "refit"
 
 
 class JobStatus(StrEnum):
@@ -37,7 +39,8 @@ class Job(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     kind: Mapped[JobKind] = mapped_column(enum_column(JobKind, "kind"))
-    assignment_id: Mapped[UUID] = mapped_column(ForeignKey("app.assignments.id"))
+    # None for a corpus job (REFIT), which no assignment's workflow waits on.
+    assignment_id: Mapped[UUID | None] = mapped_column(ForeignKey("app.assignments.id"))
     status: Mapped[JobStatus] = mapped_column(
         enum_column(JobStatus, "status"), default=JobStatus.QUEUED
     )

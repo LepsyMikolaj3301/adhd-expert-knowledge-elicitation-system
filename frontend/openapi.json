@@ -1387,6 +1387,37 @@
         "title": "HomeView",
         "type": "object"
       },
+      "IndexStatus": {
+        "description": "The BM25 refit after a removal. up_to_date also when no refit ever ran.",
+        "properties": {
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "state": {
+            "enum": [
+              "up_to_date",
+              "queued",
+              "running",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "IndexStatus",
+        "type": "object"
+      },
       "InviteIssued": {
         "properties": {
           "invite_path": {
@@ -1579,6 +1610,11 @@
             ],
             "title": "Embed Text Combined"
           },
+          "expert_id": {
+            "format": "uuid",
+            "title": "Expert Id",
+            "type": "string"
+          },
           "expert_is_synthetic": {
             "title": "Expert Is Synthetic",
             "type": "boolean"
@@ -1694,6 +1730,7 @@
           "assignment_id",
           "vignette_code",
           "vignette_version",
+          "expert_id",
           "expert_pseudonym",
           "expert_is_synthetic",
           "ordinal",
@@ -2771,10 +2808,24 @@
           "approved",
           "rejected",
           "ingested",
-          "superseded"
+          "superseded",
+          "removed"
         ],
         "title": "UnitStatus",
         "type": "string"
+      },
+      "UnitsRemoved": {
+        "properties": {
+          "removed": {
+            "title": "Removed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "removed"
+        ],
+        "title": "UnitsRemoved",
+        "type": "object"
       },
       "UserAdminView": {
         "description": "What the admin sees: also whether the person has yet to accept their invite.",
@@ -4774,6 +4825,114 @@
         ]
       }
     },
+    "/api/v1/knowledge-units/by-expert/{expert_id}": {
+      "delete": {
+        "description": "Takes everything an expert gave out of the knowledge base, in every case: for an expert\nwho no longer wants their knowledge used.",
+        "operationId": "remove_expert_knowledge_api_v1_knowledge_units_by_expert__expert_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "expert_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Expert Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitsRemoved"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Remove Expert Knowledge",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge-units/index": {
+      "get": {
+        "description": "Whether the search index has caught up with the last removal (the BM25 refit job).",
+        "operationId": "index_status_api_v1_knowledge_units_index_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Index Status",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge-units/index/refit": {
+      "post": {
+        "description": "Queues a BM25 refit by hand, e.g. after one failed.",
+        "operationId": "refit_index_api_v1_knowledge_units_index_refit_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Refit Index",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
     "/api/v1/knowledge-units/search": {
       "post": {
         "description": "Runs the platform's retrievers over the ingested units, for the admin to see what a\nquestion or a patient's text finds. A POST, so that typed text stays out of URLs and logs.",
@@ -4811,6 +4970,43 @@
           }
         },
         "summary": "Search Knowledge Units",
+        "tags": [
+          "knowledge"
+        ]
+      }
+    },
+    "/api/v1/knowledge-units/{unit_id}": {
+      "delete": {
+        "description": "Takes one ingested unit out of the knowledge base. Retrieval stops finding it at once;\nthe BM25 weights are refit by the worker.",
+        "operationId": "remove_knowledge_unit_api_v1_knowledge_units__unit_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unit_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Unit Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Remove Knowledge Unit",
         "tags": [
           "knowledge"
         ]

@@ -14,14 +14,18 @@ const role = computed(() => auth.role)
 const isExpert = computed(() => role.value === 'expert')
 
 const section = (id: string) => HOME.more.sections.find((s) => s.id === id)!
-const why = section('why')
+const aim = section('aim')
+const vignettes = section('vignettes')
+const answer = section('answer')
 const flow = section('flow')
 const review = section('review')
 const answers = section('answers')
 
 /** The page in the order it is read. The same list builds the jump links at the top. */
 const contents = computed(() => [
-  { id: 'why', label: why.heading },
+  { id: 'aim', label: aim.heading },
+  { id: 'vignettes', label: vignettes.heading },
+  { id: 'answer', label: answer.heading },
   { id: 'flow', label: flow.heading },
   ...(isExpert.value
     ? [
@@ -61,12 +65,40 @@ const rest = computed(() => HOME.about.text[role.value].slice(1))
     </nav>
 
     <div class="mt-8 space-y-6">
-      <AboutSection id="why" :heading="why.heading">
-        <p class="mt-2 max-w-[68ch] leading-relaxed">{{ why.text }}</p>
+      <AboutSection id="aim" :heading="aim.heading">
+        <p v-for="text in aim.text" :key="text" class="mt-2 max-w-[68ch] leading-relaxed">
+          {{ text }}
+        </p>
+      </AboutSection>
+
+      <AboutSection id="vignettes" :heading="vignettes.heading">
+        <p v-for="text in vignettes.text" :key="text" class="mt-2 max-w-[68ch] leading-relaxed">
+          {{ text }}
+        </p>
+        <h3 class="eyebrow mt-5 text-base">{{ HOME.more.referencesHeading }}</h3>
+        <ul class="mt-2 space-y-2">
+          <li
+            v-for="source in HOME.more.references"
+            :key="source.url"
+            class="max-w-[68ch] text-sm leading-relaxed text-muted"
+          >
+            {{ source.cite }}
+            <a :href="source.url" target="_blank" rel="noopener">{{ source.url }}</a>
+          </li>
+        </ul>
+      </AboutSection>
+
+      <AboutSection id="answer" :heading="answer.heading">
+        <p v-for="text in answer.text" :key="text" class="mt-2 max-w-[68ch] leading-relaxed">
+          {{ text }}
+        </p>
+        <TermGrid class="mt-5" :items="HOME.more.questions" />
       </AboutSection>
 
       <AboutSection id="flow" :heading="flow.heading">
-        <p class="mt-2 max-w-[68ch] leading-relaxed">{{ flow.text }}</p>
+        <p v-for="text in flow.text" :key="text" class="mt-2 max-w-[68ch] leading-relaxed">
+          {{ text }}
+        </p>
         <StepFlow class="mt-4" :steps="INTRO.structure.flow" testid="about-flow" />
         <ol class="mt-5 space-y-4">
           <li
@@ -105,11 +137,15 @@ const rest = computed(() => HOME.about.text[role.value].slice(1))
       </template>
 
       <AboutSection v-else id="review" :heading="review.heading">
-        <p class="mt-2 max-w-[68ch] leading-relaxed">{{ review.text }}</p>
+        <p v-for="text in review.text" :key="text" class="mt-2 max-w-[68ch] leading-relaxed">
+          {{ text }}
+        </p>
       </AboutSection>
 
       <AboutSection id="answers" :heading="answers.heading" accent>
-        <p class="mt-2 max-w-[68ch] leading-relaxed">{{ answers.text }}</p>
+        <p v-for="text in answers.text" :key="text" class="mt-2 max-w-[68ch] leading-relaxed">
+          {{ text }}
+        </p>
         <p v-if="isExpert" class="mt-2 max-w-[68ch] leading-relaxed text-muted">
           {{ TRUST_SENTENCE }}
         </p>

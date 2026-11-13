@@ -9,8 +9,10 @@ Only some kinds of rules are applied, and each one only with its first suggestio
   (the patient's own words) or for the clinical terms in CLINICAL_TERMS;
 - style, redundancy, typography (curly quotes would hide the expert's quotations): never.
 
-Chips (`⟦hN⟧`) are sent as markup that LanguageTool reads as the quoted words of the citation, so
-it checks the sentence as it reads, and a chip is never edited or moved.
+Chips (`⟦hN⟧`) are sent as markup that LanguageTool reads as a placeholder quotation
+(CHIP_READS_AS), not as the patient's words: those are often ungrammatical ("i dont know why"), and
+a match inside `interpretAs` text makes LanguageTool fail the whole request (HTTP 500). The
+sentence around a chip is still checked; a chip is never edited or moved.
 """
 
 import json
@@ -44,6 +46,9 @@ CLINICAL_TERMS = frozenset(
     }
 )  # fmt: skip
 _WORD = re.compile(r"[^\W\d_]+(?:['’][^\W\d_]+)*")
+# What a chip reads as. A quotation with no words of its own: nothing to correct inside it, and no
+# repeated-word or casing matches between two chips (tested against `this`, `it`, `X`, `quote`).
+CHIP_READS_AS = '"…"'
 
 
 @dataclass
@@ -58,15 +63,14 @@ def vocabulary(text: str) -> set[str]:
     return {word.lower() for word in _WORD.findall(text)}
 
 
-def annotate(text: str, quotes: dict[int, str]) -> dict[str, Any]:
-    """LanguageTool's annotated text: chips become markup read as their quoted words."""
+def annotate(text: str) -> dict[str, Any]:
+    """LanguageTool's annotated text: chips become markup read as CHIP_READS_AS."""
     parts: list[dict[str, str]] = []
     last = 0
     for match in CHIP_RE.finditer(text):
         if match.start() > last:
             parts.append({"text": text[last : match.start()]})
-        quote = quotes.get(int(match.group(1)), "this")
-        parts.append({"markup": match.group(), "interpretAs": f'"{quote}"'})
+        parts.append({"markup": match.group(), "interpretAs": CHIP_READS_AS})
         last = match.end()
     if last < len(text):
         parts.append({"text": text[last:]})
@@ -83,7 +87,7 @@ def _code_points(text: str, utf16_offset: int) -> int:
     return len(text)
 
 
-async def ask(text: str, quotes: dict[int, str]) -> dict[str, Any]:
+async def ask(text: str) -> dict[str, Any]:
     """One /v2/check call. Tests replace this function."""
     async with httpx.AsyncClient(
         base_url=settings.languagetool_url, timeout=settings.languagetool_timeout
@@ -92,7 +96,7 @@ async def ask(text: str, quotes: dict[int, str]) -> dict[str, Any]:
             "/v2/check",
             data={
                 "language": settings.languagetool_language,
-                "data": json.dumps(annotate(text, quotes)),
+                "data": json.dumps(annotate(text)),
             },
         )
         response.raise_for_status()
@@ -140,7 +144,7 @@ def apply(text: str, reply: dict[str, Any], protected: set[str]) -> Checked:
     return checked
 
 
-async def check(text: str, quotes: dict[int, str], protected: set[str]) -> Checked:
+async def check(text: str, protected: set[str]) -> Checked:
     if not text.strip():
         return Checked(text=text)
-    return apply(text, await ask(text, quotes), protected)
+    return apply(text, await ask(text), protected)

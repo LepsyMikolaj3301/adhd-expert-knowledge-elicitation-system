@@ -33,11 +33,9 @@ def layout(text: str) -> str:
     return "\n".join(text[a:b].strip() for a, b in split_sentences(text))
 
 
-async def _grammar(
-    text: str, quotes: dict[int, str], protected: set[str], passes: dict[str, Any], key: str
-) -> str:
+async def _grammar(text: str, protected: set[str], passes: dict[str, Any], key: str) -> str:
     try:
-        checked = await grammar.check(text, quotes, protected)
+        checked = await grammar.check(text, protected)
     except SERVICE_ERRORS as exc:
         logger.warning("grammar check skipped\n%s", safe_traceback(exc))
         passes[key] = "unavailable"
@@ -55,7 +53,7 @@ async def proofread_answer(
     passes: dict[str, Any] = {}
     text, dropped = garbage.drop_garbage(answer, protected)
     passes["dropped"] = len(dropped)
-    text = await _grammar(text, quotes, protected, passes, "grammar")
+    text = await _grammar(text, protected, passes, "grammar")
     enhanced = None
     if text.strip():
         try:
@@ -65,7 +63,7 @@ async def proofread_answer(
             passes["enhanced"] = "unavailable"
     if enhanced is not None:
         passes["enhanced"] = True
-        text = await _grammar(enhanced, quotes, protected, passes, "grammar_after")
+        text = await _grammar(enhanced, protected, passes, "grammar_after")
     else:
         passes.setdefault("enhanced", False)
     return Proofread(text=layout(text), dropped=dropped, passes=passes)

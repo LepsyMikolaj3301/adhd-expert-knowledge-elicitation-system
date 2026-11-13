@@ -29,6 +29,7 @@ async def unit_items(
             Vignette.code,
             VignetteVersion.version,
             VignetteVersion.framing,
+            User.id,
             User.pseudonym,
             User.is_synthetic,
         )
@@ -45,8 +46,17 @@ async def unit_items(
     rows = (await db.execute(query)).all()
     findings = await _findings(db, {unit.assignment_id for unit, *_ in rows})
     return [
-        _item(unit, code, version, framing, pseudonym, synthetic, findings.get(unit.assignment_id))
-        for unit, code, version, framing, pseudonym, synthetic in rows
+        _item(
+            unit,
+            code,
+            version,
+            framing,
+            expert_id,
+            pseudonym,
+            synthetic,
+            findings.get(unit.assignment_id),
+        )
+        for unit, code, version, framing, expert_id, pseudonym, synthetic in rows
     ]
 
 
@@ -64,6 +74,7 @@ def _item(
     code: str,
     version: int,
     framing: str | None,
+    expert_id: UUID,
     pseudonym: str,
     synthetic: bool,
     findings: AnswerFindings | None,
@@ -74,6 +85,7 @@ def _item(
         assignment_id=unit.assignment_id,
         vignette_code=code,
         vignette_version=version,
+        expert_id=expert_id,
         expert_pseudonym=pseudonym,
         expert_is_synthetic=synthetic,
         ordinal=unit.ordinal,

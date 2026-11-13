@@ -304,7 +304,7 @@ describe('ReviewView', () => {
     expect(after.findAll('button')[0]!.attributes('aria-pressed')).toBe('true')
     const tally = wrapper!.get('[data-testid="tally"]')
     expect(tally.attributes('aria-label')).toBe('1 approve, 0 disapprove')
-    expect(tally.text().replace(/\s+/g, ' ')).toBe('1 0')
+    expect(tally.text().replace(/\s+/g, ' ')).toBe('Votes 1 0')
   })
 
   it('keeps a comment that could not be posted', async () => {

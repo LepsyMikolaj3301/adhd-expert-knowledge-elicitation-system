@@ -84,12 +84,13 @@ def test_offsets_count_utf16_units_like_java():
     assert grammar.apply(text, reply, set()).text == "😀 he doesn't know"
 
 
-def test_chips_are_sent_as_the_words_they_stand_for():
-    data = grammar.annotate("Her ⟦h1⟧ is telling.", {1: "I can't sleep"})
+def test_chips_are_sent_as_a_placeholder_not_the_patients_words():
+    # The patient's words are not checked: errors in them made LanguageTool fail the request.
+    data = grammar.annotate("Her ⟦h1⟧ is telling.")
     assert data == {
         "annotation": [
             {"text": "Her "},
-            {"markup": "⟦h1⟧", "interpretAs": '"I can\'t sleep"'},
+            {"markup": "⟦h1⟧", "interpretAs": grammar.CHIP_READS_AS},
             {"text": " is telling."},
         ]
     }
@@ -167,7 +168,7 @@ def test_the_layout_is_one_sentence_per_line():
 async def test_garbage_goes_before_the_grammar_checker_sees_it(monkeypatch):
     seen = []
 
-    async def ask(text, quotes):
+    async def ask(text):
         seen.append(text)
         return {"matches": []}
 

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assignments.models import Assignment, Submission
@@ -144,6 +144,18 @@ async def ingest(
         .values(status=UnitStatus.INGESTED)
     )
 
+
+async def refit(db: AsyncSession) -> None:
+    """Refits BM25 over the whole knowledge base, after units were removed. No model is needed:
+    bge-m3 is frozen, and the other units' dense vectors don't depend on what was removed."""
+    await db.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": ingest_module.BM25_LOCK})
+    await ingest_module.refresh_sparse(db)
+
+
+# Jobs of the whole corpus: no assignment, no workflow step, nothing to prepare.
+CORPUS_HANDLERS: dict[JobKind, Callable[[AsyncSession], Awaitable[None]]] = {
+    JobKind.REFIT: refit,
+}
 
 # Proofreading and ingestion have a slow part; cutting into units does not.
 PREPARE: dict[JobKind, Prepare] = {

@@ -17,6 +17,8 @@ class UnitStatus(StrEnum):
     INGESTED = "ingested"
     # Cut in an earlier review round: kept as history, never reviewed again or ingested.
     SUPERSEDED = "superseded"
+    # Taken out of the knowledge base by the admin after ingestion: its chips rows are deleted.
+    REMOVED = "removed"
 
 
 class KnowledgeUnit(Base):
