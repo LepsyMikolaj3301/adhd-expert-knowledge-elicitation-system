@@ -412,7 +412,7 @@ def answers_stage(args: argparse.Namespace, log: list, accepted: dict, attempts:
             clock = started + timedelta(minutes=4 + len(answers["Q1"]) // 80)
             responses.append(ChipResponse(
                 vignette_id=v.id, vignette_version=v.version, vignette_hash=v.content_hash,
-                expert_id=expert_id, is_synthetic=True, answers=answers, highlights=highlights,
+                expert_id=expert_id, answers=answers, highlights=highlights,
                 rating=rating, insufficient_information=insufficient, started_at=started,
                 submitted_at=clock,
             ))  # fmt: skip
@@ -431,7 +431,7 @@ def answers_stage(args: argparse.Namespace, log: list, accepted: dict, attempts:
             )
             continue
         doc = ChipDocument(
-            session_id=session_id, expert_id=expert_id, created_at=day, is_synthetic=True,
+            session_id=session_id, expert_id=expert_id, created_at=day,
             vignettes=shown, responses=responses,
         )  # fmt: skip
         write_json(path, doc.model_dump(mode="json"))

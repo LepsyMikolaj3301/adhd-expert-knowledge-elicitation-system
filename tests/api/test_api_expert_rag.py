@@ -11,7 +11,6 @@ from test_api_pipeline import chips, ingested_single
 
 from expert_knowledge_core.records import is_readable
 from expert_knowledge_rag import (
-    ExpertFilter,
     ExpertKnowledgeStore,
     ExpertQuestionRetriever,
     PatientTextRetriever,
@@ -37,11 +36,11 @@ async def test_the_stored_document_is_readable_and_its_unit_ids_map_to_the_rows(
     assert is_readable(document)
     rows = await chips(
         "SELECT id, session_id, expert_id, vignette_id, vignette_version, kind, highlight_id, "
-        "direction, is_synthetic, embed_text FROM chips.finding_units ORDER BY id"
+        "direction, embed_text FROM chips.finding_units ORDER BY id"
     )
     columns = (
         "id", "session_id", "expert_id", "vignette_id", "vignette_version", "kind",
-        "highlight_id", "direction", "is_synthetic", "embed_text",
+        "highlight_id", "direction", "embed_text",
     )  # fmt: skip
     hits = [UnitHit.from_row({**dict(zip(columns, r, strict=True)), "score": 1.0}) for r in rows]
     assert hits
@@ -61,7 +60,6 @@ async def test_a_retriever_over_the_ingested_database_returns_the_approved_notes
         embeddings=FakeEmbeddings(),
         k=3,
         search="dense",
-        filter=ExpertFilter(include_synthetic=True),
     )
     # a query equal to a stored text has the same vector: that unit is the best hit
     docs = await retriever.ainvoke(unit_text)
@@ -70,11 +68,6 @@ async def test_a_retriever_over_the_ingested_database_returns_the_approved_notes
     assert first.page_content.startswith("Teaching case ")
     assert "Clinician's own words:" in first.page_content
     assert first.metadata["source"] == "expert" and first.metadata["unit_ids"]
-    # the application's experts are real users unless marked synthetic: the default filter agrees
-    default = await ExpertQuestionRetriever(
-        store=store, embeddings=FakeEmbeddings(), search="dense"
-    ).ainvoke(unit_text)
-    assert [d.metadata["is_synthetic"] for d in default] == [False] * len(default)
 
 
 async def test_patient_text_matching_a_stored_highlight_finds_its_units(models):
@@ -86,6 +79,5 @@ async def test_patient_text_matching_a_stored_highlight_finds_its_units(models):
         store=ExpertKnowledgeStore(TEST_URL),
         embeddings=FakeEmbeddings(),
         search="dense",
-        filter=ExpertFilter(include_synthetic=True),
     ).ainvoke(cue_text)
     assert docs and docs[0].metadata["patient_words"]

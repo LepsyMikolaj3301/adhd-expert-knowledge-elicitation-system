@@ -1,4 +1,4 @@
-"""Development data: silver answers submitted by two synthetic experts and peer-reviewed by two
+"""Development data: silver answers submitted by two experts and peer-reviewed by two
 more, left in `peer_review` for the admin to decide and ingest by hand.
 
 Run from backend/ (the dev password is never stored; the four experts all get it):
@@ -109,12 +109,12 @@ def build_payloads(seed: dict[str, Any], pairs: dict[str, Any]) -> dict[tuple[st
 async def ensure_user(db, email: str, name: str, password: str) -> User:
     user = await db.scalar(select(User).where(User.email == email.lower()))
     if user is not None:
-        if user.role != Role.EXPERT or not user.is_synthetic:
-            raise SystemExit(f"{email} exists but isn't a synthetic expert; refusing to use it.")
+        if user.role != Role.EXPERT:
+            raise SystemExit(f"{email} exists but isn't an expert; refusing to use it.")
         log(f"  user {user.pseudonym} {email}: exists")
         return user
     user = await create_user(
-        db, email=email, display_name=name, role=Role.EXPERT, is_synthetic=True, password=password
+        db, email=email, display_name=name, role=Role.EXPERT, password=password
     )
     log(f"  user {user.pseudonym} {email}: created")
     return user
@@ -308,7 +308,7 @@ async def review(
 
 async def main(args: argparse.Namespace) -> None:
     if settings.environment == "production":
-        raise SystemExit("Refusing to seed synthetic data in production.")
+        raise SystemExit("Refusing to seed development data in production.")
     password = os.environ.get(args.password_env, "")
     if not password:
         raise SystemExit(f"Set the experts' dev password in ${args.password_env}.")

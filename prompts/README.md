@@ -25,5 +25,6 @@ Each file starts with front-matter (`id`, `version`, `target`, ...); the loader 
 The `bad_quote` fixture kind listed in the expert-answer prompt is not sent to the model: the script asks
 for a `clean` answer and breaks one quote itself.
 
-Fixtures only: the expert-answer prompt produces `is_synthetic=true` data that must never be ingested
-into the production knowledge base.
+A persona file is versioned like a prompt: changing an expert's way of writing is `E21.v2.md`, so a fixture's manifest can say which wording produced it.
+
+Fixtures only: the expert-answer prompt writes test answers for the fixtures.

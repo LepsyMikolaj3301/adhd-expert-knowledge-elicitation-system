@@ -56,7 +56,6 @@ export const expert: User = {
   display_name: 'Eve',
   role: 'expert',
   pseudonym: 'E01',
-  is_synthetic: false,
   is_active: true,
   created_at: '2026-11-04T10:00:00Z',
 }

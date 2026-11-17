@@ -1,7 +1,6 @@
 {
   "created_at": "2026-01-06T09:00:00Z",
   "expert_id": "SYN-002",
-  "is_synthetic": true,
   "responses": [
     {
       "answers": {
@@ -68,7 +67,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 2,
@@ -134,7 +132,6 @@
         }
       ],
       "insufficient_information": true,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": null,
@@ -209,7 +206,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 2,
@@ -284,7 +280,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 3,
@@ -350,7 +345,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 1,
@@ -425,7 +419,6 @@
         }
       ],
       "insufficient_information": true,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": null,
@@ -500,7 +493,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 3,
@@ -575,7 +567,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 2,
@@ -650,7 +641,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 2,
@@ -725,7 +715,6 @@
         }
       ],
       "insufficient_information": true,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": null,
@@ -800,7 +789,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 2,
@@ -875,7 +863,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 1,
@@ -950,7 +937,6 @@
         }
       ],
       "insufficient_information": false,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": 1,
@@ -1025,7 +1011,6 @@
         }
       ],
       "insufficient_information": true,
-      "is_synthetic": true,
       "q4": null,
       "quoted_fragments": [],
       "rating": null,

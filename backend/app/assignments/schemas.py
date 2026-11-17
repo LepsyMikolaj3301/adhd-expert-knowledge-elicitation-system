@@ -28,7 +28,7 @@ class ExpertVignette(BaseModel):
     patient_summary: str
     word_count: int
     content_hash: str
-    # Only the questions the expert may see now: Q4-Q6 are absent until the gate is passed.
+    # The questions of this vignette version.
     questions: list[QuestionView]
 
 

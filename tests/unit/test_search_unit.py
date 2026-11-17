@@ -9,7 +9,7 @@ import pytest
 from app.core.errors import DomainError
 from app.knowledge import embedding, ingest, search
 from app.knowledge.schemas import KnowledgeSearchRequest
-from expert_knowledge_rag import ExpertQuestionRetriever, PatientTextRetriever
+from expert_knowledge_rag import ExpertFilter, ExpertQuestionRetriever, PatientTextRetriever
 
 
 @pytest.mark.parametrize(
@@ -76,7 +76,7 @@ def test_the_mode_picks_the_retriever_and_every_hit_is_one_unit(mode, kind):
     retriever = search._retriever(request, search._Embeddings())
     assert type(retriever) is kind
     assert retriever.k == 5 and retriever.merge_shared is False
-    assert retriever.filter.include_synthetic is True  # the admin sees the test accounts' units
+    assert retriever.filter == ExpertFilter()  # every expert's units
 
 
 # --- ingestion helpers -------------------------------------------------------------------------

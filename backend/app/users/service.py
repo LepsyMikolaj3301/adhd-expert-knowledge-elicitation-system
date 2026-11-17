@@ -11,7 +11,7 @@ from app.audit.service import record_event
 from app.auth.service import end_all_sessions
 from app.core.errors import DomainError, not_found
 from app.core.security import hash_password
-from app.users.models import PSEUDONYM_SEQUENCE, SYNTHETIC_PREFIX, Role, User
+from app.users.models import PSEUDONYM_SEQUENCE, Role, User
 from app.users.schemas import CaseCounts, PersonAdminCard, PersonCard, PersonView
 
 
@@ -21,19 +21,16 @@ async def create_user(
     email: str,
     display_name: str,
     role: Role,
-    is_synthetic: bool = False,
     password: str | None = None,
     actor_id: UUID | None = None,
 ) -> User:
     number = await db.scalar(PSEUDONYM_SEQUENCE.next_value())
     letter = "A" if role == Role.ADMIN else "E"
-    prefix = SYNTHETIC_PREFIX if is_synthetic else ""
     user = User(
         email=email.lower(),
         display_name=display_name,
         role=role,
-        pseudonym=f"{prefix}{letter}{number:02d}",
-        is_synthetic=is_synthetic,
+        pseudonym=f"{letter}{number:02d}",
         password_hash=hash_password(password) if password else None,
     )
     db.add(user)
@@ -117,7 +114,6 @@ async def person_card(db: AsyncSession, pseudonym: str, viewer: User) -> PersonV
         display_name=user.display_name,
         email=user.email,
         is_active=user.is_active,
-        is_synthetic=user.is_synthetic,
         cases=CaseCounts(
             open=count(
                 {State.ASSIGNED, State.IN_PROGRESS, State.PROOFREADING, State.PROOFREAD_CHECK}

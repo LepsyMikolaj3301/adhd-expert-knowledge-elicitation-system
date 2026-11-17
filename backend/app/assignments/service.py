@@ -376,7 +376,6 @@ async def submit(db: AsyncSession, assignment: Assignment, actor: Actor, viewer:
                 "vignette_code": code,
                 "vignette_version": version.version,
                 "expert_pseudonym": viewer.pseudonym,
-                "is_synthetic": viewer.is_synthetic,
                 "started_at": assignment.started_at.isoformat() if assignment.started_at else None,
                 "submitted_at": now.isoformat(),
             },

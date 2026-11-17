@@ -15,7 +15,6 @@ class UserView(BaseModel):
     display_name: str
     role: Role
     pseudonym: str
-    is_synthetic: bool
     is_active: bool
     created_at: datetime
 
@@ -84,7 +83,6 @@ class PersonAdminCard(BaseModel):
     display_name: str
     email: str
     is_active: bool
-    is_synthetic: bool
     cases: CaseCounts
 
 

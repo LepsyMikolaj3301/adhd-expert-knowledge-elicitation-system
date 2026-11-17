@@ -12,10 +12,9 @@ results, approval) lives in separate backend records that point to `session_id`.
 | Field | Type | Notes |
 |---|---|---|
 | `session_id` | str | unique per session |
-| `expert_id` | str | `SYN-…` for synthetic experts |
+| `expert_id` | str | |
 | `created_at` | datetime (tz-aware) | |
 | `schema_version` | `"1.1"` | 1.1: Q4 is a what-if scale, Q1–Q3 gate the rest (1.0 files: `migrate_q4_whatif.py`) |
-| `is_synthetic` | bool | must be true exactly when `expert_id` starts with `SYN-` |
 | `vignettes[]` | `Vignette` | in the order shown; ids unique |
 | `responses[]` | `Response` | at most one per vignette; may be fewer than vignettes (session ended early) |
 
@@ -29,7 +28,7 @@ for B), `content_hash` (sha256 of `text`, auto-filled, verified) and the hidden 
 substring of `text`. The platform shows the expert `Vignette.expert_view()`, which omits `design`.
 
 **Response** — `vignette_id` + `vignette_version` + `vignette_hash` (must match the vignette shown),
-`expert_id`, `is_synthetic`, `answers` (`{"Q1": "…"}`: open questions and Q4's optional *why*, none
+`expert_id`, `answers` (`{"Q1": "…"}`: open questions and Q4's optional *why*, none
 blank), `quoted_fragments` (fragments the expert marked in the text; exact substrings), `rating` (1–5,
 Q6), `insufficient_information` (Q6 alternative, exclusive with `rating`), `q4` (`ShiftAnswer`, see
 below), `started_at`, `submitted_at`.
@@ -63,10 +62,3 @@ how far to trust it depends on the tier, see [fixtures.md](fixtures.md).
 submitted → extracted → member_checked → approved
                                        ↘ rejected
 ```
-
-## Synthetic documents
-
-Synthetic documents (`is_synthetic=true`, `expert_id` starting `SYN-`) exist for tests and evaluation.
-**They can never be ingested into the production knowledge base.** `assert_ingestible(doc, production=True)`
-raises `SyntheticIngestionError`; any ingestion path to the production KB must call it. They may go
-through the lifecycle and into a test KB.

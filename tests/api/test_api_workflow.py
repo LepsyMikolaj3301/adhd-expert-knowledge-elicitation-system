@@ -28,7 +28,6 @@ from app.jobs.models import Job, JobKind, JobStatus
 from app.jobs.queue import MAX_ATTEMPTS
 from app.jobs.worker import run_once
 from app.proofread import service as proofread_service
-from app.settings import settings
 
 
 async def _state(api, assignment_id):
@@ -233,26 +232,6 @@ async def test_crashing_on_the_last_attempt_fails_the_job():
     assert await _state(admin, assignment_id) == "processing_failed"
     [job] = await _jobs()
     assert job.last_error == "LeaseExpired"
-
-
-async def test_synthetic_answers_never_enter_production(monkeypatch):
-    admin = await admin_api()
-    expert = await expert_api("s@example.com", is_synthetic=True)
-    [assignment_id], _ = await reach_review(admin, expert)
-    await decide_all(admin, assignment_id)
-
-    monkeypatch.setattr(settings, "environment", "production")
-    assert await run_jobs() == 2, "cut, then refused at once: retrying can't help"
-    assert await _state(admin, assignment_id) == "ingestion_failed"
-    units = await admin.ok("GET", "/knowledge-units")
-    assert {u["status"] for u in units} == {"approved"}
-    [job] = await _jobs(JobKind.INGEST)
-    assert job.last_error == "SyntheticIngestionRefused"
-
-    monkeypatch.setattr(settings, "environment", "development")
-    await admin.ok("POST", f"/assignments/{assignment_id}/retry")
-    await run_jobs()
-    assert await _state(admin, assignment_id) == "ingested"
 
 
 async def _until(condition, seconds: float = 5.0) -> None:

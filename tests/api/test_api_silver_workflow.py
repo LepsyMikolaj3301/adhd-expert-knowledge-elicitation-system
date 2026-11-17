@@ -98,7 +98,6 @@ async def test_approved_silver_answers_are_ingested_searchable_and_removable():
     (sessions,) = await chips("SELECT count(*) FROM chips.elicitation_sessions")
     assert sessions[0] == SUBMISSIONS
     assert (await chips("SELECT DISTINCT tier FROM chips.vignettes")) == [("app",)]
-    assert (await chips("SELECT DISTINCT is_synthetic FROM chips.finding_units")) == [(True,)]
     (cases, whole) = (
         (await chips("SELECT count(*) FROM chips.finding_units WHERE kind = 'case'"))[0][0],
         (await chips("SELECT count(*) FROM chips.finding_units"))[0][0],

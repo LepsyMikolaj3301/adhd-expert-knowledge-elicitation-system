@@ -16,7 +16,6 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from app.vignettes.questions import GATE, QUESTIONS, QuestionId
 
 SCHEMA_VERSION = "1.1"  # 1.1: Q4 is a what-if scale (ShiftAnswer), Q1-Q3 gate
-SYNTHETIC_PREFIX = "SYN-"
 MIN_WORDS, MAX_WORDS = 120, 250
 
 Strength = Literal["weak", "moderate", "strong"]
@@ -34,10 +33,6 @@ class _Model(BaseModel):
 
 def content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def is_synthetic_id(expert_id: str) -> bool:
-    return expert_id.startswith(SYNTHETIC_PREFIX)
 
 
 class PlantedCue(_Model):
@@ -174,7 +169,6 @@ class Response(_Model):
     vignette_version: int = Field(ge=1)
     vignette_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     expert_id: str = Field(min_length=1)
-    is_synthetic: bool
     answers: dict[QuestionId, str] = Field(
         description="free-text answers: open questions, and Q4's optional why"
     )
@@ -207,11 +201,6 @@ class Response(_Model):
             or self.q4 is not None
         ):
             raise ValueError("empty_answer: response contains nothing")
-        if self.is_synthetic != is_synthetic_id(self.expert_id):
-            raise ValueError(
-                f"synthetic_flag_mismatch: is_synthetic={self.is_synthetic} "
-                f"but expert_id={self.expert_id!r}"
-            )
         if self.submitted_at < self.started_at:
             raise ValueError("timestamps: submitted_at before started_at")
         return self
@@ -222,17 +211,11 @@ class ElicitationDocument(_Model):
     expert_id: str = Field(min_length=1)
     created_at: AwareDatetime
     schema_version: Literal["1.1"] = SCHEMA_VERSION
-    is_synthetic: bool
     vignettes: list[Vignette] = Field(min_length=1, description="in the order shown")
     responses: list[Response]
 
     @model_validator(mode="after")
     def _check(self) -> Self:
-        if self.is_synthetic != is_synthetic_id(self.expert_id):
-            raise ValueError(
-                f"synthetic_flag_mismatch: is_synthetic={self.is_synthetic} "
-                f"but expert_id={self.expert_id!r}"
-            )
         shown = {}
         for v in self.vignettes:
             if v.id in shown:
@@ -251,7 +234,7 @@ class ElicitationDocument(_Model):
                 raise ValueError(f"vignette_version_mismatch: {r.vignette_id}")
             if r.vignette_hash != v.content_hash:
                 raise ValueError(f"vignette_hash_mismatch: {r.vignette_id}")
-            if r.expert_id != self.expert_id or r.is_synthetic != self.is_synthetic:
+            if r.expert_id != self.expert_id:
                 raise ValueError(f"expert_mismatch: response to {r.vignette_id} vs document")
             for qid in r.answers:
                 if qid not in v.question_ids:

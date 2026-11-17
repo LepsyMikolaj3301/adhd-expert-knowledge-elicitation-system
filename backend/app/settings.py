@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     enhance_model: str = "qwen3.5:9b"
     # The folder with prompts/ and config/. The images copy both next to backend/.
     project_root: Path = Path(__file__).resolve().parents[2]
-    # "production" switches on the synthetic-data guard at ingestion. Anything else stops the app
-    # at startup: a typo here must not silently turn the guard off.
+    # "production" forces the HTTPS-only session cookie. Anything else stops the app at startup:
+    # a typo here must not silently turn that off.
     environment: Literal["development", "production"] = "development"
     # HTTPS-only session cookie. Always on in production; this turns it on elsewhere too.
     cookie_secure: bool = False

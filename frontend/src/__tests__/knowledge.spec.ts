@@ -17,7 +17,6 @@ function unit(overrides: Partial<KnowledgeUnit> = {}): KnowledgeUnit {
     vignette_version: 1,
     expert_id: 'x1',
     expert_pseudonym: 'E01',
-    expert_is_synthetic: false,
     ordinal: 1,
     review_round: 1,
     text: 'Q1: «the box Mum sent…» The report gives childhood evidence.',

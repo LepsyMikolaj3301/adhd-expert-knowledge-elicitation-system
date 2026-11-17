@@ -5,7 +5,7 @@ Usage: python scripts/db/chips_backup.py backup  --out data/backup/chips_synthet
        python scripts/db/chips_backup.py empty   --out data/backup/chips_synthetic_2026-11-05
        python scripts/db/chips_backup.py restore --out data/backup/chips_synthetic_2026-11-05
 
-`backup` refuses to run if any row is not synthetic. `verify` loads every file back into temporary
+`verify` loads every file back into temporary
 tables (nothing in `chips` changes) and compares row counts and a checksum of each table. `empty`
 only runs if `verify` passes. `restore` needs empty tables.
 """
@@ -36,13 +36,6 @@ TABLES = (
     "unit_cues",
     "review_events",
 )
-SYNTHETIC_CHECKS = {
-    "experts": "SELECT count(*) FROM chips.experts WHERE NOT is_synthetic",
-    "elicitation_sessions": (
-        "SELECT count(*) FROM chips.elicitation_sessions WHERE NOT is_synthetic"
-    ),
-    "finding_units": "SELECT count(*) FROM chips.finding_units WHERE NOT is_synthetic",
-}
 
 
 def sha256(path: Path) -> str:
@@ -54,9 +47,6 @@ async def count(conn: asyncpg.Connection, table: str) -> int:
 
 
 async def backup(conn: asyncpg.Connection, out: Path) -> None:
-    for table, query in SYNTHETIC_CHECKS.items():
-        if real := await conn.fetchval(query):
-            raise SystemExit(f"{table} holds {real} rows that are not synthetic: not backing up")
     await asyncio.to_thread(out.mkdir, parents=True, exist_ok=True)
     manifest = {"created_at": datetime.now(UTC).isoformat(), "schema": SCHEMA, "tables": {}}
     async with conn.transaction(isolation="repeatable_read", readonly=True):

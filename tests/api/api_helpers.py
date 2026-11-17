@@ -72,7 +72,7 @@ class Api:
         await self.client.aclose()
 
 
-async def login_as(role: Role, email: str, *, is_synthetic: bool = False) -> Api:
+async def login_as(role: Role, email: str) -> Api:
     async with session_factory()() as db:
         user = await create_user(
             db,
@@ -80,7 +80,6 @@ async def login_as(role: Role, email: str, *, is_synthetic: bool = False) -> Api
             display_name=email.split("@")[0],
             role=role,
             password=PASSWORD,
-            is_synthetic=is_synthetic,
         )
         await db.commit()
     api = Api(str(user.id), user.pseudonym)
@@ -92,8 +91,8 @@ async def admin_api(email: str = "admin@example.com") -> Api:
     return await login_as(Role.ADMIN, email)
 
 
-async def expert_api(email: str, *, is_synthetic: bool = False) -> Api:
-    return await login_as(Role.EXPERT, email, is_synthetic=is_synthetic)
+async def expert_api(email: str) -> Api:
+    return await login_as(Role.EXPERT, email)
 
 
 async def set_stored_questions(version_id: str, question_ids: list[str]) -> None:

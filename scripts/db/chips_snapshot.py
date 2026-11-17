@@ -140,9 +140,7 @@ def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> d
     conn.execute(DDL.read_text().format(schema=schema))
     conn.execute(sql.SQL("SET search_path = {}, public").format(sql.Identifier(schema)))
     for e in t["experts"]:
-        conn.execute(
-            "INSERT INTO experts VALUES (%s, %s, %s)", (e["id"], e["role"], e["is_synthetic"])
-        )
+        conn.execute("INSERT INTO experts VALUES (%s, %s)", (e["id"], e["role"]))
     for v in t["vignettes"]:
         conn.execute(
             "INSERT INTO vignettes VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
@@ -150,8 +148,8 @@ def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> d
         )  # fmt: skip
     for s in t["sessions"]:
         conn.execute(
-            "INSERT INTO elicitation_sessions VALUES (%s, %s, %s, %s::jsonb, %s)",
-            (s["id"], s["expert_id"], s["is_synthetic"], json.dumps(s["document"]), s["created_at"]),
+            "INSERT INTO elicitation_sessions VALUES (%s, %s, %s::jsonb, %s)",
+            (s["id"], s["expert_id"], json.dumps(s["document"]), s["created_at"]),
         )  # fmt: skip
     cue_id: dict[int, int] = {}
     for key, k in enumerate(t["cue_keys"]):
@@ -180,10 +178,10 @@ def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> d
     for n, u in enumerate(t["units"]):
         conn.execute(
             "INSERT INTO finding_units (id, session_id, expert_id, vignette_id, vignette_version, kind, highlight_id, direction, "
-            "population, track, framing, is_synthetic, segmenter, embed_text, embedding, embed_text_combined, embedding_combined) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, CAST(%s AS vector), %s, CAST(%s AS vector))",
+            "population, track, framing, segmenter, embed_text, embedding, embed_text_combined, embedding_combined) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, CAST(%s AS vector), %s, CAST(%s AS vector))",
             (u["id"], u["session_id"], u["expert_id"], u["vignette_id"], u["vignette_version"], u["kind"], u["highlight_id"], u["direction"],
-             u["population"], u["track"], u["framing"], u["is_synthetic"], json.dumps(t["segmenter"]), u["embed_text"],
+             u["population"], u["track"], u["framing"], json.dumps(t["segmenter"]), u["embed_text"],
              vector_text(vectors["i1"][n]), u["embed_text_combined"], vector_text(vectors["i3"][n])),
         )  # fmt: skip
     for unit, sentence, order in t["unit_sentences"]:
@@ -306,7 +304,6 @@ def freeze(args: argparse.Namespace) -> int:
                 {
                     "id": expert,
                     "role": role_for(tier, doc.session_id, doc.expert_id),
-                    "is_synthetic": doc.is_synthetic,
                 }
             )
         document = deepcopy(rec)
@@ -319,7 +316,6 @@ def freeze(args: argparse.Namespace) -> int:
             {
                 "id": sid,
                 "expert_id": expert,
-                "is_synthetic": rec["is_synthetic"],
                 "created_at": doc.created_at.isoformat(),
                 "document": document,
             }
@@ -343,7 +339,7 @@ def freeze(args: argparse.Namespace) -> int:
                 "id": uid, "session_id": sid, "expert_id": expert, "vignette_id": vid, "vignette_version": ver,
                 "kind": u["kind"], "highlight_id": f"{sid}-{vid}-{u['highlight']}" if u["highlight"] else None,
                 "direction": u["direction"], "population": meta["population"], "track": rec["track"],
-                "framing": meta["framing"], "is_synthetic": rec["is_synthetic"], "embed_text": u["i1"], "embed_text_combined": u["i3"],
+                "framing": meta["framing"], "embed_text": u["i1"], "embed_text_combined": u["i3"],
             })  # fmt: skip
             unit_sentences += [[uid, f"{sid}-{vid}-{s}", n] for n, s in enumerate(u["sentences"])]
             vec_i1.append(arrays["i1"][row])

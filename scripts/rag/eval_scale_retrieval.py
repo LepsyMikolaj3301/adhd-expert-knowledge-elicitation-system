@@ -230,7 +230,6 @@ def run(args: argparse.Namespace) -> dict:
                     if not targets:
                         continue  # nobody in the pool has answered this vignette yet
                     flt = ExpertFilter(
-                        include_synthetic=True,
                         experts=pool,
                         vignettes=[q["vignette"]] if q["set"] == "fixed" else None,
                     )

@@ -1,7 +1,7 @@
 """Writes an assignment's approved units into the RAG tables (schema `chips`).
 
 The tables and their meaning are in docs/new-chips-knowledge.md ("Storage"); scripts/db/
-load_chips_pg.py does the same for the synthetic test data, and this is the same SQL run inside the
+load_chips_pg.py does the same for the fixture data, and this is the same SQL run inside the
 job's transaction, so that the rows, the units' new status and the workflow state commit together.
 
 Two phases, as every job has them (app.jobs.handlers):
@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.assignments.models import Assignment
 from app.indexing import bm25, load_indexing_config
-from app.jobs.errors import NoFindings, NoUnits, SyntheticIngestionRefused, UnitsNotEmbeddable
+from app.jobs.errors import NoFindings, NoUnits, UnitsNotEmbeddable
 from app.knowledge import embedding
 from app.knowledge.findings import CASE
 from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
@@ -41,7 +41,6 @@ BM25_LOCK = 4_715_331_001  # BM25 weights are corpus-wide, so only one ingestion
 class Ingestion:
     session_id: str
     expert_id: str
-    is_synthetic: bool
     created_at: datetime
     vignette: dict[str, Any]
     document: dict[str, Any]
@@ -96,10 +95,6 @@ async def load(db: AsyncSession, assignment_id: UUID) -> Ingestion:
     assert assignment is not None
     expert = await db.get(User, assignment.expert_id)
     assert expert is not None
-    if settings.environment == "production" and expert.is_synthetic:
-        raise SyntheticIngestionRefused(
-            "synthetic answers can't enter the production knowledge base"
-        )
 
     units = list(
         await db.scalars(
@@ -164,7 +159,6 @@ async def load(db: AsyncSession, assignment_id: UUID) -> Ingestion:
     return Ingestion(
         session_id=str(assignment_id),
         expert_id=str(expert.id),
-        is_synthetic=expert.is_synthetic,
         created_at=_as_time(assignment.submitted_at or row.created_at),
         vignette={
             "code": code,
@@ -217,11 +211,8 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
     )
     v = d.vignette
     await db.execute(
-        text(
-            "INSERT INTO chips.experts (id, role, is_synthetic) VALUES (:id, NULL, :syn) "
-            "ON CONFLICT (id) DO UPDATE SET is_synthetic = EXCLUDED.is_synthetic"
-        ),
-        {"id": d.expert_id, "syn": d.is_synthetic},
+        text("INSERT INTO chips.experts (id, role) VALUES (:id, NULL) ON CONFLICT (id) DO NOTHING"),
+        {"id": d.expert_id},
     )
     await db.execute(
         text(
@@ -237,11 +228,11 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
     )  # fmt: skip
     await db.execute(
         text(
-            "INSERT INTO chips.elicitation_sessions (id, expert_id, is_synthetic, document, "
-            "created_at) VALUES (:id, :expert, :syn, CAST(:doc AS jsonb), :at)"
+            "INSERT INTO chips.elicitation_sessions (id, expert_id, document, created_at) "
+            "VALUES (:id, :expert, CAST(:doc AS jsonb), :at)"
         ),
         {
-            "id": d.session_id, "expert": d.expert_id, "syn": d.is_synthetic,
+            "id": d.session_id, "expert": d.expert_id,
             "doc": json.dumps(d.document), "at": d.created_at,
         },
     )  # fmt: skip
@@ -302,9 +293,9 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
             text(
                 "INSERT INTO chips.finding_units (id, session_id, expert_id, vignette_id, "
                 "vignette_version, kind, highlight_id, direction, population, track, framing, "
-                "is_synthetic, segmenter, embed_text, embedding, embed_text_combined, "
+                "segmenter, embed_text, embedding, embed_text_combined, "
                 "embedding_combined) VALUES (:id, :sid, :expert, :vid, :ver, :kind, :hid, "
-                ":direction, :pop, :track, :framing, :syn, CAST(:seg AS jsonb), :i1text, "
+                ":direction, :pop, :track, :framing, CAST(:seg AS jsonb), :i1text, "
                 "CAST(CAST(:i1 AS text) AS vector), :i3text, CAST(CAST(:i3 AS text) AS vector))"
             ),
             {
@@ -312,7 +303,7 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
                 "ver": v["version"], "kind": unit["kind"],
                 "hid": pid(unit["highlight"]) if unit["highlight"] else None,
                 "direction": unit["direction"], "pop": v["population"], "track": d.track,
-                "framing": v["framing"], "syn": d.is_synthetic, "seg": segmenter,
+                "framing": v["framing"], "seg": segmenter,
                 "i1text": unit["i1"], "i1": _vec(i1), "i3text": unit["i3"], "i3": _vec(i3),
             },
         )  # fmt: skip

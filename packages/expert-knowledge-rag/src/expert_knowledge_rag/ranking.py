@@ -23,7 +23,6 @@ class UnitHit:
     kind: str  # fragment | case
     highlight_id: str | None
     direction: str | None
-    is_synthetic: bool
     embed_text: str  # I1
     score: float
     vector: np.ndarray | None = None  # I1 embedding of case units only
@@ -40,7 +39,6 @@ class UnitHit:
             kind=row["kind"],
             highlight_id=row["highlight_id"],
             direction=row["direction"],
-            is_synthetic=row["is_synthetic"],
             embed_text=row["embed_text"],
             score=float(row["score"] if score is None else score),
             vector=np.asarray(text.strip("[]").split(","), dtype=np.float32) if text else None,

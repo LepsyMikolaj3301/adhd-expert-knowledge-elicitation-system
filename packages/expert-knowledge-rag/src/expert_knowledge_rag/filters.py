@@ -7,11 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class ExpertFilter(BaseModel):
-    """Narrow a search. Every field that is set must hold.
-
-    `include_synthetic` is False by default: units from synthetic experts (test data) must not
-    reach a production answer. A development app over synthetic data sets it to True.
-    """
+    """Narrow a search. Every field that is set must hold."""
 
     populations: list[str] | None = None  # adult | child ...
     tracks: list[str] | None = None
@@ -19,7 +15,6 @@ class ExpertFilter(BaseModel):
     vignettes: list[str] | None = None  # only these vignette ids (codes)
     exclude_vignettes: list[str] = Field(default_factory=list)  # e.g. the case being read now
     experts: list[str] | None = None  # only these experts; cue keys are shared, so not filtered
-    include_synthetic: bool = False
 
     def on_unit(self, alias: str = "u") -> tuple[list[sql.Composable], dict[str, Any]]:
         """Conditions on a `finding_units` row aliased `alias`, and their parameters."""
@@ -43,8 +38,6 @@ class ExpertFilter(BaseModel):
         if self.exclude_vignettes:
             conditions.append(sql.SQL("{}.vignette_id <> ALL(%(f_exclude)s)").format(a))
             params["f_exclude"] = list(self.exclude_vignettes)
-        if not self.include_synthetic:
-            conditions.append(sql.SQL("NOT {}.is_synthetic").format(a))
         return conditions, params
 
     def on_cue(self, alias: str = "c") -> tuple[list[sql.Composable], dict[str, Any]]:

@@ -35,7 +35,7 @@ print(notes[0].page_content)
 Each Document is one **note**: the case line, the patient's words with the expert's direction
 label, and the clinician's own sentences verbatim, citations rendered as short quotes. `metadata`
 has `unit_ids`, `session_id`, `expert_id`, `vignette_id`, `kinds`, `directions`, `patient_words`,
-`score`, `is_synthetic` and `merged`.
+`score` and `merged`.
 
 ```
 Teaching case V001: an adult's journal entry; clinician; overall: insufficient information
@@ -60,12 +60,10 @@ Everything is also available async (`ainvoke`).
 ```python
 from expert_knowledge_rag import ExpertFilter
 
-ExpertFilter(populations=["adult"], exclude_vignettes=["V007"], include_synthetic=False)
+ExpertFilter(populations=["adult"], exclude_vignettes=["V007"])
 ```
 
-**`include_synthetic` is `False` by default**: units from synthetic experts (test data) must not
-reach a production answer. A development app over synthetic data passes `True`. Use
-`exclude_vignettes` when the text being read is itself a teaching case.
+Use `exclude_vignettes` when the text being read is itself a teaching case.
 
 ### Answer chains
 

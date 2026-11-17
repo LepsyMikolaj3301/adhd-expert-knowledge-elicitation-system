@@ -23,7 +23,7 @@ def questions(silver):
 
 
 def retriever(store, frozen, vignette: str, **options):
-    flt = ExpertFilter(include_synthetic=True, vignettes=[vignette])
+    flt = ExpertFilter(vignettes=[vignette])
     return ExpertQuestionRetriever(
         store=store, embeddings=frozen, filter=flt, k=K, merge_shared=False, **options
     )
@@ -95,7 +95,7 @@ def test_the_top_k_does_not_repeat_the_same_finding_for_every_expert(
 def test_notes_never_mix_the_answers_of_different_experts(crowd_store, frozen, questions):
     merged = 0
     for q in questions[:15]:
-        flt = ExpertFilter(include_synthetic=True, vignettes=[q["vignettes"][0]])
+        flt = ExpertFilter(vignettes=[q["vignettes"][0]])
         docs = ExpertQuestionRetriever(
             store=crowd_store, embeddings=frozen, filter=flt, k=K
         ).invoke(q["question"])

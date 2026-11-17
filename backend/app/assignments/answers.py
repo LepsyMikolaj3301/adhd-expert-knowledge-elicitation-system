@@ -32,7 +32,7 @@ class Highlight(BaseModel):
     text: ShortText = Field(min_length=1)
     # [start, end) in characters of the vignette text (code points, not the browser's UTF-16 units).
     span: tuple[int, int]
-    # None only while drafting: the gate and submit require it.
+    # None only while drafting: submit requires it.
     direction: Direction | None = None
 
 

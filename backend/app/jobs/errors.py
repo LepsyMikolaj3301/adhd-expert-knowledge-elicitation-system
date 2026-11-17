@@ -6,10 +6,6 @@ class PermanentJobError(Exception):
     """Retrying can't help, so the job fails at once instead of using up its attempts."""
 
 
-class SyntheticIngestionRefused(PermanentJobError):
-    pass
-
-
 class NoFindings(PermanentJobError):
     """The check was passed but there is nothing to build from."""
 

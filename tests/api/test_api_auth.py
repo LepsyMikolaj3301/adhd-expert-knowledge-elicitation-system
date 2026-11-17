@@ -185,12 +185,6 @@ async def test_duplicate_email_is_a_conflict():
     await admin.fails("POST", "/users", 409, "email_taken", json=body)
 
 
-async def test_synthetic_accounts_cannot_be_created_through_the_api():
-    admin = await admin_api()
-    body = {"email": "s@example.com", "display_name": "S", "role": "expert", "is_synthetic": True}
-    await admin.fails("POST", "/users", 422, "validation_error", json=body)
-
-
 async def test_a_bad_field_is_named_in_the_message():
     admin = await admin_api()
     body = {"email": "not-an-email", "display_name": "A", "role": "expert"}

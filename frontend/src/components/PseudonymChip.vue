@@ -48,7 +48,6 @@ async function load() {
       <p class="font-medium text-ink">{{ person.display_name }}</p>
       <p class="text-muted">
         {{ person.email }} | {{ person.role }}
-        <template v-if="person.is_synthetic"> | synthetic</template>
         <template v-if="!person.is_active"> | deactivated</template>
       </p>
       <p>

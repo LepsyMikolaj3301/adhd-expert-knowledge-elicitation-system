@@ -20,7 +20,6 @@ async def test_the_list_says_how_each_unit_was_cut_and_what_is_embedded(models):
     assert fragment["highlight_id"] == "h1" and case["highlight_id"] is None
     assert fragment["patient_words"] == CUE
     assert fragment["expert_pseudonym"] == expert.pseudonym
-    assert fragment["expert_is_synthetic"] is False
     assert fragment["framing"] == "personal_journal"
     # What gets embedded: the reviewed text with its header, and that plus the patient's words.
     assert fragment["embed_text"].endswith(fragment["text"])

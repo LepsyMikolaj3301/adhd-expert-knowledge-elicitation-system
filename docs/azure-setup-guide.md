@@ -222,10 +222,6 @@ docker compose --profile tools run --rm cli import-vignettes \
     --dir /import/vignettes --whatifs /import/chip_whatifs.json --admin-email you@example.com
 ```
 
-`ENVIRONMENT=production` refuses to ingest answers from synthetic (fixture) experts. To try the app
-with synthetic data, set `ENVIRONMENT=development` in `/opt/rag/.env` (leave `COOKIE_SECURE=true`) and
-run `./deploy.sh`; set it back before real experts use it.
-
 ## 11. Day to day
 
 | I want to | Do |

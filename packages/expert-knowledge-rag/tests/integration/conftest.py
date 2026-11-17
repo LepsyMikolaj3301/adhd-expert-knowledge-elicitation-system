@@ -1,7 +1,7 @@
 # ruff: noqa: E501  (SQL strings)
 """A throwaway schema shaped like the web application's `chips`, seeded with the V001 example.
 
-Two sessions of the same case: S1 by a real expert, S2 by a synthetic one. Dense vectors are
+Two sessions of the same case: S1 by expert X1, S2 by expert X2. Dense vectors are
 fake (same text, same vector); BM25 is fitted for real with expert_knowledge_core.bm25.
 """
 
@@ -42,12 +42,12 @@ def seed(conn: psycopg.Connection, schema: str) -> None:
     conn.execute(SCHEMA_SQL.read_text().format(schema=schema))  # ty: ignore[no-matching-overload]
     conn.execute(sql.SQL("SET search_path = {}, public").format(sql.Identifier(schema)))
     cue_ids: dict[tuple[bool, int | None], int] = {}
-    for session, expert, synthetic in (("S1", "X1", False), ("S2", "X2", True)):
+    for session, expert in (("S1", "X1"), ("S2", "X2")):
         rec = example_record(session, expert)
-        conn.execute("INSERT INTO experts VALUES (%s, NULL, %s)", (expert, synthetic))
+        conn.execute("INSERT INTO experts VALUES (%s, NULL)", (expert,))
         conn.execute(
-            "INSERT INTO elicitation_sessions VALUES (%s, %s, %s, %s::jsonb, %s)",
-            (session, expert, synthetic, json.dumps(rec), datetime.now(UTC)),
+            "INSERT INTO elicitation_sessions VALUES (%s, %s, %s::jsonb, %s)",
+            (session, expert, json.dumps(rec), datetime.now(UTC)),
         )
         for h in rec["highlights"]:
             a, b = h["span"]
@@ -70,13 +70,13 @@ def seed(conn: psycopg.Connection, schema: str) -> None:
         for u in rec["units"]:
             conn.execute(
                 "INSERT INTO finding_units (id, session_id, expert_id, vignette_id, vignette_version, "
-                "kind, highlight_id, direction, population, track, framing, is_synthetic, segmenter, "
+                "kind, highlight_id, direction, population, track, framing, segmenter, "
                 "embed_text, embedding, embed_text_combined, embedding_combined) VALUES (%s, %s, %s, %s, 1, "
-                "%s, %s, %s, %s, 'general', %s, %s, '{}'::jsonb, %s, CAST(%s AS vector), %s, CAST(%s AS vector))",
+                "%s, %s, %s, %s, 'general', %s, '{}'::jsonb, %s, CAST(%s AS vector), %s, CAST(%s AS vector))",
                 (
                     pid(session, u["id"]), session, expert, VID, u["kind"],
                     pid(session, u["highlight"]) if u["highlight"] else None, u["direction"],
-                    meta["population"], meta["framing"], synthetic, u["i1"], vec(u["i1"]),
+                    meta["population"], meta["framing"], u["i1"], vec(u["i1"]),
                     u["i3"], vec(u["i3"]),
                 ),
             )  # fmt: skip

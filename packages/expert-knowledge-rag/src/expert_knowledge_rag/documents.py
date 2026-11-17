@@ -47,7 +47,6 @@ def _metadata(
         "directions": [h.direction for h in hits],
         "patient_words": words,
         "score": first.score,  # the best unit of the note
-        "is_synthetic": any(h.is_synthetic for h in hits),
         "merged": merged,
     }
 

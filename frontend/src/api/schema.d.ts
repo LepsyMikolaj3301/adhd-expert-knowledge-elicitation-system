@@ -1354,8 +1354,6 @@ export interface components {
              * Format: uuid
              */
             expert_id: string;
-            /** Expert Is Synthetic */
-            expert_is_synthetic: boolean;
             /** Expert Pseudonym */
             expert_pseudonym: string;
             /** Findings Version */
@@ -1502,8 +1500,6 @@ export interface components {
             email: string;
             /** Is Active */
             is_active: boolean;
-            /** Is Synthetic */
-            is_synthetic: boolean;
             /** Pseudonym */
             pseudonym: string;
             role: components["schemas"]["Role"];
@@ -1817,8 +1813,6 @@ export interface components {
             invite_pending: boolean;
             /** Is Active */
             is_active: boolean;
-            /** Is Synthetic */
-            is_synthetic: boolean;
             /** Pseudonym */
             pseudonym: string;
             role: components["schemas"]["Role"];
@@ -1859,8 +1853,6 @@ export interface components {
             id: string;
             /** Is Active */
             is_active: boolean;
-            /** Is Synthetic */
-            is_synthetic: boolean;
             /** Pseudonym */
             pseudonym: string;
             role: components["schemas"]["Role"];

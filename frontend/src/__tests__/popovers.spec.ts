@@ -61,7 +61,6 @@ describe('PseudonymChip', () => {
     display_name: 'Eve Example',
     email: 'eve@example.com',
     is_active: true,
-    is_synthetic: false,
     cases: { open: 2, in_review: 1, done: 3, stopped: 0 },
   }
 
