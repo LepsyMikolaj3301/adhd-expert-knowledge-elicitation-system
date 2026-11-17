@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     languagetool_url: str = "http://localhost:8010"
     languagetool_language: str = "en-US"
     languagetool_timeout: float = 60
-    # The model that turns fragments into full sentences (prompts/Answer_enhance.v1.md). Empty
+    # The model that turns fragments into full sentences (prompts/Answer_enhance.v2.md). Empty
     # switches the enhancement off: the answers are then only proofread.
     enhance_model: str = "qwen3.5:9b"
     # The folder with prompts/ and config/. The images copy both next to backend/.

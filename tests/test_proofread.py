@@ -131,19 +131,94 @@ def test_another_language_counts_as_unreadable():
 # --- the enhancement ----------------------------------------------------------------------------
 
 
+def reply(text: str) -> str:
+    return json.dumps({"answer": text})
+
+
 def test_a_reply_must_keep_every_chip_and_not_grow_too_much():
     answer = "⟦h1⟧ avoidance, not tidiness"
-    good = json.dumps({"answer": "⟦h1⟧ reads as avoidance, not tidiness."})
-    assert enhance.check_reply(good, answer) == "⟦h1⟧ reads as avoidance, not tidiness."
-    for bad in (
-        json.dumps({"answer": "It reads as avoidance."}),  # the chip is gone
-        json.dumps({"answer": "⟦h1⟧ ⟦h1⟧ avoidance"}),  # one too many
-        json.dumps({"answer": "⟦h1⟧ " + "word " * 60}),  # far longer
-        json.dumps({"answer": "  "}),
-        json.dumps({"text": "⟦h1⟧ x"}),
-        "not json",
+    assert enhance.rejection(reply("⟦h1⟧ reads as avoidance, not tidiness."), answer, {}) is None
+    for bad, why in (
+        (reply("It reads as avoidance."), "chips"),  # the chip is gone
+        (reply("⟦h1⟧ ⟦h1⟧ avoidance"), "chips"),  # one too many
+        (reply("⟦h1⟧ " + "word " * 60), "too_long"),
+        (reply("  "), "empty"),
+        (json.dumps({"text": "⟦h1⟧ x"}), "not_json"),
+        ("not json", "not_json"),
     ):
-        assert enhance.check_reply(bad, answer) is None, bad
+        assert enhance.rejection(bad, answer, {}) == why, bad
+
+
+# Taken from the v1 replies on the scale fixture: the model wrote the cited passage out as the
+# clinician's own sentence, in the patient's first person.
+NOTE = '⟦h4⟧ - hand note, list in locker "or my coat", mild, could be just tired.'
+QUOTES = {4: "I wrote it on my hand because the list is in my locker, or my coat, I forget which."}
+
+
+def test_a_reply_that_copies_the_cited_passage_is_refused():
+    copied = "⟦h4⟧ - they wrote it on a hand and forget which locker; mild."
+    assert enhance.leaked(copied, NOTE, QUOTES) == ["forget", "wrote"]
+    assert enhance.rejection(reply(copied), NOTE, QUOTES) == "leak"
+
+
+def test_the_patients_first_person_is_refused_where_the_clinician_wrote_none():
+    answer = "⟦h1⟧ - time underestimate, 2h became the evening; weak alone."
+    flipped = "⟦h1⟧ - I underestimated the time; two hours went, and I felt weak alone."
+    assert enhance.rejection(reply(flipped), answer, {}) == "voice"
+
+
+def test_a_quoted_my_is_the_patients_not_the_clinicians():
+    """The real v1 case: the note quotes "or my coat", the reply tells the passage as "I"."""
+    told = "⟦h4⟧ - I wrote a note on my hand; the list is in the locker, so it is mild."
+    assert enhance.narrated(NOTE) == 0
+    assert enhance.rejection(reply(told), NOTE, {}) == "voice"
+
+
+def test_the_clinicians_own_i_is_fine():
+    """'Need a baseline' -> 'I need a baseline' supplies the clinician's dropped subject. On the
+    scale fixture this was the most common edit of Q3, and none of it is the patient speaking."""
+    answer = "Need a baseline. Looked at ⟦h1⟧, can't say more."
+    fuller = "I need a baseline. I looked at ⟦h1⟧, and I can't say more."
+    assert enhance.narrated(fuller) == 0
+    assert enhance.rejection(reply(fuller), answer, {}) is None
+
+
+def test_a_reply_that_only_adds_glue_words_passes():
+    """Words such as 'shows' or 'suggests' may also stand in a passage; they are not a copy."""
+    answer = "⟦h1⟧ avoidance, not tidiness. ⟦h2⟧ mild"
+    quotes = {1: "It shows I am tidy", 2: "This suggests nothing, like before"}
+    fuller = "⟦h1⟧ shows avoidance, not tidiness. ⟦h2⟧ suggests something mild."
+    assert enhance.leaked(fuller, answer, quotes) == []
+    assert enhance.rejection(reply(fuller), answer, quotes) is None
+
+
+def test_one_shared_word_is_not_yet_a_leak():
+    answer = "⟦h1⟧ late start, mild"
+    fuller = "⟦h1⟧ shows a late start in the evening, which is mild."
+    assert enhance.rejection(reply(fuller), answer, {1: "I started late in the evening"}) is None
+
+
+async def test_the_model_is_not_shown_the_cited_passages(monkeypatch):
+    seen = []
+
+    async def ask(system, user):
+        seen.append(system + user)
+        return reply("⟦h4⟧ is a hand note; the list is in a locker or a coat, which is mild.")
+
+    monkeypatch.setattr(enhance, "ask", ask)
+    monkeypatch.setattr(enhance.settings, "enhance_model", "qwen3.5:9b")
+    text, refused = await enhance.enhance("Q?", NOTE, QUOTES)
+    assert refused is None and text.startswith("⟦h4⟧ is a hand note")
+    assert "I forget which" not in seen[0] and NOTE in seen[0]
+
+
+async def test_a_refused_reply_says_why(monkeypatch):
+    async def ask(system, user):
+        return reply("⟦h4⟧ - I wrote it on my hand because I forget which.")
+
+    monkeypatch.setattr(enhance, "ask", ask)
+    monkeypatch.setattr(enhance.settings, "enhance_model", "qwen3.5:9b")
+    assert await enhance.enhance("Q?", NOTE, QUOTES) == (None, "leak")
 
 
 async def test_switching_the_enhancement_off_never_calls_the_model(monkeypatch):
@@ -152,7 +227,7 @@ async def test_switching_the_enhancement_off_never_calls_the_model(monkeypatch):
 
     monkeypatch.setattr(enhance, "ask", never)
     monkeypatch.setattr(enhance.settings, "enhance_model", "")
-    assert await enhance.enhance("Q?", "an answer", {}) is None
+    assert await enhance.enhance("Q?", "an answer", {}) == (None, None)
 
 
 # --- one answer, end to end ---------------------------------------------------------------------

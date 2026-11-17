@@ -235,10 +235,21 @@ async def test_the_enhancement_is_used_only_when_it_keeps_every_chip(models):
     assert by_question["Q3"]["proposed"] == answers["Q3"]
     passes = (await round_of(assignment_id)).passes
     assert passes["Q2"]["enhanced"] is True and passes["Q3"]["enhanced"] is False
+    assert passes["Q3"]["enhance_rejected"] == "chips" and "enhance_rejected" not in passes["Q2"]
     assert [(line["targets"], line["assigned_by"]) for line in by_question["Q2"]["lines"]] == [
         (["h2"], "chip"),
         (["case"], "llm"),
     ]
+
+
+async def test_an_enhancement_that_copies_the_cited_passage_is_refused(models):
+    _, expert, assignment_id = await setup_one()
+    q1 = CITED_PAYLOAD["answers"]["Q1"]
+    models.enhance_reply = {q1: "⟦h1⟧: they reorganised the entire desk instead of the report."}
+    await answer_and_submit(expert, assignment_id, CITED_PAYLOAD)
+    assert items(await proofread(expert, assignment_id))["Q1"]["proposed"] == q1
+    passes = (await round_of(assignment_id)).passes
+    assert passes["Q1"]["enhanced"] is False and passes["Q1"]["enhance_rejected"] == "leak"
 
 
 async def test_an_enhancement_model_that_is_down_is_skipped(models):
