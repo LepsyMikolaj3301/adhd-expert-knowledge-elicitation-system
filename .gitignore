@@ -230,7 +230,10 @@ tests/sample_inputs/
 .agents/
 skills-lock.json
 
-# Deploy settings and secrets (see infra/.env.deploy.example)
+# Data dropped on the Azure VM for the first import (infra/azure); its .env is ignored by `.env` above
+infra/azure/import/
+
+# Old Render/Neon deploy settings, kept ignored until the file is deleted by hand (it holds Neon credentials)
 infra/.env.deploy
 
 # Local development logins

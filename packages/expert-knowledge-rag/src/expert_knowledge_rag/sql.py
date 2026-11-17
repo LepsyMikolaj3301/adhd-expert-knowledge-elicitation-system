@@ -3,7 +3,7 @@
 Dense: pgvector cosine distance. Sparse: `sparse <#> q` is -BM25 (see expert_knowledge_core.bm25),
 rows sharing no term with the query (score 0) are not matches. The rankings are fused with RRF.
 Vectors travel as text through `CAST(CAST(x AS text) AS vector)`, so no codec has to be registered
-on the connection (which keeps it working behind Neon's pooler).
+on the connection.
 """
 
 from typing import Any, Literal

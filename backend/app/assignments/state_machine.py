@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.assignments.models import Assignment
 from app.assignments.states import Action, Actor, State
 from app.audit.service import record_event
+from app.compute import require_compute
 from app.core.errors import DomainError, forbidden, not_found
 from app.jobs.models import Job, JobKind
 
@@ -118,6 +119,12 @@ async def transition(
     meta: dict[str, Any] | None = None,
 ) -> None:
     rule = check_transition(assignment.state, action, actor)
+    job_kind = JOB_ON_ENTRY.get(rule.to)
+    if job_kind is not None and actor != Actor.SYSTEM:
+        # Before anything changes: a 503 leaves the assignment where it was. It reads the last
+        # probe, no network wait under the row lock. The worker's own moves are not checked here:
+        # the worker holds back a job whose machine is down (app/jobs/worker.py).
+        await require_compute(job_kind)
     previous = assignment.state
     assignment.state = rule.to
     record_event(
@@ -130,6 +137,5 @@ async def transition(
         to_state=rule.to.value,
         meta=meta,
     )
-    job_kind = JOB_ON_ENTRY.get(rule.to)
     if job_kind is not None:
         db.add(Job(kind=job_kind, assignment_id=assignment.id))

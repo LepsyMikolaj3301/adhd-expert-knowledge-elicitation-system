@@ -1,0 +1,163 @@
+# The stack on the Azure VM: docker compose --env-file .env up -d   (infra/azure/deploy.sh does this).
+# Ollama and LanguageTool are not here: they run on the owner's PC, reached over Tailscale at PC_HOST.
+# Setup: docs/azure-setup-guide.md. Design: docs/deployment.md.
+#
+# Sized for a 4 GB VM (B2s): the limits add up to about 2 GB, the rest is the OS, the page cache and swap.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-backend: &backend
+  image: ${REGISTRY}/backend:${IMAGE_TAG:-latest}
+  environment:
+    DATABASE_URL: postgresql://rag:${POSTGRES_PASSWORD}@postgres:5432/rag
+    ENVIRONMENT: ${ENVIRONMENT:-production}
+    COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-12}
+    OLLAMA_BASE_URL: http://${PC_HOST}:11434
+    LANGUAGETOOL_URL: http://${PC_HOST}:8010
+    CLASSIFIER_MODEL: ${CLASSIFIER_MODEL:-qwen3.5:9b}
+    ENHANCE_MODEL: ${ENHANCE_MODEL:-qwen3.5:9b}
+    REQUIRE_COMPUTE: "true"
+  logging: *logging
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # The certificate: losing it would ask Let's Encrypt again (rate limits).
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    mem_limit: 64m
+    cpus: 0.5
+    logging: *logging
+    restart: unless-stopped
+
+  # nginx: serves the built app and proxies /api/ to the backend, so the session cookie needs no CORS.
+  frontend:
+    image: ${REGISTRY}/frontend:${IMAGE_TAG:-latest}
+    environment:
+      PORT: "8080"
+      API_UPSTREAM_URL: http://rag-backend:8000
+      API_HOST: rag-backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    mem_limit: 64m
+    cpus: 0.5
+    logging: *logging
+    restart: unless-stopped
+
+  rag-backend:
+    <<: *backend
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # Background jobs: proofreading and linking the answers, cutting them into units, ingesting them.
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app.jobs.worker"]
+    # The worker touches this file every 10 s (app/jobs/worker.py); deploy.sh waits for healthy.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os, sys, time; sys.exit(time.time() - os.path.getmtime('/tmp/worker-alive') > 60)"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # One-shot: applies the migrations of the `app` and `chips` schemas before the API and worker start.
+  migrate:
+    <<: *backend
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 384m
+    restart: "no"
+
+  # Not published: only the containers on this network reach it. The `vector` extension is created by
+  # migration 0003.
+  postgres:
+    image: pgvector/pgvector:pg16
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=30", "-c", "work_mem=8MB"]
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: rag
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    mem_limit: 768m
+    cpus: 1.0
+    logging: *logging
+    restart: unless-stopped
+
+  # One-shot admin tasks, not started by `up`:
+  #   docker compose --profile tools run --rm cli create-admin --email ... --name ...
+  #   docker compose --profile tools run --rm cli import-vignettes --dir /import/vignettes \
+  #       --whatifs /import/chip_whatifs.json --admin-email ...
+  cli:
+    <<: *backend
+    profiles: [tools]
+    entrypoint: ["python", "-m", "app.cli"]
+    volumes:
+      - ./import:/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    mem_limit: 384m
+    restart: "no"
+
+volumes:
+  postgres-data:
+  caddy-data:
+  caddy-config:

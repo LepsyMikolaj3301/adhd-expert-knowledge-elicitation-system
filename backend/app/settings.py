@@ -6,10 +6,10 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://rag:rag@localhost:5432/rag"
-    # Migrations must not go through a connection pooler (Neon `-pooler` host). When set, alembic
-    # uses this instead of database_url.
-    database_url_unpooled: str | None = None
     ollama_base_url: str = "http://localhost:11434"
+    # The models run on another machine (the owner's PC, reached over Tailscale): before a request
+    # queues a job, ask that machine and answer 503 `compute_unavailable` if it isn't ready.
+    require_compute: bool = False
     # The model that files sentences that carry no citation (prompts/Expert_sentence_targets.v1.md).
     # The chip test found the 35b model no better at this and far slower to load.
     classifier_model: str = "qwen3.5:9b"

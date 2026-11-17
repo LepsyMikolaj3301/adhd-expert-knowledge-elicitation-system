@@ -1,94 +1,105 @@
-# Deploying: Render (two containers) + Neon (database)
+# Deploying: one Azure VM, the models on your own PC
+
+Step by step setup, with costs and limits: [azure-setup-guide.md](azure-setup-guide.md). This page is
+the technical reference.
 
 ```
-browser --https--> Render "rag-frontend"  (nginx; serves the app, proxies /api/)
-                        '--https--> Render "rag-backend"  (FastAPI)
-                                         '--TLS, pooled--> Neon Postgres
+visitor --https--> Caddy :443  (certificate for <label>.<region>.cloudapp.azure.com)
+                     '--> frontend (nginx: the built app, proxies /api/)
+                             '--> rag-backend (FastAPI)  --+
+                                  worker (python -m app.jobs.worker) --+--> postgres (pgvector)
+                                                              |
+                       Tailscale -----------------------------+--> your PC: Ollama :11434, LanguageTool :8010
 ```
 
-The browser only talks to the frontend's address, so the session cookie is first-party and there is no
-CORS. Everything deployment-specific is in `infra/` plus `render.yaml`:
+Everything on the VM is one compose project, `infra/azure/docker-compose.yml`. The browser only
+talks to the one address, so the session cookie is first-party and there is no CORS. Ollama and
+LanguageTool (the GPU work) stay on the owner's PC; the VM reaches them over Tailscale at `PC_HOST`.
 
 | File | What |
 |---|---|
-| `infra/backend.Dockerfile` | production API image (no `--reload`, listens on Render's `PORT`, non-root) |
+| `infra/backend.Dockerfile` | production API and worker image (non-root, no `--reload`) |
 | `infra/frontend.Dockerfile` | production web image: build, then nginx |
-| `render.yaml` | the two Render services (Blueprint) |
-| `infra/.env.deploy.example` | settings the deploy script reads |
-| `infra/deploy.sh` | migrate, deploy backend, deploy frontend, smoke test |
+| `infra/azure/docker-compose.yml` | caddy, frontend, rag-backend, worker, migrate, postgres, cli (profile `tools`) |
+| `infra/azure/Caddyfile` | TLS for `${DOMAIN}`, proxies to the frontend |
+| `infra/azure/env.example` | the VM's `.env` (domain, registry, PC address, passwords, models) |
+| `infra/azure/deploy.sh` | on the VM: pull, migrate, restart, wait healthy |
+| `infra/azure/setup-vm.sh` | first boot of the VM: swap, Docker, Tailscale, updates, backup job |
+| `infra/azure/backup.sh` | daily `pg_dump`, 7 days kept |
+| `.github/workflows/ci.yml`, `deploy.yml` | the checks, and the manual deploy |
 
-The development images stay `backend/Dockerfile` and `frontend/Dockerfile`.
+The development images stay `backend/Dockerfile` and `frontend/Dockerfile`, and the root
+`docker-compose.yml` is the PC and dev setup (Ollama, LanguageTool, MinIO, Postgres, dev container).
 
-## One-time setup
+## The services and their limits
 
-1. **Neon.** Create a project (pick a region next to Render's, e.g. Frankfurt for both). In *Connect*,
-   copy two strings: the **pooled** one (host has `-pooler`) and the **direct** one (untick "Connection
-   pooling"). The app schema needs no extensions.
-2. **Render.** *New > Blueprint*, choose this repo, apply `render.yaml`. Then:
-   - `rag-backend` > Environment: set `DATABASE_URL` to the **pooled** string.
-   - Copy the backend's public URL (`https://rag-backend-xxxx.onrender.com`). In `rag-frontend` >
-     Environment set `API_UPSTREAM_URL` to that URL (no trailing slash) and `API_HOST` to its host
-     (`rag-backend-xxxx.onrender.com`).
-   - On both services, *Settings > Deploy Hook*: copy the URL.
-3. **Local settings.** `cp infra/.env.deploy.example infra/.env.deploy` and fill it in (it is gitignored).
-4. **First data.** `infra/deploy.sh migrate`, then `infra/deploy.sh bootstrap` (creates the admin,
-   asks for a password, imports the vignettes if `VIGNETTES_DIR` exists). These run from your machine
-   against the direct Neon string, because the free Render tier has no shell.
+Sized for a 4 GB VM (B2s). The limits add up to about 2.2 GB; the rest is the OS, the page cache and the
+2 GB swap file.
 
-## Every deploy
+| Service | Memory limit | Notes |
+|---|---|---|
+| postgres | 768 MB | `shared_buffers=128MB`, `max_connections=30`; not published |
+| rag-backend | 512 MB | one uvicorn process, trusts `X-Forwarded-*` (it sits behind nginx and Caddy) |
+| worker | 512 MB | the same image; polls the `jobs` table, so it also works across restarts |
+| migrate | 384 MB | one-shot, `alembic upgrade head`; the API and worker wait for it |
+| frontend | 64 MB | nginx |
+| caddy | 64 MB | ports 80 and 443 only |
 
-```bash
-git push
-infra/deploy.sh          # check, migrate, backend, frontend, smoke
-```
+Logs rotate (3 files of 10 MB per container) so the 30 GB disk does not fill up. If the worker is
+killed for memory on a big ingestion, raise its limit first.
 
-Single steps: `infra/deploy.sh check | migrate | backend | frontend | smoke`. Render builds the commit
-the script passes (`HEAD`, which must be pushed). Auto-deploy is off so the order is always:
-migrate, backend, frontend.
+## When the PC is not set up
 
-- Migrations run before the new code starts, so keep each one compatible with the release still
-  serving: add first, remove in a later release.
-- The health wait cannot tell the old release from the new one while Render is still building, so
-  it waits 20 s and then for three healthy answers in a row. If a build fails, Render keeps the old
-  release running and the script may report success: check the Render dashboard for the deploy status.
+`REQUIRE_COMPUTE=true` (set by the compose file) turns on `backend/app/compute.py`. Before a person
+moves an assignment into a step that queues a job, `transition()` in
+`backend/app/assignments/state_machine.py` asks the PC (3 second timeout):
 
-## Why two Neon strings
+| Job queued | Needs |
+|---|---|
+| proofread (author submits, or an admin retries) | Ollama with the classifier and enhancement models, LanguageTool |
+| ingest (an admin retries an ingestion) | Ollama with the embedding model of `config/indexing.yaml` |
+| process (admin approves the answers) | nothing: it cuts text into units with no model |
 
-The pooled string goes through PgBouncer (transaction mode): right for the API, wrong for migrations
-(session state, advisory locks). The backend notices a `-pooler` host and turns off asyncpg's
-prepared-statement cache for it (`backend/app/core/db.py`), and converts Neon's libpq options
-(`sslmode`, `channel_binding`) to what asyncpg accepts. Alembic uses `DATABASE_URL_UNPOOLED` when set
-(the script sets `DATABASE_URL` to the direct string instead).
+If something is missing the request answers **503 `compute_unavailable`** (`details.missing` lists
+`ollama`, `languagetool` or `model <name>`), before anything is changed: the assignment keeps its state
+and no job is queued. The worker's own moves are not checked, and neither is the BM25 refit (no model).
+The admin's test search keeps its own 503, `embedding_unavailable`.
 
-## Free-tier behaviour
+Without this check, proofreading would skip an unreachable LanguageTool or enhancement model and give
+the author an unchecked answer (`app/proofread/pipeline.py`). A job that is already queued when the PC
+goes away still follows the worker's rules: three attempts, then failed, retryable by an admin.
 
-Both Render services sleep after 15 minutes without traffic and Neon suspends its compute after 5, so
-the first request after a pause can take 30 to 60 seconds (the frontend wakes, then the backend, then
-the database). The backend can't be a private service on the free plan, which is why the frontend
-reaches it by its public URL. On a paid plan make it a private service and set `API_UPSTREAM_URL` to
-`http://<host>:<port>`, `API_HOST` to the host.
+## CI/CD
 
-## Trying the images locally
+Nothing runs by itself: it is a one-person repository that works on main.
 
-```bash
-docker build -f infra/backend.Dockerfile -t rag-backend .
-docker run --rm -p 9000:9000 -e PORT=9000 -e DATABASE_URL='<a Neon dev branch, pooled>' rag-backend
-curl localhost:9000/api/v1/health
+- **CI** (`ci.yml`, Actions > CI > Run workflow): ruff, `ty`, the tests that need no database
+  (`-m "not integration"`), then the frontend lint, type-check, tests and build. CI starts no
+  Postgres: everything marked `integration` (`tests/api`, `tests/integration`, the package
+  integration tests) runs locally, against the compose Postgres: `uv run pytest -m integration`.
+  Run that before a deploy that touches the backend.
+- **Deploy** (`deploy.yml`, Actions > Deploy > Run workflow), with two switches: *run CI first* and
+  *deploy to the VM*. It builds both images for `linux/amd64`, pushes them to GHCR
+  (`ghcr.io/<owner>/<repo>/backend|frontend`, tags `sha-<short>` and `latest`), joins the tailnet as
+  `tag:ci`, copies `infra/azure/` to `/opt/rag` over Tailscale SSH, runs `deploy.sh sha-<short>` and
+  smoke-tests `/api/v1/health` and `/` through Caddy. The VM has no open SSH port.
 
-docker compose --profile preview up -d --build frontend-preview   # http://localhost:8080
-```
+Migrations run before the new code starts (`migrate` service), so keep each one compatible with the
+release still serving: add first, remove in a later release.
 
-## Not covered yet
+## Backups and restore
 
-- The background worker (`python -m app.jobs.worker`). Its handlers are real now, but they call
-  Ollama for the classifier (`CLASSIFIER_MODEL`) and bge-m3, which Render doesn't provide, so the
-  worker needs a reachable Ollama (`OLLAMA_BASE_URL`) before it can be deployed there. A commented
-  block in `render.yaml` is ready; Render workers need a paid plan. Migration `0003` also runs
-  `CREATE EXTENSION vector` (Neon allows it) for the `chips` schema.
-- nginx does not verify the backend's TLS certificate (`proxy_ssl_verify` is off).
-- S3 settings are only used by scripts, not by the API, so Render needs none.
-- The API needs Ollama for one thing: the admin's test search (Knowledge base > Test search)
-  embeds what the admin types with bge-m3. Without a reachable `OLLAMA_BASE_URL` that search
-  answers 503 `embedding_unavailable` and says so; the list of units and everything else work.
-  The search also reads `chips` through its own connection to `DATABASE_URL` (the pooled Neon
-  URL works: prepared statements are off).
+`backup.sh` runs from `/etc/cron.daily`, which anacron also runs after a boot, so a VM that is off at
+night still gets its dump. Dumps are in `/var/backups/rag` (custom format, 7 days). Restore with
+`pg_restore --clean --if-exists` (see the guide, step 11). They are on the same disk as the database:
+copy one home now and then.
+
+## Not covered
+
+- **High availability.** One VM, one database container. Fine for a demo; a VM that is off is a site that is off.
+- **The certificate needs ports 80 and 443 open** and the VM on. A static IP keeps the name, and the
+  certificate is kept in a volume.
+- **nginx talks plain HTTP to the backend** on the compose network, so no certificate checks inside the VM.
+- **S3 settings** (MinIO) are only used by scripts, not by the API, so the VM has none.
+- **The admin's test search** embeds what the admin types through the PC's Ollama; with the PC off it
+  answers 503 `embedding_unavailable`.

@@ -1,15 +1,37 @@
+import asyncio
+import contextlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter, FastAPI
 
+from app import compute
 from app.assignments.router import router as assignments_router
 from app.auth.router import router as auth_router
 from app.core.errors import ErrorResponse, install_error_handlers
 from app.home.router import router as home_router
 from app.knowledge.router import router as knowledge_router
 from app.reviews.router import router as reviews_router
+from app.settings import settings
 from app.users.router import router as users_router
 from app.vignettes.router import router as vignettes_router
 
 API_PREFIX = "/api/v1"
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    """With REQUIRE_COMPUTE, keep probing the PC; requests read the result (app/compute.py)."""
+    if not settings.require_compute:
+        yield
+        return
+    watcher = asyncio.create_task(compute.watch())
+    try:
+        yield
+    finally:
+        watcher.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await watcher
 
 
 def create_app() -> FastAPI:
@@ -18,6 +40,7 @@ def create_app() -> FastAPI:
         docs_url=f"{API_PREFIX}/docs",
         redoc_url=None,
         openapi_url=f"{API_PREFIX}/openapi.json",
+        lifespan=lifespan,
     )
     install_error_handlers(app)
 

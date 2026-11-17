@@ -1,0 +1,7 @@
+# TLS for the VM's public name (yourapp.<region>.cloudapp.azure.com): Caddy asks Let's Encrypt for the
+# certificate by itself, which needs ports 80 and 443 open to the internet (the NSG rules).
+{$DOMAIN} {
+	encode gzip
+	# nginx in the frontend container serves the app and proxies /api/ to the backend.
+	reverse_proxy frontend:8080
+}

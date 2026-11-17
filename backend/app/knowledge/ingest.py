@@ -10,8 +10,7 @@ Two phases, as every job has them (app.jobs.handlers):
 
 Only approved units go in. The stored `document` is the record cut down to them: their sentences,
 their highlights, nothing the reviewers rejected. Vectors travel through SQL casts (`CAST(:v AS
-vector)` from text), so no codec has to be registered on the connection, which keeps it working
-behind Neon's pooler.
+vector)` from text), so no codec has to be registered on the connection.
 """
 
 import json

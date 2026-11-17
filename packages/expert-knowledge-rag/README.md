@@ -102,7 +102,7 @@ tool = create_retriever_tool(
 - `schema="chips"` is what the web application ingests into; `"chips_eval"` holds the test data of
   `scripts/db/load_chips_pg.py`, whose sessions have no findings record, so its units come back one
   per note as embedded, with a warning.
-- Connections are `READ ONLY` transactions with prepared statements off (works behind Neon's pooler).
+- Connections are `READ ONLY` transactions with prepared statements off (works behind a connection pooler).
   Pass `pool=` / `async_pool=` to reuse connections.
 
 ## Tests

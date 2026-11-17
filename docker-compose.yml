@@ -2,7 +2,9 @@ services:
   ollama:
     image: ollama/ollama:latest
     ports:
-      - "11434:11434"
+      # This machine only. The Azure VM comes in through `tailscale serve`, which forwards the tailnet
+      # port here (docs/azure-setup-guide.md, step 5); containers use the compose network.
+      - "127.0.0.1:11434:11434"
     volumes:
       # Host path for models (bind mount). Falls back to the named volume if unset.
       - ${OLLAMA_DATA_PATH:-ollama-data}:/root/.ollama
@@ -24,7 +26,7 @@ services:
   languagetool:
     image: erikvl87/languagetool:6.8
     ports:
-      - "8010:8010"
+      - "127.0.0.1:8010:8010"  # as Ollama's port above
     environment:
       Java_Xms: 512m
       Java_Xmx: 1g
@@ -269,7 +271,7 @@ services:
     init: true
     restart: unless-stopped
 
-  # The production image, run locally the way Render runs it: http://localhost:8080. It looks the
+  # The production image, run locally the way the Azure VM runs it: http://localhost:8080. It looks the
   # backend up per request, so start the backend first (--profile app); nothing orders them here.
   # Start: docker compose --profile preview up -d --build frontend-preview
   frontend-preview:

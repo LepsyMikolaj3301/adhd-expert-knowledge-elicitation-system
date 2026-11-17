@@ -1,12 +1,13 @@
 # syntax=docker/dockerfile:1
 #
-# Production image of the API (what Render runs). The dev image is backend/Dockerfile.
+# Production image of the API (what the Azure VM runs, infra/azure/). The dev image is
+# backend/Dockerfile.
 # Build context: the repo root, because the uv workspace lockfile lives there:
 #
 #   docker build -f infra/backend.Dockerfile -t rag-backend .
 #   docker run --rm -p 9000:9000 -e PORT=9000 -e ENVIRONMENT=production -e DATABASE_URL=... rag-backend
 #
-# Migrations are not run here: infra/deploy.sh runs them against the database's direct URL.
+# Migrations are not run here: the `migrate` service of infra/azure/docker-compose.yml runs them.
 
 ARG PYTHON_VERSION=3.12
 
@@ -41,7 +42,7 @@ COPY --chown=app:app prompts /workspace/prompts
 COPY --chown=app:app config /workspace/config
 USER app
 WORKDIR /workspace/backend
-# Render sets PORT (default 10000). It terminates TLS, so trust its X-Forwarded-* headers.
+# TLS ends at Caddy, which nginx and then this server sit behind: trust the X-Forwarded-* headers.
 ENV PORT=8000
 EXPOSE 8000
 CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'"]

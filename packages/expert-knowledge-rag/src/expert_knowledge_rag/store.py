@@ -19,7 +19,7 @@ class ExpertKnowledgeStore:
     Give a `dsn`, or a psycopg pool (`pool=`: anything with `.connection()`, such as
     `psycopg_pool.ConnectionPool`; `async_pool=` for `AsyncConnectionPool`). Every call runs in a
     `READ ONLY` transaction, so a bug or a hostile query string can't change the knowledge base,
-    and prepared statements are off, which keeps it working behind Neon's pooler.
+    and prepared statements are off, which keeps it working behind a connection pooler.
 
     `schema` is `chips` for the web application's ingested answers; `chips_eval` holds the test
     data of scripts/db/load_chips_pg.py. `dimensions` must match the stored vectors.

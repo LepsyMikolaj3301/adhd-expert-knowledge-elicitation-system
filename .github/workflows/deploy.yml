@@ -1,0 +1,116 @@
+# Deploys to the Azure VM. Manual only: Actions > Deploy > Run workflow. Both steps can be skipped:
+#   run_tests  off: don't run the CI workflow first
+#   deploy     off: build and push the images, leave the VM alone
+# The VM must be running (it is switched off when not in use: docs/azure-setup-guide.md).
+# One-time setup of the secrets and variables below: docs/azure-setup-guide.md, step 8.
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: Run the CI checks first
+        type: boolean
+        default: true
+      deploy:
+        description: Deploy to the VM (off = only build and push the images)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+# Two deploys at once would race on the VM.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    if: inputs.run_tests
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: ci
+    # A skipped CI is fine, a failed or cancelled one is not.
+    if: ${{ !cancelled() && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.names.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: names
+        run: |
+          echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          # GHCR wants lower case.
+          echo "registry=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # The context is the repo root: the uv workspace lockfile lives there.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/backend.Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.names.outputs.registry }}/backend:${{ steps.names.outputs.tag }}
+            ${{ steps.names.outputs.registry }}/backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: infra/frontend.Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.names.outputs.registry }}/frontend:${{ steps.names.outputs.tag }}
+            ${{ steps.names.outputs.registry }}/frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  deploy:
+    needs: build
+    if: inputs.deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: azure
+    env:
+      VM: ${{ vars.VM_USER }}@${{ vars.VM_HOST }}
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      # The VM has no open SSH port: the runner joins the tailnet as tag:ci and uses Tailscale SSH.
+      - uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+      - name: Is the VM on?
+        run: |
+          if ! timeout 60 tailscale ping --c 3 --timeout 10s "${{ vars.VM_HOST }}"; then
+            echo "::error::The VM does not answer. Start it in the Azure portal, wait two minutes, run Deploy again."
+            exit 1
+          fi
+      - name: Copy the compose files
+        run: |
+          tar -C infra/azure -cf - docker-compose.yml Caddyfile env.example deploy.sh backup.sh \
+            | ssh -o StrictHostKeyChecking=accept-new "$VM" 'tar -C /opt/rag -xf -'
+      - name: Deploy
+        run: ssh -o StrictHostKeyChecking=accept-new "$VM" "/opt/rag/deploy.sh $TAG"
+      # Through Caddy and nginx, the way a visitor comes.
+      - name: Smoke test
+        run: |
+          curl -fsS --retry 10 --retry-delay 6 --retry-all-errors --max-time 20 \
+            "${{ vars.APP_URL }}/api/v1/health"
+          echo
+          curl -fsS --max-time 20 -o /dev/null "${{ vars.APP_URL }}/"

@@ -3,7 +3,9 @@ then one sentence per line. Garbage goes first: a spelling checker would otherwi
 "afdoafgja" into a real word.
 
 The grammar checker and the model are optional: when one can't be reached, its pass is skipped and
-recorded, and the author still gets their answer back to check. Nothing here fails the job.
+recorded, and the author still gets their answer back to check. With REQUIRE_COMPUTE (the models on
+another machine) an unreachable machine is the exception: the job fails and the worker holds it back
+until the machine is up (app/jobs/worker.py), instead of handing the author an unchecked answer.
 """
 
 import logging
@@ -14,11 +16,16 @@ import httpx
 
 from app.core.errors import safe_traceback
 from app.proofread import enhance, garbage, grammar
+from app.settings import settings
 from expert_knowledge_core.notes import split_sentences
 
 logger = logging.getLogger(__name__)
 # What can go wrong talking to LanguageTool or Ollama. Anything else is a bug and raises.
 SERVICE_ERRORS = (httpx.HTTPError, OSError, KeyError, ValueError)
+
+
+def _skippable(exc: Exception) -> bool:
+    return not (settings.require_compute and isinstance(exc, httpx.TransportError))
 
 
 @dataclass
@@ -37,6 +44,8 @@ async def _grammar(text: str, protected: set[str], passes: dict[str, Any], key: 
     try:
         checked = await grammar.check(text, protected)
     except SERVICE_ERRORS as exc:
+        if not _skippable(exc):
+            raise
         logger.warning("grammar check skipped\n%s", safe_traceback(exc))
         passes[key] = "unavailable"
         return text
@@ -59,6 +68,8 @@ async def proofread_answer(
         try:
             enhanced = await enhance.enhance(question, text, quotes)
         except SERVICE_ERRORS as exc:
+            if not _skippable(exc):
+                raise
             logger.warning("enhancement skipped\n%s", safe_traceback(exc))
             passes["enhanced"] = "unavailable"
     if enhanced is not None:

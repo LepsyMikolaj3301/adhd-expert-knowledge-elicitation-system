@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# Production image of the web app (what Render runs): nginx serves the built files and proxies /api/
+# Production image of the web app (what the Azure VM runs): nginx serves the built files and proxies /api/
 # to the backend, so the browser sees one origin and the session cookie needs no CORS.
 # The dev image (Vite with hot reload) is frontend/Dockerfile.
 #
@@ -9,8 +9,8 @@
 #   docker build -f infra/frontend.Dockerfile -t rag-frontend frontend/
 #
 # Runtime environment (the official nginx image fills these into nginx/default.conf.template):
-#   PORT              port to listen on; Render sets it (default 10000)
-#   API_UPSTREAM_URL  backend with scheme, no trailing slash: http://rag-backend:8000 or https://x.onrender.com
+#   PORT              port to listen on (default 8080)
+#   API_UPSTREAM_URL  backend with scheme, no trailing slash: http://rag-backend:8000
 #   API_HOST          host name of that backend, no scheme: sent as Host header and TLS server name
 # See docs/deployment.md.
 

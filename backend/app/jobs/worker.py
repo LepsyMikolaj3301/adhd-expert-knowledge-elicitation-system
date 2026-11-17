@@ -3,11 +3,13 @@
 import asyncio
 import contextlib
 import logging
+from pathlib import Path
 from uuid import UUID
 
 from sqlalchemy import select, update
 
 import app.models  # noqa: F401  (a worker runs without app.main: every table must be known)
+from app import compute
 from app.assignments.state_machine import lock_assignment, transition
 from app.assignments.states import Action, Actor
 from app.core.db import session_factory, utcnow
@@ -18,6 +20,10 @@ from app.jobs.queue import LEASE, MAX_ATTEMPTS, next_job
 
 logger = logging.getLogger(__name__)
 POLL_SECONDS = 2.0
+# Touched while the worker runs; the compose healthcheck reads its age
+# (infra/azure/docker-compose.yml).
+ALIVE_FILE = Path("/tmp/worker-alive")
+ALIVE_SECONDS = 10.0
 
 SUCCESS_ACTION = {
     JobKind.PROOFREAD: Action.PROOFREAD_SUCCEEDED,
@@ -80,8 +86,10 @@ async def _stop(task: asyncio.Task) -> None:
 async def run_once() -> bool:
     """Claim and run one job. Returns False when there was nothing to do."""
     factory = session_factory()
+    # With REQUIRE_COMPUTE: a job whose machine is down stays queued, the others still run.
+    kinds = await compute.ready_kinds()
     async with factory() as db:
-        job = await next_job(db)
+        job = await next_job(db, kinds)
         if job is None:
             return False
         if job.attempts >= MAX_ATTEMPTS:
@@ -133,12 +141,21 @@ async def run_once() -> bool:
             safe_traceback(exc),
         )
         error = type(exc).__name__
+        permanent = isinstance(exc, PermanentJobError)
+        # The PC went off mid-job: not the job's fault, so the attempt doesn't count.
+        waiting = not permanent and await compute.is_down_for(kind)
         async with factory() as db:
             if assignment_id is not None:
                 await lock_assignment(db, assignment_id)  # same lock order as the success path
             job = await _current(db, job_id, attempt)
             if job is not None:
-                if isinstance(exc, PermanentJobError) or attempt >= MAX_ATTEMPTS:
+                if waiting:
+                    logger.warning("job %s waits for the PC with the models", job_id)
+                    job.status = JobStatus.QUEUED
+                    job.attempts -= 1
+                    job.locked_until = None
+                    job.last_error = error
+                elif permanent or attempt >= MAX_ATTEMPTS:
                     await _fail(db, job, error)
                 else:
                     job.status = JobStatus.QUEUED
@@ -148,18 +165,30 @@ async def run_once() -> bool:
     return True
 
 
+async def _alive() -> None:
+    """Proves to the healthcheck that the process runs, also during a long job."""
+    while True:
+        await asyncio.to_thread(ALIVE_FILE.touch)
+        await asyncio.sleep(ALIVE_SECONDS)
+
+
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     logger.info("worker started")
-    while True:
-        try:
-            found_work = await run_once()
-        except Exception as exc:
-            # E.g. Postgres restarting. A job caught in it is picked up again once its lease ends.
-            logger.error("worker loop failed, trying again\n%s", safe_traceback(exc))
-            found_work = False
-        if not found_work:
-            await asyncio.sleep(POLL_SECONDS)
+    alive = asyncio.create_task(_alive())
+    try:
+        while True:
+            try:
+                found_work = await run_once()
+            except Exception as exc:
+                # E.g. Postgres restarting. A job caught in it is picked up again once its lease
+                # ends.
+                logger.error("worker loop failed, trying again\n%s", safe_traceback(exc))
+                found_work = False
+            if not found_work:
+                await asyncio.sleep(POLL_SECONDS)
+    finally:
+        await _stop(alive)
 
 
 if __name__ == "__main__":

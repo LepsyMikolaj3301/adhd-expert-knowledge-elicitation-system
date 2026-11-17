@@ -297,7 +297,7 @@ async def test_a_failing_worker_loop_waits_between_tries_and_logs_no_message(mon
     secret = "the-answer-text must not be stored"
     calls = 0
 
-    async def failing_next_job(db):
+    async def failing_next_job(db, kinds=None):
         nonlocal calls
         calls += 1
         raise RuntimeError(secret)
