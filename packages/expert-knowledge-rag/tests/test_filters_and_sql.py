@@ -31,6 +31,14 @@ def test_every_set_field_becomes_a_parameterised_condition():
     assert "ANY(%(f_populations)s)" in text(conditions[0])
 
 
+def test_experts_filter_limits_units_but_not_cue_keys():
+    f = ExpertFilter(experts=["silver/SYN-001", "silver/SYN-002"], include_synthetic=True)
+    conditions, params = f.on_unit("u")
+    assert [text(c) for c in conditions] == ['"u"."expert_id" = ANY(%(f_experts)s)']
+    assert params == {"f_experts": ["silver/SYN-001", "silver/SYN-002"]}
+    assert f.on_cue("c") == ([], {})  # a cue key is shared by every expert who marked it
+
+
 def test_cue_conditions_only_use_the_vignette():
     conditions, params = ExpertFilter(populations=["adult"], exclude_vignettes=["V9"]).on_cue("c")
     assert [text(c) for c in conditions] == ['"c".vignette_id <> ALL(%(f_exclude)s)']

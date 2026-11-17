@@ -18,6 +18,7 @@ class ExpertFilter(BaseModel):
     framings: list[str] | None = None  # email | forum_post | personal_journal
     vignettes: list[str] | None = None  # only these vignette ids (codes)
     exclude_vignettes: list[str] = Field(default_factory=list)  # e.g. the case being read now
+    experts: list[str] | None = None  # only these experts; cue keys are shared, so not filtered
     include_synthetic: bool = False
 
     def on_unit(self, alias: str = "u") -> tuple[list[sql.Composable], dict[str, Any]]:
@@ -30,6 +31,7 @@ class ExpertFilter(BaseModel):
             ("track", "f_tracks", self.tracks),
             ("framing", "f_framings", self.framings),
             ("vignette_id", "f_vignettes", self.vignettes),
+            ("expert_id", "f_experts", self.experts),
         ):
             if values is not None:
                 conditions.append(

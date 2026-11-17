@@ -7,6 +7,7 @@ fake (same text, same vector); BM25 is fitted for real with expert_knowledge_cor
 
 import json
 import os
+import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -21,7 +22,10 @@ from expert_knowledge_core.bm25 import Bm25Config
 from expert_knowledge_core.example import example_record
 from expert_knowledge_rag import ExpertKnowledgeStore
 
-SCHEMA_SQL = Path(__file__).resolve().parents[4] / "scripts" / "db" / "chips_schema.sql"
+REPO = Path(__file__).resolve().parents[4]
+SCHEMA_SQL = REPO / "scripts" / "db" / "chips_schema.sql"
+SNAPSHOT = REPO / "tests" / "fixtures" / "retrieval_silver"
+sys.path.insert(0, str(REPO / "scripts" / "db"))
 EMB = DeterministicFakeEmbedding(size=1024)
 VID = "V001"
 
@@ -148,3 +152,78 @@ def store(dsn: str, schema: str) -> ExpertKnowledgeStore:
 @pytest.fixture(scope="session")
 def embeddings() -> DeterministicFakeEmbedding:
     return EMB
+
+
+# --- the frozen silver snapshot: 198 real units with bge-m3 vectors (scripts/db/chips_snapshot.py) -
+
+
+@pytest.fixture(scope="session")
+def silver(dsn: str):
+    """(tables, vectors, queries) of tests/fixtures/retrieval_silver."""
+    if not (SNAPSHOT / "tables.json").exists():
+        pytest.skip(
+            "no tests/fixtures/retrieval_silver: python scripts/db/chips_snapshot.py freeze"
+        )
+    import chips_snapshot
+
+    return chips_snapshot.load_snapshot(SNAPSHOT)
+
+
+@pytest.fixture(scope="session")
+def silver_schema(dsn: str, silver):
+    import chips_snapshot
+
+    name = f"chips_silver_{uuid.uuid4().hex[:8]}"
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        try:
+            conn.execute("BEGIN")
+            chips_snapshot.seed(conn, name, SNAPSHOT)
+            conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+    yield name
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(name)))
+
+
+@pytest.fixture(scope="session")
+def silver_store(dsn: str, silver_schema: str) -> ExpertKnowledgeStore:
+    return ExpertKnowledgeStore(dsn, schema=silver_schema)
+
+
+@pytest.fixture(scope="session")
+def frozen(silver):
+    """The real query embeddings of the snapshot; any other text raises instead of calling a model."""
+    import chips_snapshot
+
+    _, vectors, queries = silver
+    return chips_snapshot.FrozenEmbeddings(queries, vectors)
+
+
+# --- the snapshot with many experts per vignette (synthetic copies, see chips_snapshot.crowded) --
+
+CROWD = 4  # copies of each of the two experts: ten answers to every vignette
+
+
+@pytest.fixture(scope="session")
+def crowd_schema(dsn: str, silver):
+    import chips_snapshot
+
+    name = f"chips_crowd_{uuid.uuid4().hex[:8]}"
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        try:
+            conn.execute("BEGIN")
+            chips_snapshot.seed(conn, name, SNAPSHOT, crowd=CROWD)
+            conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+    yield name
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(name)))
+
+
+@pytest.fixture(scope="session")
+def crowd_store(dsn: str, crowd_schema: str) -> ExpertKnowledgeStore:
+    return ExpertKnowledgeStore(dsn, schema=crowd_schema)
