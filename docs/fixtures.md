@@ -25,8 +25,10 @@ local model, it is graded against its own kind of output and the score is inflat
 ## Layout
 
 Nothing below is in git: vignette texts and expert answers (synthetic or real) stay local. Share
-them out of band; the fixture tests skip when neither `data/fixtures` nor `tests/sample_inputs`
-exists.
+them out of band. The one exception is the silver chips data the tests need, which is synthetic and
+committed as small copies: `tests/fixtures/silver_chips/` (the chip documents, vignettes and platform
+seed) and `tests/fixtures/retrieval_silver/` (the frozen units, vectors and labels for the retrieval
+regression; see `docs/backend-workflow.md`, Tests). No test reads `data/`.
 
 ```
 data/fixtures/                      (gitignored; synthetic/bronze is rebuilt from tests/sample_inputs)

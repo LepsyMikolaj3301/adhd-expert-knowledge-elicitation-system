@@ -284,3 +284,54 @@ cd ../frontend && npm run gen:api
 **Tests:** `uv run pytest` uses a separate `rag_test` database (created automatically, or
 `TEST_DATABASE_URL`), and is skipped if Postgres isn't reachable. `npm run test:unit` covers the
 frontend.
+
+| Folder | What | Needs |
+|---|---|---|
+| `tests/unit/` | Pure backend logic: answer rules, error helpers, security, Ollama clients, prompts, vignette import, search helpers, job tables | nothing |
+| `tests/scripts/` | The scripts the silver data came from (chip findings, fixture builders, judgments) | nothing |
+| `tests/*.py` | Classifier, links, proofreading, findings, state machine, retrieval metrics | nothing |
+| `tests/api/` | The API end to end, one real database per test run (all marked `integration`) | Postgres |
+| `tests/integration/` | Retrieval-quality regression on the frozen silver snapshot (marked `integration`, `regression`) | Postgres |
+| `packages/*/tests/` | The two packages; `integration/` runs the retrievers on a V001 example and on the silver snapshot | Postgres for `integration/` |
+
+```bash
+uv run pytest -m "not integration"                      # fast, no database (about 20 s)
+uv run pytest -m "not integration" --cov --cov-report=term-missing
+uv run pytest tests/api                                 # the API, about 10 minutes
+uv run pytest -m regression -s                          # retrieval quality, prints the table
+```
+
+Coverage when this was written (2026-11-16; statements and branches of `backend/app` and the two
+packages, frontend `src/`): everything with Postgres **89%**, `-m "not integration"` alone **69%**,
+frontend **91% statements, 82% branches** (`npm run test:cov`). Two specs depend on timing:
+`answerView.spec` "follows what is typed…" and `intro.spec` "goes on to the case…" fail when the
+machine is busy, which is why `test:cov` uses two workers.
+
+**The silver snapshot** (`tests/fixtures/retrieval_silver/`, committed, about 2 MB) is the silver
+units with their real bge-m3 vectors, the 40 questions with their original and pooled labels, and the
+bge-m3 vector of every text the tests send as a query, so no test calls a model. Rebuild it after the
+units or the questions change (needs `data/` and Ollama with bge-m3):
+
+```bash
+uv run python scripts/db/chips_snapshot.py freeze     # rewrites tables.json, vectors.npz, queries.json
+uv run python scripts/db/chips_snapshot.py check      # consistent?
+UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s   # accept the new scores as the baseline
+```
+
+`tests/integration/test_retrieval_regression.py` runs the package's retrievers on it and scores them
+with `scripts/rag/expert_metrics.py` (recall@k, hit@k, MRR, nDCG, token-budget recall, the ceiling).
+Without an oracle it runs the retrievers as the application does; with one it reads the labels'
+ceiling (the best any four units could reach) and restricts the search to the vignettes the labelled
+claims come from. A metric falling more than 0.02 below `baseline.json` fails the run.
+
+**Many experts on one vignette.** The silver data has only two experts per vignette, and their
+answers are alike but not near-duplicates (cosine 0.70-0.90), so it cannot show a top k that fills
+with one vignette's answers. `chips_snapshot.crowded` adds synthetic copies of every expert (same
+words, vectors moved a little), and `packages/expert-knowledge-rag/tests/integration/
+test_crowded_vignette.py` runs the retrievers on that: down-weighting stops a repeated whole-case
+answer from taking the places, but the same fragment said by many experts still does (a strict
+`xfail` records it). Real answers from four or more experts on the same vignettes would replace the
+copies; until then those tests show mechanics, never quality.
+
+`tests/fixtures/silver_chips/` is a committed copy of the silver chip documents, vignettes and the
+platform seed that `tests/api/test_api_silver_workflow.py` and `test_cli.py` use.

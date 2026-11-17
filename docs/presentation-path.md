@@ -1,11 +1,12 @@
 # Presentation path: one case from vignette to knowledge base
 
-A short, invented case for the demo: a new mother asks whether she has ADHD. Her post shows a
-lifelong attentional pattern, but sleep loss and low mood could explain the recent problems just as
-well.
+# WPROWADZENIE
 
-Copy each grey box as it is. The answers contain **deliberate mistakes** for the proofreading to fix;
-they are listed after step 2.
+Dzień Dobry, nazywam się Mikołaj Lepsy, tematem mojej zaś pracy dyplomowej jest stworzenie systemu i platformy zarządzania wiedzą ekspercką, na potrzeby wykorzystania jej do np. bazy wiedzy RAG
+
+Po co ten system - systemy sztucznej inteligencji swoją wiedzę czerpią z pre-treningu, czyli ogólnodostępnej wiedzy z internetu. Aby AI do analizy tekstu był bardziej dokładny i bardziej przystosowany do nadchodzących przypadków klinicznych, lepiej jest zapewnić mu wiedzę niedostępną w np. międzynarodowej klasyfikacji chorób ICD-11, która jest używana codziennie przez ekspertów do diagnozy.
+
+Do wyciągnięcia takiej wiedzy eksperckiej, w inżynierii wiedzy istnieje wiele metod. Niektóre polegają na aktywnej konwersacji i wywiadu twarzą w twarz, ale są też metody wywiadów, które można prowadzić przez internet, bez drugiej osoby. Taka forma wywiadu to tzw. winietty kliniczne, które pokazują ekspertowi przypadek kliniczny, a on na podstawie tego przypadku musi odpowiedzieć na pytania.
 
 ---
 
@@ -112,6 +113,10 @@ A less experienced clinician might put everything down to the new baby, as her G
 
 ---
 
+
+### Go to reviews when proofreading!
+
+
 ## 3. Check and review (no input)
 
 1. **Check the edited text** (expert): the original and the edited answer side by side, changes
@@ -137,3 +142,15 @@ How do I tell postnatal depression and sleep loss apart from ADHD in a new mothe
 ```text
 A 15-year-old boy is getting into fights at school. Could it be ADHD?
 ```
+
+
+## PYTANIA
+
+1. Co Pani sądzi o interfejsie, czy jest przejrzysty, dla experta, który zazwyczaj nie ma czasu
+2. Czy podane przypadki (case) dają możliwość ekspertowi wstępnego zapoznania sie z przypadkiem, czy ekspert powinien dostać więcej kontekstu
+3. Czy uważa Pani, że podana metoda elicytacji wiedzy byłaby odpowiednia na ekspertów z wiedzą psychiatryczną/psychologiczną? Czy można ufać swoim ekspertom?
+4. Czy wiedza ekspercka jest ważniejsza od oficjalnych klasyfikacji? Jak często eksperci bazują na wiedzy swojej, eksperckiej.
+
+
+
+NOTATKI I UWAGI
