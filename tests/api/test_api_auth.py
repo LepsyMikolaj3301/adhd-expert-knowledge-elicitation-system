@@ -236,7 +236,7 @@ async def test_a_slow_password_check_does_not_block_other_requests(monkeypatch):
     await expert_api("e@example.com")
 
     def slow(*_):
-        time.sleep(0.3)
+        time.sleep(0.5)
         return False
 
     monkeypatch.setattr(auth_service, "verify_password", slow)
@@ -257,7 +257,8 @@ async def test_a_slow_password_check_does_not_block_other_requests(monkeypatch):
         json={"email": "e@example.com", "password": "wrong"},
     )
     task.cancel()
-    assert ticks >= 10, "the event loop was blocked during the password check"
+    # About 50 when the check runs off the loop, at most 2 when it blocks it: room for a slow box.
+    assert ticks >= 5, "the event loop was blocked during the password check"
 
 
 async def test_no_lock_is_held_during_the_password_check(monkeypatch):

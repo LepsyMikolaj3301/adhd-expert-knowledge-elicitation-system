@@ -1,6 +1,8 @@
-"""API tests run against a real database, `rag_test` in the compose Postgres (or TEST_DATABASE_URL).
+"""API tests run against a real database in the compose Postgres (or TEST_DATABASE_URL).
 
-The schema comes from the Alembic migrations, and `app` is emptied before each test.
+Each run gets its own database, `rag_<pid>_test`, dropped at the end: two runs at once (two
+terminals, pytest-xdist) would otherwise empty each other's tables. The schema comes from the
+Alembic migrations, and `app` is emptied before each test.
 """
 
 import asyncio
@@ -25,8 +27,9 @@ from app.models import User  # noqa: F401  (fills Base.metadata)
 from app.settings import settings
 
 BACKEND = Path(__file__).resolve().parents[2] / "backend"
+OWN_DATABASE = not os.environ.get("TEST_DATABASE_URL")
 TEST_URL = os.environ.get("TEST_DATABASE_URL") or (
-    settings.database_url.rsplit("/", 1)[0] + "/rag_test"
+    settings.database_url.rsplit("/", 1)[0] + f"/rag_{os.getpid()}_test"
 )
 if not TEST_URL.rsplit("/", 1)[1].endswith("_test"):
     raise RuntimeError(f"refusing to run against a non-test database: {TEST_URL}")
@@ -46,25 +49,39 @@ def alembic_config() -> Config:
     return config
 
 
+ADMIN_URL = TEST_URL.rsplit("/", 1)[0] + "/postgres"
+DATABASE_NAME = TEST_URL.rsplit("/", 1)[1]
+
+
 async def _ensure_database() -> None:
-    admin_url = TEST_URL.rsplit("/", 1)[0] + "/postgres"
-    connection = await asyncpg.connect(admin_url, timeout=5)
-    name = TEST_URL.rsplit("/", 1)[1]
+    connection = await asyncpg.connect(ADMIN_URL, timeout=5)
     try:
-        if not await connection.fetchval("SELECT 1 FROM pg_database WHERE datname = $1", name):
-            await connection.execute(f'CREATE DATABASE "{name}"')
+        if not await connection.fetchval(
+            "SELECT 1 FROM pg_database WHERE datname = $1", DATABASE_NAME
+        ):
+            await connection.execute(f'CREATE DATABASE "{DATABASE_NAME}"')
+    finally:
+        await connection.close()
+
+
+async def _drop_database() -> None:
+    connection = await asyncpg.connect(ADMIN_URL, timeout=5)
+    try:
+        await connection.execute(f'DROP DATABASE IF EXISTS "{DATABASE_NAME}" WITH (FORCE)')
     finally:
         await connection.close()
 
 
 @pytest.fixture(scope="session")
-def migrated_database() -> str:
+def migrated_database():
     try:
         asyncio.run(_ensure_database())
     except (OSError, TimeoutError, asyncpg.PostgresError) as exc:
         pytest.skip(f"Postgres is not reachable: {exc}")
     command.upgrade(alembic_config(), "head")
-    return TEST_URL
+    yield TEST_URL
+    if OWN_DATABASE:
+        asyncio.run(_drop_database())
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -74,7 +91,7 @@ async def clean_database(migrated_database: str):
     tables = ", ".join(f"app.{table.name}" for table in Base.metadata.sorted_tables)
     async with session_factory()() as session:
         await session.execute(text(f"TRUNCATE {tables} CASCADE"))
-        # The RAG tables that ingestion writes (rag_test only: the name is checked above).
+        # The RAG tables that ingestion writes (a test database only: the name is checked above).
         await session.execute(
             text(
                 "TRUNCATE chips.experts, chips.vignettes, chips.elicitation_sessions, "

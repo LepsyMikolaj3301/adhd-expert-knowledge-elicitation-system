@@ -46,13 +46,14 @@ async def test_slow_preparation_holds_no_lock_on_the_assignment(monkeypatch):
 
 async def test_the_heartbeat_keeps_a_long_job_from_being_taken_over(monkeypatch):
     await _submitted()
-    monkeypatch.setattr(queue, "LEASE", timedelta(seconds=0.3))
-    monkeypatch.setattr(worker, "LEASE", timedelta(seconds=0.3))
+    # A renewal every 0.5 s leaves a second for one renewal to connect and write on a slow machine.
+    monkeypatch.setattr(queue, "LEASE", timedelta(seconds=1.5))
+    monkeypatch.setattr(worker, "LEASE", timedelta(seconds=1.5))
     started = []
 
     async def slow_prepare(assignment_id):
         started.append(assignment_id)
-        await asyncio.sleep(1.0)  # more than three leases
+        await asyncio.sleep(4.0)  # more than two leases
 
     async def record(db, assignment, prepared):
         return None
@@ -60,7 +61,7 @@ async def test_the_heartbeat_keeps_a_long_job_from_being_taken_over(monkeypatch)
     monkeypatch.setitem(handlers.PREPARE, JobKind.PROOFREAD, slow_prepare)
     monkeypatch.setitem(handlers.HANDLERS, JobKind.PROOFREAD, record)
     first = asyncio.create_task(run_once())
-    await asyncio.sleep(0.7)  # the first lease ended long ago
+    await asyncio.sleep(2.5)  # the first lease ended a second ago
     assert await run_once() is False, "another worker took a job that is still being worked on"
     assert await first is True
     assert len(started) == 1

@@ -281,8 +281,8 @@ cd backend && python -m app.cli export-openapi --out ../frontend/openapi.json
 cd ../frontend && npm run gen:api
 ```
 
-**Tests:** `uv run pytest` uses a separate `rag_test` database (created automatically, or
-`TEST_DATABASE_URL`), and is skipped if Postgres isn't reachable. `npm run test:unit` covers the
+**Tests:** `uv run pytest` gives each run its own database, `rag_<pid>_test` (created and dropped
+automatically; or `TEST_DATABASE_URL`), and is skipped if Postgres isn't reachable. `npm run test:unit` covers the
 frontend.
 
 | Folder | What | Needs |
