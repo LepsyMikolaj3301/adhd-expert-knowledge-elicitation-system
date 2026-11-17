@@ -11,7 +11,13 @@ npm run type-check # vue-tsc only
 npm run lint       # oxlint + eslint (with --fix)
 npm run format     # prettier on src/
 npm run test:unit  # vitest (watch mode; add -- --run for a single pass)
+npm run test:cov   # one pass with a v8 coverage report; two workers, because with all of them the
+                   # instrumented run is slow enough to trip a timing-sensitive spec
 ```
+
+Specs live in `src/__tests__/`. They stub `fetch` (`helpers.ts`: `stubFetch` answers by URL, `serve`
+by method and path, `writes` lists the non-GET calls), so no backend is needed. When a spec shows a
+bug, it is written to fail first.
 
 ## Talking to the backend
 

@@ -353,3 +353,197 @@ describe('Knowledge base: test search', () => {
     expect(view().find('[data-testid="hits"]').exists()).toBe(false)
   })
 })
+
+describe('Knowledge base: removals that do not go to plan', () => {
+  const two = () => jsonResponse(200, [unit({ id: 'u1' }), unit({ id: 'u2', highlight_id: 'h2' })])
+  const upToDate = () => jsonResponse(200, { state: 'up_to_date' })
+
+  async function askToRemoveFirstUnit() {
+    await open()
+    await view().get('[data-testid="expert-toggle"]').trigger('click')
+    await view().findAll('[data-testid="remove-unit"]')[0]!.trigger('click')
+  }
+
+  const deletes = () => calls.filter((c) => c.method === 'DELETE')
+
+  it('keeps the unit and says so when the removal is refused', async () => {
+    serve({
+      'GET /knowledge-units': two,
+      'GET /knowledge-units/index': upToDate,
+      'DELETE /knowledge-units/u1': () =>
+        jsonResponse(403, { code: 'forbidden', message: 'You may not do this.' }),
+    })
+    await askToRemoveFirstUnit()
+    await confirmRemove().trigger('click')
+    await flushPromises()
+
+    expect(deletes()).toHaveLength(1)
+    expect(view().get('[role="alert"]').text()).not.toBe('')
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(2)
+    expect(document.querySelector('dialog')).toBeNull() // the question is closed either way
+  })
+
+  it('says so when the unit is already gone', async () => {
+    serve({
+      'GET /knowledge-units': two,
+      'GET /knowledge-units/index': upToDate,
+      'DELETE /knowledge-units/u1': () =>
+        jsonResponse(404, { code: 'not_found', message: 'Unit not found.' }),
+    })
+    await askToRemoveFirstUnit()
+    await confirmRemove().trigger('click')
+    await flushPromises()
+    expect(view().find('[role="alert"]').exists()).toBe(true)
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(2)
+  })
+
+  it('sends nothing when the admin keeps the unit', async () => {
+    serve({ 'GET /knowledge-units': two, 'GET /knowledge-units/index': upToDate })
+    await askToRemoveFirstUnit()
+    expect(document.body.textContent).toContain('Remove this unit?')
+    await view()
+      .get('dialog')
+      .findAll('button')
+      .find((b) => b.text() === 'Keep')!
+      .trigger('click')
+    expect(deletes()).toHaveLength(0)
+    expect(document.querySelector('dialog')).toBeNull()
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(2)
+  })
+
+  it('removes once, however often the button is pressed, and says it is working', async () => {
+    let finish: (r: Response) => void = () => {}
+    const slow = new Promise<Response>((resolve) => (finish = resolve))
+    serve({
+      'GET /knowledge-units': two,
+      'GET /knowledge-units/index': upToDate,
+      'DELETE /knowledge-units/u1': () => slow as unknown as Response,
+    })
+    await askToRemoveFirstUnit()
+    const button = confirmRemove()
+    await button.trigger('click')
+    await button.trigger('click')
+    expect(button.text()).toBe('Removing…')
+    finish(new Response(null, { status: 204 }))
+    await flushPromises()
+    expect(deletes()).toHaveLength(1)
+    expect(view().findAll('[data-testid="unit"]')).toHaveLength(1)
+  })
+
+  it('shows the empty page once the last unit is gone', async () => {
+    serve({
+      'GET /knowledge-units': () => jsonResponse(200, [unit({ id: 'u1' })]),
+      'GET /knowledge-units/index': upToDate,
+      'DELETE /knowledge-units/u1': () => new Response(null, { status: 204 }),
+    })
+    await askToRemoveFirstUnit()
+    await confirmRemove().trigger('click')
+    await flushPromises()
+    expect(view().find('[data-testid="case"]').exists()).toBe(false)
+    expect(view().get('[data-testid="empty"]').text()).toBe('Nothing has been ingested yet.')
+  })
+
+  it('keeps the other units of an expert when one answer is removed from a case', async () => {
+    serve({
+      'GET /knowledge-units': () =>
+        jsonResponse(200, [
+          unit({ id: 'u1' }),
+          unit({ id: 'u2', assignment_id: 'a2', expert_id: 'x2', expert_pseudonym: 'E02' }),
+        ]),
+      'GET /knowledge-units/index': upToDate,
+      'DELETE /knowledge-units/u1': () => new Response(null, { status: 204 }),
+    })
+    await askToRemoveFirstUnit()
+    await confirmRemove().trigger('click')
+    await flushPromises()
+    expect(view().findAll('[data-testid="expert"]')).toHaveLength(1)
+    expect(view().get('[data-testid="expert"]').text()).toContain('E02')
+  })
+
+  it('does not claim zero units when the list cannot be loaded', async () => {
+    serve({
+      'GET /knowledge-units': () => jsonResponse(500, { code: 'internal_error', message: 'x' }),
+      'GET /knowledge-units/index': upToDate,
+    })
+    await open()
+    expect(view().get('[role="alert"]').text()).not.toBe('')
+    expect(view().find('[data-testid="summary"]').exists()).toBe(false)
+    expect(view().find('[data-testid="empty"]').exists()).toBe(false)
+  })
+
+  it('shows why a refit could not be started', async () => {
+    serve({
+      'GET /knowledge-units': () => jsonResponse(200, [unit()]),
+      'GET /knowledge-units/index': () => jsonResponse(200, { state: 'failed' }),
+      'POST /knowledge-units/index/refit': () =>
+        jsonResponse(500, { code: 'internal_error', message: 'x' }),
+    })
+    await open()
+    await buttonNamed('Try again').trigger('click')
+    await flushPromises()
+    expect(view().get('[role="alert"]').text()).not.toBe('')
+  })
+
+  describe('the index status', () => {
+    beforeEach(() => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] }))
+    afterEach(() => vi.useRealTimers())
+
+    const indexCalls = () => calls.filter((c) => c.url.endsWith('/knowledge-units/index')).length
+
+    it('follows the refit from queued to running to up to date, then stops asking', async () => {
+      const states = ['queued', 'running', 'up_to_date']
+      serve({
+        'GET /knowledge-units': () => jsonResponse(200, [unit()]),
+        'GET /knowledge-units/index': () =>
+          jsonResponse(200, { state: states[Math.min(indexCalls() - 1, 2)] }),
+      })
+      await open()
+      expect(view().get('[data-testid="index-status"]').text()).toContain('Refitting')
+      await vi.advanceTimersByTimeAsync(2000)
+      await flushPromises()
+      expect(view().get('[data-testid="index-status"]').text()).toContain('Refitting')
+      await vi.advanceTimersByTimeAsync(2000)
+      await flushPromises()
+      expect(view().get('[data-testid="index-status"]').text()).toContain('up to date')
+      const asked = indexCalls()
+      await vi.advanceTimersByTimeAsync(20000)
+      expect(indexCalls()).toBe(asked)
+    })
+
+    it('stops asking when the page is left', async () => {
+      serve({
+        'GET /knowledge-units': () => jsonResponse(200, [unit()]),
+        'GET /knowledge-units/index': () => jsonResponse(200, { state: 'running' }),
+      })
+      await open()
+      await vi.advanceTimersByTimeAsync(2000)
+      const asked = indexCalls()
+      expect(asked).toBeGreaterThan(1)
+      wrapper?.unmount()
+      wrapper = undefined
+      await vi.advanceTimersByTimeAsync(20000)
+      expect(indexCalls()).toBe(asked)
+    })
+
+    it('shows no status line at all when the status cannot be read', async () => {
+      serve({
+        'GET /knowledge-units': () => jsonResponse(200, [unit()]),
+        'GET /knowledge-units/index': () => jsonResponse(500, { code: 'internal_error' }),
+      })
+      await open()
+      expect(view().find('[data-testid="index-status"]').exists()).toBe(false)
+      expect(view().find('[role="alert"]').exists()).toBe(false)
+    })
+  })
+
+  it('never offers to remove a unit from a search result', async () => {
+    serve({
+      'GET /knowledge-units': () => jsonResponse(200, []),
+      'POST /knowledge-units/search': () => jsonResponse(200, { hits: [hit(1), hit(2)] }),
+    })
+    await open('/knowledge?tab=search')
+    await search('school report')
+    expect(view().findAll('[data-testid="hit"]')).toHaveLength(2)
+    expect(view().find('[data-testid="remove-unit"]').exists()).toBe(false)
+  })
+})

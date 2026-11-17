@@ -48,6 +48,36 @@ describe('api client', () => {
     expect(handler).toHaveBeenCalledOnce()
   })
 
+  it('lets a network failure through as it is: it is not an answer from the server', async () => {
+    const handler = vi.fn<() => void>()
+    setUnauthorizedHandler(handler)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch')
+      }),
+    )
+    const error = await api.GET('/api/v1/me').catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(TypeError)
+    expect(error).not.toBeInstanceOf(ApiError)
+    expect(handler).not.toHaveBeenCalled()
+  })
+
+  it('accepts an answer with no body', async () => {
+    stubFetch(() => new Response(null, { status: 204 }))
+    const { data, error } = await api.POST('/api/v1/auth/logout')
+    expect(data).toBeUndefined()
+    expect(error).toBeUndefined()
+  })
+
+  it('reports a 403 as an error without treating it as the end of the session', async () => {
+    const handler = vi.fn<() => void>()
+    setUnauthorizedHandler(handler)
+    stubFetch(() => jsonResponse(403, { code: 'forbidden', message: 'You may not do this.' }))
+    await expect(api.GET('/api/v1/users')).rejects.toMatchObject({ status: 403, code: 'forbidden' })
+    expect(handler).not.toHaveBeenCalled()
+  })
+
   it('calls the versioned path on the same origin', async () => {
     const fetchMock = stubFetch(() => jsonResponse(200, []))
     await api.GET('/api/v1/assignments')

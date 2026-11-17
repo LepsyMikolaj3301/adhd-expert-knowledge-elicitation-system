@@ -152,8 +152,10 @@ async function vote(answer: ReviewAnswer, choice: AnswerVote) {
     )
     if (data) review.value = data as ReviewAnswersView
   } catch (e) {
-    error.value = describeError(e)
+    const message = describeError(e)
+    // The page is read again, which clears the error: the reason is set after it.
     if (e instanceof ApiError && e.code === 'stale_round') await load()
+    error.value = message
   }
 }
 

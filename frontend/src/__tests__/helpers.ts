@@ -17,6 +17,32 @@ export function stubFetch(answer: (url: string) => Response) {
   return mock
 }
 
+/**
+ * A fetch stub that answers by method and path, `'POST /api/v1/assignments/a1/cancel'`. A route is
+ * a response or a function of the request (so it can change between calls); anything else is a 404.
+ * Every call is kept in `.mock.calls`, and `writes(mock)` lists the non-GET ones.
+ */
+export type Route = Response | ((request: Request) => Response | Promise<Response>)
+
+export function serve(routes: Record<string, Route>) {
+  const mock = vi.fn<(input: FetchInput) => Promise<Response>>(async (input) => {
+    const request = input as Request
+    const route = routes[`${request.method} ${new URL(request.url).pathname}`]
+    if (!route) return jsonResponse(404, { code: 'not_found', message: 'Not found.' })
+    return typeof route === 'function' ? route(request) : route.clone()
+  })
+  vi.stubGlobal('fetch', mock)
+  return mock
+}
+
+/** `'METHOD /path'` of every write a stub has seen. */
+export function writes(mock: ReturnType<typeof serve>): string[] {
+  return mock.mock.calls
+    .map(([input]) => input as Request)
+    .filter((r) => r.method !== 'GET')
+    .map((r) => `${r.method} ${new URL(r.url).pathname}`)
+}
+
 export function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,

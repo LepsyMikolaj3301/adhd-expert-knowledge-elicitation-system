@@ -57,12 +57,14 @@ const cancelling = ref<AssignmentSummary | null>(null)
 /** The admin's buttons are the actions an assignment allows; the rest are the expert's. */
 async function run(call: () => Promise<unknown>) {
   error.value = ''
+  let refused = ''
   try {
     await call()
   } catch (e) {
-    error.value = describeAdminError(e)
+    refused = describeAdminError(e)
   }
-  await refresh()
+  await refresh() // a good reload clears `error`, so the reason is set after it
+  if (refused) error.value = refused
 }
 
 function retry(a: AssignmentSummary) {

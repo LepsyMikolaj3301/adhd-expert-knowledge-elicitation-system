@@ -273,7 +273,7 @@ const allOpen = (assignments: string[]) => assignments.every((a) => opened.value
         Nothing has been ingested yet.
       </p>
 
-      <template v-else>
+      <template v-else-if="units.length">
         <p class="mt-2 text-sm text-muted" data-testid="summary">
           {{ units.length }} {{ units.length === 1 ? 'unit' : 'units' }} from
           {{ cases.reduce((n, c) => n + c.experts.length, 0) }} accepted answers in

@@ -7,7 +7,14 @@ import HeroBanner from '@/components/HeroBanner.vue'
 import PageIntro from '@/components/PageIntro.vue'
 import PseudonymChip from '@/components/PseudonymChip.vue'
 import SectionCard from '@/components/SectionCard.vue'
-import { activityText, commentExcerpt, HOME, tallyLabel, TRUST_SENTENCE } from '@/copy'
+import {
+  activityText,
+  commentExcerpt,
+  describeError,
+  HOME,
+  tallyLabel,
+  TRUST_SENTENCE,
+} from '@/copy'
 import { navFor } from '@/navigation'
 import { SITE_NAME } from '@/site'
 import { useAuthStore } from '@/stores/auth'
@@ -37,11 +44,16 @@ const news = computed(() => data.value?.activity.slice(0, newsShown.value) ?? []
 
 const ACTION = { start: 'Start', continue: 'Continue', check: 'Check', retry: 'Retry' } as const
 
+const retryError = ref('')
+
 async function retry(item: NextUpItem) {
+  retryError.value = ''
   try {
     await api.POST('/api/v1/assignments/{assignment_id}/retry', {
       params: { path: { assignment_id: item.assignment_id } },
     })
+  } catch (e) {
+    retryError.value = describeError(e)
   } finally {
     await home.load()
   }
@@ -127,6 +139,7 @@ watch(
                   </li>
                 </ul>
               </template>
+              <p v-if="retryError" class="alert mt-2" role="alert">{{ retryError }}</p>
               <p v-if="moreCases" class="mt-2 text-base text-muted" data-testid="more-cases">
                 and {{ moreCases }} more {{ moreCases === 1 ? 'case' : 'cases' }}
               </p>
