@@ -53,7 +53,7 @@ async def test_a_password_the_login_would_refuse_creates_no_account(monkeypatch,
 
 
 ROOT = Path(__file__).resolve().parents[2]
-CHIP_FIXTURES = ROOT / "data" / "fixtures_chips" / "synthetic" / "silver" / "vignettes"
+CHIP_FIXTURES = ROOT / "tests" / "fixtures" / "silver_chips" / "vignettes"  # a committed copy
 CHIP_WHATIFS = ROOT / "scripts" / "elicitation" / "chip_whatifs.json"
 
 # --- import-vignettes -----------------------------------------------------------------------
@@ -186,8 +186,6 @@ async def test_a_missing_directory_or_whatif_file_is_reported(tmp_path, capsys):
 
 
 async def test_the_chip_vignettes_import_with_their_what_ifs(capsys):
-    if not CHIP_FIXTURES.is_dir():
-        pytest.skip("no data/fixtures_chips (gitignored)")
     admin = await admin_api()
     assert await _import(CHIP_FIXTURES, CHIP_WHATIFS) == 0, capsys.readouterr().err
     listed = await admin.ok("GET", "/vignettes")

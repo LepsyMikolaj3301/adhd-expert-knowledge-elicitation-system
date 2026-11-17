@@ -1,0 +1,36 @@
+{
+  "content_hash": "1547427c32301630d084a762266df5469802525a34192b6d236b28c129fc8c58",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Clear, ordinary anxiety about the move and what will fit in the new house.",
+        "quote": "I am a little worried about the garage"
+      },
+      {
+        "alternative_explanation": "Worry about the move disturbing sleep; plain anxiety, not an organisational difficulty.",
+        "quote": "I confess I woke at four this morning thinking about it"
+      }
+    ],
+    "is_control": true,
+    "knowledge_target": null,
+    "origin": "llm",
+    "planted_cues": [],
+    "population": "adult",
+    "purpose": "packing for a house move next month (control: none: this person has no notable attention or organisation difficulties)",
+    "source_ref": null,
+    "track": "general"
+  },
+  "framing": "email",
+  "id": "V005",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Dear Margaret, I am writing to update you on the move, which is now five weeks away. I booked the removal firm in March and they have confirmed the date in writing, so that part is settled. The books are finished: twelve boxes, each labelled by room and numbered on a master sheet I keep in the green folder. The kitchen I did last Sunday in about three hours, and I was pleased to find that two boxes of mugs and plates were enough, which is fewer than I had budgeted for. I am a little worried about the garage, because there is forty years of tools and paint in it and I have not yet decided what the new house has room for. I have asked Peter whether he wants the workbench. He has not replied. I also keep wondering whether the new boiler will pass inspection before we complete, and I confess I woke at four this morning thinking about it. The solicitor says the paperwork is on schedule, and the council tax and utility changes were sent off on Monday, a week earlier than I needed. I shall take the curtains down only on the final weekend. Please let me know if the 14th still suits you for lunch.",
+  "variant": null,
+  "version": 1
+}

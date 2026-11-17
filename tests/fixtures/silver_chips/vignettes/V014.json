@@ -1,0 +1,42 @@
+{
+  "content_hash": "9f45efd800890e50fdb5fa24589c905dccf0db354921afd00b4821d5328090db",
+  "design": {
+    "confounders": [],
+    "is_control": false,
+    "knowledge_target": null,
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "I had told myself shoes and coats would take five minutes. It took twenty.",
+        "strength": "moderate",
+        "trait": "time_estimation"
+      },
+      {
+        "quote": "I stood at the kitchen counter looking at the school bags and did not start on them for a while",
+        "strength": "weak",
+        "trait": "task_initiation"
+      }
+    ],
+    "population": "adult",
+    "purpose": "getting the kids out of the door in the morning (traits: time_estimation: moderate; task_initiation: weak)",
+    "source_ref": null,
+    "track": "general"
+  },
+  "framing": "personal_journal",
+  "id": "V014",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Tuesday. The lunch boxes were packed yesterday evening, so that part cost nothing. Oskar ate his porridge without any complaint. Lena wanted the blue cup and I gave her the blue cup. That was a calm ten minutes. I had told myself shoes and coats would take five minutes. It took twenty. Lena's left boot had gone missing. We found it under the radiator in the hall. Her coat zip also jammed halfway up, and I had to take it off her and start again. After that I stood at the kitchen counter looking at the school bags and did not start on them for a while. I am not sure what I was waiting for. Then I put the reading folders in and zipped them. Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though. We left the house at 8:25, ten minutes later than I wanted. The walk to school takes fifteen minutes and we reached the gate at 8:40. That was five minutes before the bell. The teacher at the gate said hello to both of them. Back home I put the dishes in the machine and wiped the table.",
+  "variant": {
+    "arm": "B",
+    "change": "The newborn and the broken nights are not mentioned.",
+    "pair_id": "S05"
+  },
+  "version": 1
+}

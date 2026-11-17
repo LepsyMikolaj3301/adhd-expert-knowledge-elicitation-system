@@ -282,7 +282,15 @@ async def test_the_worker_survives_a_database_outage_and_resumes(monkeypatch, ca
         return await _state(admin, assignment_id) == "proofread_check"
 
     await _until(job_finished)
+    await _stop(task)
+
+
+async def _stop(task: asyncio.Task) -> None:
+    """Cancel a worker loop and wait until it has let go of its database session. Left running,
+    the loop can be caught in the middle of a query when the test ends: its transaction then stays
+    open and blocks the TRUNCATE that starts the next test."""
     task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
 
 
 async def test_a_failing_worker_loop_waits_between_tries_and_logs_no_message(monkeypatch, caplog):
@@ -299,7 +307,7 @@ async def test_a_failing_worker_loop_waits_between_tries_and_logs_no_message(mon
     task = asyncio.create_task(worker.main())
     await asyncio.sleep(0.25)
     assert not task.done(), "the worker died on the error"
-    task.cancel()
+    await _stop(task)
 
     assert 1 <= calls <= 10, "the loop must not spin at full speed while failing"
     assert "RuntimeError" in caplog.text

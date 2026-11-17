@@ -32,6 +32,13 @@ if not TEST_URL.rsplit("/", 1)[1].endswith("_test"):
     raise RuntimeError(f"refusing to run against a non-test database: {TEST_URL}")
 
 
+def pytest_collection_modifyitems(items) -> None:
+    """Everything here needs the test database: `-m "not integration"` is the fast run."""
+    for item in items:
+        if Path(item.fspath).is_relative_to(Path(__file__).parent):
+            item.add_marker(pytest.mark.integration)
+
+
 def alembic_config() -> Config:
     config = Config(str(BACKEND / "alembic.ini"))
     config.set_main_option("sqlalchemy.url", TEST_URL.replace("%", "%%"))

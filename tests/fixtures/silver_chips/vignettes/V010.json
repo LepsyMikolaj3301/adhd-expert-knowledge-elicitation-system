@@ -1,0 +1,43 @@
+{
+  "content_hash": "d47a3f70349ce8dee6ffdccb8c12252722ad2b8a4b2686432044f22d260925c4",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Low mood for several weeks after a break-up could account for the irritability and the sharp outburst.",
+        "quote": "I've felt flat since the break-up, about five weeks now"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": "Reading emotional reactivity in text: fast tone shifts with fast recovery versus persistent low mood, and what a single entry cannot show.",
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "loud enough for two customers, that it was the third time and did anyone here actually read the planogram",
+        "strength": "moderate",
+        "trait": "emotional_reactivity"
+      },
+      {
+        "quote": "I started pulling the signs down myself before she'd even answered.",
+        "strength": "weak",
+        "trait": "quick_to_act"
+      }
+    ],
+    "population": "adult",
+    "purpose": "snapping at a colleague and then feeling awful about it (traits: emotional_reactivity: moderate; quick_to_act: weak)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "personal_journal",
+  "id": "V010",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Snapped at Priya today. Not proud. She'd put the spring display up on the wrong wall and I said, loud enough for two customers, that it was the third time and did anyone here actually read the planogram. I started pulling the signs down myself before she'd even answered. Then she went quiet and I went to the stockroom and counted boxes I'd already counted. Sorry. Genuinely. She'd been in since six and covered for Tomas, so the wall thing was a bad call on my side too, I never told her which wall. I should have just said that. Rest of the day was fine. Delivery arrived on time, till float matched to the penny, and the Friday rota went out before lunch like I'd planned. I stayed calm with the man who wanted a refund without a receipt, which I'm weirdly happy about. I've felt flat since the break-up, about five weeks now, so maybe that's some of it. Maybe not. Don't want to use it as an excuse. Bought her a coffee at four. She said it was fine. I don't think it was. Will say it properly tomorrow before opening, or text tonight. Not sure. Text, probably.",
+  "variant": null,
+  "version": 1
+}

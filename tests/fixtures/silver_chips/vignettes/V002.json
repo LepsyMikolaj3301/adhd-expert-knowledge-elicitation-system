@@ -1,0 +1,27 @@
+{
+  "content_hash": "8b4379dd595d7bedc2bb9fb2f9455fa36138042a5991c2793ba5e986038209b6",
+  "design": {
+    "confounders": [],
+    "is_control": true,
+    "knowledge_target": null,
+    "origin": "llm",
+    "planted_cues": [],
+    "population": "adult",
+    "purpose": "organising her sister's birthday dinner (control: none: this person has no notable attention or organisation difficulties)",
+    "source_ref": null,
+    "track": "general"
+  },
+  "framing": "email",
+  "id": "V002",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "booked the restaurant on monday for saturday at seven. table for eight at the italian place by the station. they wanted a deposit so i paid it by card and the confirmation came straight away. jo does not know yet. i asked her husband to keep the evening free and he said fine without asking why which is lucky. the cake was the awkward bit. the bakery on mill road was full for saturday so i ordered a lemon one from the supermarket and collect it friday after school. dad cannot drive at night now so i said i would pick him up at half six and drop him home after. mum is bringing the blue photo album from the loft. cat sitter is sorted for the evening because the neighbour has a key. still need candles. i think we have some at home but i will buy a pack anyway. can you bring the card and the wrapped present. i already wrote my bit inside it. will send the final head count thursday.",
+  "variant": null,
+  "version": 1
+}

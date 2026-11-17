@@ -1,0 +1,282 @@
+{
+  "V009": {
+    "kind": "similar",
+    "SYN-001": {
+      "answers": {
+        "Q1": "⟦h1⟧ - the core one. Sent to do a fluid balance, ends up restocking gloves down the corridor, chart remembered at 5. Mid-task switch to an easier, more visible job = distractibility, moderate, toward; but recovered same shift ('done before handover anyway') so low cost. ⟦h2⟧ - reminder on the hand because the list is in the locker/coat: misplaced external memory, toward but weak, and plenty of nurses do exactly this. Away: ⟦h3⟧ - code on Mon, patient back, handover complete, nothing missed. Sustained attention when the stakes are obvious; ADHD hx often does fine in a crisis so I would not push it far either way. The typos line ⟦h4⟧ is the medium, and clipped bits like ⟦h5⟧ look like a tired list-maker rather than a drifting mind. Net: mild-moderate, one clear episode.",
+        "Q2": "Most of it. 12 h shift + phone thumbs -> ⟦h4⟧ explains the telegraphic style and typos on its own, and tired nurses lose a chart for an hour whatever their baseline. ⟦h1⟧ could be ordinary task-switching on a busy ward (gloves presumably needed). Distinguish: does it happen on days off, on low-urgency tasks, did it pre-date shift work? The hand note is the weakest, ?is the list always lost.",
+        "Q3": "hx: childhood, school, earlier jobs. Writing from a non-shift day (see Q4). How often the chart-type slip happens and whether anyone has flagged it. Sleep pattern around the shifts.",
+        "Q4": "Rest-day full linked prose -> the fragments are the phone and the shift, not the person. Supports my reading that the style is mostly medium; the glove episode stays as the only real signal.",
+        "Q5": "Over: 'ADHD nurse' from the hand note + the telegraphic style. Under: the chart episode gets dismissed as busy-ward noise, yet it is the one line with an actual self-interruption. The away points (⟦h3⟧) shouldn't be over-credited either. Overall 3."
+      },
+      "highlights": [
+        {
+          "chip": 1,
+          "text": "ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+          "span": [
+            282,
+            364
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 2,
+          "text": "wrote it on my hand because the list is in my locker. or my coat.",
+          "span": [
+            541,
+            606
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 3,
+          "text": "handover done by 7 with nothing missed",
+          "span": [
+            101,
+            139
+          ],
+          "direction": "away"
+        },
+        {
+          "chip": 4,
+          "text": "Typing this on my phone with useless thumbs after twelve hours so excuse the typos.",
+          "span": [
+            607,
+            690
+          ],
+          "direction": "neutral"
+        },
+        {
+          "chip": 5,
+          "text": "Bus. Also milk.",
+          "span": [
+            691,
+            706
+          ],
+          "direction": "neutral"
+        }
+      ],
+      "q4": {
+        "hypothesis": "Mild-to-moderate situational distractibility (one clear self-interruption), with most of the fragmented style explained by fatigue and phone typing.",
+        "shift": -1,
+        "toward": null,
+        "other_explanation": null
+      },
+      "rating": 3,
+      "insufficient_information": false
+    },
+    "SYN-002": {
+      "answers": {
+        "Q1": "The passage I'd put most weight on is ⟦h2⟧: she sets out to do the fluid balance on bed 9, ends up restocking glove boxes along the whole corridor, and only remembers the chart at 5. That reads as the task being displaced by something more immediate, and 'ended up' suggests she did not choose the switch. I'd call it toward, moderate, though 'done before handover anyway' tempers it, no harm done. ⟦h3⟧ is a smaller point: the reminder goes on her hand because the list is somewhere else, so the system for holding things in mind is improvised; weak toward. ⟦h1⟧ I'd leave neutral, the late delivery is an outside reason ('not my fault for once' suggests she expects blame). ⟦h4⟧ points away, or at least ordinary: a full 30 minute break, sat down, ate, which is not a restless, can't-stop picture, though one break proves little. ⟦h5⟧ is the medium, neutral, and ⟦h6⟧ is just a busy ward event.",
+        "Q2": "Most of it, honestly. After twelve hours and typing on a phone, ⟦h5⟧ could account for the clipped style and the typos by itself, and a tired person can lose track of a chart without any attentional difficulty. The glove boxes could also be ordinary ward behaviour: the corridor may have needed restocking, and the Tuesday delivery problem in ⟦h1⟧ had probably left her short on supplies. What would separate them: whether it shows up when she is rested and has no deadline, and whether she does similar things outside work, at home or in earlier jobs.",
+        "Q3": "I'd want something she wrote on a day off, and ideally something from before she worked shifts. I'd also want to know how often charts get missed and whether colleagues have commented. And of course the usual history, which a diary note can't give.",
+        "Q4": "If her rest-day notes are full, linked sentences, then the broken style here is more likely down to the phone and the twelve hours, which is what I half suspected. So my view is somewhat reinforced; what's left is the glove-box episode, and I'd still hold that loosely.",
+        "Q5": "Over: treating the short, jumpy sentences and typos as evidence of attention problems, and the hand note as poor memory. Under: it would be easy to dismiss the glove-box episode because it ended well, whereas it is the one place the text shows her being pulled off a task. I'd say 3, a modest signal."
+      },
+      "highlights": [
+        {
+          "chip": 1,
+          "text": "Tue the pharmcy delivery came late so I spent an hour chasing saline stock, not my fault for once",
+          "span": [
+            141,
+            238
+          ],
+          "direction": "neutral"
+        },
+        {
+          "chip": 2,
+          "text": "Went to do the fluid balance on bed 9 and ended up restocking glove boxes down the whole corridor, remembered the chart at 5. Done before handover anyway.",
+          "span": [
+            240,
+            394
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 3,
+          "text": "wrote it on my hand because the list is in my locker",
+          "span": [
+            541,
+            593
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 4,
+          "text": "Dana covered my break and I sat down for the full 30 min",
+          "span": [
+            406,
+            462
+          ],
+          "direction": "away"
+        },
+        {
+          "chip": 5,
+          "text": "Typing this on my phone with useless thumbs after twelve hours",
+          "span": [
+            607,
+            669
+          ],
+          "direction": "neutral"
+        },
+        {
+          "chip": 6,
+          "text": "Mon was quiet apart from bed 14 who coded at 3, we got him back",
+          "span": [
+            36,
+            99
+          ],
+          "direction": "neutral"
+        }
+      ],
+      "q4": {
+        "hypothesis": "A modest, situational tendency to be pulled off a task, seen in one episode, with most of the telegraphic style down to fatigue and phone typing.",
+        "shift": -1,
+        "toward": null,
+        "other_explanation": null
+      },
+      "rating": 3,
+      "insufficient_information": false
+    }
+  },
+  "V010": {
+    "kind": "divergent",
+    "SYN-001": {
+      "answers": {
+        "Q1": "Not rating. The loud line ⟦h1⟧ is the one anyone would flag - public, 'third time' - but the writer is five weeks into feeling flat (⟦h2⟧, half-offered as a cause, then retracted in ⟦h6⟧) and irritability is a standard feature of low mood -> I would count it away from a trait reading for now. 'Third time' also implies a real repeated error, so the grievance isn't groundless. ⟦h3⟧ - owns the miscommunication ('never told her which wall') and notes she had covered for Tomas: perspective-taking after the fact, not what I'd expect from impulsive blaming; away. ⟦h4⟧ and ⟦h5⟧ - organised rest of the day, float to the penny, rota out before lunch, calm with a difficult customer: away. Episodic, remorse looks real. The box counting I'd leave, ?avoidance after a row.",
+        "Q2": "All of the snap. Low mood/irritability 5 wks post break-up, ?sleep, ?appetite -> ddx depressive episode, adjustment reaction; ⟦h2⟧ and ⟦h6⟧ are the writer's own caveat. Also a long day for Priya (in since six) and the writer's own unclear instruction. Distinguish: onset - did the snap -> act -> remorse cycle predate the break-up; sleep and anhedonia screen; does it show on good-mood days.",
+        "Q3": "Hx before the break-up, previous 6-12 months of work behaviour, other entries from calm days. Whether 'third time' is accurate. Sleep, appetite, alcohol. Single entry -> no. Hence not rating.",
+        "Q4": "If there are earlier apologies for snapping, mood no longer holds the monopoly: the pattern predates the five weeks, so I'd move partly toward a longstanding reactivity trait, not necessarily ADHD (?anxiety, ?personality). Still need the rest of the picture.",
+        "Q5": "Over: 'snapped + signs down + counting boxes' = ADHD emotional dysregulation. Under: the flat-mood sentence, easily skipped because the writer plays it down. Also the competent rest of the day shouldn't be read as 'no problem' either."
+      },
+      "highlights": [
+        {
+          "chip": 1,
+          "text": "I said, loud enough for two customers, that it was the third time",
+          "span": [
+            89,
+            154
+          ],
+          "direction": "away"
+        },
+        {
+          "chip": 2,
+          "text": "I've felt flat since the break-up, about five weeks now, so maybe that's some of it",
+          "span": [
+            774,
+            857
+          ],
+          "direction": "unclear"
+        },
+        {
+          "chip": 3,
+          "text": "She'd been in since six and covered for Tomas, so the wall thing was a bad call on my side too, I never told her which wall",
+          "span": [
+            377,
+            500
+          ],
+          "direction": "away"
+        },
+        {
+          "chip": 4,
+          "text": "Rest of the day was fine. Delivery arrived on time, till float matched to the penny, and the Friday rota went out before lunch like I'd planned.",
+          "span": [
+            532,
+            676
+          ],
+          "direction": "away"
+        },
+        {
+          "chip": 5,
+          "text": "I stayed calm with the man who wanted a refund without a receipt",
+          "span": [
+            677,
+            741
+          ],
+          "direction": "away"
+        },
+        {
+          "chip": 6,
+          "text": "Don't want to use it as an excuse.",
+          "span": [
+            870,
+            904
+          ],
+          "direction": "unclear"
+        }
+      ],
+      "q4": {
+        "hypothesis": "One irritable outburst with remorse, best explained by five weeks of low mood; a single entry cannot separate that from a trait.",
+        "shift": 1,
+        "toward": "more_adhd",
+        "other_explanation": null
+      },
+      "rating": null,
+      "insufficient_information": true
+    },
+    "SYN-002": {
+      "answers": {
+        "Q1": "I'd say the most informative stretch is the first half: how fast it goes from a mistake to a public outburst to action. ⟦h1⟧ is loud, in front of customers, and phrased as an accusation ('did anyone here actually read the planogram'), which is more heated than the situation seems to call for given that, as the writer admits later, the instruction was never clear. I'd call that toward emotional reactivity. ⟦h2⟧ then shows acting before the other person can reply, which fits a quick-to-act pattern, though weak on its own. ⟦h3⟧ - after the row the writer goes off and counts boxes already counted; I read this as restlessness or not being able to settle, so weakly toward, although it might simply be avoidance. ⟦h4⟧ is the remorse arriving within a few lines; it is the speed of the swing I notice, flare, guilt, repair within hours. ⟦h5⟧ is more of the same, indecision about how to apologise, unclear. Overall a moderate signal, not strong.",
+        "Q2": "The snap itself could be low mood, and I'd rather not argue that away: five weeks since the break-up is not nothing, and irritability is common in low mood. It could also be tiredness, since the colleague had been in since six, or ordinary work stress. To tell them apart I'd want to know whether quick outbursts and quick regrets were there before the break-up, and whether the writer has similar swings on days when mood is fine. I'd also want to know about sleep. The box counting in ⟦h3⟧ could just be anxiety or avoidance after a row.",
+        "Q3": "Anything from before the break-up, and something from a different setting, home or friends. How often this happens and how people around the writer describe it. Whether the 'third time' really happened. I'd also like a mood and sleep history. The usual history.",
+        "Q4": "If the writer had apologised for snapping several times before the break-up, then low mood stops being a good explanation and the pattern looks long-standing, which is what I assumed when I leaned on a trait reading. So I'd say my view is strongly reinforced.",
+        "Q5": "Over: treating one outburst as dysregulation of a diagnostic kind, or reading the competent rest of the day as proof of nothing. Under: the writer's own caveat about the break-up, plus the speed of the recovery, which is easy to miss because the entry is mostly apologetic. I'd say 3, with real uncertainty."
+      },
+      "highlights": [
+        {
+          "chip": 1,
+          "text": "loud enough for two customers, that it was the third time and did anyone here actually read the planogram",
+          "span": [
+            97,
+            202
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 2,
+          "text": "I started pulling the signs down myself before she'd even answered.",
+          "span": [
+            204,
+            271
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 3,
+          "text": "Then she went quiet and I went to the stockroom and counted boxes I'd already counted.",
+          "span": [
+            272,
+            358
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 4,
+          "text": "Sorry. Genuinely.",
+          "span": [
+            359,
+            376
+          ],
+          "direction": "toward"
+        },
+        {
+          "chip": 5,
+          "text": "Will say it properly tomorrow before opening, or text tonight. Not sure. Text, probably.",
+          "span": [
+            978,
+            1066
+          ],
+          "direction": "unclear"
+        }
+      ],
+      "q4": {
+        "hypothesis": "A pattern of quick emotional reactivity and quick action followed by fast remorse and recovery, more trait-like than mood-driven, moderate in strength.",
+        "shift": -2,
+        "toward": null,
+        "other_explanation": null
+      },
+      "rating": 3,
+      "insufficient_information": false
+    }
+  }
+}

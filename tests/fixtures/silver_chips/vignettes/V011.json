@@ -1,0 +1,43 @@
+{
+  "content_hash": "c4c370e467c2766d3f3217569faacc9c593b2ad136db540224076e230a6b0396",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Many of the childhood memories are second-hand, retold by the parents, so they may be embellished or reflect the parents' framing rather than the writer's own recall.",
+        "quote": "I don't actually remember that, it's one of her stories"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": "Weighing retrospective childhood accounts in text (specific episodes versus generic labels, second-hand memories) for the childhood-onset requirement.",
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number",
+        "strength": "moderate",
+        "trait": "task_initiation"
+      },
+      {
+        "quote": "walking home the long way and arriving an hour late because I was watching the men dig up the road",
+        "strength": "moderate",
+        "trait": "distractibility"
+      }
+    ],
+    "population": "adult",
+    "purpose": "remembering how school went and what the teachers wrote on report cards (traits: task_initiation: moderate; distractibility: moderate, recalled from childhood)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "email",
+  "id": "V011",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "So I was going through the box Mum sent and found my year four report. Mrs Okafor wrote that I was capable, polite and a strong reader, which is nice to see in her handwriting. Mum says I would sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number. I don't actually remember that, it's one of her stories, same as the one about me walking home the long way and arriving an hour late because I was watching the men dig up the road. Dad tells that one every Christmas. What I do remember myself is the science fair, year six or seven, I'm hazy. I planned the volcano the week before, bought the baking soda on the Tuesday and had it finished early. It got a ribbon. Mr Doyle wrote that I was a pleasure to teach when I knew what was expected. The handwriting comment came every year though, untidy and rushed. You got the neat ones. I'd love to see yours if Mum kept them, she said the loft, or maybe the garage.",
+  "variant": null,
+  "version": 1
+}

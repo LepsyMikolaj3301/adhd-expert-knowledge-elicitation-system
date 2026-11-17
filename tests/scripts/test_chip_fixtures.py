@@ -1,15 +1,9 @@
-"""Tests for the reply checks of make_chip_fixtures.py (run by path, see test_chip_findings.py)."""
+"""Tests for the reply checks of make_chip_fixtures.py."""
 
-import sys
-from pathlib import Path
-
+import make_chip_fixtures as mk
 import pytest
-
-sys.path.insert(0, str(Path(__file__).parent))
-
-import make_chip_fixtures as mk  # noqa: E402
-from elicitation_schema import Vignette, VignetteDesign, content_hash  # noqa: E402
-from make_fixtures import Rejected  # noqa: E402
+from elicitation_schema import Vignette, VignetteDesign, content_hash
+from make_fixtures import Rejected
 
 TEXT = (
     "I only opened the file at nine because I did the dishes first. The report is due on Friday "

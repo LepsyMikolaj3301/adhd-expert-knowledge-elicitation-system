@@ -1,0 +1,47 @@
+{
+  "content_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Ruminating about a conflict with a colleague, which could explain distraction and the rushed proofing.",
+        "quote": "a message that I keep going over in my head"
+      },
+      {
+        "alternative_explanation": "An ordinary process failure: the colleague saved the calendar locally and did not mention it.",
+        "quote": "she'd saved it as a local file and nobody told me"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": "Telling goal-loss digression that eventually resolves from anxious rumination that circles one worry, in free adult text (textual markers, not diagnostic criteria).",
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "Anyway, my sister has the same problem with her boiler manual",
+        "strength": "moderate",
+        "trait": "discourse_tangentiality"
+      },
+      {
+        "quote": "I'd allowed an hour to check the proofs and it took nearer three",
+        "strength": "weak",
+        "trait": "time_estimation"
+      }
+    ],
+    "population": "adult",
+    "purpose": "explaining why last week's project handover went wrong (traits: discourse_tangentiality: moderate; time_estimation: weak)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "email",
+  "id": "V006",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Hi Jo, you asked how the handover went and I said fine, which was not true. Here is what happened. Dana moved to the events team on Friday, so on Thursday I was meant to take over her campaign calendar and the supplier logins. The logins worked, because I asked IT on Monday and they sorted it the same day. The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version. That's the ordinary reason, really. Anyway, my sister has the same problem with her boiler manual, it's a PDF on a laptop she has since sold, and her whole building spent a weekend... sorry. The newsletter went out on Tuesday with the wrong date for the webinar. I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look. Priya in design also copied me on a message that I keep going over in my head, the one about 'ownership', but that's another email. So it was a local file, a wrong date and rushed proofing. I'm sorry this ran so long.",
+  "variant": null,
+  "version": 1
+}

@@ -1,0 +1,47 @@
+{
+  "content_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "High caffeine intake can cause restlessness and scattered focus.",
+        "quote": "I have had four coffees today"
+      },
+      {
+        "alternative_explanation": "Exam anxiety could explain difficulty concentrating on writing.",
+        "quote": "I am quite nervous about it"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": null,
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+        "strength": "moderate",
+        "trait": "working_memory"
+      },
+      {
+        "quote": "went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+        "strength": "weak",
+        "trait": "distractibility"
+      }
+    ],
+    "population": "adult",
+    "purpose": "a thesis chapter that is not getting written (traits: distractibility: moderate; working_memory: weak)",
+    "source_ref": null,
+    "track": "general"
+  },
+  "framing": "forum_post",
+  "id": "V004",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Chapter three is at 1,100 words. It goes to my supervisor on the 20th and today is the 11th. I would call this a tragedy but it is mostly arithmetic.\n\nOn Monday I wrote 600 of those words in one go at the library, because the kitchen at home was empty and nobody was cooking. That went fine. On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.\n\nI have had four coffees today. I know. The stats exam is on Thursday as well and I am quite nervous about it.\n\nI did send the method section on time last week, so at least one person at the university has proof I exist. My supervisor wrote back with three comments, all fair, and I fixed them the same evening.\n\nToday I made a plan of two blocks of 50 minutes with my phone in my bag. Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins. Block two is after dinner.",
+  "variant": null,
+  "version": 1
+}

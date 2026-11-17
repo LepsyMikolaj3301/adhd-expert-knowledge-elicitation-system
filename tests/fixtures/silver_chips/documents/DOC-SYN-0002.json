@@ -1,0 +1,1630 @@
+{
+  "created_at": "2026-01-06T09:00:00Z",
+  "expert_id": "SYN-002",
+  "is_synthetic": true,
+  "responses": [
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ - time underestimate, 2h became the evening; weak alone. ⟦h2⟧ - late start, chores first; mild. ⟦h3⟧ and ⟦h6⟧ - early, ahead of deadline, organised. ⟦h4⟧ just a favour for a colleague. ⟦h5⟧ context only.",
+        "Q2": "⟦h1⟧ ⟦h2⟧ ordinary procrastination on a writing task, plus poor sleep (⟦h5⟧) after the move. Distinguish: is it only commentary/writing, or all tasks?",
+        "Q3": "Other samples, calm week. Is the late start typical or just this report?",
+        "Q5": "Over: reading the late start as a deficit. Under: nothing much, the text is mostly organised."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            457,
+            547
+          ],
+          "text": "I told myself two hours for the commentary section and it has now been most of the evening"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            549,
+            627
+          ],
+          "text": "I only opened the document at nine because I did the dishes and the bins first"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            135,
+            208
+          ],
+          "text": "I had already pulled the loss ratios into the template by Wednesday lunch"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            219,
+            301
+          ],
+          "text": "Priya asked me to check her reserve figures too, and that took the whole afternoon"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            629,
+            685
+          ],
+          "text": "Still sleeping badly since we moved flats two months ago"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            788,
+            829
+          ],
+          "text": "sent the chart pack to Marcus before work"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-06T09:01:00Z",
+      "submitted_at": "2026-01-06T09:07:00Z",
+      "vignette_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "vignette_id": "V001",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "I'm not going to read traits into this. It is a logistics email for a surprise party and almost everything in it is a plan that got made: ⟦h1⟧ booked days ahead, ⟦h2⟧ a problem (bakery full) met with a sensible workaround, ⟦h4⟧ cover arranged. All ordinary, and if anything organised, but one planning email can't carry a reading either way. ⟦h3⟧ is the only spot where I'd hesitate: \"i think we have some\" but buying a pack anyway could be sensible hedging or a habit of not checking, I can't tell from one line. ⟦h5⟧ is a promise of a later message, nothing to read in it yet.",
+        "Q2": "⟦h3⟧ could be a quick practical choice, candles are cheap, so buying a pack is simply less hassle than a search of the house. Nothing here distinguishes that from a habit; I'd need to see how the writer handles that kind of thing elsewhere. The lower-case, no-greeting style is just how some people write emails to family.",
+        "Q3": "Anything where the writer is under pressure or has something to get wrong. Another text from an ordinary week, and what happened with the earlier tasks, did the head count go out on Thursday? And the usual history.",
+        "Q5": "Over: treating the candles line or the missing capitals as a sign. Under: not much, there is little here to under-read."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            0,
+            53
+          ],
+          "text": "booked the restaurant on monday for saturday at seven"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            341,
+            467
+          ],
+          "text": "the bakery on mill road was full for saturday so i ordered a lemon one from the supermarket and collect it friday after school"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            688,
+            765
+          ],
+          "text": "still need candles. i think we have some at home but i will buy a pack anyway"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            618,
+            686
+          ],
+          "text": "cat sitter is sorted for the evening because the neighbour has a key"
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            849,
+            888
+          ],
+          "text": "will send the final head count thursday"
+        }
+      ],
+      "insufficient_information": true,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": null,
+      "started_at": "2026-01-06T09:08:00Z",
+      "submitted_at": "2026-01-06T09:19:00Z",
+      "vignette_hash": "8b4379dd595d7bedc2bb9fb2f9455fa36138042a5991c2793ba5e986038209b6",
+      "vignette_id": "V002",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "Mostly ordinary, with a couple of mild leans each way. Away from ADHD: ⟦h1⟧ - filed more than three weeks before the deadline, so the job got finished early and the writer knows it (\"no panic fees\"). ⟦h5⟧ - a deliberate, workable strategy (set length, no radio, timer) that the writer worked out and uses; that is compensating well, not struggling. Mild toward: ⟦h2⟧ - swapping the actual task for a side task (comparing apps) and even spending money on it; note the writer catches it themselves, \"caught myself\". ⟦h6⟧ - the same drift into tidying when the work is dull, but it is tied to longer stretches and the writer has a fix for it. Both are what most people do with a tax return. ⟦h3⟧ and ⟦h4⟧ - bereavement and low mood, with evenings of doing very little; I read this as grief, not attention, so it carries no weight either way.",
+        "Q2": "⟦h4⟧ and ⟦h3⟧ are explained by the bereavement and low mood and I would not count them as anything else. ⟦h2⟧ and ⟦h6⟧ could be ordinary procrastination on a dull task, made worse by low mood. What would separate them: does the drifting happen on tasks the writer likes, or with no deadline, and was it there before April? If it only showed up after the loss it points to mood.",
+        "Q3": "A text from a better stretch, before or well after the loss. Also whether the writer's work is usually done like this, with a deadline and a fix, or if the early filing is unusual. The usual history.",
+        "Q5": "Over: reading ⟦h2⟧ and ⟦h6⟧ as attention problems when they sit beside a bereavement. Under: missing that ⟦h1⟧ and ⟦h5⟧ show good planning and a working strategy, which counts against."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            156,
+            202
+          ],
+          "text": "I filed on the 9th, so no panic fees this year"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            491,
+            585
+          ],
+          "text": "Around the third evening I caught myself comparing invoicing apps instead of typing in figures"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            655,
+            710
+          ],
+          "text": "My dad died in April and I've been low on and off since"
+        },
+        {
+          "chip": 4,
+          "direction": "unclear",
+          "span": [
+            715,
+            791
+          ],
+          "text": "some evenings I just sat there with the spreadsheet open and did very little"
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            809,
+            877
+          ],
+          "text": "forty minutes after lunch with the radio off and a timer on my phone"
+        },
+        {
+          "chip": 6,
+          "direction": "toward",
+          "span": [
+            879,
+            936
+          ],
+          "text": "anything longer and I was reorganising my desktop folders"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-06T09:20:00Z",
+      "submitted_at": "2026-01-06T09:34:00Z",
+      "vignette_hash": "0ef8b3f59f6e6036f4144dba8cf6dc75f7e375471fdeeea0c4233560bfe2ce37",
+      "vignette_id": "V003",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "I'd say this is a mixed picture, and I would not want to lean hard on any one line. Toward, mildly: ⟦h2⟧ - a short errand that drifts into something else (a mug, not the table) and the writer comes back with nothing; the specific detail, \"a clean mug and no table\", is what makes it read as a real lost ten minutes rather than a figure of speech. ⟦h5⟧ is the same pattern again, and this time the original question (the bins) never gets answered, which is a little more telling than the first because it happens inside a block the writer had planned. Two instances in a short post is something, though people on a deadline do this all the time. Away: ⟦h1⟧ - 600 words in one sitting after choosing a place that suited them, so attention is clearly available when the setting is right (and I notice they thought about why the library, which is good insight). ⟦h4⟧ - on time, and fixing the comments the same evening is not what I'd expect from someone who routinely loses things. ⟦h6⟧ - a sensible plan with the phone put away; again, the writer is managing it. Worth saying the tone is wry and organised: \"mostly arithmetic\", it gets back to the point. ⟦h3⟧ I can't place, see Q2.",
+        "Q2": "Quite a lot of this could be something else, and I'd want to be careful. ⟦h3⟧ - nervous about the exam, plus \"four coffees\", which could by itself make someone restless and make a kitchen trip more likely; so ⟦h2⟧ and ⟦h5⟧ might be anxiety and caffeine rather than anything stable. Or just ordinary avoidance of a hard chapter, thesis writing being what it is. What would separate them: does the wandering happen on easy or interesting tasks too, and in weeks without an exam? I'd also want to know whether it shows up outside the thesis. A single week can't answer it.",
+        "Q3": "A post from a quieter week, with no exam and no deadline, and anything about how the writer handled earlier coursework. Whether the library-vs-home difference is typical. The usual history, of course.",
+        "Q5": "Over: counting ⟦h2⟧ and ⟦h5⟧ as clear distraction when exam anxiety and coffee are right there in the post. Under: not noticing that ⟦h1⟧ and ⟦h6⟧ show a writer who understands their own pattern and manages it."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            151,
+            212
+          ],
+          "text": "On Monday I wrote 600 of those words in one go at the library"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            322,
+            430
+          ],
+          "text": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            472,
+            541
+          ],
+          "text": "The stats exam is on Thursday as well and I am quite nervous about it"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            544,
+            591
+          ],
+          "text": "I did send the method section on time last week"
+        },
+        {
+          "chip": 5,
+          "direction": "toward",
+          "span": [
+            838,
+            927
+          ],
+          "text": "Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            745,
+            816
+          ],
+          "text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-06T09:35:00Z",
+      "submitted_at": "2026-01-06T09:53:00Z",
+      "vignette_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "vignette_id": "V004",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ ⟦h2⟧ ⟦h3⟧ - early, written down, systematic; organised, points away. ⟦h4⟧ - garage worry, a real decision, ordinary. ⟦h5⟧ - worry about the boiler, not task trouble.",
+        "Q2": "⟦h5⟧ anxiety / poor sleep about the move, nothing else. ⟦h4⟧ unanswered Peter is just waiting on a reply.",
+        "Q3": "Little to ask, nothing off here. Maybe a text from a less planned task.",
+        "Q5": "Over: reading the garage and 4am waking as a problem. Under: none really."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            190,
+            307
+          ],
+          "text": "The books are finished: twelve boxes, each labelled by room and numbered on a master sheet I keep in the green folder"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            899,
+            988
+          ],
+          "text": "the council tax and utility changes were sent off on Monday, a week earlier than I needed"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            85,
+            163
+          ],
+          "text": "I booked the removal firm in March and they have confirmed the date in writing"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            474,
+            567
+          ],
+          "text": "I am a little worried about the garage, because there is forty years of tools and paint in it"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            789,
+            844
+          ],
+          "text": "I confess I woke at four this morning thinking about it"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 1,
+      "started_at": "2026-01-06T09:54:00Z",
+      "submitted_at": "2026-01-06T10:00:00Z",
+      "vignette_hash": "1547427c32301630d084a762266df5469802525a34192b6d236b28c129fc8c58",
+      "vignette_id": "V005",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "I'd rather not put a reading on this. It is one email, written to explain a bad week, and most of what's in it has an external cause the writer names: ⟦h2⟧ a handover that went wrong because nobody said the calendar was local. ⟦h1⟧ is just candour about a poor week. The two lines I looked at hardest: ⟦h4⟧ - an hour allowed, three taken, last pages skimmed, and a wrong date went out. That could be a time misjudgement, but one proofing job tells me very little. ⟦h3⟧ - a drift into the sister's boiler manual that the writer stops themselves on (\"sorry\") and then returns to the point. The email does come back and ends with a tidy summary in ⟦h6⟧, which counts against reading much into the digression. ⟦h5⟧ - ongoing rumination about a message, which is a worry, not an attention matter. So: mostly unclear, nothing I can use.",
+        "Q2": "⟦h4⟧ could be a stressful handover week with someone else's mess to sort, plus the worry in ⟦h5⟧ taking up room. ⟦h3⟧ could be nervous chat when apologising to a boss. What would help separate: how proofing goes when nothing else is on, and whether the digressions turn up in calm writing too.",
+        "Q3": "Something written in a normal week, ideally about an ordinary task. How often proofing runs over. What the 'ownership' message actually said, since it is clearly on the writer's mind. Not enough here to rate.",
+        "Q5": "Over: reading the digression or the missed date as inattention when the handover itself was faulty. Under: skipping past the rumination in the 'ownership' line, which is probably the real current problem."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            7,
+            74
+          ],
+          "text": "you asked how the handover went and I said fine, which was not true"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            338,
+            387
+          ],
+          "text": "she'd saved it as a local file and nobody told me"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            547,
+            637
+          ],
+          "text": "it's a PDF on a laptop she has since sold, and her whole building spent a weekend... sorry"
+        },
+        {
+          "chip": 4,
+          "direction": "unclear",
+          "span": [
+            711,
+            815
+          ],
+          "text": "I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            851,
+            921
+          ],
+          "text": "a message that I keep going over in my head, the one about 'ownership'"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            949,
+            1005
+          ],
+          "text": "So it was a local file, a wrong date and rushed proofing"
+        }
+      ],
+      "insufficient_information": true,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": null,
+      "started_at": "2026-01-06T10:01:00Z",
+      "submitted_at": "2026-01-06T10:15:00Z",
+      "vignette_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "vignette_id": "V006",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "Two separate things here and they point different ways. The quoting: ⟦h1⟧ - \"every month\", so the writer says it is a pattern, but ⟦h2⟧ gives real site reasons (thick plaster, cable in the wrong place) and ⟦h3⟧ shows an accurate quote when the job is known. That is ordinary trade estimating, so it points away more than toward. The invoices are the stronger part: ⟦h4⟧ - note the time words, \"soon\", \"usually Sunday\", a plan with no date that keeps sliding. ⟦h5⟧ - six unsent, the oldest five weeks, and \"I keep saying I'll\", which is repeated intention without follow-through; there is a real cost here too, since unsent invoices are unpaid money. ⟦h6⟧ - long days and tiredness, context for the above rather than a sign in itself.",
+        "Q2": "⟦h4⟧ and ⟦h5⟧ can easily be plain tiredness: on site from seven, home after seven, and paperwork is the first thing to go for a lot of self-employed people, with no ADHD involved. Business also got busier since spring, so it may be a workload problem. To separate it: did invoices pile up in quieter years, and does it happen with other admin like tax, insurance, or returns, even on days off? The over-run on jobs (⟦h1⟧) is better explained by the site factors in ⟦h2⟧.",
+        "Q3": "A post from before the busy spell, or what happened in winter when there was less work. Whether other admin gets the same treatment, and if the writer ever gets the invoices done on a Sunday. Does the app idea actually go anywhere?",
+        "Q5": "Over: calling the two-day-to-three overrun a time-blindness sign when the writer gives real site causes and quotes accurately for known jobs. Under: dismissing the invoice pile as just being tired, when the \"I keep saying\" wording shows a long gap between intending and doing."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            47,
+            92
+          ],
+          "text": "A job I quote at about two days ends up three"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            218,
+            324
+          ],
+          "text": "the plaster being thicker than it looked and the old cable run under the floor not where the drawings said"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            368,
+            428
+          ],
+          "text": "I did a consumer unit swap in one morning, exactly as quoted"
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            643,
+            692
+          ],
+          "text": "Invoices wait. I'll do them soon, usually Sunday."
+        },
+        {
+          "chip": 5,
+          "direction": "toward",
+          "span": [
+            703,
+            818
+          ],
+          "text": "there are six sitting in a folder, the oldest about five weeks, and I keep saying I'll sit down with them after tea"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            555,
+            641
+          ],
+          "text": "I'm on site by seven most days and not home till gone seven, and by then I'm shattered"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-06T10:16:00Z",
+      "submitted_at": "2026-01-06T10:29:00Z",
+      "vignette_hash": "eb46ca52c8aeffb9b171888ee656bc712d81a6c22b6b501a23180cd0149cb891",
+      "vignette_id": "V007",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "My first impression is that this is mostly a new-job picture, and I'd want to be careful not to over-read it, but there are a couple of lines I keep coming back to. The one that matters most to me is ⟦h3⟧ - the writer says they knew what to do and still didn't do it for a day, which is a gap between knowing and starting; that is the kind of thing I'd note, although a corrected spreadsheet for a supplier is also an easy thing to freeze on when you are anxious about getting it wrong (see Q2). ⟦h4⟧ - forgetting why you walked into a room is something nearly everyone does, and the writer even says \"I know is small\", so I give it very little weight, perhaps none. Away: ⟦h2⟧ - early every day and induction done by the Friday is a good first week, and I'd weigh that. ⟦h1⟧ - the writer links it to newness and effort themselves, which I find fairly plausible, if a little self-protective. ⟦h5⟧ - they already tried something and it helped, which is a sensible response, though I would not read it as proof either way. ⟦h6⟧ - the apologetic, careful tone throughout (and again \"I'm sorry this is so long\") reads as anxiety about doing it wrong, rather than anything to do with attention; I'd say that is the dominant flavour of the whole email, and it was a clear, well-organised message in the end.",
+        "Q2": "Most of it, honestly. ⟦h3⟧ - a day's delay on a task the writer says they knew how to do fits anxious avoidance (not wanting to send something wrong) as well as an initiation problem; ordinary new-job overload could also do it. ⟦h4⟧ - tired, distracted, new surroundings, an anxious head. What would tell them apart: whether the delays are on tasks that frightened them or on dull ones, whether it was happening at university or in earlier part-time work, and how sleep has been these three weeks. I'd also want to see if it eases as the job becomes familiar.",
+        "Q3": "The usual history (they have been registered since university but only seen twice), and how they managed before this job, in studying and deadlines. A text from a calmer week. And one question: what did the writer feel while the spreadsheet sat open?",
+        "Q5": "Over: treating the stock room and spreadsheet lines as ADHD signs three weeks into a first job, when the writer is anxious and tired. Under: ignoring that ⟦h3⟧ is a real gap worth asking about, and the request for out-of-hours appointments suggests worry about being seen."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            271,
+            349
+          ],
+          "text": "some of this is just that it's new and I'm trying hard not to get things wrong"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            376,
+            445
+          ],
+          "text": "I was early every day and finished my induction modules by the Friday"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            593,
+            690
+          ],
+          "text": "I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it"
+        },
+        {
+          "chip": 4,
+          "direction": "unclear",
+          "span": [
+            692,
+            785
+          ],
+          "text": "Twice I've walked into the stock room and forgotten what I went in for, which I know is small"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            826,
+            893
+          ],
+          "text": "the planner I bought last week has helped with remembering meetings"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            7,
+            96
+          ],
+          "text": "I'm very sorry to trouble you, and I hope this is the right way to ask for an appointment"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-06T10:30:00Z",
+      "submitted_at": "2026-01-06T10:50:00Z",
+      "vignette_hash": "db00a2dd560d9dcd0442af662c48cdca7cb935475a175539c2716512d306b185",
+      "vignette_id": "V008",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ - side task took over, chart remembered late; the one real lead, but a busy ward does this. ⟦h2⟧ ⟦h3⟧ - done on time, nothing missed, so the job is held. ⟦h4⟧ - hand note, list in locker \"or my coat\", mild, could be just tired. ⟦h6⟧ a late delivery, not the writer. ⟦h5⟧ medium and tiredness only.",
+        "Q2": "⟦h1⟧ ⟦h4⟧ twelve-hour shift, tired, ordinary ward load. Check same pattern on a day off.",
+        "Q3": "Calmer-week sample. Is the restocking thing typical?",
+        "Q5": "Over: ⟦h1⟧ as a lot. Under: the \"nothing missed\" lines, which count against."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            240,
+            364
+          ],
+          "text": "Went to do the fluid balance on bed 9 and ended up restocking glove boxes down the whole corridor, remembered the chart at 5"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            366,
+            393
+          ],
+          "text": "Done before handover anyway"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            101,
+            139
+          ],
+          "text": "handover done by 7 with nothing missed"
+        },
+        {
+          "chip": 4,
+          "direction": "unclear",
+          "span": [
+            541,
+            606
+          ],
+          "text": "wrote it on my hand because the list is in my locker. or my coat."
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            607,
+            689
+          ],
+          "text": "Typing this on my phone with useless thumbs after twelve hours so excuse the typos"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            179,
+            238
+          ],
+          "text": "I spent an hour chasing saline stock, not my fault for once"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-06T10:51:00Z",
+      "submitted_at": "2026-01-06T10:58:00Z",
+      "vignette_hash": "a136b2be7e6d14c4e95ccb9b447e464efcd748962244bbc66910d3c0ba9ebcd1",
+      "vignette_id": "V009",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "I'm declining to put a trait reading on this one. The main event is a flash of temper at work, and the writer names it, owns it and explains it better than I could. ⟦h1⟧ and ⟦h2⟧ are the lines a quick reader might grab (loud, acting before the other person answered), but this is irritability in a rough patch, not attention. I'd put ⟦h3⟧ ahead of both: five weeks flat since a break-up is the obvious background. Away, if I have to say a direction: ⟦h4⟧ a day of on-time, balanced, planned work, and ⟦h5⟧ the writer sees their own part in the mix-up. ⟦h6⟧ is the hesitation about how to apologise, which is ordinary and the text settles on \"text, probably\". Nothing here I can use for ADHD either way.",
+        "Q2": "Everything I marked has a better explanation than a trait: ⟦h1⟧ ⟦h2⟧ low mood, strain, perhaps a short night; a bad week after the break-up. What would help: how the writer is at work before the break-up, sleep, and whether outbursts like this are new.",
+        "Q3": "The text is about mood and a conflict. Missing: any sample from before the break-up, anything about how they handle tasks over time, and the previous two times the display was wrong, which the writer mentions but doesn't describe. Not enough for a view.",
+        "Q5": "Over: reading the outburst and the counting of already-counted boxes as impulsivity or distraction. Under: skipping the five weeks of low mood in ⟦h3⟧, which is probably the real story."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "unclear",
+          "span": [
+            89,
+            202
+          ],
+          "text": "I said, loud enough for two customers, that it was the third time and did anyone here actually read the planogram"
+        },
+        {
+          "chip": 2,
+          "direction": "unclear",
+          "span": [
+            204,
+            270
+          ],
+          "text": "I started pulling the signs down myself before she'd even answered"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            774,
+            857
+          ],
+          "text": "I've felt flat since the break-up, about five weeks now, so maybe that's some of it"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            558,
+            675
+          ],
+          "text": "Delivery arrived on time, till float matched to the penny, and the Friday rota went out before lunch like I'd planned"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            473,
+            500
+          ],
+          "text": "I never told her which wall"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            978,
+            1066
+          ],
+          "text": "Will say it properly tomorrow before opening, or text tonight. Not sure. Text, probably."
+        }
+      ],
+      "insufficient_information": true,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": null,
+      "started_at": "2026-01-06T10:59:00Z",
+      "submitted_at": "2026-01-06T11:11:00Z",
+      "vignette_hash": "d47a3f70349ce8dee6ffdccb8c12252722ad2b8a4b2686432044f22d260925c4",
+      "vignette_id": "V010",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "Mostly second-hand and weak, so I'm treating it lightly. ⟦h2⟧ and ⟦h3⟧ are family stories about childhood: slow to start a maths sheet, and getting distracted on the way home. Both are the kind of thing parents tell about any child, and the writer says outright \"it's one of her stories\", so the evidence is thin, but the content is the type I'd note (a long delay before starting, and an hour lost to watching something). ⟦h6⟧ is the one written by teachers, in their own words, and it recurs: \"untidy and rushed\" every year is a record, not a memory. Away: ⟦h4⟧ - the writer's own memory, a planned project, bought the Tuesday, finished early, ribbon; that is good planning when the task interested them. ⟦h1⟧ is ordinary and positive. ⟦h5⟧ is interesting: \"when I knew what was expected\" suggests structure helped, which could go either way.",
+        "Q2": "⟦h2⟧ could be ordinary reluctance about maths, or perfectionism and worry about getting it wrong, a pencil sharpened twice is a stalling habit many children have. ⟦h3⟧ could be a curious child enjoying roadworks, which is also ordinary. ⟦h6⟧ could be a hand-writing or fine-motor matter, or simply a child who wanted to finish. What would separate them: whether the stalling was general or just maths, and what the other reports said about attention in class.",
+        "Q3": "The other school reports, which the writer asks about, especially the teacher comments on concentration, and anything in their own words about how school felt. Also what the writer is like now: this is all childhood. And from the usual history, who else noticed.",
+        "Q5": "Over: building a childhood picture out of two family anecdotes the writer does not even remember. Under: skipping the repeated teacher comment in ⟦h6⟧, which is the firmest line in the text, and the early-finished project in ⟦h4⟧."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            71,
+            134
+          ],
+          "text": "Mrs Okafor wrote that I was capable, polite and a strong reader"
+        },
+        {
+          "chip": 2,
+          "direction": "unclear",
+          "span": [
+            194,
+            319
+          ],
+          "text": "sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            403,
+            501
+          ],
+          "text": "walking home the long way and arriving an hour late because I was watching the men dig up the road"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            615,
+            717
+          ],
+          "text": "I planned the volcano the week before, bought the baking soda on the Tuesday and had it finished early"
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            736,
+            811
+          ],
+          "text": "Mr Doyle wrote that I was a pleasure to teach when I knew what was expected"
+        },
+        {
+          "chip": 6,
+          "direction": "toward",
+          "span": [
+            813,
+            878
+          ],
+          "text": "The handwriting comment came every year though, untidy and rushed"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-06T11:12:00Z",
+      "submitted_at": "2026-01-06T11:26:00Z",
+      "vignette_hash": "c4c370e467c2766d3f3217569faacc9c593b2ad136db540224076e230a6b0396",
+      "vignette_id": "V011",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "I'd say there is very little here, and I'd rather say that than go looking. The main thing is the register: a long, chatty, friendly email to a friend, and the writer announces it themselves in ⟦h1⟧. It is also well ordered, a day told in sequence with times (five, quarter to seven, about noon, three, six), and it finishes with an invitation, so it gets back to its point, and I'd count that as away. ⟦h2⟧ - a week of planning for a fishing trip, which is just organised. ⟦h3⟧ - one small aside and a clean \"Anyway\" back to the story; a digression that returns is what most people's emails look like. ⟦h4⟧ - a problem (the wrong bait, and not the writer's doing) and a quick fix. ⟦h5⟧ is the only line I'd stop at: talking all the way home and not remembering much of it, as reported by Dennis. It is hearsay, and a happy person after a day out does that, so I wouldn't lean on it. ⟦h6⟧ is vagueness about a trivial count, nothing in it.",
+        "Q2": "The one possibly relevant thing, ⟦h5⟧, could be tiredness after a long day outdoors, the pleasure of a good day, or just a talkative person with a captive audience. Nothing here to distinguish it further without other writing; I'd want to see whether the writer is like this in meetings or with strangers, as opposed to a friend and a drive home.",
+        "Q3": "Nothing really missing for the purpose of this text, because there is not a concern in it. If I had to ask: is this how the writer usually writes? And the usual history.",
+        "Q5": "Over: calling the talkativeness (⟦h1⟧ ⟦h5⟧) a trait. Under: not a lot, maybe the plain good planning in ⟦h2⟧."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            69,
+            106
+          ],
+          "text": "you know I never tell a short version"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            108,
+            178
+          ],
+          "text": "We left Harlow at five on the Saturday, which I had planned for a week"
+        },
+        {
+          "chip": 3,
+          "direction": "neutral",
+          "span": [
+            268,
+            367
+          ],
+          "text": "after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat. Anyway."
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            678,
+            794
+          ],
+          "text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it"
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            893,
+            969
+          ],
+          "text": "I talked the whole way back, Dennis says, though I don't remember much of it"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            1021,
+            1068
+          ],
+          "text": "There are eleven, or twelve, I'd have to count."
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 1,
+      "started_at": "2026-01-06T11:27:00Z",
+      "submitted_at": "2026-01-06T11:42:00Z",
+      "vignette_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "vignette_id": "V012",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h2⟧ - five min became twenty, but a missing boot and a jammed zip explain it. ⟦h3⟧ - stalls at the bags, \"not sure what I was waiting for\"; one line, the best lead, mild. ⟦h1⟧ ⟦h6⟧ - prepared the night before, at the gate before the bell. ⟦h5⟧ - kit brought, day maybe wrong; trivial. ⟦h4⟧ context.",
+        "Q2": "⟦h3⟧ three broken nights (⟦h4⟧), ordinary parent-of-young-children tiredness. ⟦h2⟧ is two small kids and a lost boot.",
+        "Q3": "A calmer morning, and whether the stalling at tasks happens before the baby. Usual history.",
+        "Q5": "Over: ⟦h2⟧ and ⟦h5⟧, both normal for a parent. Under: little, the text is steady and gets everyone there in time."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            9,
+            81
+          ],
+          "text": "The lunch boxes were packed yesterday evening, so that part cost nothing"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            212,
+            286
+          ],
+          "text": "I had told myself shoes and coats would take five minutes. It took twenty."
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            460,
+            555
+          ],
+          "text": "I stood at the kitchen counter looking at the school bags and did not start on them for a while"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            646,
+            686
+          ],
+          "text": "The baby was up three times in the night"
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            688,
+            783
+          ],
+          "text": "Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though."
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            889,
+            955
+          ],
+          "text": "we reached the gate at 8:40. That was five minutes before the bell"
+        }
+      ],
+      "insufficient_information": false,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 1,
+      "started_at": "2026-01-06T11:43:00Z",
+      "submitted_at": "2026-01-06T11:50:00Z",
+      "vignette_hash": "3e8dabf137101193e3c8b334dde538c67e585449180f129e01302b614b066d89",
+      "vignette_id": "V013",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "I'd rather not read traits into this, so I'll say what I looked at and why it doesn't settle anything. ⟦h1⟧ and ⟦h2⟧ are the only stretches that stand out: she stops at the counter and can't say why. That is a pause in the middle of a task, and the writer herself doesn't know what it was. It could be a task-start problem, but one stuck minute in one morning isn't much to go on, and 'for a while' tells me nothing about how long. ⟦h3⟧ is a planned five minutes turning into twenty, but the text gives a reason (a missing boot, a jammed zip), so this is a morning with two mishaps, not a pattern of misjudging time. ⟦h5⟧ reads as someone who plans ahead the night before, which if anything leans the other way, but it's one sentence. ⟦h4⟧ is mixed: the child remembers the kit, the writer is unsure of the day, and that is ordinary parent uncertainty about a weekly timetable. ⟦h6⟧ is a ten-minute slip, and they still reach the gate before the bell. The tone throughout is flat and factual, with no frustration, apology or tangents. I mark most of these unclear or neutral.",
+        "Q2": "⟦h1⟧ and ⟦h2⟧ could just as well be tiredness after a rushed morning, a low moment, or plain reluctance to start a boring chore. ⟦h3⟧ is explained by the lost boot and the zip in the text itself, so ordinary morning chaos with two young children covers it. Poor sleep or low mood would show up as the same pause, and I can't tell them apart from one entry. What would help: whether the pause happens on calm mornings too, and whether it happens with tasks she cares about as well as school bags.",
+        "Q3": "Other entries from the same writer, ideally including a calm day and a harder one. Her own account of whether this morning was typical. Whether anyone else (partner, the teacher) sees the same pattern. And a direct question about what she was thinking at the counter. One day of a parent's journal doesn't tell me about her, only about that Tuesday. The usual history would come after that.",
+        "Q5": "Over-interpreting: treating the pause at the counter and the 'five minutes, took twenty' line as proof of poor time sense or task initiation. Under-interpreting: ignoring that she did not know what she was waiting for, which is worth asking about. Also easy to mistake the children's mishaps for her traits. As a whole the text is tidy and organised, so a less experienced reader might over-read the one odd minute."
+      },
+      "expert_id": "SYN-002",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "unclear",
+          "span": [
+            449,
+            556
+          ],
+          "text": "After that I stood at the kitchen counter looking at the school bags and did not start on them for a while."
+        },
+        {
+          "chip": 2,
+          "direction": "unclear",
+          "span": [
+            557,
+            594
+          ],
+          "text": "I am not sure what I was waiting for."
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            212,
+            286
+          ],
+          "text": "I had told myself shoes and coats would take five minutes. It took twenty."
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            646,
+            741
+          ],
+          "text": "Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though."
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            9,
+            82
+          ],
+          "text": "The lunch boxes were packed yesterday evening, so that part cost nothing."
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            742,
+            801
+          ],
+          "text": "We left the house at 8:25, ten minutes later than I wanted."
+        }
+      ],
+      "insufficient_information": true,
+      "is_synthetic": true,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": null,
+      "started_at": "2026-01-06T11:51:00Z",
+      "submitted_at": "2026-01-06T12:08:00Z",
+      "vignette_hash": "9f45efd800890e50fdb5fa24589c905dccf0db354921afd00b4821d5328090db",
+      "vignette_id": "V014",
+      "vignette_version": 1
+    }
+  ],
+  "schema_version": "1.1-chips",
+  "session_id": "DOC-SYN-0002",
+  "vignettes": [
+    {
+      "content_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Poor sleep after a recent move to a louder flat could explain tiredness and slower starts.",
+            "quote": "Still sleeping badly since we moved flats two months ago"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I told myself two hours for the commentary section and it has now been most of the evening",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I only opened the document at nine because I did the dishes and the bins first",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a quarterly report due on Friday (traits: task_initiation: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V001",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch, and then Priya asked me to check her reserve figures too, and that took the whole afternoon, and the lift in our building was out so I carried the shopping up four floors, which has nothing to do with anything but my legs hurt. Anyway the report. I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first. Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed, so I was up at five anyway and sent the chart pack to Marcus before work, and he replied with a thumbs up by eight. That part went well. The commentary I think I can finish by eleven, maybe midnight, then read through it once in the morning. Need to remember to ask Dan about the fridge shelf.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "8b4379dd595d7bedc2bb9fb2f9455fa36138042a5991c2793ba5e986038209b6",
+      "design": {
+        "confounders": [],
+        "is_control": true,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "organising her sister's birthday dinner (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "email",
+      "id": "V002",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "booked the restaurant on monday for saturday at seven. table for eight at the italian place by the station. they wanted a deposit so i paid it by card and the confirmation came straight away. jo does not know yet. i asked her husband to keep the evening free and he said fine without asking why which is lucky. the cake was the awkward bit. the bakery on mill road was full for saturday so i ordered a lemon one from the supermarket and collect it friday after school. dad cannot drive at night now so i said i would pick him up at half six and drop him home after. mum is bringing the blue photo album from the loft. cat sitter is sorted for the evening because the neighbour has a key. still need candles. i think we have some at home but i will buy a pack anyway. can you bring the card and the wrapped present. i already wrote my bit inside it. will send the final head count thursday.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "0ef8b3f59f6e6036f4144dba8cf6dc75f7e375471fdeeea0c4233560bfe2ce37",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Grief and low mood after a parent's death could explain evenings of low productivity and difficulty sustaining effort.",
+            "quote": "My dad died in April and I've been low on and off since, so some evenings I just sat there with the spreadsheet open and did very little"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "Around the third evening I caught myself comparing invoicing apps instead of typing in figures, and I bought a year of one",
+            "strength": "moderate",
+            "trait": "novelty_seeking"
+          },
+          {
+            "quote": "anything longer and I was reorganising my desktop folders",
+            "strength": "weak",
+            "trait": "sustained_attention_on_boring_tasks"
+          }
+        ],
+        "population": "adult",
+        "purpose": "finally doing the tax return (traits: novelty_seeking: moderate; sustained_attention_on_boring_tasks: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V003",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "So the tax return is done. Submitted, receipt number and everything (I screenshotted it twice, because I trust nothing). The deadline is end of January and I filed on the 9th, so no panic fees this year. First job was getting the invoices into one folder, and that was easy because Hollis, my biggest client, pays by bank transfer and every payment has a reference (bless them). The software receipts took ages. There are eleven subscriptions, I counted, and two I had forgotten I even had. Around the third evening I caught myself comparing invoicing apps instead of typing in figures, and I bought a year of one, which is not a deduction I planned for. My dad died in April and I've been low on and off since, so some evenings I just sat there with the spreadsheet open and did very little. What worked was forty minutes after lunch with the radio off and a timer on my phone, anything longer and I was reorganising my desktop folders. My accountant friend checked the totals and found one wrong VAT figure, the supplier's typo, not mine. Refund should land in about three weeks (fingers crossed, the boiler needs a service).",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "High caffeine intake can cause restlessness and scattered focus.",
+            "quote": "I have had four coffees today"
+          },
+          {
+            "alternative_explanation": "Exam anxiety could explain difficulty concentrating on writing.",
+            "quote": "I am quite nervous about it"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+            "strength": "moderate",
+            "trait": "working_memory"
+          },
+          {
+            "quote": "went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+            "strength": "weak",
+            "trait": "distractibility"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a thesis chapter that is not getting written (traits: distractibility: moderate; working_memory: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V004",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Chapter three is at 1,100 words. It goes to my supervisor on the 20th and today is the 11th. I would call this a tragedy but it is mostly arithmetic.\n\nOn Monday I wrote 600 of those words in one go at the library, because the kitchen at home was empty and nobody was cooking. That went fine. On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.\n\nI have had four coffees today. I know. The stats exam is on Thursday as well and I am quite nervous about it.\n\nI did send the method section on time last week, so at least one person at the university has proof I exist. My supervisor wrote back with three comments, all fair, and I fixed them the same evening.\n\nToday I made a plan of two blocks of 50 minutes with my phone in my bag. Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins. Block two is after dinner.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "1547427c32301630d084a762266df5469802525a34192b6d236b28c129fc8c58",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Clear, ordinary anxiety about the move and what will fit in the new house.",
+            "quote": "I am a little worried about the garage"
+          },
+          {
+            "alternative_explanation": "Worry about the move disturbing sleep; plain anxiety, not an organisational difficulty.",
+            "quote": "I confess I woke at four this morning thinking about it"
+          }
+        ],
+        "is_control": true,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "packing for a house move next month (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "email",
+      "id": "V005",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Dear Margaret, I am writing to update you on the move, which is now five weeks away. I booked the removal firm in March and they have confirmed the date in writing, so that part is settled. The books are finished: twelve boxes, each labelled by room and numbered on a master sheet I keep in the green folder. The kitchen I did last Sunday in about three hours, and I was pleased to find that two boxes of mugs and plates were enough, which is fewer than I had budgeted for. I am a little worried about the garage, because there is forty years of tools and paint in it and I have not yet decided what the new house has room for. I have asked Peter whether he wants the workbench. He has not replied. I also keep wondering whether the new boiler will pass inspection before we complete, and I confess I woke at four this morning thinking about it. The solicitor says the paperwork is on schedule, and the council tax and utility changes were sent off on Monday, a week earlier than I needed. I shall take the curtains down only on the final weekend. Please let me know if the 14th still suits you for lunch.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Ruminating about a conflict with a colleague, which could explain distraction and the rushed proofing.",
+            "quote": "a message that I keep going over in my head"
+          },
+          {
+            "alternative_explanation": "An ordinary process failure: the colleague saved the calendar locally and did not mention it.",
+            "quote": "she'd saved it as a local file and nobody told me"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Telling goal-loss digression that eventually resolves from anxious rumination that circles one worry, in free adult text (textual markers, not diagnostic criteria).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "Anyway, my sister has the same problem with her boiler manual",
+            "strength": "moderate",
+            "trait": "discourse_tangentiality"
+          },
+          {
+            "quote": "I'd allowed an hour to check the proofs and it took nearer three",
+            "strength": "weak",
+            "trait": "time_estimation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "explaining why last week's project handover went wrong (traits: discourse_tangentiality: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V006",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hi Jo, you asked how the handover went and I said fine, which was not true. Here is what happened. Dana moved to the events team on Friday, so on Thursday I was meant to take over her campaign calendar and the supplier logins. The logins worked, because I asked IT on Monday and they sorted it the same day. The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version. That's the ordinary reason, really. Anyway, my sister has the same problem with her boiler manual, it's a PDF on a laptop she has since sold, and her whole building spent a weekend... sorry. The newsletter went out on Tuesday with the wrong date for the webinar. I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look. Priya in design also copied me on a message that I keep going over in my head, the one about 'ownership', but that's another email. So it was a local file, a wrong date and rushed proofing. I'm sorry this ran so long.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "eb46ca52c8aeffb9b171888ee656bc712d81a6c22b6b501a23180cd0149cb891",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Higher workload and long tired days could explain late invoices and overrunning jobs.",
+            "quote": "Business has got busier since spring, I'm on site by seven most days and not home till gone seven, and by then I'm shattered"
+          },
+          {
+            "alternative_explanation": "Unexpected site conditions in an old house are an ordinary reason for a job overrunning.",
+            "quote": "the plaster being thicker than it looked and the old cable run under the floor not where the drawings said"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Reading time language (vague quantifiers, 'just' tasks, retrospective underestimation) as evidence of time-estimation difficulty versus workload or avoidance.",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I said about two and a half days and it took four",
+            "strength": "strong",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I keep saying I'll sit down with them after tea",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "why jobs keep overrunning and invoices go out late (traits: time_estimation: strong; task_initiation: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "forum_post",
+      "id": "V007",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Same story every month and I'm fed up with it. A job I quote at about two days ends up three. Last week it was a rewire in a 1960s semi, I said about two and a half days and it took four, though a fair bit of that was the plaster being thicker than it looked and the old cable run under the floor not where the drawings said. That's the house, not me. The week before I did a consumer unit swap in one morning, exactly as quoted, customer was pleased and paid by card on the spot. So I can do it when I know the job. Business has got busier since spring, I'm on site by seven most days and not home till gone seven, and by then I'm shattered. Invoices wait. I'll do them soon, usually Sunday. Right now there are six sitting in a folder, the oldest about five weeks, and I keep saying I'll sit down with them after tea. One of them I did start, got as far as the customer's address. Anyone else use an app on the phone for this? Might try one soon.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "db00a2dd560d9dcd0442af662c48cdca7cb935475a175539c2716512d306b185",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Starting a new job three weeks ago and feeling under pressure could explain the slips.",
+            "quote": "some of this is just that it's new and I'm trying hard not to get things wrong"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Weighing a help-seeking message: over-explaining or minimising style, borrowed opinions of others, and what the text cannot show (onset, breadth, impairment).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "it sat open on my screen until the next afternoon before I sent it",
+            "strength": "moderate",
+            "trait": "task_initiation"
+          },
+          {
+            "quote": "walked into the stock room and forgotten what I went in for",
+            "strength": "weak",
+            "trait": "working_memory"
+          }
+        ],
+        "population": "adult",
+        "purpose": "asking for an appointment because things at work keep slipping (traits: task_initiation: moderate; working_memory: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V008",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hello, I'm very sorry to trouble you, and I hope this is the right way to ask for an appointment. I'm 27 and have been registered with you since university, though I've only been in twice. Three weeks ago I started my first job, at a logistics firm, and honestly I think some of this is just that it's new and I'm trying hard not to get things wrong. The first week was fine. I was early every day and finished my induction modules by the Friday, which I was pleased about. Since then a few things have slipped. Last Tuesday my manager asked me to send a supplier a corrected spreadsheet, and I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it. Twice I've walked into the stock room and forgotten what I went in for, which I know is small. My manager has been kind about it, and the planner I bought last week has helped with remembering meetings. I'm sorry this is so long. Could I please have an appointment, either early morning or after 5pm, as I would rather not explain to work yet?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "a136b2be7e6d14c4e95ccb9b447e464efcd748962244bbc66910d3c0ba9ebcd1",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Typing in a hurry on a phone after a night shift explains the typos and the scattered, fragmentary style.",
+            "quote": "Typing this on my phone with useless thumbs after twelve hours so excuse the typos."
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Separating fragmentation caused by medium, haste or fatigue from fragmentation that reflects attentional lapses (self-interruption mid-clause, lost referents).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+            "strength": "moderate",
+            "trait": "distractibility"
+          },
+          {
+            "quote": "wrote it on my hand because the list is in my locker. or my coat.",
+            "strength": "weak",
+            "trait": "working_memory"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a note about the week, typed between tasks (traits: distractibility: moderate; working_memory: moderate)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "personal_journal",
+      "id": "V009",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Wed. 6:50, bus in ten. Week so far. Mon was quiet apart from bed 14 who coded at 3, we got him back, handover done by 7 with nothing missed. Tue the pharmcy delivery came late so I spent an hour chasing saline stock, not my fault for once. Went to do the fluid balance on bed 9 and ended up restocking glove boxes down the whole corridor, remembered the chart at 5. Done before handover anyway. Last night Dana covered my break and I sat down for the full 30 min, ate the rice thing. Nothing happened. Need to ask about swapping the Sunday, wrote it on my hand because the list is in my locker. or my coat. Typing this on my phone with useless thumbs after twelve hours so excuse the typos. Bus. Also milk.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "d47a3f70349ce8dee6ffdccb8c12252722ad2b8a4b2686432044f22d260925c4",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Low mood for several weeks after a break-up could account for the irritability and the sharp outburst.",
+            "quote": "I've felt flat since the break-up, about five weeks now"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Reading emotional reactivity in text: fast tone shifts with fast recovery versus persistent low mood, and what a single entry cannot show.",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "loud enough for two customers, that it was the third time and did anyone here actually read the planogram",
+            "strength": "moderate",
+            "trait": "emotional_reactivity"
+          },
+          {
+            "quote": "I started pulling the signs down myself before she'd even answered.",
+            "strength": "weak",
+            "trait": "quick_to_act"
+          }
+        ],
+        "population": "adult",
+        "purpose": "snapping at a colleague and then feeling awful about it (traits: emotional_reactivity: moderate; quick_to_act: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "personal_journal",
+      "id": "V010",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Snapped at Priya today. Not proud. She'd put the spring display up on the wrong wall and I said, loud enough for two customers, that it was the third time and did anyone here actually read the planogram. I started pulling the signs down myself before she'd even answered. Then she went quiet and I went to the stockroom and counted boxes I'd already counted. Sorry. Genuinely. She'd been in since six and covered for Tomas, so the wall thing was a bad call on my side too, I never told her which wall. I should have just said that. Rest of the day was fine. Delivery arrived on time, till float matched to the penny, and the Friday rota went out before lunch like I'd planned. I stayed calm with the man who wanted a refund without a receipt, which I'm weirdly happy about. I've felt flat since the break-up, about five weeks now, so maybe that's some of it. Maybe not. Don't want to use it as an excuse. Bought her a coffee at four. She said it was fine. I don't think it was. Will say it properly tomorrow before opening, or text tonight. Not sure. Text, probably.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "c4c370e467c2766d3f3217569faacc9c593b2ad136db540224076e230a6b0396",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Many of the childhood memories are second-hand, retold by the parents, so they may be embellished or reflect the parents' framing rather than the writer's own recall.",
+            "quote": "I don't actually remember that, it's one of her stories"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Weighing retrospective childhood accounts in text (specific episodes versus generic labels, second-hand memories) for the childhood-onset requirement.",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number",
+            "strength": "moderate",
+            "trait": "task_initiation"
+          },
+          {
+            "quote": "walking home the long way and arriving an hour late because I was watching the men dig up the road",
+            "strength": "moderate",
+            "trait": "distractibility"
+          }
+        ],
+        "population": "adult",
+        "purpose": "remembering how school went and what the teachers wrote on report cards (traits: task_initiation: moderate; distractibility: moderate, recalled from childhood)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V011",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "So I was going through the box Mum sent and found my year four report. Mrs Okafor wrote that I was capable, polite and a strong reader, which is nice to see in her handwriting. Mum says I would sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number. I don't actually remember that, it's one of her stories, same as the one about me walking home the long way and arriving an hour late because I was watching the men dig up the road. Dad tells that one every Christmas. What I do remember myself is the science fair, year six or seven, I'm hazy. I planned the volcano the week before, bought the baking soda on the Tuesday and had it finished early. It got a ribbon. Mr Doyle wrote that I was a pleasure to teach when I knew what was expected. The handwriting comment came every year though, untidy and rushed. You got the neat ones. I'd love to see yours if Mum kept them, she said the loft, or maybe the garage.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "The writer is naturally talkative and enjoys telling stories at length.",
+            "quote": "you know I never tell a short version"
+          },
+          {
+            "alternative_explanation": "Talkativeness is an ordinary personality trait of someone who enjoys storytelling.",
+            "quote": "I talked the whole way back"
+          }
+        ],
+        "is_control": true,
+        "knowledge_target": "Hard negative: long, digressive but organised storytelling that must not be read as attentional (style versus trait).",
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "telling a neighbour about a fishing trip last summer (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V012",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hello Frank, you asked how the fishing trip went, so here it is, and you know I never tell a short version. We left Harlow at five on the Saturday, which I had planned for a week, and we reached the lake by quarter to seven. Dennis drove because my knee was sore, and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat. Anyway. We hired the little boat from the man at the jetty, the same man as last year, and he remembered my name, which pleased me. I caught a perch first and then nothing for two hours. Dennis caught three roach and mentioned it often. Margaret made the sandwiches, ham and mustard, and they lasted until about noon. The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it. Around three the wind got up and we came in early. The roads were clear and we were home by six. I talked the whole way back, Dennis says, though I don't remember much of it. Come round Thursday and I'll show you the photos. There are eleven, or twelve, I'd have to count.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "3e8dabf137101193e3c8b334dde538c67e585449180f129e01302b614b066d89",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "A newborn waking the household several times a night explains tiredness and a slow, disorganised morning.",
+            "quote": "The baby was up three times in the night."
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I had told myself shoes and coats would take five minutes. It took twenty.",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I stood at the kitchen counter looking at the school bags and did not start on them for a while",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "getting the kids out of the door in the morning (traits: time_estimation: moderate; task_initiation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V013",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Tuesday. The lunch boxes were packed yesterday evening, so that part cost nothing. Oskar ate his porridge without any complaint. Lena wanted the blue cup and I gave her the blue cup. That was a calm ten minutes. I had told myself shoes and coats would take five minutes. It took twenty. Lena's left boot had gone missing. We found it under the radiator in the hall. Her coat zip also jammed halfway up, and I had to take it off her and start again. After that I stood at the kitchen counter looking at the school bags and did not start on them for a while. I am not sure what I was waiting for. Then I put the reading folders in and zipped them. The baby was up three times in the night. Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though. We left the house at 8:25, ten minutes later than I wanted. The walk to school takes fifteen minutes and we reached the gate at 8:40. That was five minutes before the bell. The teacher at the gate said hello to both of them. Back home I put the dishes in the machine and wiped the table.",
+      "variant": {
+        "arm": "A",
+        "change": null,
+        "pair_id": "S05"
+      },
+      "version": 1
+    },
+    {
+      "content_hash": "9f45efd800890e50fdb5fa24589c905dccf0db354921afd00b4821d5328090db",
+      "design": {
+        "confounders": [],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I had told myself shoes and coats would take five minutes. It took twenty.",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I stood at the kitchen counter looking at the school bags and did not start on them for a while",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "getting the kids out of the door in the morning (traits: time_estimation: moderate; task_initiation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V014",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Tuesday. The lunch boxes were packed yesterday evening, so that part cost nothing. Oskar ate his porridge without any complaint. Lena wanted the blue cup and I gave her the blue cup. That was a calm ten minutes. I had told myself shoes and coats would take five minutes. It took twenty. Lena's left boot had gone missing. We found it under the radiator in the hall. Her coat zip also jammed halfway up, and I had to take it off her and start again. After that I stood at the kitchen counter looking at the school bags and did not start on them for a while. I am not sure what I was waiting for. Then I put the reading folders in and zipped them. Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though. We left the house at 8:25, ten minutes later than I wanted. The walk to school takes fifteen minutes and we reached the gate at 8:40. That was five minutes before the bell. The teacher at the gate said hello to both of them. Back home I put the dishes in the machine and wiped the table.",
+      "variant": {
+        "arm": "B",
+        "change": "The newborn and the broken nights are not mentioned.",
+        "pair_id": "S05"
+      },
+      "version": 1
+    }
+  ]
+}

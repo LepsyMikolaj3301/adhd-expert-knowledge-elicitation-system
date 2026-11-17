@@ -1,0 +1,43 @@
+{
+  "content_hash": "db00a2dd560d9dcd0442af662c48cdca7cb935475a175539c2716512d306b185",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Starting a new job three weeks ago and feeling under pressure could explain the slips.",
+        "quote": "some of this is just that it's new and I'm trying hard not to get things wrong"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": "Weighing a help-seeking message: over-explaining or minimising style, borrowed opinions of others, and what the text cannot show (onset, breadth, impairment).",
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "it sat open on my screen until the next afternoon before I sent it",
+        "strength": "moderate",
+        "trait": "task_initiation"
+      },
+      {
+        "quote": "walked into the stock room and forgotten what I went in for",
+        "strength": "weak",
+        "trait": "working_memory"
+      }
+    ],
+    "population": "adult",
+    "purpose": "asking for an appointment because things at work keep slipping (traits: task_initiation: moderate; working_memory: weak)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "email",
+  "id": "V008",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Hello, I'm very sorry to trouble you, and I hope this is the right way to ask for an appointment. I'm 27 and have been registered with you since university, though I've only been in twice. Three weeks ago I started my first job, at a logistics firm, and honestly I think some of this is just that it's new and I'm trying hard not to get things wrong. The first week was fine. I was early every day and finished my induction modules by the Friday, which I was pleased about. Since then a few things have slipped. Last Tuesday my manager asked me to send a supplier a corrected spreadsheet, and I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it. Twice I've walked into the stock room and forgotten what I went in for, which I know is small. My manager has been kind about it, and the planner I bought last week has helped with remembering meetings. I'm sorry this is so long. Could I please have an appointment, either early morning or after 5pm, as I would rather not explain to work yet?",
+  "variant": null,
+  "version": 1
+}

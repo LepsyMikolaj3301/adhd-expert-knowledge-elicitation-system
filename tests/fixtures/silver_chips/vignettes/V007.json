@@ -1,0 +1,47 @@
+{
+  "content_hash": "eb46ca52c8aeffb9b171888ee656bc712d81a6c22b6b501a23180cd0149cb891",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Higher workload and long tired days could explain late invoices and overrunning jobs.",
+        "quote": "Business has got busier since spring, I'm on site by seven most days and not home till gone seven, and by then I'm shattered"
+      },
+      {
+        "alternative_explanation": "Unexpected site conditions in an old house are an ordinary reason for a job overrunning.",
+        "quote": "the plaster being thicker than it looked and the old cable run under the floor not where the drawings said"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": "Reading time language (vague quantifiers, 'just' tasks, retrospective underestimation) as evidence of time-estimation difficulty versus workload or avoidance.",
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "I said about two and a half days and it took four",
+        "strength": "strong",
+        "trait": "time_estimation"
+      },
+      {
+        "quote": "I keep saying I'll sit down with them after tea",
+        "strength": "weak",
+        "trait": "task_initiation"
+      }
+    ],
+    "population": "adult",
+    "purpose": "why jobs keep overrunning and invoices go out late (traits: time_estimation: strong; task_initiation: weak)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "forum_post",
+  "id": "V007",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Same story every month and I'm fed up with it. A job I quote at about two days ends up three. Last week it was a rewire in a 1960s semi, I said about two and a half days and it took four, though a fair bit of that was the plaster being thicker than it looked and the old cable run under the floor not where the drawings said. That's the house, not me. The week before I did a consumer unit swap in one morning, exactly as quoted, customer was pleased and paid by card on the spot. So I can do it when I know the job. Business has got busier since spring, I'm on site by seven most days and not home till gone seven, and by then I'm shattered. Invoices wait. I'll do them soon, usually Sunday. Right now there are six sitting in a folder, the oldest about five weeks, and I keep saying I'll sit down with them after tea. One of them I did start, got as far as the customer's address. Anyone else use an app on the phone for this? Might try one soon.",
+  "variant": null,
+  "version": 1
+}

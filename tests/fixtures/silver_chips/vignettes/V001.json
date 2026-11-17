@@ -1,0 +1,43 @@
+{
+  "content_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Poor sleep after a recent move to a louder flat could explain tiredness and slower starts.",
+        "quote": "Still sleeping badly since we moved flats two months ago"
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": null,
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "I told myself two hours for the commentary section and it has now been most of the evening",
+        "strength": "moderate",
+        "trait": "time_estimation"
+      },
+      {
+        "quote": "I only opened the document at nine because I did the dishes and the bins first",
+        "strength": "weak",
+        "trait": "task_initiation"
+      }
+    ],
+    "population": "adult",
+    "purpose": "a quarterly report due on Friday (traits: task_initiation: moderate; time_estimation: weak)",
+    "source_ref": null,
+    "track": "general"
+  },
+  "framing": "personal_journal",
+  "id": "V001",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch, and then Priya asked me to check her reserve figures too, and that took the whole afternoon, and the lift in our building was out so I carried the shopping up four floors, which has nothing to do with anything but my legs hurt. Anyway the report. I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first. Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed, so I was up at five anyway and sent the chart pack to Marcus before work, and he replied with a thumbs up by eight. That part went well. The commentary I think I can finish by eleven, maybe midnight, then read through it once in the morning. Need to remember to ask Dan about the fridge shelf.",
+  "variant": null,
+  "version": 1
+}

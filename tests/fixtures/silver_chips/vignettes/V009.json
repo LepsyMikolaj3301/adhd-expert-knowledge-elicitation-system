@@ -1,0 +1,43 @@
+{
+  "content_hash": "a136b2be7e6d14c4e95ccb9b447e464efcd748962244bbc66910d3c0ba9ebcd1",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "Typing in a hurry on a phone after a night shift explains the typos and the scattered, fragmentary style.",
+        "quote": "Typing this on my phone with useless thumbs after twelve hours so excuse the typos."
+      }
+    ],
+    "is_control": false,
+    "knowledge_target": "Separating fragmentation caused by medium, haste or fatigue from fragmentation that reflects attentional lapses (self-interruption mid-clause, lost referents).",
+    "origin": "llm",
+    "planted_cues": [
+      {
+        "quote": "ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+        "strength": "moderate",
+        "trait": "distractibility"
+      },
+      {
+        "quote": "wrote it on my hand because the list is in my locker. or my coat.",
+        "strength": "weak",
+        "trait": "working_memory"
+      }
+    ],
+    "population": "adult",
+    "purpose": "a note about the week, typed between tasks (traits: distractibility: moderate; working_memory: moderate)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "personal_journal",
+  "id": "V009",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Wed. 6:50, bus in ten. Week so far. Mon was quiet apart from bed 14 who coded at 3, we got him back, handover done by 7 with nothing missed. Tue the pharmcy delivery came late so I spent an hour chasing saline stock, not my fault for once. Went to do the fluid balance on bed 9 and ended up restocking glove boxes down the whole corridor, remembered the chart at 5. Done before handover anyway. Last night Dana covered my break and I sat down for the full 30 min, ate the rice thing. Nothing happened. Need to ask about swapping the Sunday, wrote it on my hand because the list is in my locker. or my coat. Typing this on my phone with useless thumbs after twelve hours so excuse the typos. Bus. Also milk.",
+  "variant": null,
+  "version": 1
+}

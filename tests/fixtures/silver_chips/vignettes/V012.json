@@ -1,0 +1,36 @@
+{
+  "content_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+  "design": {
+    "confounders": [
+      {
+        "alternative_explanation": "The writer is naturally talkative and enjoys telling stories at length.",
+        "quote": "you know I never tell a short version"
+      },
+      {
+        "alternative_explanation": "Talkativeness is an ordinary personality trait of someone who enjoys storytelling.",
+        "quote": "I talked the whole way back"
+      }
+    ],
+    "is_control": true,
+    "knowledge_target": "Hard negative: long, digressive but organised storytelling that must not be read as attentional (style versus trait).",
+    "origin": "llm",
+    "planted_cues": [],
+    "population": "adult",
+    "purpose": "telling a neighbour about a fishing trip last summer (control: none: this person has no notable attention or organisation difficulties)",
+    "source_ref": null,
+    "track": "text_analysis"
+  },
+  "framing": "email",
+  "id": "V012",
+  "q4_whatif": null,
+  "question_ids": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q5",
+    "Q6"
+  ],
+  "text": "Hello Frank, you asked how the fishing trip went, so here it is, and you know I never tell a short version. We left Harlow at five on the Saturday, which I had planned for a week, and we reached the lake by quarter to seven. Dennis drove because my knee was sore, and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat. Anyway. We hired the little boat from the man at the jetty, the same man as last year, and he remembered my name, which pleased me. I caught a perch first and then nothing for two hours. Dennis caught three roach and mentioned it often. Margaret made the sandwiches, ham and mustard, and they lasted until about noon. The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it. Around three the wind got up and we came in early. The roads were clear and we were home by six. I talked the whole way back, Dennis says, though I don't remember much of it. Come round Thursday and I'll show you the photos. There are eleven, or twelve, I'd have to count.",
+  "variant": null,
+  "version": 1
+}

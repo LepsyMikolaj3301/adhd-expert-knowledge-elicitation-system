@@ -21,6 +21,7 @@ dev = [
     "ruff>=0.16.9",
     "ty>=0.0.84",
     "pytest-asyncio>=0.24",
+    "pytest-cov>=7.1.0",
 ]
 notebooks = [
     "ipykernel>=7.4.0",
@@ -37,6 +38,7 @@ scripts = [
     "lxml>=6.1.3",
     "prompt-toolkit>=3.0.53",
     "pyyaml>=6.0",
+    "langchain-ollama>=1.0",
 ]
 experiments = []
 
@@ -54,7 +56,20 @@ extra-paths = ["backend", "scripts/elicitation", "scripts/rag", "scripts/corpus"
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/expert-knowledge-core/tests", "packages/expert-knowledge-rag/tests"]
-pythonpath = ["backend", "scripts/elicitation", "scripts/rag"]
+pythonpath = ["backend", "scripts/elicitation", "scripts/rag", "scripts/db"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-markers = ["integration: needs the Postgres of DATABASE_URL (pgvector); skipped when unreachable"]
+markers = [
+    "integration: needs the Postgres of DATABASE_URL (pgvector); skipped when unreachable",
+    "regression: retrieval-quality floors over tests/fixtures/retrieval_silver (needs Postgres)",
+]
+
+# Fast run without a database, with coverage:
+#   uv run pytest -m "not integration" --cov --cov-report=term-missing
+[tool.coverage.run]
+source = ["backend/app", "packages/expert-knowledge-core/src", "packages/expert-knowledge-rag/src"]
+branch = true
+
+[tool.coverage.report]
+skip_empty = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]

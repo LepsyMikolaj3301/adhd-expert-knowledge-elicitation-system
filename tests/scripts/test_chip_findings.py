@@ -1,18 +1,13 @@
 """Tests for chip_findings.py, built on the worked example of docs/new-chips-knowledge.md.
 
-Run by path (it sits outside tests/ because new code lives in scripts/ only):
-    python -m pytest scripts/elicitation/test_chip_findings.py -q
+The scripts/elicitation folder is on pytest's pythonpath (pyproject.toml).
 """
 
-import sys
 from datetime import UTC, datetime
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-
-import chip_findings as cf  # noqa: E402
-from chips_schema import ChipDocument, to_legacy  # noqa: E402
-from elicitation_schema import Vignette, VignetteDesign, content_hash  # noqa: E402
+import chip_findings as cf
+from chips_schema import ChipDocument, to_legacy
+from elicitation_schema import Vignette, VignetteDesign, content_hash
 
 FRAGS = [
     ("numbers on screen keep looking like they are moving when I blink", "away"),

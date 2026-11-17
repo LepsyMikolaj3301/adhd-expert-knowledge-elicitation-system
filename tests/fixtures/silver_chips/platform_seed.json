@@ -1,0 +1,457 @@
+{
+  "_about": "Silver (Claude-written) development data for the platform: which silver answers go in, the Q4 answers and peer reviews written for them, and the four seed experts. Read by scripts/db/seed_silver_reviews.py. Answers for V009/V010 come from platform_pairs.json.",
+  "vignettes": [
+    "V001",
+    "V005",
+    "V006",
+    "V007",
+    "V008",
+    "V009",
+    "V010"
+  ],
+  "patient_summaries": {
+    "V001": "Adult analyst keeping a journal the night before a quarterly report is due",
+    "V005": "Older adult writing to a friend about a house move",
+    "V006": "Adult office worker writing to their manager after a handover",
+    "V007": "Self-employed electrician posting on a trade forum",
+    "V008": "Adult, age 27, emailing their GP practice",
+    "V009": "Hospital nurse's note to self after a long shift",
+    "V010": "Shop supervisor's journal entry at the end of a shift"
+  },
+  "authors": {
+    "SYN-001": {
+      "email": "silver-c1@example.com",
+      "display_name": "Silver expert C1"
+    },
+    "SYN-002": {
+      "email": "silver-c2@example.com",
+      "display_name": "Silver expert C2"
+    }
+  },
+  "reviewers": {
+    "R1": {
+      "email": "silver-r1@example.com",
+      "display_name": "Silver reviewer R1",
+      "persona": "Consultant clinical psychologist, adult neurodevelopmental assessment service, 14 years. Strict about evidence: wants each citation's reading justified, challenges over-reading and thin reasoning."
+    },
+    "R2": {
+      "email": "silver-r2@example.com",
+      "display_name": "Silver reviewer R2",
+      "persona": "Senior psychiatry trainee in an adult ADHD clinic. Practical: asks what would discriminate, cares about history and follow-up questions, more willing to weigh deferral language."
+    }
+  },
+  "q4": {
+    "SYN-001": {
+      "V001": {
+        "hypothesis": "A capable worker having an ordinary late evening before a deadline, made worse by two months of poor sleep.",
+        "shift": 1,
+        "toward": "more_adhd",
+        "why": "One last-evening crunch I would put down to sleep and the move. Three quarters running, most of them before the move, turns the late start into a habit, so the dishes-and-bins line carries more. Only partly: the numbers were still in early and the chart pack went out before work."
+      },
+      "V005": {
+        "hypothesis": "An organised person who is anxious about a big move; nothing in the planning suggests difficulty.",
+        "shift": -1,
+        "why": "Waking at four every morning since the move was agreed is anxiety about the move, which is what I already put the four a.m. line down to. The organisation holds despite it, so my reading is, if anything, firmer."
+      },
+      "V006": {
+        "hypothesis": "A stressed employee explaining a handover that went wrong mostly for external reasons, with one real time misjudgement.",
+        "shift": 1,
+        "toward": "other",
+        "other_explanation": "Work-related anxiety after a conflict with a colleague",
+        "why": "A formal warning puts the 'ownership' message at the centre. The rumination, the long apologetic email and the rushed proofing all read as someone under threat at work, at least as well as anything attentional."
+      },
+      "V007": {
+        "hypothesis": "A busy self-employed tradesman whose overruns and late invoices are explained by long days and ordinary paperwork avoidance.",
+        "shift": 1,
+        "toward": "more_adhd",
+        "why": "If the overruns were the same in a quiet winter, tiredness and the busy spring no longer explain the quoting, and his site reasons start to look like a habit of explaining. I would then take the invoice deferral more seriously too."
+      },
+      "V008": {
+        "hypothesis": "A conscientious, anxious new starter adjusting to a first job, with one initiation lapse worth asking about.",
+        "shift": 1,
+        "toward": "more_adhd",
+        "why": "A tutor noticing similar slips moves this from three weeks in a new job to something seen across settings and years. The spreadsheet line would then be part of a longer pattern, though anxiety would still be in the picture."
+      }
+    },
+    "SYN-002": {
+      "V001": {
+        "hypothesis": "Ordinary procrastination on a writing task plus poor sleep; organised otherwise.",
+        "shift": 1,
+        "toward": "more_adhd",
+        "why": "Three quarters in a row means a pattern, not this week. Sleep since the move can't explain the earlier ones. Time estimate and late start weigh more."
+      },
+      "V005": {
+        "hypothesis": "Organised, worried about the move; nothing attention-related.",
+        "shift": 0
+      },
+      "V006": {
+        "hypothesis": "Not enough to form one; a bad week with an external cause and a worried writer.",
+        "shift": 1,
+        "toward": "other",
+        "other_explanation": "Anxiety about being blamed at work",
+        "why": "A formal warning makes the worry the main story. The rumination over Priya's message and the apologetic tone fit fear of blame better than anything else here."
+      },
+      "V007": {
+        "hypothesis": "Quoting overruns are ordinary trade estimating; the invoice backlog shows a gap between intending and doing.",
+        "shift": -1,
+        "why": "Same overrun when business was quiet means the quoting is a stable habit, not tiredness, which fits the long-standing intention-action gap I already read in the invoices."
+      },
+      "V008": {
+        "hypothesis": "Mostly a new-job, anxious picture, with one real gap between knowing and starting.",
+        "shift": 1,
+        "toward": "more_adhd",
+        "why": "A tutor commenting on similar slips at university means it predates the job and the anxiety about it. The spreadsheet delay then looks less like freezing on something new."
+      }
+    }
+  },
+  "reviews": {
+    "SYN-001/V001": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Agree the return to 'Anyway the report' is the strongest structural point here, and good that the blown estimate is held at unclear rather than counted toward."
+        },
+        {
+          "by": "R2",
+          "q": "Q4",
+          "stance": "question",
+          "body": "Three late quarters, most of them before the move, would be a stable pattern predating the sleep problem. Why only 'partly changes'?"
+        },
+        {
+          "by": "author",
+          "q": "Q4",
+          "reply_to": 1,
+          "body": "Because the work itself still gets done early and well; a habit of writing the commentary last is not much on its own."
+        }
+      ]
+    },
+    "SYN-002/V001": {
+      "disapprove": {
+        "R1": [
+          "Q1"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "Very terse. The favour for Priya is marked neutral without saying why it isn't a sign of being pulled off task. One line of reasoning per citation would make this usable as knowledge."
+        },
+        {
+          "by": "R2",
+          "q": "Q2",
+          "stance": "support",
+          "body": "Asking whether it's only writing tasks or all tasks is exactly the right discriminator."
+        }
+      ]
+    },
+    "SYN-001/V005": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Good to separate the garage (a real decision with forty years in it) from avoidance."
+        },
+        {
+          "by": "R1",
+          "q": "Q3",
+          "stance": "question",
+          "body": "You say little is needed. Would you still want anything on sleep before ruling things out, given the four a.m. waking?"
+        },
+        {
+          "by": "author",
+          "q": "Q3",
+          "reply_to": 1,
+          "body": "No. One night's waking about a boiler inspection five weeks before a move is not a reason to go looking."
+        }
+      ]
+    },
+    "SYN-002/V005": {
+      "disapprove": {
+        "R1": [
+          "Q1"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "Three citations grouped as 'organised' with no reasoning for each. The conclusion is fine; the justification is thin for something that will be retrieved on its own."
+        }
+      ]
+    },
+    "SYN-001/V006": {
+      "disapprove": {
+        "R1": [
+          "Q5"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "support",
+          "body": "The point that the tangent is self-caught, brief and about the same kind of problem is well made."
+        },
+        {
+          "by": "R1",
+          "q": "Q2",
+          "stance": "support",
+          "body": "Agree the 'ownership' message is the more likely driver of the week."
+        },
+        {
+          "by": "R1",
+          "q": "Q5",
+          "stance": "challenge",
+          "body": "A rating of 2 sits oddly with Q2, which explains nearly everything by anxiety and a faulty handover. Either the proofing overrun carries weight or it doesn't."
+        }
+      ]
+    },
+    "SYN-002/V006": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "question",
+          "body": "You decline to rate. Would a second sample alone change that, or do you need the history first?"
+        },
+        {
+          "by": "author",
+          "q": "Q1",
+          "reply_to": 0,
+          "body": "A second piece written in a calm week would be enough to start. History after that."
+        },
+        {
+          "by": "R1",
+          "q": "Q5",
+          "stance": "support",
+          "body": "Agree the rumination in the 'ownership' line is the under-read point here."
+        }
+      ]
+    },
+    "SYN-001/V007": {
+      "disapprove": {
+        "R2": [
+          "Q1"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Declining is defensible with ten-hour days and a busy spring sitting right next to every feature."
+        },
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "I think this under-weights the invoice wording. 'I keep saying I'll' is repeated intention without follow-through, and that doesn't depend on being tired."
+        },
+        {
+          "by": "author",
+          "q": "Q1",
+          "reply_to": 1,
+          "body": "Fair, but repeated intention after ten-hour days is still what tired people write. I'd want to see the winter before calling it."
+        }
+      ]
+    },
+    "SYN-002/V007": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "The rating of 3 rests almost entirely on the invoices. One admin backlog during a busy spring seems thin for a 3."
+        },
+        {
+          "by": "R2",
+          "q": "Q3",
+          "stance": "question",
+          "body": "Would you ask about tax returns specifically? A self-assessment deadline is a good natural test of the same thing."
+        },
+        {
+          "by": "R2",
+          "q": "Q5",
+          "stance": "support",
+          "body": "The over/under split here is the most useful one in the set: site causes for the quotes, wording for the invoices."
+        }
+      ]
+    },
+    "SYN-001/V008": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R2",
+          "q": "Q2",
+          "stance": "support",
+          "body": "Asking what went through their head while the spreadsheet sat open is a practical way to split anxious checking from an initiation problem."
+        },
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "The answer calls the writer 'he'; the text doesn't say. Small, but it will travel with the unit."
+        },
+        {
+          "by": "author",
+          "q": "Q1",
+          "reply_to": 1,
+          "body": "Fair point, it should read 'they'."
+        }
+      ]
+    },
+    "SYN-002/V008": {
+      "disapprove": {
+        "R2": [
+          "Q3"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Thorough and balanced, with each citation weighed. I'd keep this as a model answer."
+        },
+        {
+          "by": "R2",
+          "q": "Q3",
+          "stance": "challenge",
+          "body": "Q3 mostly repeats the history questions from Q2. What specific evidence would be missing before you'd treat the spreadsheet line as meaningful?"
+        },
+        {
+          "by": "R2",
+          "q": "Q4",
+          "stance": "question",
+          "body": "Would it matter what kind of coursework the tutor meant, deadlines or careless slips?"
+        }
+      ]
+    },
+    "SYN-001/V009": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Same reading as the colleague's answer on this note, reached through slightly different lines: both land on the glove-box episode as the only real self-interruption. Good that the hand note is kept weak."
+        },
+        {
+          "by": "R2",
+          "q": "Q2",
+          "stance": "support",
+          "body": "Days off and low-urgency tasks are the right discriminators; the other answer asks the same."
+        },
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "question",
+          "body": "You cite 'nothing missed' at handover as pointing away; the colleague left the coding patient neutral. Would you weigh a crisis this much either way?"
+        },
+        {
+          "by": "author",
+          "q": "Q1",
+          "reply_to": 2,
+          "body": "Not much, which is why I said I wouldn't push it far. It mostly balances the chart slip."
+        }
+      ]
+    },
+    "SYN-002/V009": {
+      "disapprove": {},
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Agrees with the parallel answer in substance (rating 3, glove boxes as the one episode), with fuller reasoning per citation. Both are worth keeping."
+        },
+        {
+          "by": "R1",
+          "q": "Q4",
+          "stance": "support",
+          "body": "Consistent with Q2: the rest-day prose removes the style, not the episode."
+        }
+      ]
+    },
+    "SYN-001/V010": {
+      "disapprove": {
+        "R2": [
+          "Q1"
+        ],
+        "R1": [
+          "Q4"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "Marking the public outburst as pointing away is hard to follow. I'd accept 'unclear' given the low mood, but the line itself is the reactivity. The other answer on this text reads it as toward, and I'm closer to that."
+        },
+        {
+          "by": "author",
+          "q": "Q1",
+          "reply_to": 0,
+          "body": "Away from a trait reading, not away from irritability. Five weeks of low mood explains a snap; I'd want it before the break-up first."
+        },
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "support",
+          "body": "Declining to rate one entry five weeks after a break-up is the safer call here."
+        },
+        {
+          "by": "R1",
+          "q": "Q4",
+          "stance": "challenge",
+          "body": "The direction chosen is 'more ADHD', but the why says a longstanding reactivity trait 'not necessarily ADHD (?anxiety, ?personality)'. That reads as 'another explanation', not 'more ADHD'."
+        }
+      ]
+    },
+    "SYN-002/V010": {
+      "disapprove": {
+        "R1": [
+          "Q1",
+          "Q5"
+        ]
+      },
+      "comments": [
+        {
+          "by": "R1",
+          "q": "Q1",
+          "stance": "challenge",
+          "body": "Counting boxes already counted after a row is read as restlessness; avoidance or shame after an argument fits at least as well, as Q2 itself says. A rating of 3 from one entry, five weeks after a break-up, goes further than the text allows. The colleague declined to rate, and I think rightly."
+        },
+        {
+          "by": "R2",
+          "q": "Q1",
+          "stance": "support",
+          "body": "The speed of the swing (flare, action, remorse within hours) is the useful observation here, and it's missing from the other answer."
+        },
+        {
+          "by": "author",
+          "q": "Q1",
+          "reply_to": 0,
+          "body": "The rating carries the uncertainty I gave it. The sequence is what matters, not any single line, and low mood doesn't usually bring the remorse that fast."
+        },
+        {
+          "by": "R1",
+          "q": "Q5",
+          "stance": "challenge",
+          "body": "Under-reading the break-up is listed as a risk, yet the answer itself rates 3 despite it."
+        }
+      ]
+    }
+  }
+}
