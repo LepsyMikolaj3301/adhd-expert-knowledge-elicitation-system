@@ -31,6 +31,7 @@ import os
 import shutil
 import sys
 from datetime import timedelta
+from functools import partial
 from pathlib import Path
 
 import make_chip_fixtures as mcf
@@ -456,12 +457,57 @@ def answers_stage(args: argparse.Namespace, log: list, accepted: dict, attempts:
     return 0
 
 
+def seed_schema(args: argparse.Namespace, classifier: str, dsn: str) -> None:
+    """Freeze the built units into a scratch snapshot under data/ and seed `args.schema` from it.
+
+    Same route as the silver schema: one session per (document, vignette) with a findings record,
+    which is what the retrievers read their patient words from. load_chips_pg stores the raw
+    document instead, so retrieval would run without them.
+    """
+    sys.path.insert(0, str(ROOT / "scripts" / "db"))
+    sys.path.insert(0, str(ROOT / "scripts" / "rag"))
+    import chip_retrieval
+    import chips_snapshot
+    import classify_sentence_targets
+    import psycopg
+    from psycopg import sql
+
+    snapshot = args.units.parent / f"{args.units.name}_snapshot"
+    chips_snapshot.SNAPSHOT = snapshot  # freeze writes here, not into tests/fixtures
+    classify_sentence_targets.UNITS = args.units
+    chip_retrieval.load_chip_fixture = partial(chip_retrieval.load_chip_fixture, fixtures=args.out)
+    if code := chips_snapshot.freeze(argparse.Namespace(tier=TIER, classifier=classifier)):
+        raise SystemExit(code)
+    with psycopg.connect(dsn, autocommit=True) as conn:
+        # The drop is in the transaction too: a failed seed leaves the old schema as it was.
+        conn.execute("BEGIN")
+        try:
+            conn.execute(
+                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(args.schema))
+            )
+            counts = chips_snapshot.seed(conn, args.schema, snapshot)
+            conn.execute("COMMIT")
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+    print(f"seeded {args.schema}: {counts}")
+
+
 def build_stage(args: argparse.Namespace) -> int:
-    """classify -> build units + embed -> load into Postgres, with the scale roots and personas."""
+    """classify -> build units + embed -> freeze and seed Postgres, with the scale roots and personas."""
     sys.path.insert(0, str(ROOT / "scripts" / "db"))
     import build_chip_units
     import classify_sentence_targets
-    import load_chips_pg
+    import psycopg
+
+    from app.settings import settings
+
+    # Before the long classify and embed steps, not after them.
+    dsn = settings.database_url
+    try:
+        psycopg.connect(dsn, connect_timeout=5).close()
+    except psycopg.OperationalError as exc:
+        raise SystemExit(f"Postgres is not reachable ({exc}); start it first") from exc
 
     with_scale_personas()
     common = ["--tier", TIER, "--fixtures", str(args.out), "--out", str(args.units)]
@@ -469,13 +515,14 @@ def build_stage(args: argparse.Namespace) -> int:
     steps = [
         (classify_sentence_targets.main, ["--model", args.classifier, *common]),
         (build_chip_units.main, ["--classifier", args.classifier, *common]),
-        (load_chips_pg.main, ["--classifier", args.classifier, "--schema", args.schema, *common]),
     ]
-    for main, argv in steps:
-        print(f"== {main.__module__} {' '.join(argv)}")
-        if code := main(argv):
-            return code
-    print(f"built {args.units / TIER / tag}; loaded schema {args.schema}")
+    if not args.skip_units:
+        for main, argv in steps:
+            print(f"== {main.__module__} {' '.join(argv)}")
+            if code := main(argv):
+                return code
+    seed_schema(args, args.classifier, dsn)
+    print(f"built {args.units / TIER / tag}; seeded schema {args.schema}")
     return 0
 
 
@@ -494,6 +541,9 @@ def main(argv=None) -> int:
     ap.add_argument("--units", type=Path, default=UNITS)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--retries", type=int, default=3)
+    ap.add_argument(
+        "--skip-units", action="store_true", help="build stage: units exist, only freeze and seed"
+    )
     ap.add_argument("--experts", type=int, nargs="+", help="answers: only these experts (3-20)")
     ap.add_argument("--vignettes", nargs="+", help="answers: only these vignettes")
     ap.add_argument("--only", nargs="+", help="vignettes stage: only these scenario ids (N01 ...)")
