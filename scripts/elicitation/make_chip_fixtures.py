@@ -184,11 +184,15 @@ def make_vignettes(gen: Gen, inbox: Path, only: list[str] | None) -> list[Vignet
 # --- answers -----------------------------------------------------------------------------------
 
 
-def answer_request(v: Vignette, kind: str, persona_id: str, persona: str) -> GenRequest:
-    questions = "\n".join(
+def questions_text(v: Vignette) -> str:
+    return "\n".join(
         f"{q}: {QUESTIONS[q].text}" + (" (answer in overall_rating)" if q == "Q6" else "")
         for q in v.question_ids
     )
+
+
+def answer_request(v: Vignette, kind: str, persona_id: str, persona: str) -> GenRequest:
+    questions = questions_text(v)
     p = load_prompt(ANSWER_PROMPT).fill(
         PERSONA=persona, STYLE_RULE=STYLE_RULES[kind], CHIP_HABIT=CHIP_HABITS[persona_id],
         FRAMING=v.framing, VIGNETTE_TEXT=v.text, QUESTIONS=questions,

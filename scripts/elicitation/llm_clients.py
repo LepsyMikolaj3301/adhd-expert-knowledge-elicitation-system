@@ -57,11 +57,12 @@ class OllamaGenerator:
     attempts = 3  # per request: Ollama answers 500 now and then while it (re)loads a model
     retry_wait = 10.0
 
-    def __init__(self, base_url: str, model: str, timeout: float | None = None):
+    def __init__(self, base_url: str, model: str, timeout: float | None = None, think=False):
         # one reply can include the model load; raise OLLAMA_REQUEST_TIMEOUT for big models
         timeout = timeout or float(os.environ.get("OLLAMA_REQUEST_TIMEOUT", 600))
         self.name = f"ollama:{model}"
         self.model = model
+        self.think = think  # False for most models; gpt-oss cannot switch thinking off: "low"
         self._http = httpx.Client(base_url=base_url, timeout=timeout)
 
     def generate(self, req: GenRequest) -> str:
@@ -73,7 +74,7 @@ class OllamaGenerator:
             messages = [{"role": "user", "content": req.user}]
             if req.system:
                 messages.insert(0, {"role": "system", "content": req.system})
-            body = {"model": self.model, "messages": messages, "stream": False, "think": False}
+            body = {"model": self.model, "messages": messages, "stream": False, "think": self.think}
             if req.json_mode:
                 body["format"] = "json"
             path, pick = "/api/chat", lambda d: d["message"]["content"]

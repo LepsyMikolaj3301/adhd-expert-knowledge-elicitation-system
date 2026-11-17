@@ -2,11 +2,12 @@
 """How retrieval holds up as more experts answer the same vignettes (schema `chips_scale`).
 
 Usage: python scripts/rag/eval_scale_retrieval.py --run-dir data/eval/scale_retrieval/<name> \
-           [--schema chips_scale] [--ns 1 2 5 10 15 20] [--ks 4 8] [--limit N]
+           [--schema chips_scale] [--ns 1 2 5 10 15 20] [--ks 4 8] [--order 1 2 21 22 ...] [--limit N]
 
 Needs the scale fixture (scripts/elicitation/make_scale_fixtures.py: stages seed, vignettes, answers,
-build). The pool at n is the first n experts (SYN-001, SYN-002 ... by number) of the schema, selected
-with ExpertFilter(experts=...): dense ranking is exactly that of an n-expert corpus, BM25 statistics
+build). The pool at n is the first n experts (SYN-001, SYN-002 ... by number) of the schema, or of
+--order (expert numbers: `--order 1 2 21 22 ... 32 3 4 ...` puts the experts of other models before the qwen
+ones, so equal-size pools can be compared), selected with ExpertFilter(experts=...): dense ranking is exactly that of an n-expert corpus, BM25 statistics
 stay those of all experts. Experts 1-2 are the silver ones whose claims label the 40 questions.
 
 Question sets (every question is embedded once, so the latency is the database's):
@@ -204,11 +205,23 @@ def expert_of(unit_id: str, facts: dict) -> str | None:
 # --- the run ---------------------------------------------------------------------------------
 
 
+def pool_at(experts: list[str], n: int, order: list[int] | None) -> list[str]:
+    """The first n experts: in the schema's order, or in the order of the expert numbers `order`."""
+    if not order:
+        return experts[:n]
+    ids = [next((e for e in experts if e.endswith(f"SYN-{num:03d}")), None) for num in order]
+    if missing := [num for num, i in zip(order, ids, strict=True) if i is None]:
+        raise ValueError(f"--order names experts that are not in the schema: {missing}")
+    return ids[:n]  # type: ignore[return-value]
+
+
 def run(args: argparse.Namespace) -> dict:
     dsn = os.environ["DATABASE_URL"]
     facts = pool_facts(dsn, args.schema)
     if len(facts["experts"]) < max(args.ns):
         sys.exit(f"{args.schema} has {len(facts['experts'])} experts, --ns asks for {max(args.ns)}")
+    if args.order and len(args.order) < max(args.ns):
+        sys.exit(f"--order lists {len(args.order)} experts, --ns asks for {max(args.ns)}")
     store = ExpertKnowledgeStore(dsn, schema=args.schema)
     embeddings = CachedQueries(
         default_embeddings(base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
@@ -219,7 +232,7 @@ def run(args: argparse.Namespace) -> dict:
         embeddings.embed_query(q["question"])  # embedded first; the loops below touch only Postgres
     results: list[dict] = []
     for n in args.ns:
-        pool = facts["experts"][:n]
+        pool = pool_at(facts["experts"], n, args.order)
         in_pool = {v for v, es in facts["by_vignette"].items() if set(es) & set(pool)}
         for k in args.ks:
             for dw in (True, False):
@@ -258,7 +271,7 @@ def run(args: argparse.Namespace) -> dict:
         print(f"n={n}: pool {len(pool)} experts, {len(in_pool)} vignettes answered", flush=True)
     return {"schema": args.schema, "facts": {"experts": facts["experts"], "units": facts["n_units"],
             "experts_per_vignette": {v: len(e) for v, e in sorted(facts["by_vignette"].items())}},
-            "questions": len(questions), "results": results}  # fmt: skip
+            "questions": len(questions), "order": args.order, "results": results}  # fmt: skip
 
 
 # --- report ----------------------------------------------------------------------------------
@@ -278,11 +291,19 @@ def first_problem(curve: dict[int, float | None], base_n: int, rule) -> int | No
     )
 
 
+def order_note(order: list[int] | None) -> str:
+    return (
+        "the first n experts"
+        if not order
+        else f"the first n of experts {', '.join(map(str, order))}"
+    )
+
+
 def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
     res = data["results"]
     out = [f"# Retrieval at scale: schema {data['schema']}\n"]
     out.append(
-        f"{len(data['facts']['experts'])} experts, {data['facts']['units']} units, {data['questions']} questions. Pool at n = the first n experts.\n"
+        f"{len(data['facts']['experts'])} experts, {data['facts']['units']} units, {data['questions']} questions. Pool at n = {order_note(data.get('order'))}.\n"
     )
     out.append(
         "Experts per vignette: "
@@ -401,6 +422,9 @@ def main() -> None:
     ap.add_argument("--schema", default="chips_scale")
     ap.add_argument("--ns", type=int, nargs="+", default=[1, 2, 5, 10, 15, 20])
     ap.add_argument("--ks", type=int, nargs="+", default=[4, 8])
+    ap.add_argument(
+        "--order", type=int, nargs="+", help="expert numbers in the order the pools grow"
+    )
     ap.add_argument("--limit", type=int, help="only the first N questions (smoke test)")
     args = ap.parse_args()
     args.run_dir.mkdir(parents=True, exist_ok=True)
