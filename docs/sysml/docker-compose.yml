@@ -27,5 +27,21 @@ services:
       - database
     networks:
       - syson
+  sysml-pilot:
+    # SysML v2 Pilot Implementation (OMG): Jupyter server with the "sysml" kernel, %viz -> SVG.
+    # Only with the profile: docker compose --profile pilot up -d --build sysml-pilot
+    profiles: ["pilot"]
+    build: ./pilot
+    ports:
+      - "${PILOT_PORT:-8890}:8888"
+    volumes:
+      - ./src:/models:ro
+    environment:
+      # The kernel JVM loads the whole SysML standard library at start-up.
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+    mem_limit: 3g
+    command: >
+      jupyter server --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+      --ServerApp.token=${PILOT_TOKEN:-sysml} --ServerApp.allow_origin='*'
 networks:
   syson:

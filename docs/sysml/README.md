@@ -47,11 +47,37 @@ Skrypty rozmawiają z `http://localhost:8080`; inny adres: `SYSON_URL=http://hos
 Zapisuje elementy modelu przez REST API (posortowane po `@id`, więc nadają się do `git diff`).
 To zrzut do wglądu i porównań, nie źródło: do SysON wraca się przez `push.sh` z plików `.sysml`.
 
+## Pilot SysML v2 (renderowanie i walidacja)
+
+Referencyjna implementacja OMG ([SysML v2 Pilot Implementation](https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation),
+jądro Jupyter `sysml`, wersja 0.63.1 = wydanie 2026-09.1) jako serwer Jupyter bez interfejsu.
+Służy do **walidacji** tekstu (parser i reguły OMG są ostrzejsze niż w SysON) i **renderowania**
+diagramów poleceniem `%viz` (PlantUML + Graphviz -> SVG). Do edycji i przeglądania zostaje SysON.
+
+```bash
+docker compose --profile pilot up -d --build sysml-pilot   # http://localhost:8890, token: sysml
+docker compose --profile pilot stop sysml-pilot             # zatrzymanie (samo `docker compose down` zatrzymuje też SysON)
+PILOT_TOKEN=... PILOT_PORT=8891 docker compose --profile pilot up -d sysml-pilot   # inny token / port na hoście
+```
+
+- Zwykłe `docker compose up -d` uruchamia tylko SysON (usługa jest w profilu `pilot`).
+- Z devcontainera: `http://host.docker.internal:8890` (REST `/api/kernels` + websocket
+  `/api/kernels/<id>/channels`), nagłówek `Authorization: token sysml`.
+- `src/` jest zamontowane tylko do odczytu w `/models`.
+- Port na hoście to 8890, bo 8888 na Windows zajmuje VS Code (przekierowanie portu z devcontainera);
+  na nim żądania wiszą bez odpowiedzi. Inny port: `PILOT_PORT`. W kontenerze serwer zawsze słucha na 8888.
+- Model wysyłaj jako **jedną komórkę** (pliki sklejone w kolejności nazw, jak w `push.sh`):
+  komórka widzi tylko komórki wcześniejsze, a **komórka z jakimkolwiek błędem jest w całości
+  odrzucana**, więc `%viz` znajdzie elementy dopiero wtedy, gdy model nie ma błędów (ostrzeżenia nie szkodzą).
+- Przykład: `%viz --view=state StanyElicytacji::AssignmentLifecycle` (widoki: `tree`, `interconnection`,
+  `action`, `state`, `sequence`, `case`, `mixed`).
+
 ## Pliki
 
 | Plik | Rola |
 |---|---|
-| `docker-compose.yml` | SysON + Postgres |
+| `docker-compose.yml` | SysON + Postgres; w profilu `pilot` także pilot SysML v2 |
+| `pilot/Dockerfile` | obraz pilota SysML v2 (Jupyter + jądro `sysml`, Java 21, Graphviz) |
 | `push.sh` | tekst `.sysml` -> projekt w SysON |
 | `export.sh` | projekty z SysON -> `models/*/elements.json` |
 | `src/` | źródła `.sysml` (jeden folder = jeden projekt) |
