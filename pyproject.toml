@@ -62,6 +62,7 @@ asyncio_default_fixture_loop_scope = "function"
 markers = [
     "integration: needs the Postgres of DATABASE_URL (pgvector); skipped when unreachable",
     "regression: retrieval-quality floors over tests/fixtures/retrieval_silver (needs Postgres)",
+    "scale: retrieval curves over the local 32-expert scale snapshot under data/ (needs Postgres; slower)",
 ]
 
 # Fast run without a database, with coverage:

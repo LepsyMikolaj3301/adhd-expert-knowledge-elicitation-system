@@ -225,9 +225,11 @@ class FrozenEmbeddings(Embeddings):
     """The query embeddings of the snapshot; a text that was not frozen is an error, not a model call."""
 
     def __init__(self, queries: dict, vectors: dict[str, np.ndarray]) -> None:
-        self.vectors = {
-            text: vectors["queries"][n] for n, text in enumerate(queries["embedded_texts"])
-        }
+        self.vectors = dict(zip(queries["embedded_texts"], vectors["queries"], strict=True))
+
+    @classmethod
+    def of(cls, texts: list[str], matrix: np.ndarray) -> "FrozenEmbeddings":
+        return cls({"embedded_texts": texts}, {"queries": matrix})
 
     def _get(self, text: str) -> list[float]:
         if text not in self.vectors:
@@ -256,6 +258,14 @@ def _half(array: np.ndarray) -> np.ndarray:
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
+
+def snapshot_digest(snapshot: Path) -> str:
+    """One digest of a snapshot's rows and vectors: what a frozen question set was built against."""
+    digest = hashlib.sha256()
+    for name in ("tables.json", "vectors.npz"):
+        digest.update((snapshot / name).read_bytes())
+    return digest.hexdigest()[:16]
 
 
 def freeze(args: argparse.Namespace) -> int:

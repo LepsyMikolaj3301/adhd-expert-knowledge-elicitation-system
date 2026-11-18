@@ -215,26 +215,23 @@ def pool_at(experts: list[str], n: int, order: list[int] | None) -> list[str]:
     return ids[:n]  # type: ignore[return-value]
 
 
-def run(args: argparse.Namespace) -> dict:
-    dsn = os.environ["DATABASE_URL"]
-    facts = pool_facts(dsn, args.schema)
-    if len(facts["experts"]) < max(args.ns):
-        sys.exit(f"{args.schema} has {len(facts['experts'])} experts, --ns asks for {max(args.ns)}")
-    if args.order and len(args.order) < max(args.ns):
-        sys.exit(f"--order lists {len(args.order)} experts, --ns asks for {max(args.ns)}")
-    store = ExpertKnowledgeStore(dsn, schema=args.schema)
-    embeddings = CachedQueries(
-        default_embeddings(base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
-    )
-    questions = build_questions(args, facts)
+def evaluate(
+    store: ExpertKnowledgeStore,
+    embeddings: Embeddings,
+    facts: dict,
+    questions: list[dict],
+    ns: list[int],
+    ks: list[int],
+    order: list[int] | None = None,
+    log: bool = False,
+) -> list[dict]:
+    """Every question at every (n, k), with the near-duplicate down-weighting on (and off, for `fixed`)."""
     anchors = set(ANCHORS)
-    for q in questions:
-        embeddings.embed_query(q["question"])  # embedded first; the loops below touch only Postgres
     results: list[dict] = []
-    for n in args.ns:
-        pool = pool_at(facts["experts"], n, args.order)
+    for n in ns:
+        pool = pool_at(facts["experts"], n, order)
         in_pool = {v for v, es in facts["by_vignette"].items() if set(es) & set(pool)}
-        for k in args.ks:
+        for k in ks:
             for dw in (True, False):
                 for q in questions:
                     if q["set"] != "fixed" and not dw:
@@ -268,10 +265,65 @@ def run(args: argparse.Namespace) -> dict:
                             **row,
                         }
                     )
-        print(f"n={n}: pool {len(pool)} experts, {len(in_pool)} vignettes answered", flush=True)
-    return {"schema": args.schema, "facts": {"experts": facts["experts"], "units": facts["n_units"],
+        if log:
+            print(f"n={n}: pool {len(pool)} experts, {len(in_pool)} vignettes answered", flush=True)
+    return results
+
+
+def summary(schema: str, facts: dict, questions: list[dict], order, results: list[dict]) -> dict:
+    return {"schema": schema, "facts": {"experts": facts["experts"], "units": facts["n_units"],
             "experts_per_vignette": {v: len(e) for v, e in sorted(facts["by_vignette"].items())}},
-            "questions": len(questions), "order": args.order, "results": results}  # fmt: skip
+            "questions": len(questions), "order": order, "results": results}  # fmt: skip
+
+
+def run(args: argparse.Namespace) -> dict:
+    dsn = os.environ["DATABASE_URL"]
+    facts = pool_facts(dsn, args.schema)
+    if len(facts["experts"]) < max(args.ns):
+        sys.exit(f"{args.schema} has {len(facts['experts'])} experts, --ns asks for {max(args.ns)}")
+    if args.order and len(args.order) < max(args.ns):
+        sys.exit(f"--order lists {len(args.order)} experts, --ns asks for {max(args.ns)}")
+    store = ExpertKnowledgeStore(dsn, schema=args.schema)
+    embeddings = CachedQueries(
+        default_embeddings(base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
+    )
+    questions = build_questions(args, facts)
+    for q in questions:
+        embeddings.embed_query(q["question"])  # embedded first; the loops below touch only Postgres
+    results = evaluate(store, embeddings, facts, questions, args.ns, args.ks, args.order, log=True)
+    return summary(args.schema, facts, questions, args.order, results)
+
+
+def freeze_queries(args: argparse.Namespace) -> None:
+    """The built questions and their bge-m3 vectors next to a snapshot, so a test can run the
+    evaluation on a schema seeded from that snapshot without Ollama (tests/integration)."""
+    import numpy as np
+
+    sys.path.insert(0, str(ROOT / "scripts" / "db"))
+    import chips_snapshot
+
+    out: Path = args.freeze_queries
+    facts = pool_facts(os.environ["DATABASE_URL"], args.schema)
+    questions = build_questions(args, facts)
+    texts = list(dict.fromkeys(q["question"] for q in questions))
+    embedder = default_embeddings(
+        base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    )
+    vectors = np.array([embedder.embed_query(t) for t in texts], dtype=np.float32)
+    (out / "scale_queries.json").write_text(
+        json.dumps(
+            {
+                "snapshot_sha": chips_snapshot.snapshot_digest(out),
+                "schema": args.schema,
+                "texts": texts,
+                "questions": questions,
+            },
+            indent=1,
+        )
+        + "\n"
+    )
+    np.savez_compressed(out / "scale_queries.npz", queries=vectors)
+    print(f"froze {len(questions)} questions ({len(texts)} texts) into {out}")
 
 
 # --- report ----------------------------------------------------------------------------------
@@ -299,6 +351,37 @@ def order_note(order: list[int] | None) -> str:
     )
 
 
+CURVE_RULES = {  # name -> (rows, field, the first n against base that counts as a problem)
+    "crowding_anchor": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS and r["downweight"],
+                        "crowding", lambda b, v: v >= 0.5),
+    "crowding_anchor_off": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS and not r["downweight"],
+                            "crowding", None),
+    "crowding_other": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] not in ANCHORS and r["downweight"],
+                       "crowding", None),
+    "coverage_anchor": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS and r["downweight"],
+                        "expert_coverage", None),
+    "precision_labelled": (lambda r: r["set"] == "labelled", "vignette_precision", lambda b, v: b - v >= 0.15),
+    "recall_labelled": (lambda r: r["set"] == "labelled", "claim_recall",
+                        lambda b, v: b > 0 and (b - v) / b >= 0.25),
+    "precision_topic": (lambda r: r["set"] == "topic", "vignette_precision", lambda b, v: b - v >= 0.15),
+}  # fmt: skip
+
+
+def curves(results: list[dict], ns: list[int], ks: list[int]) -> dict:
+    """Per curve and k: the mean at every n, how many items it averages, and the first problem n."""
+    base = 2 if 2 in ns else ns[0]
+    out: dict = {}
+    for name, (keep, field, rule) in CURVE_RULES.items():
+        rows = [r for r in results if keep(r)]
+        out[name] = {}
+        for k in ks:
+            curve = {n: mean([r for r in rows if r["n"] == n and r["k"] == k], field) for n in ns}
+            count = {n: len([r for r in rows if r["n"] == n and r["k"] == k]) for n in ns}
+            out[name][k] = {"mean": curve, "items": count,
+                            "problem_n": first_problem(curve, base, rule) if rule else None}  # fmt: skip
+    return out
+
+
 def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
     res = data["results"]
     out = [f"# Retrieval at scale: schema {data['schema']}\n"]
@@ -314,24 +397,21 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
     anchor_rows = [r for r in res if r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS]
     other_rows = [r for r in res if r["set"] == "fixed" and r["id"].split("-")[1] not in ANCHORS]
 
-    def block(title: str, rows: list[dict], field: str) -> dict[int, dict[int, float | None]]:
+    def block(title: str, rows: list[dict], field: str) -> None:
         out.append(f"\n## {title}\n")
         out.append("| n | " + " | ".join(f"k={k}" for k in ks) + " |")
         out.append("|---|" + "---|" * len(ks))
-        curves: dict[int, dict[int, float | None]] = {k: {} for k in ks}
         for n in ns:
             cells = []
             for k in ks:
                 sub = [r for r in rows if r["n"] == n and r["k"] == k]
                 m = mean(sub, field)
-                curves[k][n] = m
                 cells.append(f"{m if m is not None else '-'} ({len(sub)})")
             out.append(f"| {n} | " + " | ".join(cells) + " |")
-        return curves
 
     on = [r for r in anchor_rows if r["downweight"]]
     off = [r for r in anchor_rows if not r["downweight"]]
-    crowd_on = block(
+    block(
         "Crowding@k, anchor vignettes, per-vignette questions (down-weighting on; items in brackets)",
         on,
         "crowding",
@@ -352,12 +432,12 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
         on,
         "available_experts",
     )
-    prec_l = block(
+    block(
         "Vignette precision@k, labelled questions (all vignettes, no filter)",
         [r for r in res if r["set"] == "labelled"],
         "vignette_precision",
     )
-    rec_l = block(
+    block(
         "Original-label claim recall@k, labelled questions (experts 1-2 only: a lower bound)",
         [r for r in res if r["set"] == "labelled"],
         "claim_recall",
@@ -367,7 +447,7 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
         [r for r in res if r["set"] == "labelled"],
         "anchor_share",
     )
-    prec_t = block(
+    block(
         "Target-vignette precision@k, topic questions (strict)",
         [r for r in res if r["set"] == "topic"],
         "vignette_precision",
@@ -388,23 +468,19 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
 
     base = 2 if 2 in ns else ns[0]
     out.append(f"\n## Where it goes wrong (against n={base})\n")
+    names = {
+        "crowding_anchor": "crowding@k >= 0.5 on anchors",
+        "precision_labelled": "labelled vignette precision falls by 0.15",
+        "precision_topic": "topic vignette precision falls by 0.15",
+        "recall_labelled": "original-label recall falls by a quarter",
+    }
+    found = curves(res, ns, ks)
     for k in ks:
-        found = {
-            "crowding@k >= 0.5 on anchors": first_problem(crowd_on[k], base, lambda b, v: v >= 0.5),
-            "labelled vignette precision falls by 0.15": first_problem(
-                prec_l[k], base, lambda b, v: b - v >= 0.15
-            ),
-            "topic vignette precision falls by 0.15": first_problem(
-                prec_t[k], base, lambda b, v: b - v >= 0.15
-            ),
-            "original-label recall falls by a quarter": first_problem(
-                rec_l[k], base, lambda b, v: b > 0 and (b - v) / b >= 0.25
-            ),
-        }
         out.append(
             f"k={k}: "
             + "; ".join(
-                f"{name}: {'n=' + str(n) if n else 'not reached'}" for name, n in found.items()
+                f"{label}: {'n=' + str(n) if (n := found[name][k]['problem_n']) else 'not reached'}"
+                for name, label in names.items()
             )
             + "\n"
         )
@@ -418,7 +494,12 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--run-dir", type=Path, required=True)
+    ap.add_argument("--run-dir", type=Path)
+    ap.add_argument(
+        "--freeze-queries", type=Path, metavar="SNAPSHOT_DIR",
+        help="write the built questions and their vectors next to this snapshot (for the scale "
+        "regression test) instead of running the evaluation; --schema must be seeded from it",
+    )  # fmt: skip
     ap.add_argument("--schema", default="chips_scale")
     ap.add_argument("--ns", type=int, nargs="+", default=[1, 2, 5, 10, 15, 20])
     ap.add_argument("--ks", type=int, nargs="+", default=[4, 8])
@@ -427,6 +508,11 @@ def main() -> None:
     )
     ap.add_argument("--limit", type=int, help="only the first N questions (smoke test)")
     args = ap.parse_args()
+    if args.freeze_queries:
+        freeze_queries(args)
+        return
+    if not args.run_dir:
+        ap.error("--run-dir is required")
     args.run_dir.mkdir(parents=True, exist_ok=True)
     data = run(args)
     (args.run_dir / "results.json").write_text(json.dumps(data, indent=1))
