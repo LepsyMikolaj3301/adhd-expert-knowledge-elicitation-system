@@ -5,8 +5,7 @@ package StrukturaElicytacji {
      *   BackendApi        - moduły backend/app/* jako części
      *   FrontendWebowy    - aplikacja Vue + nginx, części wg grup widoków
      *   WorkerZadan       - proces python -m app.jobs.worker
-     *   BazaPostgres      - schematy app, chips oraz tabele korpusu
-     *   NarzedziaBadawcze - skrypty offline (korpus, elicytacja, ewaluacja RAG)
+     *   BazaPostgres      - schematy app i chips
      *   Biblioteki        - pakiety packages/expert-knowledge-*
      * Struktura techniczna ścieżki przetwarzania (od zgłoszenia do chips): 13_SciezkaPrzetwarzania.
      * Połączenia wewnętrzne (IBD) są w SystemElicytacji; zależności między modułami backendu
@@ -156,7 +155,6 @@ package StrukturaElicytacji {
         dependency przydzialyUzywajaMocy from ModulPrzydzialow to ModulMocyObliczeniowej;   // transition() -> require_compute
         dependency zadaniaUzywajaMocy from ModulZadan to ModulMocyObliczeniowej;           // worker -> ready_kinds, is_down_for
         dependency mocUzywaZadan from ModulMocyObliczeniowej to ModulZadan;                // JobKind
-        dependency badaniaUzywajaKorekty from NarzedziaBadawcze to ModulKorekty;           // make_scale_fixtures --stage proofread
     }
 
     // =================================================================== containers
@@ -256,60 +254,6 @@ package StrukturaElicytacji {
         part schematChips {
             doc /* DziedzinaElicytacji::SchematChips - wektory jednostek wiedzy */
         }
-        part tabeleKorpusu {
-            doc /* DziedzinaElicytacji::Korpus - documents, chunks */
-        }
-    }
-
-    part def MagazynObiektow {
-        doc /* MinIO (S3): surowe, sparsowane i pocięte dokumenty korpusu. */
-        @OdwolanieDoKodu { sciezka = "scripts/corpus/storage.py"; }
-        port s3 : PortS3;
-    }
-
-    part def NarzedziaBadawcze {
-        doc /* Skrypty offline uruchamiane z kontenera dev; nie są częścią wdrożenia produkcyjnego. */
-        @OdwolanieDoKodu { sciezka = "scripts"; }
-
-        port bd : ~PortSql;
-        port s3 : ~PortS3;
-        port llm : ~PortOllama;
-
-        part skryptyKorpusu {
-            doc /* scripts/corpus - fetch, upload, parse, chunk, index */
-        }
-        part skryptyElicytacji {
-            doc /*
-             * scripts/elicitation - fixtures, odpowiedzi syntetyczne, jednostki, gold claims.
-             * make_scale_fixtures: fikstura skali (32 ekspertów, 24 winiety; etapy seed, vignettes,
-             * answers, proofread, build), schematy chips_scale (po korekcie) i chips_scale_raw
-             * (surowe); etap proofread przepuszcza odpowiedzi przez korektę aplikacji (proofread_answer).
-             */
-        }
-        part personyEkspertow {
-            doc /*
-             * prompts/expert_personas/E21..E32.v1 - eksperci syntetyczni 21-32: własny prompt
-             * systemowy, styl pisania i cytowania oraz własny model; prompt Synthetic_expert_answer.v5.
-             */
-            @OdwolanieDoKodu { sciezka = "prompts/expert_personas"; }
-        }
-        part skryptyEwaluacjiRag {
-            doc /*
-             * scripts/rag - eval_retrieval, eval_generation, judge_generations, report_eval,
-             * eval_scale_retrieval (wyszukiwanie przy wielu ekspertach na winietę), try_expert_rag.
-             */
-        }
-        part skryptyBd {
-            doc /*
-             * scripts/db - init_db, load_chips_pg (nigdy nie pisze do `chips`), backup,
-             * chips_snapshot (zamrożona migawka silver: freeze / seed, kopie `crowded`),
-             * seed_silver_reviews.
-             */
-        }
-        part rag : RagWiedzyEksperckiej;
-
-        perform action zbudujKorpus : CzynnosciElicytacji::IngestiaKorpusu;
-        perform action ocenRag : CzynnosciElicytacji::ZapytanieRag;
     }
 
     // =================================================================== system of interest
@@ -328,8 +272,6 @@ package StrukturaElicytacji {
         part backend : BackendApi;
         part worker : WorkerZadan[0..*];
         part baza : BazaPostgres;
-        part magazynObiektow : MagazynObiektow;
-        part badania : NarzedziaBadawcze;
 
         // ---------------------------------------------------- IBD: delegacje portów brzegowych
         bind web = frontend.web;
@@ -347,18 +289,9 @@ package StrukturaElicytacji {
             klient ::> worker.bd to
             serwer ::> baza.sql;
 
-        interface badaniaDoBd : PolaczenieSql connect
-            klient ::> badania.bd to
-            serwer ::> baza.sql;
-
-        interface badaniaDoMagazynu : ApiS3 connect
-            klient ::> badania.s3 to
-            serwer ::> magazynObiektow.s3;
-
         // ---------------------------------------------------- IBD: wyjście do usług zewnętrznych
         connect backend.llm to ollama;
         connect worker.llm to ollama;
-        connect badania.llm to ollama;
         connect worker.gramatyka to languageTool;
         connect backend.gramatyka to languageTool;     // sonda mocy obliczeniowej
     }

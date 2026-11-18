@@ -699,7 +699,7 @@ package SciezkaPrzetwarzania {
 
         part def MagazynWiedzyRag {
             doc /* Schemat `chips` (pgvector): czyta go wyszukiwanie w API i biblioteka expert-knowledge-rag. */
-            @OdwolanieDoKodu { sciezka = "scripts/db/chips_schema.sql"; }
+            @OdwolanieDoKodu { sciezka = "backend/migrations/versions/0003_pipeline.py"; }
             port wiersze : ~PortWierszyChips;
             port odczyt : PortSql;
         }

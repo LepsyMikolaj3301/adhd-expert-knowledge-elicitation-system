@@ -42,7 +42,7 @@ package KontekstElicytacji {
         }
 
         part def InzynierWiedzy :> Osoba {
-            doc /* Inżynier wiedzy (autor pracy): korpus, eksperymenty, ewaluacja RAG. */
+            doc /* Inżynier wiedzy (autor pracy): wdraża wydania systemu. */
         }
 
         part def OdbiorcaRag {
@@ -74,15 +74,6 @@ package KontekstElicytacji {
             port api : PortLanguageTool;
         }
 
-        part def ZrodlaLiteratury {
-            doc /* Źródła literatury (config/sources.yaml) pobierane do korpusu. */
-            @OdwolanieDoKodu { sciezka = "config/sources.yaml"; }
-        }
-
-        part def PulaReddit {
-            doc /* Pula postów (forum) jako materiał do winiet i danych syntetycznych. */
-            @OdwolanieDoKodu { sciezka = "scripts/elicitation/fetch_reddit_pool.py"; }
-        }
     }
 
     private import SystemyZewnetrzne::*;
@@ -99,12 +90,9 @@ package KontekstElicytacji {
 
         part ollama : UslugaOllama;
         part languageTool : UslugaLanguageTool;
-        part literatura : ZrodlaLiteratury;
-        part reddit : PulaReddit;
 
         connect administrator to system.web;
         connect ekspert to system.web;
-        connect inzynier to system.badania;
 
         interface systemDoOllama : OllamaHttp connect
             klient ::> system.ollama to
@@ -114,8 +102,6 @@ package KontekstElicytacji {
             klient ::> system.languageTool to
             serwer ::> languageTool.api;
 
-        connect system.badania to literatura;
-        connect system.badania to reddit;
     }
 
     // =================================================================== use cases
@@ -267,19 +253,7 @@ package KontekstElicytacji {
             @Planowane;
         }
 
-        // ----------------------------------------------------- research (knowledge engineer)
-        use case def ZbudujKorpusLiteratury {
-            subject system : SystemElicytacji;
-            actor inzynier : InzynierWiedzy;
-            objective { doc /* Pobrać, sparsować, pociąć i zindeksować literaturę. */ }
-        }
-
-        use case def OcenRag {
-            subject system : SystemElicytacji;
-            actor inzynier : InzynierWiedzy;
-            objective { doc /* Zmierzyć jakość wyszukiwania i odpowiedzi (sędziowie LLM). */ }
-        }
-
+        // ----------------------------------------------------- knowledge engineer
         use case def WdrozWydanie {
             doc /* Workflow Deploy (ręczny): CI, obrazy w ghcr.io, deploy.sh na VM, test dymny. */
             subject system : SystemElicytacji;

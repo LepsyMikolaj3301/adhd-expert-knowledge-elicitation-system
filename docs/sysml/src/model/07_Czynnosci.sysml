@@ -6,7 +6,6 @@ package CzynnosciElicytacji {
      *   ZbudujJednostki      - zadanie `process`
      *   IngestujJednostki    - zadanie `ingest`
      *   WykonanieZadania     - jedno wykonanie zadania przez workera (run_once): bramka mocy, dzierżawa, błędy
-     *   IngestiaKorpusu      - korpus literatury (skrypty offline)
      *   ZapytanieRag         - wyszukiwanie hybrydowe i odpowiedź RAG
      * Tory (kto wykonuje czynność) są przypisane alokacjami w PlatformaElicytacji::AlokacjaCzynnosci.
      * Strukturę, która wykonuje zadania, opisuje 13_SciezkaPrzetwarzania (BDD + IBD).
@@ -166,31 +165,6 @@ package CzynnosciElicytacji {
         action def OdswiezWektoryRzadkie {
             doc /* Przeliczenie BM25 (idf globalne) pod blokadą doradczą. */
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/ingest.py"; }
-        }
-
-        // ---------------------------------------------------- corpus
-        action def PobierzZrodla {
-            @OdwolanieDoKodu { sciezka = "scripts/corpus/fetch_sources.py"; }
-            out item surowe : ObiektWMagazynie[1..*];
-        }
-        action def PrzeslijSurowe {
-            @OdwolanieDoKodu { sciezka = "scripts/corpus/upload_raw_documents.py"; }
-            in item surowe : ObiektWMagazynie[1..*];
-        }
-        action def ParsujDokumenty {
-            @OdwolanieDoKodu { sciezka = "scripts/corpus/parse_raw_documents.py"; }
-            out item sparsowany : ObiektWMagazynie[1..*];
-        }
-        action def DzielDokumenty {
-            doc /* Cięcie wg config/chunking.yaml; contextual_text dla każdego fragmentu. */
-            @OdwolanieDoKodu { sciezka = "scripts/corpus/chunk_parsed_documents.py"; }
-            in item sparsowany : ObiektWMagazynie[1..*];
-            out item podzielone : ObiektWMagazynie[1..*];
-        }
-        action def IndeksujFragmenty {
-            doc /* config/indexing.yaml: bge-m3 (1024) + BM25 (k1 1.2, b 0.75) -> tabela chunks. */
-            @OdwolanieDoKodu { sciezka = "scripts/corpus/index_chunks.py"; }
-            in item podzielone : ObiektWMagazynie[1..*];
         }
 
         // ---------------------------------------------------- RAG query
@@ -490,36 +464,12 @@ package CzynnosciElicytacji {
         flow from zbudujJednostki.jednostki to jednostki;
     }
 
-    // =================================================================== corpus
-    action def IngestiaKorpusu {
-        doc /* Budowa korpusu literatury: źródła z config/sources.yaml -> MinIO -> Postgres (chunks). */
-        @OdwolanieDoKodu { sciezka = "scripts/corpus"; }
-
-        action pobierzZrodla : PobierzZrodla;
-        action przeslij : PrzeslijSurowe;
-        action parsuj : ParsujDokumenty;
-        action dziel : DzielDokumenty;
-        action indeksuj : IndeksujFragmenty;
-
-        first start;
-        then pobierzZrodla;
-        then przeslij;
-        then parsuj;
-        then dziel;
-        then indeksuj;
-        then done;
-
-        flow from pobierzZrodla.surowe to przeslij.surowe;
-        flow from parsuj.sparsowany to dziel.sparsowany;
-        flow from dziel.podzielone to indeksuj.podzielone;
-    }
-
     // =================================================================== RAG query
     action def ZapytanieRag {
         doc /*
          * Zapytanie do bazy wiedzy. Tryb `question` (ExpertQuestionRetriever) albo `patient_text`
          * (PatientTextRetriever: wyszukuje po kluczach-wskazówkach z winiet). Generowanie
-         * odpowiedzi: @Planowane w aplikacji, używane w skryptach ewaluacji.
+         * odpowiedzi: @Planowane w aplikacji.
          */
         @OdwolanieDoKodu { sciezka = "packages/expert-knowledge-rag/src/expert_knowledge_rag/retrievers.py"; }
         in item zapytanie : ZapytanieWyszukiwania;

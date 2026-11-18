@@ -111,7 +111,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `AskKnowledgeBase` | `ZapytajBazeWiedzy` |
 | `AssignExpert` | `PrzydzielEksperta` |
 | `AuthorVignette` | `NapiszWiniete` |
-| `BuildLiteratureCorpus` | `ZbudujKorpusLiteratury` |
 | `BuildUnits` | `ZbudujJednostki` |
 | `CancelAssignment` | `AnulujPrzydzial` |
 | `CheckProofread` | `SprawdzKorekte` |
@@ -123,15 +122,12 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `DecideAnswers` | `RozstrzygnijOdpowiedzi` |
 | `elicitationContext` | `kontekstElicytacji` |
 | `ElicitationInterfaces` | `InterfejsyElicytacji` |
-| `EvaluateRag` | `OcenRag` |
 | `ExternalSystems` | `SystemyZewnetrzne` |
 | `IngestUnits` | `IngestujJednostki` |
 | `InterfaceDefinitions` | `DefinicjeInterfejsow` |
 | `InviteExpert` | `ZaprosEksperta` |
 | `LanguageToolPort` | `PortLanguageTool` |
 | `LanguageToolService` | `UslugaLanguageTool` |
-| `literature` | `literatura` |
-| `LiteratureSources` | `ZrodlaLiteratury` |
 | `LogIn` | `Zaloguj` |
 | `OllamaPort` | `PortOllama` |
 | `OllamaService` | `UslugaOllama` |
@@ -139,10 +135,8 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `Ports` | `Porty` |
 | `ProofreadAnswers` | `KorygujOdpowiedzi` |
 | `PublishVignette` | `OpublikujWiniete` |
-| `RedditPool` | `PulaReddit` |
 | `RefitIndex` | `PrzeliczIndeks` |
 | `RemoveKnowledge` | `UsunWiedze` |
-| `research` | `badania` |
 | `RetryJob` | `PonowZadanie` |
 | `ReviewAnswers` | `RecenzujOdpowiedzi` |
 | `Reviewer` | `Recenzent` |
@@ -179,7 +173,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `embedding` | `osadzenie` |
 | `EmbedRequest` | `ZapytanieOsadzenia` |
 | `embedRequest` | `zapytanieOsadzenia` |
-| `get` | `pobierz` |
 | `GrammarCheckRequest` | `ZapytanieSprawdzeniaGramatyki` |
 | `GrammarMatches` | `DopasowaniaGramatyczne` |
 | `hits` | `trafienia` |
@@ -187,19 +180,15 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `HttpRequest` | `ZapytanieHttp` |
 | `HttpResponse` | `OdpowiedzHttp` |
 | `Items` | `Elementy` |
-| `key` | `klucz` |
 | `language` | `jezyk` |
 | `matches` | `dopasowania` |
 | `method` | `metoda` |
 | `mode` | `tryb` |
-| `put` | `zapisz` |
 | `query` | `zapytanie` |
 | `request` | `zapytanie` |
 | `response` | `odpowiedz` |
 | `RestApi` | `ApiRest` |
 | `result` | `wynik` |
-| `S3Api` | `ApiS3` |
-| `S3Port` | `PortS3` |
 | `SearchQuery` | `ZapytanieWyszukiwania` |
 | `SearchResult` | `WynikWyszukiwania` |
 | `SqlConnection` | `PolaczenieSql` |
@@ -207,7 +196,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `SqlResult` | `WynikSql` |
 | `SqlStatement` | `InstrukcjaSql` |
 | `statement` | `instrukcja` |
-| `StoredObject` | `ObiektWMagazynie` |
 | `temperature` | `temperatura` |
 | `text` | `tekst` |
 | `texts` | `teksty` |
@@ -238,23 +226,16 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `authUsesUsers` | `uwierzytelnianieUzywaUzytkownikow` |
 | `authViews` | `widokiLogowania` |
 | `BackendModules` | `ModulyBackendu` |
-| `buildCorpus` | `zbudujKorpus` |
 | `chains` | `lancuchy` |
 | `chipsSchema` | `schematChips` |
 | `classifier` | `klasyfikator` |
 | `core` | `rdzen` |
 | `CoreModule` | `ModulRdzenia` |
-| `CorpusIngestion` | `IngestiaKorpusu` |
-| `corpusScripts` | `skryptyKorpusu` |
-| `corpusTables` | `tabeleKorpusu` |
 | `database` | `baza` |
 | `db` | `bd` |
-| `dbScripts` | `skryptyBd` |
 | `ElicitationActivities` | `CzynnosciElicytacji` |
-| `elicitationScripts` | `skryptyElicytacji` |
 | `ElicitationStates` | `StanyElicytacji` |
 | `enhance` | `redakcja` |
-| `evaluateRag` | `ocenRag` |
 | `ExpertKnowledgeCore` | `RdzenWiedzyEksperckiej` |
 | `ExpertKnowledgeRag` | `RagWiedzyEksperckiej` |
 | `expertViews` | `widokiEksperta` |
@@ -288,8 +269,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `ModuleDependencies` | `ZaleznosciModulow` |
 | `nginxToApi` | `nginxDoApi` |
 | `notes` | `notatki` |
-| `ObjectStore` | `MagazynObiektow` |
-| `objectStore` | `magazynObiektow` |
 | `patientTextRetriever` | `wyszukiwaczTekstuPacjenta` |
 | `pipeline` | `potok` |
 | `pollSeconds` | `odpytywanieSekundy` |
@@ -302,13 +281,9 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `ProofreadPipeline` | `PotokKorekty` |
 | `questionRetriever` | `wyszukiwaczPytan` |
 | `queue` | `kolejka` |
-| `ragEvalScripts` | `skryptyEwaluacjiRag` |
 | `RagQuery` | `ZapytanieRag` |
 | `records` | `rekordy` |
 | `removal` | `usuwanie` |
-| `researchToDb` | `badaniaDoBd` |
-| `ResearchToolchain` | `NarzedziaBadawcze` |
-| `researchToStore` | `badaniaDoMagazynu` |
 | `reviews` | `recenzje` |
 | `ReviewsModule` | `ModulRecenzji` |
 | `reviewsUsesAssignments` | `recenzjeUzywajaPrzydzialow` |
@@ -365,14 +340,10 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `challenge` | `zastrzezenie` |
 | `checkOutcome` | `wynikSprawdzenia` |
 | `ChipsSchema` | `SchematChips` |
-| `Chunk` | `Fragment` |
-| `chunkIndex` | `numerFragmentu` |
 | `code` | `kod` |
 | `comment` | `komentarz` |
 | `contentHash` | `skrotTresci` |
 | `context` | `kontekst` |
-| `contextualText` | `tekstKontekstowy` |
-| `Corpus` | `Korpus` |
 | `createdAt` | `utworzonoO` |
 | `createdBy` | `utworzonyPrzez` |
 | `CueKey` | `KluczWskazowki` |
@@ -389,13 +360,10 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `disapprove` | `sprzeciw` |
 | `displayName` | `nazwaWyswietlana` |
 | `document` | `dokument` |
-| `Document` | `Dokument` |
-| `DocumentStatus` | `StatusDokumentu` |
 | `draft` | `szkic` |
 | `dropped` | `odrzucone` |
 | `ElicitationSession` | `SesjaElicytacji` |
 | `embeddingCombined` | `osadzenieZlaczone` |
-| `embeddingModel` | `modelOsadzen` |
 | `embedText` | `tekstDoOsadzenia` |
 | `embedTextCombined` | `tekstDoOsadzeniaZlaczony` |
 | `entityId` | `idEncji` |
@@ -411,7 +379,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `flags` | `flagi` |
 | `framing` | `kontekstowanie` |
 | `fromState` | `zStanu` |
-| `headingPath` | `sciezkaNaglowkow` |
 | `Highlight` | `Cytat` |
 | `highlight` | `cytat` |
 | `highlightId` | `idCytatu` |
@@ -419,8 +386,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `hypothesis` | `hipoteza` |
 | `idx` | `indeks` |
 | `in_progress` | `wToku` |
-| `indexConfig` | `konfiguracjaIndeksu` |
-| `indexed` | `zaindeksowany` |
 | `ingested` | `zaingestowany` |
 | `ingesting` | `ingestiaWToku` |
 | `ingestion_failed` | `ingestiaNieudana` |
@@ -440,7 +405,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `meta` | `metadane` |
 | `more_adhd` | `bardziejAdhd` |
 | `neutral` | `neutralny` |
-| `nTokens` | `liczbaTokenow` |
 | `openedAt` | `otwartoO` |
 | `ordinal` | `numerPorzadkowy` |
 | `origin` | `pochodzenie` |
@@ -448,8 +412,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `other` | `inny` |
 | `otherExplanation` | `innyKomentarz` |
 | `parent` | `rodzic` |
-| `parsed` | `sparsowany` |
-| `parsing` | `parsowanie` |
 | `passes` | `przebiegi` |
 | `passwordHash` | `skrotHasla` |
 | `patientSummary` | `streszczeniePacjenta` |
@@ -497,14 +459,11 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `Role` | `Rola` |
 | `role` | `rola` |
 | `running` | `uruchomione` |
-| `s3Key` | `s3Klucz` |
 | `sentenceIds` | `idZdan` |
 | `sentences` | `zdania` |
 | `session` | `sesja` |
 | `shift` | `przesuniecie` |
 | `shiftRange` | `zakresPrzesuniecia` |
-| `sourceId` | `idZrodla` |
-| `sourceUrl` | `urlZrodla` |
 | `spanEnd` | `koniecZakresu` |
 | `spanStart` | `poczatekZakresu` |
 | `sparse` | `rzadki` |
@@ -522,7 +481,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `support` | `poparcie` |
 | `targets` | `cele` |
 | `tier` | `poziom` |
-| `title` | `tytul` |
 | `tokenHash` | `skrotTokenu` |
 | `toState` | `doStanu` |
 | `toward` | `zgodny` |
@@ -531,7 +489,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `UnitKind` | `RodzajJednostki` |
 | `UnitStatus` | `StatusJednostki` |
 | `updatedAt` | `zaktualizowanoO` |
-| `uploaded` | `przeslany` |
 | `usedAt` | `wykorzystanoO` |
 | `User` | `Uzytkownik` |
 | `variant` | `wariant` |
@@ -631,9 +588,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `buildUnits` | `zbudujJednostki` |
 | `checkMerge` | `scalenieSprawdzenia` |
 | `checkProofread` | `sprawdzKorekte` |
-| `chunk` | `dziel` |
-| `ChunkDocuments` | `DzielDokumenty` |
-| `chunked` | `podzielone` |
 | `CitePassages` | `CytujFragmenty` |
 | `citePassages` | `cytujFragmenty` |
 | `ClassifyRest` | `KlasyfikujReszte` |
@@ -655,8 +609,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `EmbedUnits` | `OsadzJednostki` |
 | `Enhance` | `Zredaguj` |
 | `enhanced` | `zredagowany` |
-| `fetch` | `pobierzZrodla` |
-| `FetchSources` | `PobierzZrodla` |
 | `FlagFindings` | `OznaczUstalenia` |
 | `flagFindings` | `oznaczUstalenia` |
 | `formatted` | `uporzadkowany` |
@@ -664,8 +616,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `GenerateAnswer` | `WygenerujOdpowiedz` |
 | `grammarAfter` | `gramatykaPonownie` |
 | `GrammarCheck` | `SprawdzGramatyke` |
-| `index` | `indeksuj` |
-| `IndexChunks` | `IndeksujFragmenty` |
 | `labelled` | `oznaczone` |
 | `Layout` | `Uloz` |
 | `layout` | `uklad` |
@@ -675,15 +625,12 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `openReview` | `otworzRecenzje` |
 | `outcome` | `rozstrzygniecie` |
 | `outcomeDecision` | `decyzjaWgWyniku` |
-| `parse` | `parsuj` |
-| `ParseDocuments` | `ParsujDokumenty` |
 | `participant` | `uczestnik` |
 | `perAnswer` | `dlaKazdejOdpowiedzi` |
 | `queryFork` | `rozwidlenieZapytania` |
 | `queryJoin` | `zlaczenieZapytania` |
 | `RankAndFuse` | `RankujIFuzjuj` |
 | `rankAndFuse` | `rankujIFuzjuj` |
-| `raw` | `surowe` |
 | `RecordRound` | `ZapiszRunde` |
 | `recordRound` | `zapiszRunde` |
 | `RefreshSparse` | `OdswiezWektoryRzadkie` |
@@ -702,8 +649,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `startAnswering` | `rozpocznijOdpowiadanie` |
 | `Steps` | `Kroki` |
 | `units` | `jednostki` |
-| `upload` | `przeslij` |
-| `UploadRaw` | `PrzeslijSurowe` |
 | `ValidateAndSubmit` | `WalidujIZglos` |
 | `vector` | `wektor` |
 | `vectors` | `wektory` |
@@ -798,11 +743,8 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | Kod / angielska nazwa | Nazwa w modelu |
 |---|---|
 | `answerTokens` | `tokenyOdpowiedzi` |
-| `bootstrapSamples` | `probyBootstrap` |
 | `budget` | `budzet` |
 | `budgetTokens` | `budzetTokenow` |
-| `ceilingAt4` | `sufitAt4` |
-| `claimsPer100Tokens` | `tezyNa100Tokenow` |
 | `classifierFits` | `klasyfikatorSieMiesci` |
 | `classifierOutputTokens` | `tokenyWyjsciaKlasyfikatora` |
 | `contextBonus` | `premiaKontekstu` |
@@ -814,38 +756,19 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `ElicitationAnalysis` | `AnalizaElicytacji` |
 | `enhanceFits` | `redakcjaSieMiesci` |
 | `enhanceOutputTokens` | `tokenyWyjsciaRedakcji` |
-| `EvalRun` | `UruchomienieEwaluacji` |
 | `ExpertContextBudget` | `BudzetKontekstuEkspertow` |
-| `generatorModel` | `modelGeneratora` |
-| `hitAt4` | `trafienieAt4` |
-| `JudgedAnswerQuality` | `JakoscOdpowiedziWgSedziow` |
-| `judgeModels` | `modeleSedziow` |
-| `judgeThreshold` | `progOcenySedziow` |
 | `llmCallBudget` | `budzetWywolanLlm` |
-| `meanJudgeScore` | `sredniaOcenaSedziow` |
-| `metrics` | `metryki` |
 | `minMrr` | `minimalneMrr` |
 | `minRecallAt4` | `minimalnaPelnoscAt4` |
 | `mrrThreshold` | `progMrr` |
 | `outputTokens` | `tokenyWyjscia` |
-| `passed` | `zaliczone` |
 | `promptTokens` | `tokenyPromptu` |
 | `quality` | `jakosc` |
-| `qualityObjective` | `celJakosci` |
-| `RagEvaluation` | `EwaluacjaRag` |
 | `ragQuality` | `jakoscRag` |
 | `rank` | `pozycja` |
-| `recallAt1` | `pelnoscAt1` |
 | `recallAt4` | `pelnoscAt4` |
-| `recallAt500Tokens` | `pelnoscPrzy500Tokenach` |
-| `recallAt8` | `pelnoscAt8` |
-| `recallThreshold` | `progPelnosci` |
 | `ReciprocalRankFusionTerm` | `SkladnikFuzjiRrf` |
-| `retrieval` | `wymogWyszukiwania` |
-| `RetrievalMetrics` | `MetrykiWyszukiwania` |
 | `RetrievalQuality` | `JakoscWyszukiwania` |
-| `retriever` | `wyszukiwacz` |
-| `run` | `uruchomienie` |
 | `score` | `wynik` |
 | `shownTokens` | `pokazaneTokeny` |
 
@@ -867,11 +790,9 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `image` | `obraz` |
 | `migrate` | `migracja` |
 | `Nodes` | `Wezly` |
-| `objectStoreDev` | `magazynObiektowDev` |
 | `ProdAllocation` | `AlokacjaProd` |
 | `ProdPlatform` | `PlatformaProd` |
 | `prodPlatform` | `platformaProd` |
-| `researchDev` | `badaniaDev` |
 | `SoftwareToNode` | `OprogramowanieNaWezle` |
 
 ## `11_Sledzenie.sysml`
@@ -905,8 +826,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `ExpertRagContractTest` | `TestKontraktuRagEksperckiego` |
 | `FindingsTest` | `TestUstalen` |
 | `ProofreadTest` | `TestKorekty` |
-| `ragEvaluation` | `ewaluacjaRag` |
-| `RagEvaluationRun` | `UruchomienieEwaluacjiRag` |
 | `RankingTest` | `TestRankingu` |
 | `Satisfaction` | `Spelnianie` |
 | `Verification` | `Weryfikacja` |
@@ -930,7 +849,6 @@ Identyfikatory wymagań: `REQ-F-xx` → `WYM-F-xx`, `REQ-N-xx` → `WYM-N-xx`, `
 | `asStateTransitionDiagram` | `jakoDiagramStanow` |
 | `asUseCaseDiagram` | `jakoDiagramPrzypadkowUzycia` |
 | `backendDecomposition` | `dekompozycjaBackendu` |
-| `corpusIngestion` | `ingestiaKorpusu` |
 | `DefinitionView` | `WidokDefinicji` |
 | `developmentDeployment` | `wdrozenieDeweloperskie` |
 | `domainModel` | `modelDziedziny` |
@@ -1036,7 +954,6 @@ element odpowiada plikowi albo konfiguracji).
 | `GET /api/tags` / lista modeli | `ZapytanieListyModeli` / `ListaModeli` | `03` |
 | `GET /v2/languages` | `ZapytanieListyJezykow` / `ListaJezykow` | `03` |
 | `filters.py` (`ExpertFilter`) | `filtry` | `04` |
-| `prompts/expert_personas` | `personyEkspertow` | `04` |
 | `ready_kinds` przy pobraniu | `Przejmij.rodzajGotowy` | `06` |
 | `is_down_for` po błędzie | `ZadanieZBledem.mocNiedostepna`, przejście `czekanieNaMoc` | `06` |
 | `run_once()` | `WykonanieZadania` | `07` |
@@ -1060,7 +977,6 @@ element odpowiada plikowi albo konfiguracji).
 | tests/api/test_api_gaps.py | `TestApiLuk` | `11` |
 | tests/test_links.py | `TestPowiazanLinii` | `11` |
 | tests/api/test_api_silver_workflow.py | `TestApiSrebrnegoPrzeplywu` | `11` |
-| tests/test_load_chips_guard.py | `TestStrazyLadowaniaChips` | `11` |
 | tests/unit/test_jobs_unit.py | `TestTabelZadan` | `11` |
 | tests/unit/test_compute.py | `TestMocyObliczeniowej` | `11` |
 | tests/api/test_api_compute.py | `TestApiMocy` | `11` |

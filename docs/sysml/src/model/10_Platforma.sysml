@@ -103,8 +103,6 @@ package PlatformaElicytacji {
             attribute :>> wystawionyPort = 5432;
         }
         part pgadmin : WezelKontenerowy { attribute :>> obraz = "dpage/pgadmin4"; }          // profil tools
-        part minio : WezelKontenerowy { attribute :>> obraz = "minio"; }
-        part minioInit : WezelKontenerowy { attribute :>> obraz = "minio-client"; }
         part dev : WezelKontenerowy { attribute :>> obraz = ".devcontainer/Dockerfile"; }
         part migracja : WezelKontenerowy { attribute :>> obraz = "backend/Dockerfile"; }      // profil app
         part ragBackend : WezelKontenerowy { attribute :>> obraz = "backend/Dockerfile"; }   // profil app
@@ -120,10 +118,8 @@ package PlatformaElicytacji {
         connect frontend to ragBackend;
         connect migracja to postgres;
         connect dev to postgres;
-        connect dev to minio;
         connect dev to ollama;
-        connect dev to languagetool;     // make_scale_fixtures --stage proofread
-        connect minioInit to minio;
+        connect dev to languagetool;
     }
 
     // =================================================================== production platform
@@ -252,7 +248,7 @@ package PlatformaElicytacji {
     part def SrodowiskoTestowe {
         doc /*
          * Gdzie działają testy (szczegóły przypadków: SledzenieElicytacji::Weryfikacja).
-         *   w CI (bez Postgresa)  - tests/unit, tests/scripts, tests/test_*.py, testy pakietów bez
+         *   w CI (bez Postgresa)  - tests/unit, tests/test_*.py, testy pakietów bez
          *                           znacznika `integration`, specyfikacje vitest frontendu;
          *   lokalnie (z bazą)     - `-m integration`: tests/api (własna baza rag_<pid>_test z migracji
          *                           Alembic, czyszczona przed każdym testem, usuwana na końcu;
@@ -326,14 +322,11 @@ package PlatformaElicytacji {
         allocation backendDev : OprogramowanieNaWezle allocate kontekstElicytacji.system.backend to platformaDev.ragBackend;
         allocation workerDev : OprogramowanieNaWezle allocate kontekstElicytacji.system.worker to platformaDev.worker;
         allocation bazaDev : OprogramowanieNaWezle allocate kontekstElicytacji.system.baza to platformaDev.postgres;
-        allocation magazynObiektowDev : OprogramowanieNaWezle allocate kontekstElicytacji.system.magazynObiektow to platformaDev.minio;
-        allocation badaniaDev : OprogramowanieNaWezle allocate kontekstElicytacji.system.badania to platformaDev.dev;
         allocation ollamaDev : OprogramowanieNaWezle allocate kontekstElicytacji.ollama to platformaDev.ollama;
         allocation languageToolDev : OprogramowanieNaWezle allocate kontekstElicytacji.languageTool to platformaDev.languagetool;
     }
 
     package AlokacjaProd {
-        doc /* Magazyn obiektów (MinIO) i narzędzia badawcze nie są wdrażane na produkcję. */
         allocation frontendProd : OprogramowanieNaWezle allocate kontekstElicytacji.system.frontend to platformaProd.vm.frontend;
         allocation backendProd : OprogramowanieNaWezle allocate kontekstElicytacji.system.backend to platformaProd.vm.ragBackend;
         allocation workerProd : OprogramowanieNaWezle allocate kontekstElicytacji.system.worker to platformaProd.vm.worker;
@@ -372,8 +365,7 @@ package PlatformaElicytacji {
         // usługi zewnętrzne w zadaniu korekty
         allocation a14 : CzynnoscDlaWykonawcy allocate PotokKorekty::klasyfikujReszte to kontekstElicytacji.ollama;
 
-        // narzędzia badawcze
-        allocation a15 : CzynnoscDlaWykonawcy allocate IngestiaKorpusu to kontekstElicytacji.system.badania;
+        // zapytanie do bazy wiedzy
         allocation a16 : CzynnoscDlaWykonawcy allocate ZapytanieRag to kontekstElicytacji.system.backend.wiedza;
 
         // wdrożenie

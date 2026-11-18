@@ -40,37 +40,39 @@ package WidokiElicytacji {
     private import Renderowania::*;
 
     // =================================================================== view definitions
-    view def WidokWymagan {
+    // Krótka nazwa <...> i specjalizacja widoku standardowego są potrzebne SysON: panel Views
+    // grupuje diagramy po nich (bez tego pokazuje błąd "null").
+    view def <req> WidokWymagan :> StandardViewDefinitions::GeneralView {
         doc /* Wymagania, concerns i ich relacje. */
         render jakoDiagramWymagan;
     }
-    view def WidokPrzypadkowUzycia {
+    view def <uc> WidokPrzypadkowUzycia :> StandardViewDefinitions::GeneralView {
         render jakoDiagramPrzypadkowUzycia;
     }
-    view def WidokPakietow {
+    view def <pkg> WidokPakietow :> StandardViewDefinitions::GeneralView {
         render jakoDiagramPakietow;
     }
-    view def WidokDefinicji {
+    view def <bdd> WidokDefinicji :> StandardViewDefinitions::GeneralView {
         doc /* Hierarchia definicji (odpowiednik BDD). */
         render asTreeDiagram;
     }
-    view def WidokPolaczen {
+    view def <ibd> WidokPolaczen :> StandardViewDefinitions::InterconnectionView {
         doc /* Części, porty i połączenia (odpowiednik IBD). */
         render asInterconnectionDiagram;
     }
-    view def WidokStanow {
+    view def <stm> WidokStanow :> StandardViewDefinitions::StateTransitionView {
         render jakoDiagramStanow;
     }
-    view def WidokCzynnosci {
+    view def <act> WidokCzynnosci :> StandardViewDefinitions::ActionFlowView {
         render jakoDiagramCzynnosci;
     }
-    view def WidokSekwencji {
+    view def <sd> WidokSekwencji :> StandardViewDefinitions::GeneralView {
         render jakoDiagramSekwencji;
     }
-    view def WidokParametryczny {
+    view def <par> WidokParametryczny :> StandardViewDefinitions::GeneralView {
         render jakoDiagramParametryczny;
     }
-    view def WidokTabelaryczny {
+    view def <tab> WidokTabelaryczny :> StandardViewDefinitions::GeneralView {
         render asElementTable;
     }
 
@@ -94,8 +96,8 @@ package WidokiElicytacji {
     }
     view przypadkiUzycia : WidokPrzypadkowUzycia {
         doc /* U2. */
-        expose KontekstElicytacji::Aktorzy::*;
-        expose KontekstElicytacji::PrzypadkyUzycia::*;
+        expose KontekstElicytacji::Aktorzy::**;
+        expose KontekstElicytacji::PrzypadkyUzycia::**;
     }
 
     // ---- 3. struktura
@@ -117,14 +119,14 @@ package WidokiElicytacji {
     }
     view dekompozycjaSystemu : WidokDefinicji {
         doc /* S2: BDD systemu. */
-        expose StrukturaElicytacji::*;
+        expose StrukturaElicytacji::**;
     }
     view dekompozycjaBackendu : WidokDefinicji {
         doc /* S3: BDD backendu + zależności modułów. */
         expose StrukturaElicytacji::BackendApi;
-        expose StrukturaElicytacji::ModulyBackendu::*;
-        expose StrukturaElicytacji::ZaleznosciModulow::*;
-        expose StrukturaElicytacji::Biblioteki::*;
+        expose StrukturaElicytacji::ModulyBackendu::**;
+        expose StrukturaElicytacji::ZaleznosciModulow::**;
+        expose StrukturaElicytacji::Biblioteki::**;
     }
     view interfejsy : WidokDefinicji {
         doc /* S4: elementy przepływu, porty, interfejsy. */
@@ -137,28 +139,27 @@ package WidokiElicytacji {
     }
     view modelDziedziny : WidokDefinicji {
         doc /* S6: model danych aplikacji. */
-        expose DziedzinaElicytacji::TypyWyliczeniowe::*;
-        expose DziedzinaElicytacji::TrescOdpowiedzi::*;
-        expose DziedzinaElicytacji::SchematApp::*;
+        expose DziedzinaElicytacji::TypyWyliczeniowe::**;
+        expose DziedzinaElicytacji::TrescOdpowiedzi::**;
+        expose DziedzinaElicytacji::SchematApp::**;
     }
     view modelDanychRag : WidokDefinicji {
-        doc /* S6b: schemat chips i korpus. */
-        expose DziedzinaElicytacji::SchematChips::*;
-        expose DziedzinaElicytacji::Korpus::*;
+        doc /* S6b: schemat chips. */
+        expose DziedzinaElicytacji::SchematChips::**;
     }
 
     // ---- 3b. ścieżka przetwarzania wypełnionej winiety (13_SciezkaPrzetwarzania)
     view sciezkaPrzetwarzaniaBdd : WidokDefinicji {
         doc /* S7: BDD - komponenty ścieżki, artefakty i porty artefaktów. */
         expose SciezkaPrzetwarzania::SciezkaPrzetwarzaniaWiniety;
-        expose SciezkaPrzetwarzania::Komponenty::*;
-        expose SciezkaPrzetwarzania::Artefakty::*;
-        expose SciezkaPrzetwarzania::PortyArtefaktow::*;
+        expose SciezkaPrzetwarzania::Komponenty::**;
+        expose SciezkaPrzetwarzania::Artefakty::**;
+        expose SciezkaPrzetwarzania::PortyArtefaktow::**;
     }
     view sciezkaPrzetwarzaniaIbd : WidokPolaczen {
         doc /* S8: IBD - od zgłoszenia przez kolejkę, worker i magazyn stanu do chips. */
         expose SciezkaPrzetwarzania::SciezkaPrzetwarzaniaWiniety;
-        expose SciezkaPrzetwarzania::SciezkaPrzetwarzaniaWiniety::*;
+        expose SciezkaPrzetwarzania::SciezkaPrzetwarzaniaWiniety::**;
     }
     view wnetrzeKorekty : WidokPolaczen {
         doc /* S9: IBD zadania proofread - PREPARE (rozbiór, korekta odpowiedzi, warstwy powiązań, flagi) i zapis rundy. */
@@ -173,7 +174,7 @@ package WidokiElicytacji {
     }
     view alokacjaSciezki : WidokTabelaryczny {
         doc /* A4: części ścieżki -> moduły i kontenery. */
-        expose SciezkaPrzetwarzania::AlokacjaSciezki::*;
+        expose SciezkaPrzetwarzania::AlokacjaSciezki::**;
     }
 
     // ---- 4. zachowanie
@@ -195,7 +196,7 @@ package WidokiElicytacji {
         doc /* B3: z torami z PlatformaElicytacji::AlokacjaCzynnosci. */
         expose CzynnosciElicytacji::OdOdpowiedziDoWiedzy;
         expose CzynnosciElicytacji::OdOdpowiedziDoWiedzy::**;
-        expose PlatformaElicytacji::AlokacjaCzynnosci::*;
+        expose PlatformaElicytacji::AlokacjaCzynnosci::**;
     }
     view potokKorekty : WidokCzynnosci {
         expose CzynnosciElicytacji::PotokKorekty;
@@ -206,11 +207,6 @@ package WidokiElicytacji {
         expose CzynnosciElicytacji::ZbudujJednostki::**;
         expose CzynnosciElicytacji::IngestujJednostki;
         expose CzynnosciElicytacji::IngestujJednostki::**;
-    }
-    view ingestiaKorpusu : WidokCzynnosci {
-        doc /* B4. */
-        expose CzynnosciElicytacji::IngestiaKorpusu;
-        expose CzynnosciElicytacji::IngestiaKorpusu::**;
     }
     view zapytanieRag : WidokCzynnosci {
         doc /* B5. */
@@ -252,7 +248,6 @@ package WidokiElicytacji {
         doc /* P1. */
         expose AnalizaElicytacji::jakoscRag;
         expose AnalizaElicytacji::jakoscRag::**;
-        expose AnalizaElicytacji::EwaluacjaRag;
     }
     view parametrykaWdrozenia : WidokParametryczny {
         doc /* P3: budżet pamięci VM, puls dzierżawy, wiek sondy mocy. */
@@ -267,13 +262,13 @@ package WidokiElicytacji {
         doc /* A2: VM Azure (compose) + komputer z modelami przez Tailscale. */
         expose PlatformaElicytacji::PlatformaProd;
         expose PlatformaElicytacji::PlatformaProd::**;
-        expose PlatformaElicytacji::AlokacjaProd::*;
+        expose PlatformaElicytacji::AlokacjaProd::**;
     }
     view wdrozenieDeweloperskie : WidokPolaczen {
         doc /* A3. */
         expose PlatformaElicytacji::PlatformaDev;
         expose PlatformaElicytacji::PlatformaDev::**;
-        expose PlatformaElicytacji::AlokacjaDev::*;
+        expose PlatformaElicytacji::AlokacjaDev::**;
     }
     view platformaCiCd : WidokPolaczen {
         doc /* A5: GitHub Actions, rejestr obrazów, środowisko testowe. */
@@ -289,13 +284,13 @@ package WidokiElicytacji {
     }
     view planTestow : WidokTabelaryczny {
         doc /* R4: przypadki testowe z poziomem i informacją, czy działają w CI. */
-        expose SledzenieElicytacji::Weryfikacja::*;
+        expose SledzenieElicytacji::Weryfikacja::**;
     }
     view macierzAlokacji : WidokTabelaryczny {
         doc /* A1: czynności -> wykonawcy, oprogramowanie -> węzły. */
-        expose PlatformaElicytacji::AlokacjaCzynnosci::*;
-        expose PlatformaElicytacji::AlokacjaDev::*;
-        expose PlatformaElicytacji::AlokacjaProd::*;
-        expose SciezkaPrzetwarzania::AlokacjaSciezki::*;
+        expose PlatformaElicytacji::AlokacjaCzynnosci::**;
+        expose PlatformaElicytacji::AlokacjaDev::**;
+        expose PlatformaElicytacji::AlokacjaProd::**;
+        expose SciezkaPrzetwarzania::AlokacjaSciezki::**;
     }
 }

@@ -79,12 +79,6 @@ package InterfejsyElicytacji {
 
         item def ListaJezykow;
 
-        item def ObiektWMagazynie {
-            doc /* Obiekt w magazynie S3 (MinIO): surowy / sparsowany / pocięty dokument. */
-            attribute bucket : String;
-            attribute klucz : String;
-        }
-
         item def ZapytanieWyszukiwania {
             doc /* POST /knowledge-units/search: pytanie klinicysty lub tekst pacjenta. */
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/schemas.py"; }
@@ -133,11 +127,6 @@ package InterfejsyElicytacji {
             out item listaJezykow : ListaJezykow;
         }
 
-        port def PortS3 {
-            doc /* Strona magazynu obiektów zgodnego z S3. */
-            in item zapisz : ObiektWMagazynie;
-            out item pobierz : ObiektWMagazynie;
-        }
     }
 
     private import Porty::*;
@@ -186,12 +175,5 @@ package InterfejsyElicytacji {
             flow of ListaJezykow from serwer.listaJezykow to klient.listaJezykow;
         }
 
-        interface def ApiS3 {
-            @OdwolanieDoKodu { sciezka = "scripts/corpus/storage.py"; }
-            end klient : ~PortS3;
-            end serwer : PortS3;
-            flow of ObiektWMagazynie from klient.zapisz to serwer.zapisz;
-            flow of ObiektWMagazynie from serwer.pobierz to klient.pobierz;
-        }
     }
 }

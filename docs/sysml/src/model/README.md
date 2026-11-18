@@ -20,11 +20,11 @@ są do uzupełnienia.
 | `02_Kontekst.sysml` | `KontekstElicytacji` | aktorzy, systemy zewnętrzne, `kontekstElicytacji`, przypadki użycia | wymagania / kontekst |
 | `03_Interfejsy.sysml` | `InterfejsyElicytacji` | elementy przepływu, porty, interfejsy | struktura |
 | `04_Struktura.sysml` | `StrukturaElicytacji` | `SystemElicytacji`, moduły backendu, frontend, worker, baza, narzędzia badawcze | struktura |
-| `05_Dziedzina.sysml` | `DziedzinaElicytacji` | typy wyliczeniowe, schematy `app` i `chips`, korpus | struktura (dane) |
+| `05_Dziedzina.sysml` | `DziedzinaElicytacji` | typy wyliczeniowe, schematy `app` i `chips` | struktura (dane) |
 | `06_Stany.sysml` | `StanyElicytacji` | cykl życia przydziału, wersji winiety i zadania | zachowanie |
-| `07_Czynnosci.sysml` | `CzynnosciElicytacji` | od odpowiedzi do wiedzy, korekta, jednostki, ingestia, korpus, zapytanie RAG | zachowanie |
+| `07_Czynnosci.sysml` | `CzynnosciElicytacji` | od odpowiedzi do wiedzy, korekta, jednostki, ingestia, zapytanie RAG | zachowanie |
 | `08_Interakcje.sysml` | `InterakcjeElicytacji` | sekwencje: zgłoszenie, wykonanie zadania, wyszukiwanie | zachowanie |
-| `09_Analiza.sysml` | `AnalizaElicytacji` | RRF, budżet kontekstu, progi jakości, ewaluacja RAG | parametryka |
+| `09_Analiza.sysml` | `AnalizaElicytacji` | RRF, budżet kontekstu, progi jakości wyszukiwania | parametryka |
 | `10_Platforma.sysml` | `PlatformaElicytacji` | platforma dev (docker-compose), prod (VM Azure + komputer z modelami przez Tailscale), CI/CD (GitHub Actions, ghcr.io), środowisko testowe, czynność wdrożenia, alokacje | alokacja |
 | `11_Sledzenie.sysml` | `SledzenieElicytacji` | `satisfy`, przypadki weryfikacji (testy z poziomem i informacją o CI), `verify` | wymagania |
 | `12_Widoki.sysml` | `WidokiElicytacji` | widoki = diagramy | widoki |
@@ -62,7 +62,7 @@ transakcji, modele) i HANDLERS (zapis pod blokadą przydziału, razem z przejśc
 | `wnetrzeSystemu` | Internal Block Diagram (ibd) | `04` |
 | `modelDziedziny`, `modelDanychRag` | BDD z blokami danych i typami wartości | `05` |
 | `stanyPrzydzialu`, `stanyWiniety`, `stanyZadania` | State Machine Diagram (stm) | `06` |
-| `odOdpowiedziDoWiedzy` (z torami), `potokKorekty`, `jednostkiIIngestia`, `ingestiaKorpusu`, `zapytanieRag` | Activity Diagram (act) | `07`, `10` |
+| `odOdpowiedziDoWiedzy` (z torami), `potokKorekty`, `jednostkiIIngestia`, `zapytanieRag` | Activity Diagram (act) | `07`, `10` |
 | `wykonanieZadania`, `potokWdrozenia` | Activity Diagram (act) | `07`, `10` |
 | `sekwencjaZgloszenia`, `sekwencjaZadania`, `sekwencjaWyszukiwania`, `sekwencjaOdmowyBezMocy` | Sequence Diagram (sd) | `08` |
 | `budzetLlm`, `parametrykaJakosciRag`, `parametrykaWdrozenia` | Parametric Diagram (par) | `09` |
@@ -122,6 +122,30 @@ Pliki **nie były sprawdzane parserem**. Zalecane:
 - `AnalizaElicytacji::budzetWywolanLlm`: `tokenyPromptu`, `tokenyOdpowiedzi` z pomiaru.
 - Mapowanie test → wymaganie w `11_Sledzenie.sysml` wyprowadzono z treści testów; potwierdzić.
 
+## Zmiany 2026-11-18
+
+Poza modelem jest teraz to, co nie wchodzi w skład systemu: **tymczasowe skrypty z `scripts/`** i
+**szybki RAG po korpusie dokumentów**. Usunięto:
+
+- `NarzedziaBadawcze` (skrypty korpusu, elicytacji, ewaluacji RAG, bazy danych; persony ekspertów
+  syntetycznych) wraz z interfejsami, połączeniami i alokacją na kontener `dev`;
+- korpus dokumentów (pakiet danych, czynność wraz z krokami i widokiem, tabele) razem z magazynem
+  plików i jego węzłami w platformie deweloperskiej;
+- systemy zewnętrzne korpusu i puli postów oraz powiązane z nimi przypadki użycia;
+- ewaluację przez skrypty: `EwaluacjaRag`, `UruchomienieEwaluacji`, `MetrykiWyszukiwania`,
+  `JakoscOdpowiedziWgSedziow`, test `UruchomienieEwaluacjiRag`, test `TestStrazyLadowaniaChips`
+  (strażnik ładowarki fikstur) i poziom testu `skryptow`.
+
+Zostaje RAG po jednostkach eksperckich (`packages/expert-knowledge-*`, czynność `ZapytanieRag`).
+Zmiany pomocnicze: `satisfy odpowiedziRag` wskazuje teraz `system.backend.rag` (dawniej
+`system.badania.rag`); odwołania do `scripts/db/chips_schema.sql` zastąpiono migracją
+`backend/migrations/versions/0003_pipeline.py`; `jakoscRag` ma własne atrybuty `pelnoscAt4` i `mrr`
+(do uzupełnienia) zamiast przebiegu ewaluacji.
+
+Skutki do rozstrzygnięcia: `WYM-N-14 jakoscOdpowiedzi` nie ma już ani `satisfy`, ani `verify`;
+`inzynier` w `kontekstElicytacji` nie ma połączenia z systemem (jego jedyny pozostały przypadek użycia,
+`WdrozWydanie`, przebiega przez CI/VM).
+
 ## Zmiany 2026-11-17
 
 - **Wdrożenie:** Render + Neon zastąpione jedną VM Azure (Caddy → nginx → API, worker, Postgres w
@@ -131,10 +155,10 @@ Pliki **nie były sprawdzane parserem**. Zalecane:
   `compute_unavailable` w API, wstrzymywanie zadań w workerze, korekta bez pomijania usług.
   Nowe wymagania `WYM-N-16`..`WYM-N-20`, stan `czekanieNaMoc` w cyklu zadania, czynność
   `WykonanieZadania`, sekwencja `InterakcjaOdmowyBezMocy`.
-- **Testy:** nowy układ (unit, api, integration, scripts), baza testów API na przebieg
+- **Testy:** nowy układ (unit, api, integration), baza testów API na przebieg
   (`rag_<pid>_test`), regresja jakości wyszukiwania, specyfikacje vitest; CI bez bazy.
-- **Badania:** fikstura skali do 32 ekspertów (persony E21-E32, prompt v5, etap korekty aplikacji),
-  migawka `chips_snapshot`, filtr ekspertów w `expert-knowledge-rag`.
+- **Badania:** filtr ekspertów w `expert-knowledge-rag`. (Fikstury, persony i migawki zostały
+  później wyłączone z modelu, zob. 2026-11-18.)
 - **Ścieżka przetwarzania:** nowy plik `13_SciezkaPrzetwarzania.sysml` (BDD + IBD).
 
 ## Rozbieżności kod ↔ dokumentacja (stan na 2026-11-16)

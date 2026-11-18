@@ -4,8 +4,7 @@ package DziedzinaElicytacji {
      * Trzy obszary:
      *   SchematApp      - schemat `app` aplikacji (modele SQLAlchemy w backend/app/<moduł>/models.py)
      *   TrescOdpowiedzi - treść odpowiedzi eksperta (payload JSONB szkicu i zgłoszenia)
-     *   SchematChips    - schemat RAG `chips` (scripts/db/chips_schema.sql), wypełniany przy ingestii
-     *   Korpus          - korpus literatury (backend/db/init.sql): dokumenty i fragmenty
+     *   SchematChips    - schemat RAG `chips` (migracja backend/migrations/versions/0003_pipeline.py), wypełniany przy ingestii
      * Typy wyliczeniowe odpowiadają klasom StrEnum z kodu; literały mają polskie nazwy, a wartość
      * w bazie (z kodu) podano w komentarzu `// db:` przy każdym literale.
      */
@@ -432,7 +431,7 @@ package DziedzinaElicytacji {
          * Schemat `chips` czytany przez bibliotekę packages/expert-knowledge-rag.
          * Wektory: bge-m3 (1024 wymiary) + rzadki wektor BM25.
          */
-        @OdwolanieDoKodu { sciezka = "scripts/db/chips_schema.sql"; }
+        @OdwolanieDoKodu { sciezka = "backend/migrations/versions/0003_pipeline.py"; }
         private import TypyWyliczeniowe::*;
 
         attribute def WektorGesty {
@@ -524,45 +523,4 @@ package DziedzinaElicytacji {
         }
     }
 
-    // =================================================================== literature corpus
-    package Korpus {
-        doc /* Korpus literatury (offline): dokumenty w MinIO, fragmenty z wektorami w Postgresie. */
-        @OdwolanieDoKodu { sciezka = "backend/db/init.sql"; }
-        private import SchematChips::WektorGesty;
-        private import SchematChips::WektorRzadki;
-
-        enum def StatusDokumentu {
-            enum przeslany;  // db: uploaded
-            enum parsowanie;  // db: parsing
-            enum sparsowany;  // db: parsed
-            enum zaindeksowany;  // db: indexed
-            enum nieudane;  // db: failed
-        }
-
-        item def Dokument {
-            attribute id : Uuid;
-            attribute pochodzenie : String;           // manifest | user_upload
-            attribute idZrodla : String[0..1];
-            attribute tytul : String[0..1];
-            attribute s3Bucket : String;
-            attribute s3Klucz : String;
-            attribute sha256 : Sha256;
-            attribute urlZrodla : String[0..1];
-            attribute status : StatusDokumentu;
-        }
-
-        item def Fragment {
-            attribute id : String;
-            ref dokument : Dokument[1];
-            attribute numerFragmentu : Integer;
-            attribute tekst : String;
-            attribute tekstKontekstowy : String;
-            attribute sciezkaNaglowkow : String[0..*];
-            attribute liczbaTokenow : Integer;
-            attribute osadzenie : WektorGesty;
-            attribute rzadki : WektorRzadki[0..1];
-            attribute modelOsadzen : String;
-            attribute konfiguracjaIndeksu : String;
-        }
-    }
 }

@@ -2,7 +2,7 @@ package SledzenieElicytacji {
     doc /*
      * Śledzenie: wymaganie --satisfy--> element struktury, przypadek weryfikacji --verify--> wymaganie.
      * Przypadki weryfikacji = istniejące testy: pytest (tests/unit, tests/api, tests/integration,
-     * tests/scripts, tests/test_*.py, packages/<pakiet>/tests) i vitest (frontend/src/__tests__),
+     * tests/test_*.py, packages/<pakiet>/tests) i vitest (frontend/src/__tests__),
      * oraz test dymny wdrożenia. Gdzie który poziom działa: PlatformaElicytacji::SrodowiskoTestowe.
      * Mapowanie test -> wymaganie wyprowadzono z nazw i treści testów; do potwierdzenia.
      */
@@ -40,7 +40,7 @@ package SledzenieElicytacji {
         satisfy sladAudytowy by kontekstElicytacji.system.backend.audyt;
         satisfy wyszukiwanieWiedzy by kontekstElicytacji.system.backend.wiedza.wyszukiwanie;
         satisfy usuwanieWiedzy by kontekstElicytacji.system.backend.wiedza.usuwanie;
-        satisfy odpowiedziRag by kontekstElicytacji.system.badania.rag;     // @Planowane w aplikacji
+        satisfy odpowiedziRag by kontekstElicytacji.system.backend.rag;     // @Planowane w aplikacji
 
         satisfy modeleLokalne by kontekstElicytacji.ollama;
         satisfy budzetKontekstu by kontekstElicytacji.system.worker.wiedza.klasyfikator;
@@ -69,7 +69,6 @@ package SledzenieElicytacji {
         enum def PoziomTestu {
             doc /* Katalog / znacznik testu. */
             enum jednostkowy;     // tests/unit, tests/test_*.py, testy pakietów bez bazy
-            enum skryptow;        // tests/scripts - skrypty badawcze
             enum api;             // tests/api - FastAPI + własna baza rag_<pid>_test (znacznik integration)
             enum integracyjny;    // tests/integration, packages/*/tests/integration (znacznik integration)
             enum regresyjny;      // znacznik regression: jakość wyszukiwania na migawce silver
@@ -282,14 +281,6 @@ package SledzenieElicytacji {
             }
         }
 
-        verification def TestStrazyLadowaniaChips :> PrzypadekTestowy {
-            doc /* Ładowarka fikstur nigdy nie pisze do schematu `chips` (bazy wiedzy aplikacji). */
-            @OdwolanieDoKodu { sciezka = "tests/test_load_chips_guard.py"; }
-            @DoUzupelnienia;    // wymaganie weryfikowane przez ten test
-            attribute :>> poziom = PoziomTestu::jednostkowy;
-            attribute :>> wCi = true;
-        }
-
         // ---------------------------------------------------- worker i moc obliczeniowa
         verification def TestApiWorkera :> PrzypadekTestowy {
             doc /* Wolne PREPARE nie trzyma blokady przydziału; puls (dzierżawa 1,5 s w teście) chroni długie zadanie. */
@@ -429,18 +420,6 @@ package SledzenieElicytacji {
             }
         }
 
-        verification def UruchomienieEwaluacjiRag :> PrzypadekTestowy {
-            doc /* Ewaluacja RAG (AnalizaElicytacji::EwaluacjaRag) - progi do uzupełnienia. */
-            @OdwolanieDoKodu { sciezka = "scripts/rag/eval_expert_units.py"; }
-            @DoUzupelnienia;
-            attribute :>> poziom = PoziomTestu::regresyjny;
-            attribute :>> wCi = false;
-            objective {
-                verify jakoscWyszukiwania;
-                verify jakoscOdpowiedzi;
-            }
-        }
-
         // ---------------------------------------------------- frontend (vitest)
         verification def TestyFrontenduPrzeplywu :> PrzypadekTestowy {
             doc /* answerDraft, answerView, proofreadStep, failedActions, reviewDecisions, reviews. */
@@ -512,7 +491,6 @@ package SledzenieElicytacji {
         verification apiPotok : TestApiPotoku;
         verification apiSrebrnyPrzeplyw : TestApiSrebrnegoPrzeplywu;
         verification ustalenia : TestUstalen;
-        verification strazLadowaniaChips : TestStrazyLadowaniaChips;
         verification apiWorker : TestApiWorkera;
         verification tabeleZadan : TestTabelZadan;
         verification mocObliczeniowa : TestMocyObliczeniowej;
@@ -525,7 +503,6 @@ package SledzenieElicytacji {
         verification srebrnaBaza : TestSrebrnejBazy;
         verification zatloczonaWinieta : TestZatloczonejWiniety;
         verification regresjaWyszukiwania : TestRegresjiWyszukiwania;
-        verification ewaluacjaRag : UruchomienieEwaluacjiRag;
         verification frontendPrzeplyw : TestyFrontenduPrzeplywu;
         verification frontendDostep : TestyFrontenduDostepu;
         verification frontendWiedza : TestyFrontenduWiedzy;

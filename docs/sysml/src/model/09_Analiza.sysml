@@ -4,8 +4,7 @@ package AnalizaElicytacji {
      *   SkladnikFuzjiRrf                               - składnik fuzji RRF (RRF_K = 60)
      *   BudzetKontekstu                                - mieszczenie się wywołania LLM w num_ctx
      *   BudzetKontekstuEkspertow                       - budżet tokenów notatek eksperckich dla generatora (300/500/800)
-     *   JakoscWyszukiwania / JakoscOdpowiedziWgSedziow - progi jakości (wartości do uzupełnienia)
-     *   EwaluacjaRag                                   - przypadek analizy odpowiadający scripts/rag/eval_*.py
+     *   JakoscWyszukiwania                             - progi jakości wyszukiwania (wartości do uzupełnienia)
      *   BudzetPamieciVm                                - limity pamięci kontenerów mieszczą się w VM
      *   OdnowienieDzierzawy, SwiezoscSondy             - puls dzierżawy i wiek sondy mocy obliczeniowej
      *   budzetWywolanLlm, jakoscRag, budzetPamieciVm, niezawodnoscZadan
@@ -44,8 +43,7 @@ package AnalizaElicytacji {
     }
 
     constraint def BudzetKontekstuEkspertow {
-        doc /* Notatki eksperckie przekazane generatorowi nie przekraczają budżetu (BUDGETS w expert_metrics.py). */
-        @OdwolanieDoKodu { sciezka = "scripts/rag/expert_metrics.py"; }
+        doc /* Notatki eksperckie przekazane generatorowi nie przekraczają budżetu. */
         in budzetTokenow : Integer;
         in pokazaneTokeny : Integer;
         pokazaneTokeny <= budzetTokenow
@@ -58,13 +56,6 @@ package AnalizaElicytacji {
         in minimalnaPelnoscAt4 : Real;
         in minimalneMrr : Real;
         pelnoscAt4 >= minimalnaPelnoscAt4 and mrr >= minimalneMrr
-    }
-
-    constraint def JakoscOdpowiedziWgSedziow {
-        doc /* Średnia ocena sędziów LLM nie niższa niż próg (WYM-N-14). */
-        in sredniaOcenaSedziow : Real;
-        in minimalnaOcenaSedziow : Real;
-        sredniaOcenaSedziow >= minimalnaOcenaSedziow
     }
 
     constraint def BudzetPamieciVm {
@@ -97,57 +88,6 @@ package AnalizaElicytacji {
         wiekSondyS <= maksymalnyWiekS
     }
 
-    // =================================================================== evaluation subject
-    attribute def MetrykiWyszukiwania {
-        doc /* Metryki z score_query(): recall@k, hit@k, MRR, nDCG@10, recall przy budżecie tokenów. */
-        @OdwolanieDoKodu { sciezka = "scripts/rag/expert_metrics.py"; }
-        attribute pelnoscAt1 : Real;
-        attribute pelnoscAt4 : Real;
-        attribute pelnoscAt8 : Real;
-        attribute trafienieAt4 : Real;
-        attribute sufitAt4 : Real;
-        attribute mrr : Real;
-        attribute ndcgAt10 : Real;
-        attribute pelnoscPrzy500Tokenach : Real;
-        attribute tezyNa100Tokenow : Real;
-    }
-
-    part def UruchomienieEwaluacji {
-        doc /* Jedno uruchomienie ewaluacji (konfiguracja retrievera, generator, sędziowie, wyniki z przedziałami bootstrap). */
-        @OdwolanieDoKodu { sciezka = "scripts/rag/report_eval.py"; }
-        attribute wyszukiwacz : String;
-        attribute modelGeneratora : String;
-        attribute modeleSedziow : String[1..*];
-        attribute metryki : MetrykiWyszukiwania;
-        attribute sredniaOcenaSedziow : Real;
-        attribute probyBootstrap : Integer = 1000;
-    }
-
-    analysis def EwaluacjaRag {
-        doc /* Ewaluacja wyszukiwania i generowania (umiejętność rag-eval). Progi do uzupełnienia. */
-        @OdwolanieDoKodu { sciezka = "scripts/rag/eval_expert_units.py"; }
-        subject uruchomienie : UruchomienieEwaluacji;
-        in attribute progPelnosci : Real;
-        in attribute progMrr : Real;
-        in attribute progOcenySedziow : Real;
-
-        objective celJakosci {
-            doc /* Spełnić WYM-N-13 i WYM-N-14. */
-            require constraint wymogWyszukiwania : JakoscWyszukiwania {
-                in pelnoscAt4 = uruchomienie.metryki.pelnoscAt4;
-                in mrr = uruchomienie.metryki.mrr;
-                in minimalnaPelnoscAt4 = progPelnosci;
-                in minimalneMrr = progMrr;
-            }
-            require constraint odpowiedzi : JakoscOdpowiedziWgSedziow {
-                in sredniaOcenaSedziow = uruchomienie.sredniaOcenaSedziow;
-                in minimalnaOcenaSedziow = progOcenySedziow;
-            }
-        }
-
-        return attribute zaliczone : Boolean;
-    }
-
     // =================================================================== parametric contexts
     part budzetWywolanLlm {
         doc /* Kontekst parametryczny dla wywołań LLM w korekcie i klasyfikacji (num_ctx 8192). */
@@ -172,9 +112,10 @@ package AnalizaElicytacji {
 
     part jakoscRag {
         doc /* Kontekst parametryczny dla odpowiedzi RAG: budżet notatek i progi jakości. */
-        part uruchomienie : UruchomienieEwaluacji;
         attribute budzetTokenow : Integer = 500;
         attribute pokazaneTokeny : Integer;          // do uzupełnienia
+        attribute pelnoscAt4 : Real;                 // do uzupełnienia - z pomiaru
+        attribute mrr : Real;                        // do uzupełnienia - z pomiaru
         attribute minimalnaPelnoscAt4 : Real;            // do uzupełnienia
         attribute minimalneMrr : Real;                  // do uzupełnienia
 
@@ -183,8 +124,8 @@ package AnalizaElicytacji {
         bind budzet.pokazaneTokeny = pokazaneTokeny;
 
         constraint jakosc : JakoscWyszukiwania;
-        bind jakosc.pelnoscAt4 = uruchomienie.metryki.pelnoscAt4;
-        bind jakosc.mrr = uruchomienie.metryki.mrr;
+        bind jakosc.pelnoscAt4 = pelnoscAt4;
+        bind jakosc.mrr = mrr;
         bind jakosc.minimalnaPelnoscAt4 = minimalnaPelnoscAt4;
         bind jakosc.minimalneMrr = minimalneMrr;
     }
