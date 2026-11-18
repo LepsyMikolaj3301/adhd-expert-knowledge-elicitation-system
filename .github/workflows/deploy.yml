@@ -97,7 +97,9 @@ jobs:
           tags: tag:ci
       - name: Is the VM on?
         run: |
-          if ! timeout 60 tailscale ping --c 3 --timeout 10s "${{ vars.VM_HOST }}"; then
+          # A reply through a DERP relay counts: the runner often has no direct path, and SSH works over it.
+          # Without --until-direct=false the ping fails with "direct connection not established".
+          if ! timeout 60 tailscale ping --until-direct=false --c 3 --timeout 10s "${{ vars.VM_HOST }}"; then
             echo "::error::The VM does not answer. Start it in the Azure portal, wait two minutes, run Deploy again."
             exit 1
           fi
