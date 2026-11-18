@@ -71,22 +71,32 @@ Everything goes in one resource group. Use the portal; each item is one screen.
     paste the `.pub` file.)
   - Disk: **Standard SSD**, 30 GB (delete-with-VM on).
   - Networking: use the public IP and NSG above. **Delete public IP when VM is deleted: off.**
-  - Management: **Enable auto-shutdown** at a time after you normally stop (for example 23:00), with
-    your time zone. This is the safety net for forgetting. **Boot diagnostics: off.** Everything else
-    off (Backup, Defender, Monitor, Log Analytics).
+  - Management: **Boot diagnostics: off.** Everything else off (Backup, Defender, Monitor, Log
+    Analytics). Azure's auto-shutdown is not available in Belgium Central; you start and stop the
+    VM yourself (step 3).
 - [ ] Open the VM's page and check that the public IP is the static one and the DNS name works:
       `ssh azureuser@<label>.<region>.cloudapp.azure.com`.
 
 ## 3. Starting, stopping, and what a stop costs
 
-- **Stop**: portal > the VM > **Stop** (it says "Stopped (deallocated)"), or
+The VM runs only when you start it; nothing starts or stops it on a schedule. From the repo root
+(WSL, with `az login` done):
+
+```bash
+infra/azure/vm.sh start    # the app is up about two minutes later
+infra/azure/vm.sh stop     # deallocate when you are done
+infra/azure/vm.sh status
+```
+
+- **Stop**: `infra/azure/vm.sh stop`, portal > the VM > **Stop** (it says "Stopped (deallocated)"), or
   `az vm deallocate -g rag-rg -n rag-vm`. Shutting down from inside Linux does **not** stop the
   billing; only "deallocated" does.
-- **Start**: portal > **Start**, or `az vm start -g rag-rg -n rag-vm`. After about two minutes
+- **Start**: `infra/azure/vm.sh start`, portal > **Start**, or `az vm start -g rag-rg -n rag-vm`. After about two minutes
   everything is back by itself: Docker, Tailscale and the containers start at boot, and the
   certificate is kept in a volume.
 - **Deploy needs the VM on.** If the Deploy workflow says the VM does not answer, start it first.
 - You pay for the disk and the IP while it is off (about $6 a month), nothing else.
+- **Forgetting to stop it** bills until you do; the budget alerts from step 1 are the safety net.
 
 ## 4. Tailscale: the private line between the VM, your PC and GitHub
 
