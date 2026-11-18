@@ -29,7 +29,9 @@ Skrypty rozmawiają z `http://localhost:8080`; inny adres: `SYSON_URL=http://hos
   zrobione tylko w interfejsie SysON przepadają. Prawdą jest tekst.
 - Dla każdego `view` z modelu skrypt tworzy też diagram, wypełniony elementami z `expose`:
   widok, którego `view def` ma `render asInterconnectionDiagram` (albo z `interconnection`
-  w nazwie), daje Interconnection View, pozostałe General View.
+  w nazwie), daje Interconnection View; `view def :> StandardViewDefinitions::ActionFlowView`
+  daje Action Flow View, `:> StandardViewDefinitions::StateTransitionView` State Transition
+  View; pozostałe General View (także wtedy, gdy SysON nie zna danego typu diagramu).
 - `expose Pakiet::*` pokazuje w SysON sam węzeł pakietu; żeby zobaczyć jego zawartość,
   użyj `expose Pakiet::**` albo wskaż elementy po kolei.
 - Po otwarciu diagramu kliknij **Arrange all** (układ liczy przeglądarka, skrypt tego nie zrobi).

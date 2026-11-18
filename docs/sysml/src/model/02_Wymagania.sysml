@@ -1,62 +1,28 @@
 package WymaganiaElicytacji {
     doc /*
      * Wymagania (diagram wymagań). Źródłem wymagań oznaczonych @Zaimplementowane jest kod
-     * (nie docs/*.md, które mogą być nieaktualne). Pozostałe: @Propozycja / @Planowane / @DoUzupelnienia -
-     * do uzupełnienia przez autora pracy.
+     * (nie docs/*.md, które mogą być nieaktualne). Pozostałe: @Propozycja / @Planowane /
+     * @DoUzupelnienia - do uzupełnienia przez autora pracy.
      *
-     * Identyfikatory:  ZAG-xx concern,  WYM-F-xx funkcjonalne,  WYM-N-xx niefunkcjonalne.
-     * Relacje satisfy / verify: SledzenieElicytacji.
+     * Identyfikatory: WYM-F-xx funkcjonalne, WYM-N-xx niefunkcjonalne. Potrzeby ZAG-xx są
+     * w 01_Interesariusze; `frame` wskazuje potrzebę, na którą wymaganie odpowiada.
+     * Spelnianie: który element struktury spełnia wymaganie (`satisfy`).
+     * Numer WYM-F-20 jest wolny (usunięte wymaganie); numerów nie przesuwano.
      */
 
     private import ScalarValues::*;
     private import ISQ::DurationValue;
     private import SI::*;
     private import BibliotekaElicytacji::*;
+    private import InteresariuszeElicytacji::Potrzeby::*;
     private import StrukturaElicytacji::SystemElicytacji;
-    private import KontekstElicytacji::Aktorzy::*;
+    private import KontekstElicytacji::kontekstKliniki;
 
     // =================================================================== base definition
     requirement def WymaganieSystemowe {
         doc /* Wymaganie systemowe; podmiotem jest cały system. */
         subject system : SystemElicytacji;
     }
-
-    // =================================================================== stakeholder concerns
-    package Zagadnienia {
-        concern <'ZAG-01'> wiernoscWiedzy {
-            doc /* Wiedza w bazie to dosłowne słowa eksperta, nie parafraza modelu. */
-            stakeholder inzynier : InzynierWiedzy;
-            stakeholder odbiorca : OdbiorcaRag;
-        }
-
-        concern <'ZAG-02'> odpowiedziBezWplywu {
-            doc /* Odpowiedzi eksperta nie są zabarwione lekturą cudzych odpowiedzi. */
-            stakeholder inzynier : InzynierWiedzy;
-        }
-
-        concern <'ZAG-03'> malyNakladEksperta {
-            doc /* Ekspert poświęca czas na wiedzę, nie na obsługę narzędzia. */
-            stakeholder ekspert : Ekspert;
-        }
-
-        concern <'ZAG-04'> kontrolaNadBazaWiedzy {
-            doc /* Administrator decyduje, co trafia do bazy wiedzy, i może to usunąć. */
-            stakeholder administrator : Administrator;
-        }
-
-        concern <'ZAG-05'> prywatnosc {
-            doc /* Dane ekspertów są chronione i pseudonimizowane; RODO. */
-            stakeholder podmiotDanych : PodmiotDanych;
-        }
-
-        concern <'ZAG-06'> sladowalnosc {
-            doc /* Każdą zmianę stanu i każdą jednostkę da się odtworzyć do źródła. */
-            stakeholder inzynier : InzynierWiedzy;
-            stakeholder administrator : Administrator;
-        }
-    }
-
-    private import Zagadnienia::*;
 
     // =================================================================== functional
     package Funkcjonalne {
@@ -65,11 +31,11 @@ package WymaganiaElicytacji {
         requirement <'WYM-F-01'> dostepWgRol : WymaganieSystemowe {
             doc /* System rozróżnia role admin i expert; każde wywołanie API sprawdza uprawnienia roli. */
             @Zaimplementowane;
-            @OdwolanieDoKodu { sciezka = "backend/app/users/models.py"; }
+            @OdwolanieDoKodu { sciezka = "backend/app/auth/dependencies.py"; }
         }
 
         requirement <'WYM-F-02'> kontaTylkoZZaproszen : WymaganieSystemowe {
-            doc /* Konto eksperta powstaje tylko z zaproszenia administratora (ważnego 7 dni). */
+            doc /* Konto eksperta powstaje tylko z zaproszenia inżyniera wiedzy (ważnego 7 dni, INVITE_TTL). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/auth/service.py"; }
             attribute waznoscZaproszenia : DurationValue = 7 [d];
@@ -133,12 +99,13 @@ package WymaganiaElicytacji {
             doc /* Szkic zapisuje się z numerem wersji; nieaktualna karta dostaje draft_conflict zamiast nadpisać tekst. */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/service.py"; }
+            frame malyNakladEksperta;
         }
 
         requirement <'WYM-F-11'> niezmienneZgloszenie : WymaganieSystemowe {
             doc /*
-             * Zgłoszenie jest niezmienne (wyzwalacz w bazie) i zawiera skrót winiety oraz pseudonim
-             * eksperta.
+             * Zgłoszenie (Submission) jest niezmienne (wyzwalacz w bazie) i zawiera skrót winiety
+             * oraz pseudonim eksperta.
              */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/models.py"; }
@@ -149,7 +116,7 @@ package WymaganiaElicytacji {
         requirement <'WYM-F-12'> jedenPunktPrzejsc : WymaganieSystemowe {
             doc /*
              * Stan przydziału zmienia wyłącznie transition(): w jednej transakcji zmienia stan,
-             * zapisuje zdarzenie audytowe i kolejkuje zadanie nowego stanu.
+             * zapisuje zdarzenie audytowe i kolejkuje zadanie nowego stanu (JOB_ON_ENTRY).
              */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/state_machine.py"; }
@@ -192,8 +159,8 @@ package WymaganiaElicytacji {
 
         requirement <'WYM-F-17'> administratorDecyduje : WymaganieSystemowe {
             doc /*
-             * Recenzenci komentują i głosują, ale tylko administrator decyduje (per pytanie):
-             * zatwierdza, odrzuca albo odsyła do autora - wtedy zaczyna się nowa runda.
+             * Recenzenci komentują i głosują, ale tylko inżynier wiedzy (admin) decyduje, per
+             * pytanie: approve, reject albo request_changes - wtedy zaczyna się nowa runda.
              */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/reviews/service.py"; }
@@ -201,20 +168,21 @@ package WymaganiaElicytacji {
         }
 
         requirement <'WYM-F-18'> budowaJednostek : WymaganieSystemowe {
-            doc /* Zatwierdzone odpowiedzi są cięte na jednostki wiedzy (fragment przy cytacie, przypadek). */
+            doc /* Zatwierdzone odpowiedzi są cięte na jednostki wiedzy (`fragment` przy cytacie, `case` - cały przypadek). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/findings.py"; }
             frame wiernoscWiedzy;
         }
 
         requirement <'WYM-F-19'> ingestiaJednostek : WymaganieSystemowe {
-            doc /* Jednostki są osadzane (bge-m3 + BM25) i zapisywane w schemacie chips. */
+            doc /* Jednostki są osadzane (bge-m3 + BM25) i zapisywane w bazie wiedzy (schemat chips). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/ingest.py"; }
+            frame sladowalnosc;
         }
 
         requirement <'WYM-F-21'> ponawianieNieudanychZadan : WymaganieSystemowe {
-            doc /* Administrator ponawia nieudaną korektę, przetwarzanie lub ingestię. */
+            doc /* Inżynier wiedzy ponawia nieudaną korektę, przetwarzanie lub ingestię (retry). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/service.py"; }
         }
@@ -222,29 +190,38 @@ package WymaganiaElicytacji {
         requirement <'WYM-F-22'> sladAudytowy : WymaganieSystemowe {
             doc /* Każde przejście stanu zapisuje zdarzenie audytowe (kto, co, z jakiego stanu do jakiego). */
             @Zaimplementowane;
-            @OdwolanieDoKodu { sciezka = "backend/app/audit/models.py"; }
+            @OdwolanieDoKodu { sciezka = "backend/app/audit/service.py"; }
             frame sladowalnosc;
         }
 
         // ---------------------------------------------------- knowledge base
         requirement <'WYM-F-23'> wyszukiwanieWiedzy : WymaganieSystemowe {
-            doc /* Wyszukiwanie jednostek: pytanie klinicysty albo tekst pacjenta, k = 1..20. */
+            doc /*
+             * Podgląd bazy wiedzy dla inżyniera wiedzy: wyszukiwanie jednostek tymi samymi
+             * retrieverami co RAG kliniki (pytanie albo tekst pacjenta), k = 1..20.
+             */
             @Zaimplementowane;
-            @OdwolanieDoKodu { sciezka = "backend/app/knowledge/search.py"; }
+            @OdwolanieDoKodu { sciezka = "backend/app/knowledge/router.py"; }
+            frame kontrolaNadBazaWiedzy;
             attribute maksymalneK : Integer = 20;
         }
 
         requirement <'WYM-F-24'> usuwanieWiedzy : WymaganieSystemowe {
-            doc /* Administrator usuwa jednostkę albo całą wiedzę eksperta; indeks BM25 jest przeliczany. */
+            doc /* Inżynier wiedzy usuwa jednostkę albo całą wiedzę eksperta; indeks BM25 jest przeliczany (zadanie refit). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/removal.py"; }
             frame kontrolaNadBazaWiedzy;
         }
 
-        requirement <'WYM-F-25'> odpowiedziRag : WymaganieSystemowe {
-            doc /* Odpowiedzi generowane na podstawie jednostek wiedzy w czasie zapytania. */
-            @Planowane;
-            @OdwolanieDoKodu { sciezka = "packages/expert-knowledge-rag/src/expert_knowledge_rag/chains.py"; }
+        requirement <'WYM-F-25'> udostepnienieBazyWiedzy : WymaganieSystemowe {
+            doc /*
+             * Baza wiedzy (schemat chips) jest dostępna dla zewnętrznego RAG przez bibliotekę
+             * expert-knowledge-rag (retrievery LangChain), tylko do odczytu: każde wywołanie działa
+             * w transakcji READ ONLY. Zapisuje do niej tylko system elicytacji.
+             */
+            @Zaimplementowane;
+            @OdwolanieDoKodu { sciezka = "packages/expert-knowledge-rag/src/expert_knowledge_rag/store.py"; }
+            frame wiedzaDlaRagKliniki;
         }
     }
 
@@ -254,14 +231,16 @@ package WymaganiaElicytacji {
         requirement <'WYM-N-01'> modeleLokalne : WymaganieSystemowe {
             doc /*
              * Modele językowe działają lokalnie (Ollama na komputerze właściciela, osiągalnym z serwera
-             * tylko przez sieć Tailscale); treść odpowiedzi nie trafia do zewnętrznych usług AI.
+             * tylko przez sieć Tailscale); odpowiedzi ekspertów i tekst winiet nie trafiają do
+             * zewnętrznych usług AI.
              */
             @Propozycja;
-            frame prywatnosc;
+            frame prywatnoscEksperta;
+            frame ochronaDanychPacjenta;
         }
 
         requirement <'WYM-N-02'> budzetKontekstu : WymaganieSystemowe {
-            doc /* Każde wywołanie LLM mieści się w oknie kontekstu małego modelu. */
+            doc /* Każde wywołanie LLM mieści się w oknie kontekstu małego modelu (num_ctx). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/classifier.py"; }
             attribute rozmiarKontekstu : Integer = 8192;
@@ -269,8 +248,8 @@ package WymaganiaElicytacji {
 
         requirement <'WYM-N-03'> ograniczonePonawianieZadan : WymaganieSystemowe {
             doc /*
-             * Zadanie ma najwyżej 3 próby; dzierżawa 5 min odnawiana w trakcie pracy, więc zadanie
-             * po awarii workera jest przejmowane po jednej dzierżawie.
+             * Zadanie ma najwyżej 3 próby (MAX_ATTEMPTS); dzierżawa 5 min (LEASE) odnawiana
+             * w trakcie pracy, więc zadanie po awarii workera jest przejmowane po jednej dzierżawie.
              */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/jobs/queue.py"; }
@@ -279,11 +258,14 @@ package WymaganiaElicytacji {
         }
 
         requirement <'WYM-N-04'> ochronaLogowania : WymaganieSystemowe {
-            doc /* Konto blokowane po 5 nieudanych logowaniach; ta sama odpowiedź dla każdego błędu. */
+            doc /*
+             * Po 5 nieudanych logowaniach konto jest blokowane na 15 min (MAX_FAILED_LOGINS,
+             * LOCKOUT); ta sama odpowiedź dla każdego błędu logowania.
+             */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/auth/service.py"; }
             attribute maksymalnaLiczbaNieudanychLogowan : Integer = 5;
-            require constraint { system.backend.uwierzytelnianie.maksymalnaLiczbaNieudanychLogowan <= maksymalnaLiczbaNieudanychLogowan }
+            require constraint { system.api.auth.MAX_FAILED_LOGINS <= maksymalnaLiczbaNieudanychLogowan }
         }
 
         requirement <'WYM-N-05'> czasZyciaSesji : WymaganieSystemowe {
@@ -297,11 +279,11 @@ package WymaganiaElicytacji {
             doc /* Zgłoszenia i baza wiedzy identyfikują eksperta pseudonimem, nie nazwiskiem. */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/service.py"; }
-            frame prywatnosc;
+            frame prywatnoscEksperta;
         }
 
         requirement <'WYM-N-07'> skalowalneWorkery : WymaganieSystemowe {
-            doc /* Wiele workerów może działać równolegle bez pobrania tego samego zadania (SKIP LOCKED). */
+            doc /* Wiele workerów może działać równolegle bez pobrania tego samego zadania (FOR UPDATE SKIP LOCKED). */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/jobs/queue.py"; }
         }
@@ -319,7 +301,7 @@ package WymaganiaElicytacji {
             doc /*
              * Jedna mała maszyna wirtualna (Azure Standard_B2s, 4 GB) z limitami pamięci kontenerów;
              * modele (GPU) na komputerze właściciela; maszynę można wyłączać (płaci się wtedy tylko
-             * za dysk i adres IP). Budżet pamięci: AnalizaElicytacji::budzetPamieciVm.
+             * za dysk i adres IP).
              */
             @Propozycja;
             @OdwolanieDoKodu { sciezka = "infra/azure/docker-compose.yml"; }
@@ -329,7 +311,7 @@ package WymaganiaElicytacji {
         requirement <'WYM-N-10'> usuwanieDanychRodo : WymaganieSystemowe {
             doc /* Usunięcie danych na dwóch poziomach: jedna jednostka; całe zgłoszenie lub ekspert z odpowiedziami. */
             @Planowane;
-            frame prywatnosc;
+            frame prywatnoscEksperta;
         }
 
         requirement <'WYM-N-11'> dostepnosc : WymaganieSystemowe {
@@ -348,25 +330,25 @@ package WymaganiaElicytacji {
         }
 
         requirement <'WYM-N-13'> jakoscWyszukiwania : WymaganieSystemowe {
-            doc /* Jakość wyszukiwania na zbiorze ewaluacyjnym (patrz AnalizaElicytacji::JakoscWyszukiwania). */
+            doc /*
+             * Jakość wyszukiwania jednostek na zbiorze ewaluacyjnym. Do rozstrzygnięcia: wcześniej
+             * model miał k = 8, a test regresji wyszukiwania sprawdza hit@4 >= 0,8, MRR >= 0,5,
+             * nDCG@10 >= 0,4 (tolerancja 0,02). Czy przyjąć te progi, decyduje autor.
+             */
             @DoUzupelnienia;
+            frame wiedzaDlaRagKliniki;
             attribute minimalnaPelnoscAtK : Real;   // do uzupełnienia
-            attribute k : Integer = 8;
-        }
-
-        requirement <'WYM-N-14'> jakoscOdpowiedzi : WymaganieSystemowe {
-            doc /* Jakość odpowiedzi RAG oceniana przez sędziów LLM. */
-            @DoUzupelnienia;
-            attribute minimalnaOcenaSedziow : Real;  // do uzupełnienia
+            attribute k : Integer;                   // do uzupełnienia: 4 (test regresji) czy 8
         }
 
         requirement <'WYM-N-15'> dostepnoscInterfejsu : WymaganieSystemowe {
             doc /* Interfejs dostępny (WCAG). */
             @Propozycja;
             @DoUzupelnienia;
+            frame malyNakladEksperta;
         }
 
-        // ---------------------------------------------------- wdrożenie: modele na osobnej maszynie
+        // ---------------------------------------------------- models on a separate machine
         requirement <'WYM-N-16'> gotowoscMocyPrzedZadaniem : WymaganieSystemowe {
             doc /*
              * Gdy komputer z modelami nie jest gotowy, żądanie osoby, które zakolejkowałoby zadanie
@@ -420,7 +402,74 @@ package WymaganiaElicytacji {
              */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "infra/azure/Caddyfile"; }
-            frame prywatnosc;
+            frame prywatnoscEksperta;
+            frame ochronaDanychPacjenta;
         }
+
+        requirement <'WYM-N-21'> anonimowaWinieta : WymaganieSystemowe {
+            doc /*
+             * Tekst winiety (wypowiedzi pacjenta) nie zawiera danych pozwalających zidentyfikować
+             * pacjenta. Obowiązek inżyniera wiedzy przy pisaniu winiety; kod tego nie sprawdza.
+             */
+            @Propozycja;
+            frame ochronaDanychPacjenta;
+        }
+    }
+
+    private import Funkcjonalne::*;
+    private import Niefunkcjonalne::*;
+
+    // =================================================================== satisfy
+    package Spelnianie {
+        doc /*
+         * Który element struktury (06_Struktura, 03_Kontekst) spełnia wymaganie. Korzeniem ścieżek
+         * jest kontekstKliniki; system elicytacji to kontekstKliniki.hosting.system.
+         * Bez `satisfy`: WYM-N-11, WYM-N-12, WYM-N-13, WYM-N-15 (do uzupełnienia), WYM-N-10
+         * (planowane), WYM-N-21 (obowiązek inżyniera wiedzy, nie kodu).
+         */
+
+        // ---- API
+        satisfy dostepWgRol by kontekstKliniki.hosting.system.api.auth;
+        satisfy kontaTylkoZZaproszen by kontekstKliniki.hosting.system.api.auth;
+        satisfy ochronaLogowania by kontekstKliniki.hosting.system.api.auth;
+        satisfy czasZyciaSesji by kontekstKliniki.hosting.system.api.auth;
+        satisfy wersjonowanieWiniet by kontekstKliniki.hosting.system.api.vignettes;
+        satisfy przydzialTylkoOpublikowanych by kontekstKliniki.hosting.system.api.assignments;
+        satisfy ukrytyProjektWiniety by kontekstKliniki.hosting.system.api.assignments;
+        satisfy wszystkiePytaniaWidoczne by kontekstKliniki.hosting.system.api.assignments;
+        satisfy cytatyZgodneZWinieta by kontekstKliniki.hosting.system.api.assignments;
+        satisfy kierunekCytatu by kontekstKliniki.hosting.system.api.assignments;
+        satisfy kompletneZgloszenie by kontekstKliniki.hosting.system.api.assignments;
+        satisfy autozapisSzkicu by kontekstKliniki.hosting.system.api.assignments;
+        satisfy dozwoloneAkcje by kontekstKliniki.hosting.system.api.assignments;
+        satisfy ponawianieNieudanychZadan by kontekstKliniki.hosting.system.api.assignments;
+        satisfy pseudonimizacja by kontekstKliniki.hosting.system.api.assignments;
+        satisfy jedenPunktPrzejsc by kontekstKliniki.hosting.system.api.assignments.state_machine;
+        satisfy sladAudytowy by kontekstKliniki.hosting.system.api.assignments.state_machine;
+        satisfy autorSprawdzaKorekte by kontekstKliniki.hosting.system.api.proofread;
+        satisfy otwartaRecenzja by kontekstKliniki.hosting.system.api.reviews;
+        satisfy administratorDecyduje by kontekstKliniki.hosting.system.api.reviews;
+        satisfy wyszukiwanieWiedzy by kontekstKliniki.hosting.system.api.knowledge;
+        satisfy usuwanieWiedzy by kontekstKliniki.hosting.system.api.knowledge;
+        satisfy gotowoscMocyPrzedZadaniem by kontekstKliniki.hosting.system.api.compute;
+
+        // ---- worker
+        satisfy automatycznaKorekta by kontekstKliniki.hosting.system.worker.handlers.proofread;
+        satisfy budzetKontekstu by kontekstKliniki.hosting.system.worker.handlers.proofread;
+        satisfy budowaJednostek by kontekstKliniki.hosting.system.worker.handlers.process;
+        satisfy ingestiaJednostek by kontekstKliniki.hosting.system.worker.handlers.ingest;
+        satisfy ograniczonePonawianieZadan by kontekstKliniki.hosting.system.worker.queue;
+        satisfy skalowalneWorkery by kontekstKliniki.hosting.system.worker.queue;
+        satisfy zadaniaCzekajaNaMoc by kontekstKliniki.hosting.system.worker.compute;
+
+        // ---- baza danych, baza wiedzy, modele, hosting
+        satisfy niezmienneZgloszenie by kontekstKliniki.hosting.system.db;
+        satisfy udostepnienieBazyWiedzy by kontekstKliniki.hosting.bazaWiedzy;
+        satisfy modeleLokalne by kontekstKliniki.lokalnyLlm;
+        satisfy bezpieczneMigracje by kontekstKliniki.hosting;
+        satisfy tanieHostowanie by kontekstKliniki.hosting;
+        satisfy kontrolaZdrowiaUslug by kontekstKliniki.hosting;
+        satisfy kopieZapasoweBazy by kontekstKliniki.hosting;
+        satisfy ograniczonaEkspozycjaSieci by kontekstKliniki.hosting;
     }
 }

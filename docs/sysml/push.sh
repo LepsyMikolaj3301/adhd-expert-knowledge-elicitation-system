@@ -77,13 +77,23 @@ for e in json.load(sys.stdin)['data']['viewer']['projects']['edges']:
   ic_defs=$(cat "$dir"/*.sysml | python3 -c "
 import sys,re
 print(' '.join(re.findall(r'view\s+def\s+(?:<\w+>\s+)?(\w+)\s*(?::>\s*[\w:]+\s*)?\{[^}]*?render\s+asInterconnectionDiagram', sys.stdin.read())))")
+  # view defs that specialize the standard Action Flow / State Transition views
+  af_defs=$(cat "$dir"/*.sysml | python3 -c "
+import sys,re
+print(' '.join(re.findall(r'view\s+def\s+(?:<\w+>\s+)?(\w+)\s*:>\s*(?:StandardViewDefinitions::)?ActionFlowView', sys.stdin.read())))")
+  st_defs=$(cat "$dir"/*.sysml | python3 -c "
+import sys,re
+print(' '.join(re.findall(r'view\s+def\s+(?:<\w+>\s+)?(\w+)\s*:>\s*(?:StandardViewDefinitions::)?StateTransitionView', sys.stdin.read())))")
 
   # a text `view` is only a model element; create its diagram too: Interconnection View
   # when its view def renders asInterconnectionDiagram (or its name contains
-  # "interconnection"), otherwise General View
+  # "interconnection"), Action Flow / State Transition View when its view def specializes
+  # that standard view, otherwise General View
   find_views "$HOST/api/rest/projects/$pid/commits/$pid" | while IFS=$'\t' read -r vid vname vdef; do
       label='General View'
-      if [[ "${vname,,}" == *interconnection* || " $ic_defs " == *" $vdef "* ]]; then label='Interconnection View'; fi
+      if [[ "${vname,,}" == *interconnection* || " $ic_defs " == *" $vdef "* ]]; then label='Interconnection View'
+      elif [[ " $af_defs " == *" $vdef "* ]]; then label='Action Flow View'
+      elif [[ " $st_defs " == *" $vdef "* ]]; then label='State Transition View'; fi
       python3 - "$ec" "$vid" "$vname" "$label" "$HOST" <<'PY'
 import sys,json,uuid,urllib.request
 ec,vid,vname,label,host=sys.argv[1:]
@@ -91,7 +101,9 @@ def gql(q,v):
     r=urllib.request.Request(host+'/api/graphql',json.dumps({'query':q,'variables':v}).encode(),{'content-type':'application/json'})
     return json.load(urllib.request.urlopen(r))
 d=gql('query($e:ID!,$o:ID!){viewer{editingContext(editingContextId:$e){representationDescriptions(objectId:$o){edges{node{id label}}}}}}',{'e':ec,'o':vid})
-rid=[n['node']['id'] for n in d['data']['viewer']['editingContext']['representationDescriptions']['edges'] if n['node']['label']==label][0]
+offered={n['node']['label']:n['node']['id'] for n in d['data']['viewer']['editingContext']['representationDescriptions']['edges']}
+if label not in offered: label='General View'   # an older SysON without that diagram type
+rid=offered[label]
 r=gql('mutation($i:CreateRepresentationInput!){createRepresentation(input:$i){__typename}}',{'i':{'id':str(uuid.uuid4()),'editingContextId':ec,'objectId':vid,'representationDescriptionId':rid,'representationName':vname}})
 print(f'{vname}: {label} -> '+r['data']['createRepresentation']['__typename'])
 PY
