@@ -53,6 +53,10 @@ Everything goes in one resource group. Use the portal; each item is one screen.
 - [ ] **Public IP address** `rag-ip`: SKU **Standard**, assignment **Static**, **DNS name label**
       `<something-unique>`. The name of your site is then `<label>.<region>.cloudapp.azure.com`; write it
       down, it is `DOMAIN` later. (A static IP keeps its name while the VM is off.)
+      For this project: `DOMAIN=psyknowhow.belgiumcentral.cloudapp.azure.com` (label `psyknowhow`,
+      region Belgium Central), so `APP_URL` is `https://psyknowhow.belgiumcentral.cloudapp.azure.com`.
+      The IP, the NSG and the VM must all be in the same region (the student subscription only
+      allows a few, and only some have a 4 GB VM size).
 - [ ] **Network security group** `rag-nsg` with these inbound rules and no others:
 
   | Port | Source | For |
