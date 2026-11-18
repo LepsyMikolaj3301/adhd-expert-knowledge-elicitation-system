@@ -14,7 +14,6 @@ from app.jobs.errors import (  # noqa: F401  (PermanentJobError is also imported
     NoFindings,
     NoUnits,
     PermanentJobError,
-    SyntheticIngestionRefused,
 )
 from app.jobs.models import JobKind
 from app.knowledge import findings
@@ -85,7 +84,6 @@ async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None
         ],
         "track": version.design.get("track", "general"),
         "origin": version.design.get("origin", "hand_written"),
-        "is_synthetic": expert.is_synthetic,
         "corrections": [],
     }
     units = record["units"]
@@ -124,7 +122,7 @@ async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None
 
 
 async def prepare_ingest(assignment_id: UUID) -> ingest_module.Ingestion:
-    """Reads what was approved and embeds it. Refuses synthetic answers in production first."""
+    """Reads what was approved and embeds it."""
     async with session_factory()() as db:
         data = await ingest_module.load(db, assignment_id)
     return await ingest_module.embed(data)

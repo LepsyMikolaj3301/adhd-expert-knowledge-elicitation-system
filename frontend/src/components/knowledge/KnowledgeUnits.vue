@@ -175,7 +175,6 @@ const cases = computed(() => {
           assignment: string
           expertId: string
           pseudonym: string
-          synthetic: boolean
           units: KnowledgeUnit[]
         }
       >
@@ -200,7 +199,6 @@ const cases = computed(() => {
         assignment: u.assignment_id,
         expertId: u.expert_id,
         pseudonym: u.expert_pseudonym,
-        synthetic: u.expert_is_synthetic,
         units: [],
       }
       c.experts.set(u.assignment_id, e)
@@ -341,7 +339,6 @@ const allOpen = (assignments: string[]) => assignments.every((a) => opened.value
                     />
                   </svg>
                   <PseudonymChip :pseudonym="e.pseudonym" />
-                  <span v-if="e.synthetic" class="quote-tag">synthetic</span>
                   <span class="text-muted" data-testid="expert-counts"
                     >{{ countLabel(e.units.length, 'unit', 'units') }} ({{
                       countLabel(e.quotes, 'quote', 'quotes')

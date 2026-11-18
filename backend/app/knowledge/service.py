@@ -31,7 +31,6 @@ async def unit_items(
             VignetteVersion.framing,
             User.id,
             User.pseudonym,
-            User.is_synthetic,
         )
         .join(Assignment, Assignment.id == KnowledgeUnit.assignment_id)
         .join(VignetteVersion, VignetteVersion.id == Assignment.vignette_version_id)
@@ -53,10 +52,9 @@ async def unit_items(
             framing,
             expert_id,
             pseudonym,
-            synthetic,
             findings.get(unit.assignment_id),
         )
-        for unit, code, version, framing, expert_id, pseudonym, synthetic in rows
+        for unit, code, version, framing, expert_id, pseudonym in rows
     ]
 
 
@@ -76,7 +74,6 @@ def _item(
     framing: str | None,
     expert_id: UUID,
     pseudonym: str,
-    synthetic: bool,
     findings: AnswerFindings | None,
 ) -> KnowledgeUnitListItem:
     record = findings.record if findings else {}
@@ -87,7 +84,6 @@ def _item(
         vignette_version=version,
         expert_id=expert_id,
         expert_pseudonym=pseudonym,
-        expert_is_synthetic=synthetic,
         ordinal=unit.ordinal,
         review_round=unit.review_round,
         text=unit.text,

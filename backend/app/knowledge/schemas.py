@@ -30,7 +30,6 @@ class KnowledgeUnitListItem(BaseModel):
     vignette_version: int
     expert_id: UUID
     expert_pseudonym: str
-    expert_is_synthetic: bool
     ordinal: int
     review_round: int
     text: str

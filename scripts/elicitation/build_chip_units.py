@@ -49,7 +49,7 @@ def build_tier(tier: str, tag: str, model: str, fixtures: Path, out: Path) -> di
                 resp, v.text, doc.session_id, doc.expert_id, role, v.framing,
                 v.design.population, info["labels"],
             )  # fmt: skip
-            rec |= dict(track=v.design.track, origin=v.design.origin, is_synthetic=doc.is_synthetic)
+            rec |= dict(track=v.design.track, origin=v.design.origin)
             records.append(rec)
             at = resp.submitted_at.isoformat()
             events += [

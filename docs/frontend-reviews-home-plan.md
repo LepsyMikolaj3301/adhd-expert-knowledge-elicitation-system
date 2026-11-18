@@ -50,7 +50,6 @@ Follows the existing conventions: clinical wording through [copy.ts](../frontend
 - "Add account" form: email, display name, role. `POST /users` handles `email_taken`.
 - **The invite link is shown once.** Show the full URL (`location.origin` + `invite_path`) with a copy button and a note that it can't be retrieved again, and warn before leaving the page.
 - Row actions: new invite link (`POST /users/{id}/invite`, also how a password is reset), edit name, deactivate or reactivate with `ConfirmDialog` (`cannot_deactivate_self`).
-- `is_synthetic` stays out of the main form, behind an advanced option.
 - [AcceptInviteView.vue](../frontend/src/views/AcceptInviteView.vue) already handles the invited person's side. There's no public `/register` route.
 
 ## F2. Reviews list (replaces the `/reviews` placeholder)

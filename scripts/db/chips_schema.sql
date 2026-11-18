@@ -1,14 +1,14 @@
 -- Tables of docs/new-chips-knowledge.md ("Storage"), in their own schema so that nothing touches
 -- backend/db/init.sql or the literature tables. {schema} is filled in by load_chips_pg.py (default
 -- chips_eval: `chips` itself is the web application's, created by migration 0003, which holds a
--- frozen copy of these tables; change both together). Synthetic data only: every row carries is_synthetic and must never reach production
--- retrieval, which reads public.chunks. vector / sparsevec come from the extension in public.
+-- frozen copy of these tables; change both together). vector / sparsevec come from the extension
+-- in public.
 CREATE SCHEMA IF NOT EXISTS {schema};
 SET search_path = {schema}, public;
 
 CREATE TABLE IF NOT EXISTS experts (
     id text PRIMARY KEY,                       -- <tier>/<expert id>: tiers share expert ids
-    role text, is_synthetic boolean NOT NULL
+    role text
 );
 
 CREATE TABLE IF NOT EXISTS vignettes (
@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS vignettes (
 CREATE TABLE IF NOT EXISTS elicitation_sessions (
     id text PRIMARY KEY,                       -- <tier>/<session id>
     expert_id text NOT NULL REFERENCES experts ON DELETE CASCADE,
-    is_synthetic boolean NOT NULL,
     document jsonb NOT NULL,                   -- the raw ChipDocument
     created_at timestamptz NOT NULL
 );
@@ -67,7 +66,6 @@ CREATE TABLE IF NOT EXISTS finding_units (
     highlight_id text REFERENCES highlights,   -- NULL for case units
     direction text,
     population text NOT NULL, track text NOT NULL, framing text NOT NULL,
-    is_synthetic boolean NOT NULL,
     segmenter jsonb NOT NULL,                  -- code version, classifier model + prompt version
     embed_text text NOT NULL,                  -- I1
     embedding vector(1024) NOT NULL, sparse sparsevec(1048576),

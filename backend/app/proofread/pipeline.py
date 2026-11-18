@@ -66,7 +66,9 @@ async def proofread_answer(
     enhanced = None
     if text.strip():
         try:
-            enhanced = await enhance.enhance(question, text, quotes)
+            enhanced, refused = await enhance.enhance(question, text, quotes)
+            if refused:
+                passes["enhance_rejected"] = refused
         except SERVICE_ERRORS as exc:
             if not _skippable(exc):
                 raise

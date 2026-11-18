@@ -1,8 +1,7 @@
 """The retrievers on the frozen silver snapshot: 28 sessions, 198 units, real bge-m3 vectors.
 
 Unlike the V001 example of test_database.py, dense search here is meaningful (the query vectors are
-frozen into the snapshot, so no model runs) and the findings records are readable ones. Everything
-in silver is synthetic, so most tests pass `include_synthetic=True`.
+frozen into the snapshot, so no model runs) and the findings records are readable ones.
 """
 
 import asyncio
@@ -21,12 +20,12 @@ from expert_knowledge_rag import (
 
 pytestmark = pytest.mark.integration
 
-SYNTHETIC = ExpertFilter(include_synthetic=True)
+ALL = ExpertFilter()
 FAKE = DeterministicFakeEmbedding(size=1024)
 
 
 def question(store, embeddings, **kw):
-    kw.setdefault("filter", SYNTHETIC)
+    kw.setdefault("filter", ALL)
     return ExpertQuestionRetriever(store=store, embeddings=embeddings, **kw)
 
 
@@ -83,14 +82,6 @@ def test_the_schema_holds_the_whole_snapshot(silver, silver_store):
         len(tables["sessions"]),
     )
     assert row["fitted"] == row["units"]  # BM25 was fitted for I1 and I3
-
-
-def test_the_default_filter_leaves_nothing_because_silver_is_synthetic(
-    silver_store, frozen, questions
-):
-    default = ExpertQuestionRetriever(store=silver_store, embeddings=frozen)
-    assert default.invoke(questions[0]["question"]) == []
-    assert question(silver_store, frozen).invoke(questions[0]["question"])
 
 
 # --- search modes ------------------------------------------------------------------------------
@@ -155,14 +146,14 @@ def test_vignette_filters_keep_and_drop_exactly_those_vignettes(silver_store, fr
     only = question(
         silver_store,
         frozen,
-        filter=ExpertFilter(include_synthetic=True, vignettes=["V001", "V004"]),
+        filter=ExpertFilter(vignettes=["V001", "V004"]),
         k=10,
     ).invoke(questions[0]["question"])
     assert only and {d.metadata["vignette_id"] for d in only} <= {"V001", "V004"}
     without = question(
         silver_store,
         frozen,
-        filter=ExpertFilter(include_synthetic=True, exclude_vignettes=["V001", "V004"]),
+        filter=ExpertFilter(exclude_vignettes=["V001", "V004"]),
         k=10,
     ).invoke(questions[0]["question"])
     assert without and not {d.metadata["vignette_id"] for d in without} & {"V001", "V004"}
@@ -178,7 +169,7 @@ def test_population_and_track_filters_agree_with_the_stored_rows(
         docs = question(
             silver_store,
             frozen,
-            filter=ExpertFilter(include_synthetic=True, **{field: [value]}),
+            filter=ExpertFilter(**{field: [value]}),
             k=10,
             merge_shared=False,
         ).invoke(questions[0]["question"])
@@ -186,7 +177,7 @@ def test_population_and_track_filters_agree_with_the_stored_rows(
     absent = question(
         silver_store,
         frozen,
-        filter=ExpertFilter(include_synthetic=True, populations=["no such population"]),
+        filter=ExpertFilter(populations=["no such population"]),
     )
     assert absent.invoke(questions[0]["question"]) == []
 
@@ -240,7 +231,7 @@ def test_patient_text_finds_units_of_other_cases_and_never_the_excluded_ones(
         retriever = PatientTextRetriever(
             store=silver_store,
             embeddings=frozen,
-            filter=ExpertFilter(include_synthetic=True, exclude_vignettes=p["exclude"]),
+            filter=ExpertFilter(exclude_vignettes=p["exclude"]),
         )
         docs = retriever.invoke(p["text"])
         answered += bool(docs)
@@ -251,7 +242,7 @@ def test_patient_text_finds_units_of_other_cases_and_never_the_excluded_ones(
 def test_patient_text_without_exclusions_may_return_its_own_case(silver_store, frozen, silver):
     p = silver[2]["patients"][0]
     docs = PatientTextRetriever(
-        store=silver_store, embeddings=frozen, k=8, filter=SYNTHETIC, merge_shared=False
+        store=silver_store, embeddings=frozen, k=8, filter=ALL, merge_shared=False
     ).invoke(p["text"])
     assert p["id"] in {d.metadata["vignette_id"] for d in docs}  # its own highlights match it best
 

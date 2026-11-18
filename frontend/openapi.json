@@ -1615,10 +1615,6 @@
             "title": "Expert Id",
             "type": "string"
           },
-          "expert_is_synthetic": {
-            "title": "Expert Is Synthetic",
-            "type": "boolean"
-          },
           "expert_pseudonym": {
             "title": "Expert Pseudonym",
             "type": "string"
@@ -1732,7 +1728,6 @@
           "vignette_version",
           "expert_id",
           "expert_pseudonym",
-          "expert_is_synthetic",
           "ordinal",
           "review_round",
           "text",
@@ -2014,10 +2009,6 @@
             "title": "Is Active",
             "type": "boolean"
           },
-          "is_synthetic": {
-            "title": "Is Synthetic",
-            "type": "boolean"
-          },
           "pseudonym": {
             "title": "Pseudonym",
             "type": "string"
@@ -2032,7 +2023,6 @@
           "display_name",
           "email",
           "is_active",
-          "is_synthetic",
           "cases"
         ],
         "title": "PersonAdminCard",
@@ -2856,10 +2846,6 @@
             "title": "Is Active",
             "type": "boolean"
           },
-          "is_synthetic": {
-            "title": "Is Synthetic",
-            "type": "boolean"
-          },
           "pseudonym": {
             "title": "Pseudonym",
             "type": "string"
@@ -2874,7 +2860,6 @@
           "display_name",
           "role",
           "pseudonym",
-          "is_synthetic",
           "is_active",
           "created_at",
           "invite_pending"
@@ -2963,10 +2948,6 @@
             "title": "Is Active",
             "type": "boolean"
           },
-          "is_synthetic": {
-            "title": "Is Synthetic",
-            "type": "boolean"
-          },
           "pseudonym": {
             "title": "Pseudonym",
             "type": "string"
@@ -2981,7 +2962,6 @@
           "display_name",
           "role",
           "pseudonym",
-          "is_synthetic",
           "is_active",
           "created_at"
         ],

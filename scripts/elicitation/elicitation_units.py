@@ -64,7 +64,6 @@ class ExpertUnit(BaseModel):
     origin: str
     rating: int | None
     insufficient_information: bool
-    is_synthetic: bool
     segmenter_version: int = SEGMENTER_VERSION
 
 
@@ -280,7 +279,6 @@ def build_units(
                     origin=vignette.design.origin,
                     rating=response.rating,
                     insufficient_information=response.insufficient_information,
-                    is_synthetic=doc.is_synthetic,
                 )
                 by_question.setdefault(qid, []).append(unit)
         for qid, qunits in by_question.items():

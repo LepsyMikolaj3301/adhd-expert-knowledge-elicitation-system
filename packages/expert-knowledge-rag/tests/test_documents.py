@@ -8,7 +8,7 @@ from expert_knowledge_rag.documents import build_documents, local_id
 from expert_knowledge_rag.ranking import UnitHit
 
 
-def hit(local: str, rank_score: float, session="S1", synthetic=False, kind=None) -> UnitHit:
+def hit(local: str, rank_score: float, session="S1", kind=None) -> UnitHit:
     return UnitHit(
         id=f"{session}-V001-{local}",
         session_id=session,
@@ -18,7 +18,6 @@ def hit(local: str, rank_score: float, session="S1", synthetic=False, kind=None)
         kind=kind or ("case" if local == "case" else "fragment"),
         highlight_id=None if local == "case" else f"{session}-V001-{local}",
         direction=None,
-        is_synthetic=synthetic,
         embed_text=f"I1 of {local}",
         score=rank_score,
     )
@@ -43,7 +42,7 @@ def test_units_sharing_a_sentence_become_one_note_in_the_rank_of_the_best(record
     assert first.page_content.count("explains most of this more parsimoniously") == 1
     assert first.metadata["merged"] is True and first.metadata["score"] == 0.9
     assert [w["direction"] for w in first.metadata["patient_words"]] == ["unclear", "away"]
-    assert first.metadata["source"] == "expert" and first.metadata["is_synthetic"] is False
+    assert first.metadata["source"] == "expert"
 
 
 def test_merging_can_be_switched_off(record):

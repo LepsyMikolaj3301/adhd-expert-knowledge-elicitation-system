@@ -82,8 +82,7 @@ def _retriever(
 ) -> ExpertQuestionRetriever | PatientTextRetriever:
     # shortcut: one connection per search, no pool. Fine for an admin's test tool.
     store = ExpertKnowledgeStore(database_url())
-    # Every test search is of units the admin can see, so the experts' test accounts count.
-    allowed = ExpertFilter(include_synthetic=True)
+    allowed = ExpertFilter()
     # merge_shared=False: one hit per unit. Merging units that share a sentence is for the
     # generator's prompt, and would hide which unit matched.
     if request.mode == "patient_text":

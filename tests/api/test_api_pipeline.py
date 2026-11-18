@@ -235,10 +235,21 @@ async def test_the_enhancement_is_used_only_when_it_keeps_every_chip(models):
     assert by_question["Q3"]["proposed"] == answers["Q3"]
     passes = (await round_of(assignment_id)).passes
     assert passes["Q2"]["enhanced"] is True and passes["Q3"]["enhanced"] is False
+    assert passes["Q3"]["enhance_rejected"] == "chips" and "enhance_rejected" not in passes["Q2"]
     assert [(line["targets"], line["assigned_by"]) for line in by_question["Q2"]["lines"]] == [
         (["h2"], "chip"),
         (["case"], "llm"),
     ]
+
+
+async def test_an_enhancement_that_copies_the_cited_passage_is_refused(models):
+    _, expert, assignment_id = await setup_one()
+    q1 = CITED_PAYLOAD["answers"]["Q1"]
+    models.enhance_reply = {q1: "⟦h1⟧: they reorganised the entire desk instead of the report."}
+    await answer_and_submit(expert, assignment_id, CITED_PAYLOAD)
+    assert items(await proofread(expert, assignment_id))["Q1"]["proposed"] == q1
+    passes = (await round_of(assignment_id)).passes
+    assert passes["Q1"]["enhanced"] is False and passes["Q1"]["enhance_rejected"] == "leak"
 
 
 async def test_an_enhancement_model_that_is_down_is_skipped(models):
@@ -554,7 +565,7 @@ async def test_approved_units_land_in_chips_with_their_embeddings(models):
 
     session = assignment_id
     [vignette_code] = [v["code"] for v in await admin.ok("GET", "/vignettes")]
-    assert await chips("SELECT id, is_synthetic FROM chips.experts") == [(expert.user_id, False)]
+    assert await chips("SELECT id FROM chips.experts") == [(expert.user_id,)]
     assert (await chips("SELECT id, version, tier FROM chips.vignettes"))[0][2] == "app"
     [(sid, expert_id)] = await chips("SELECT id, expert_id FROM chips.elicitation_sessions")
     assert (sid, expert_id) == (session, expert.user_id)
@@ -726,21 +737,6 @@ async def test_colleagues_answering_the_same_vignette_share_its_cue_keys(models)
     assert await count("finding_units") == 4
     assert await count("cue_keys") == 1, "the same passage of the same vignette is one cue key"
     assert await count("highlights") == 2
-
-
-async def test_synthetic_answers_are_refused_in_production_before_anything_is_embedded(
-    models, monkeypatch
-):
-    admin = await admin_api()
-    expert = await expert_api("s@example.com", is_synthetic=True)
-    [assignment_id] = await assign(admin, await published_version(admin), expert)
-    await answer_and_submit(expert, assignment_id)
-    await to_review(expert, assignment_id)
-    await decide_all(admin, assignment_id)
-    monkeypatch.setattr(settings, "environment", "production")
-    assert await run_jobs() == 2, "the units are cut, then ingestion refuses at once"
-    assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["state"] == "ingestion_failed"
-    assert models.embedded == [] and await count("finding_units") == 0
 
 
 async def test_units_from_before_the_pipeline_cannot_be_ingested(models):

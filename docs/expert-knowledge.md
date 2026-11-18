@@ -6,9 +6,6 @@ approved claims reach the knowledge base" plan in [elicitation-document.md](elic
 as the working proposal. That doc and `lifecycle.py` change only once the results below confirm
 the choice.
 
-There is no production yet, so synthetic data is treated like real data here. `assert_ingestible`
-stays as it is but is not called with `production=True`; `is_synthetic` is kept as metadata.
-
 Constraints:
 
 - Generation is small and local: qwen3.5:9b or gemma4:e4b with `num_ctx 8192`.

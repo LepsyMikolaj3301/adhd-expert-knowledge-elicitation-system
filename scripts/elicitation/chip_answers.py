@@ -15,7 +15,7 @@ from pathlib import Path
 
 import answer_vignettes as av
 from chips_schema import CHIP_RE, ChipDocument, ChipResponse, Highlight
-from elicitation_schema import ShiftAnswer, Vignette, is_synthetic_id
+from elicitation_schema import ShiftAnswer, Vignette
 from make_fixtures import CHIP_SOURCE, fixture_dir, write_json
 
 from app.assignments.answers import count_words
@@ -280,8 +280,6 @@ def build_document(
 ) -> ChipDocument:
     """The document of the vignettes the draft has finished, in the order they were shown."""
     expert_id = draft["expert_id"]
-    if is_synthetic_id(expert_id):
-        raise ValueError(f"{expert_id!r} is a synthetic id: gold answers are written by people")
     done = [
         (vid, draft["answers"][vid])
         for vid in draft["order"]
@@ -303,7 +301,6 @@ def build_document(
                 vignette_version=v.version,
                 vignette_hash=v.content_hash,
                 expert_id=expert_id,
-                is_synthetic=False,
                 answers=answers,
                 quoted_fragments=list(dict.fromkeys(c.text for c in citations)),
                 highlights=citations,
@@ -319,7 +316,6 @@ def build_document(
         session_id=session_id,
         expert_id=expert_id,
         created_at=now,
-        is_synthetic=False,
         vignettes=[vignettes[vid] for vid, _ in done],
         responses=responses,
     )

@@ -54,7 +54,6 @@ def make_doc(answers: dict[QuestionId, str], q4: dict | None = Q4) -> Elicitatio
         vignette_version=1,
         vignette_hash=v.content_hash,
         expert_id="SYN-001",
-        is_synthetic=True,
         answers=answers,
         rating=2,
         q4=q4,
@@ -65,7 +64,6 @@ def make_doc(answers: dict[QuestionId, str], q4: dict | None = Q4) -> Elicitatio
         session_id="DOC-SYN-9999",
         expert_id="SYN-001",
         created_at=NOW,
-        is_synthetic=True,
         vignettes=[v],
         responses=[r],
     )

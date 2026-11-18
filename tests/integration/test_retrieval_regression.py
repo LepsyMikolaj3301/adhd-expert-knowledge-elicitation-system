@@ -35,7 +35,7 @@ UPDATE = bool(os.environ.get("UPDATE_RETRIEVAL_BASELINE"))
 TOLERANCE = 0.02  # frozen vectors and a deterministic BM25: drift should be 0; this absorbs ties
 HEADLINE = ("recall@4", "hit@4", "mrr", "ndcg@10", "recall@500t", "recall@4/ceiling")
 LABELS = ("claim_ids", "pooled_ids")  # the original labels, and the pooled (completed) ones
-SYNTHETIC = ExpertFilter(include_synthetic=True)  # everything in silver is synthetic
+ALL = ExpertFilter()
 
 
 def items(docs) -> list[Item]:
@@ -43,7 +43,7 @@ def items(docs) -> list[Item]:
 
 
 def question_retriever(store, frozen, *, oracle: list[str] | None = None, **options):
-    flt = ExpertFilter(include_synthetic=True, vignettes=oracle) if oracle else SYNTHETIC
+    flt = ExpertFilter(vignettes=oracle) if oracle else ALL
     return ExpertQuestionRetriever(store=store, embeddings=frozen, filter=flt, k=10, **options)
 
 
@@ -77,7 +77,7 @@ def runs(silver, silver_store, frozen):
         ]
     patient = []
     for p in queries["patients"]:
-        flt = ExpertFilter(include_synthetic=True, exclude_vignettes=p["exclude"])
+        flt = ExpertFilter(exclude_vignettes=p["exclude"])
         retriever = PatientTextRetriever(store=silver_store, embeddings=frozen, filter=flt, k=10)
         patient.append((p, items(retriever.invoke(p["text"]))))
     out["patient/cues"] = patient

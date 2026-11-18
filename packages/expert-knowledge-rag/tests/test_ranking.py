@@ -19,7 +19,6 @@ def case(uid: str, vector) -> UnitHit:
         "case",
         None,
         None,
-        False,
         "t",
         1.0,
         np.array(vector, dtype=np.float32),
@@ -49,7 +48,7 @@ def test_cue_scores_sum_reciprocal_ranks_over_sentences():
 def row(uid: str, cue: int, context: list[int] | None) -> dict:
     return {
         "id": uid, "session_id": "S", "expert_id": "X", "vignette_id": "V", "vignette_version": 1,
-        "kind": "fragment", "highlight_id": uid, "direction": None, "is_synthetic": False,
+        "kind": "fragment", "highlight_id": uid, "direction": None,
         "embed_text": "t", "cue_id": cue, "context_ids": context, "vector": None,
     }  # fmt: skip
 

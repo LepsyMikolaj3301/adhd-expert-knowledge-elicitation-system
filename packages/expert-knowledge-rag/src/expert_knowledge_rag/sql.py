@@ -34,7 +34,6 @@ UNIT_COLUMNS = (
     "kind",
     "highlight_id",
     "direction",
-    "is_synthetic",
     "embed_text",
 )
 
@@ -151,8 +150,8 @@ def cues_search(
     depth: int = FUSION_DEPTH,
 ) -> Query:
     """Cue keys (the patient's words of a highlight) ranked for one sentence. Only cues that
-    have a unit the filter allows take part: a cue of synthetic-only units must not use up a
-    place when synthetic units are excluded."""
+    have a unit the filter allows take part: a cue whose units are all filtered out must not use
+    up a place."""
     unit_conditions, params = filter.on_unit("cu")
     cue_conditions, cue_params = filter.on_cue("c")
     exists = sql.SQL(

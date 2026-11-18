@@ -33,7 +33,7 @@ def unit_row(local: str, score: float = 0.03, **extra) -> dict:
         "id": f"S1-V001-{local}", "session_id": "S1", "expert_id": "X1", "vignette_id": "V001",
         "vignette_version": 1, "kind": "case" if local == "case" else "fragment",
         "highlight_id": None if local == "case" else f"S1-V001-{local}", "direction": None,
-        "is_synthetic": False, "embed_text": f"I1 of {local}", "score": score, "vector": None,
+        "embed_text": f"I1 of {local}", "score": score, "vector": None,
     } | extra  # fmt: skip
 
 

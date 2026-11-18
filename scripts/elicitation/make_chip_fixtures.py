@@ -184,11 +184,15 @@ def make_vignettes(gen: Gen, inbox: Path, only: list[str] | None) -> list[Vignet
 # --- answers -----------------------------------------------------------------------------------
 
 
-def answer_request(v: Vignette, kind: str, persona_id: str, persona: str) -> GenRequest:
-    questions = "\n".join(
+def questions_text(v: Vignette) -> str:
+    return "\n".join(
         f"{q}: {QUESTIONS[q].text}" + (" (answer in overall_rating)" if q == "Q6" else "")
         for q in v.question_ids
     )
+
+
+def answer_request(v: Vignette, kind: str, persona_id: str, persona: str) -> GenRequest:
+    questions = questions_text(v)
     p = load_prompt(ANSWER_PROMPT).fill(
         PERSONA=persona, STYLE_RULE=STYLE_RULES[kind], CHIP_HABIT=CHIP_HABITS[persona_id],
         FRAMING=v.framing, VIGNETTE_TEXT=v.text, QUESTIONS=questions,
@@ -337,7 +341,7 @@ def make_document(doc_i, vignettes, gen: Gen, tier: str, inbox: Path, seed: int,
         responses.append(
             ChipResponse(
                 vignette_id=v.id, vignette_version=v.version, vignette_hash=v.content_hash,
-                expert_id=expert_id, is_synthetic=True, answers=answers, highlights=highlights,
+                expert_id=expert_id, answers=answers, highlights=highlights,
                 rating=rating, insufficient_information=insufficient, started_at=started,
                 submitted_at=clock,
             )
@@ -449,7 +453,7 @@ def main(argv=None) -> int:
         if not responses:
             continue
         doc = ChipDocument(
-            session_id=session_id, expert_id=expert_id, created_at=day, is_synthetic=True,
+            session_id=session_id, expert_id=expert_id, created_at=day,
             vignettes=vignettes, responses=responses,
         )  # fmt: skip
         write_json(out / "documents" / f"{session_id}.json", doc.model_dump(mode="json"))

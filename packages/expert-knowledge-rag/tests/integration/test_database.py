@@ -15,6 +15,7 @@ from expert_knowledge_rag import (
 pytestmark = pytest.mark.integration
 
 H3_CUE = "every time I try to type a formula my hand starts shaking slightly"
+X1_ONLY = ExpertFilter(experts=["X1"])  # S1; S2 (X2) repeats the same case
 
 
 def question(store, embeddings, **kw):
@@ -26,11 +27,11 @@ def ids(docs):
 
 
 def test_bm25_finds_the_units_that_use_the_word_and_merges_them(store, embeddings):
-    docs = question(store, embeddings, search="bm25").invoke("parsimoniously")
+    docs = question(store, embeddings, search="bm25", filter=X1_ONLY).invoke("parsimoniously")
     assert len(docs) == 1  # h1, h2, h3 share Q2.1: one note, each sentence once
     assert set(docs[0].metadata["unit_ids"]) == {"S1-V001-h1", "S1-V001-h2", "S1-V001-h3"}
     assert docs[0].page_content.count("explains most of this more parsimoniously") == 1
-    assert docs[0].metadata["merged"] and not docs[0].metadata["is_synthetic"]
+    assert docs[0].metadata["merged"]
 
 
 def test_dense_search_puts_the_unit_with_the_same_text_first(store, embeddings):
@@ -47,28 +48,24 @@ def test_hybrid_is_the_default_and_returns_notes(store, embeddings):
     assert docs[0].page_content.startswith("Teaching case V001: an adult's journal entry")
 
 
-def test_synthetic_units_are_excluded_unless_asked_for(store, embeddings):
-    plain = question(store, embeddings, search="bm25", k=10).invoke("insomnia")
-    assert {d.metadata["session_id"] for d in plain} == {"S1"}
-    both = question(
-        store, embeddings, search="bm25", k=10, filter=ExpertFilter(include_synthetic=True)
-    ).invoke("insomnia")
+def test_every_expert_is_searched_unless_filtered(store, embeddings):
+    both = question(store, embeddings, search="bm25", k=10).invoke("insomnia")
     assert {d.metadata["session_id"] for d in both} == {"S1", "S2"}
+    one = question(store, embeddings, search="bm25", k=10, filter=X1_ONLY).invoke("insomnia")
+    assert {d.metadata["session_id"] for d in one} == {"S1"}
 
 
 def test_filters_narrow_the_search(store, embeddings):
-    f = ExpertFilter(include_synthetic=True, populations=["child"])
+    f = ExpertFilter(populations=["child"])
     assert question(store, embeddings, search="bm25", filter=f).invoke("insomnia") == []
-    f = ExpertFilter(include_synthetic=True, exclude_vignettes=["V001"])
+    f = ExpertFilter(exclude_vignettes=["V001"])
     assert question(store, embeddings, search="hybrid", filter=f).invoke("insomnia") == []
-    f = ExpertFilter(include_synthetic=True, populations=["adult"], framings=["personal_journal"])
+    f = ExpertFilter(populations=["adult"], framings=["personal_journal"])
     assert question(store, embeddings, search="bm25", filter=f).invoke("insomnia")
 
 
 def test_notes_of_two_experts_stay_separate(store, embeddings):
-    docs = question(
-        store, embeddings, search="bm25", k=10, filter=ExpertFilter(include_synthetic=True)
-    ).invoke("parsimoniously")
+    docs = question(store, embeddings, search="bm25", k=10).invoke("parsimoniously")
     assert sorted(d.metadata["session_id"] for d in docs) == ["S1", "S2"]
 
 
@@ -85,7 +82,7 @@ def test_sync_and_async_agree(store, embeddings):
 
 def test_patient_text_finds_the_units_of_the_matching_highlight(store, embeddings):
     docs = PatientTextRetriever(
-        store=store, embeddings=embeddings, search="bm25", merge_shared=False
+        store=store, embeddings=embeddings, search="bm25", merge_shared=False, filter=X1_ONLY
     ).invoke("My hand starts shaking slightly.")
     assert ids(docs) == [["S1-V001-h3"]]
     assert docs[0].metadata["patient_words"] == [{"text": H3_CUE, "direction": "unclear"}]
@@ -93,9 +90,9 @@ def test_patient_text_finds_the_units_of_the_matching_highlight(store, embedding
 
 def test_patient_text_prefers_a_unit_whose_co_cited_highlights_also_match(store, embeddings):
     text = f"{H3_CUE}. I haven't slept well since moving into this new flat two months ago."
-    docs = PatientTextRetriever(store=store, embeddings=embeddings, merge_shared=False, k=4).invoke(
-        text
-    )
+    docs = PatientTextRetriever(
+        store=store, embeddings=embeddings, merge_shared=False, k=4, filter=X1_ONLY
+    ).invoke(text)
     assert docs[0].metadata["unit_ids"] in (["S1-V001-h3"], ["S1-V001-h2"])
     assert {u for d in docs for u in d.metadata["unit_ids"]} <= {
         f"S1-V001-{x}" for x in ("h1", "h2", "h3", "h4")

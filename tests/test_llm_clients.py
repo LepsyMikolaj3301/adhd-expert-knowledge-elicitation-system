@@ -92,3 +92,21 @@ def test_repetition_abort_is_a_refusal_not_retried():
     gen._http = httpx.Client(base_url="http://ollama", transport=httpx.MockTransport(handler))
     with pytest.raises(ModelRefused):
         gen.generate(GenRequest(key="k", user="u"))
+
+
+def test_ollama_sends_think_as_configured():
+    bodies = []
+
+    def handler(request):
+        bodies.append(json.loads(request.content))
+        return httpx.Response(200, json={"message": {"content": "x"}})
+
+    for think in (False, "low"):
+        gen = OllamaGenerator("http://ollama", "m", think=think)
+        gen._http = httpx.Client(base_url="http://ollama", transport=httpx.MockTransport(handler))
+        gen.generate(GenRequest(key="k", user="u"))
+    assert [b["think"] for b in bodies] == [False, "low"]
+    gen = OllamaGenerator("http://ollama", "m")  # the default is what it always was
+    gen._http = httpx.Client(base_url="http://ollama", transport=httpx.MockTransport(handler))
+    gen.generate(GenRequest(key="k", user="u"))
+    assert bodies[-1]["think"] is False

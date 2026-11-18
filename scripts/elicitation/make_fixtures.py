@@ -759,7 +759,6 @@ def make_document(doc_i: int, vignettes: list[Vignette], gen: Gen, args, skipped
                 vignette_version=v.version,
                 vignette_hash=v.content_hash,
                 expert_id=expert_id,
-                is_synthetic=True,
                 answers=answers,
                 quoted_fragments=spans,
                 rating=rating,
@@ -776,7 +775,6 @@ def make_document(doc_i: int, vignettes: list[Vignette], gen: Gen, args, skipped
         session_id=session_id,
         expert_id=expert_id,
         created_at=day,
-        is_synthetic=True,
         vignettes=vignettes,
         responses=responses,
     )
@@ -831,7 +829,6 @@ def edge_cases() -> dict[str, dict]:
         vignette_version=1,
         vignette_hash=v.content_hash,
         expert_id="SYN-900",
-        is_synthetic=True,
         answers={
             "Q1": "'tomorrow turns into the next week' - task initiation.",
             "Q4": "Low mood would explain the stalling as well as anything trait-like.",
@@ -852,7 +849,6 @@ def edge_cases() -> dict[str, dict]:
         expert_id="SYN-900",
         created_at=t0.isoformat(),
         schema_version=SCHEMA_VERSION,
-        is_synthetic=True,
         vignettes=[v.model_dump(mode="json")],
         responses=[good],
     )
@@ -883,11 +879,6 @@ def edge_cases() -> dict[str, dict]:
             "response hash differs from the shown vignette",
             "vignette_hash_mismatch",
             **{"responses.0.vignette_hash": "0" * 64},
-        ),
-        "synthetic_flag_mismatch": variant(
-            "non-synthetic document with a SYN- expert id",
-            "synthetic_flag_mismatch",
-            **{"is_synthetic": False, "responses.0.is_synthetic": False},
         ),
         "unknown_question_id": variant(
             "answer for a question that does not exist",

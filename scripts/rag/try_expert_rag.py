@@ -223,7 +223,6 @@ def doc_of(note: dict) -> Document:
 
 def retrieve(item: dict, store: ExpertKnowledgeStore, embeddings: Any, args: argparse.Namespace):
     flt = ExpertFilter(
-        include_synthetic=True,
         vignettes=[item["vignette"]] if item.get("vignette") else None,
         exclude_vignettes=item.get("exclude", []),
     )

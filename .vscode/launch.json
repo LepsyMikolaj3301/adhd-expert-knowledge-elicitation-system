@@ -52,6 +52,17 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Pytest: current file (debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-s", "-x", "-p", "no:cacheprovider"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": { "DATABASE_URL": "postgresql://rag:rag@postgres:5432/rag" }
+    },
+    {
       "name": "Python: current file",
       "type": "debugpy",
       "request": "launch",

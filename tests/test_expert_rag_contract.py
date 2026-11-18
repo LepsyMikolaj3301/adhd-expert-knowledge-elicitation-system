@@ -74,7 +74,7 @@ def test_documents_are_built_from_the_backends_record():
         UnitHit(
             id=f"S1-V001-{u['id']}", session_id="S1", expert_id="X1", vignette_id="V001",
             vignette_version=1, kind=u["kind"], highlight_id=None, direction=u["direction"],
-            is_synthetic=False, embed_text=u["i1"], score=1.0 - n / 10,
+            embed_text=u["i1"], score=1.0 - n / 10,
         )
         for n, u in enumerate(record["units"])
     ]  # fmt: skip

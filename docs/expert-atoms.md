@@ -150,7 +150,7 @@ CREATE TABLE atoms (
     condition text, direction text NOT NULL, certainty text,
     status text NOT NULL, checks jsonb NOT NULL, extractor jsonb NOT NULL,
     point_id text,
-    population text NOT NULL, track text NOT NULL, framing text NOT NULL, is_synthetic boolean NOT NULL,
+    population text NOT NULL, track text NOT NULL, framing text NOT NULL,
     embed_text text NOT NULL, embedding vector(1024) NOT NULL, sparse sparsevec(1048576)
 );
 

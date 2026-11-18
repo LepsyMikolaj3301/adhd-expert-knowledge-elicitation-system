@@ -10,9 +10,9 @@ def text(composable: sql.Composable) -> str:
     return composable.as_string()
 
 
-def test_default_filter_excludes_synthetic_units_only():
+def test_default_filter_has_no_conditions():
     conditions, params = ExpertFilter().on_unit("u")
-    assert [text(c) for c in conditions] == ['NOT "u".is_synthetic']
+    assert conditions == []
     assert params == {}
     assert text(all_of([])) == "TRUE"
 
@@ -20,10 +20,10 @@ def test_default_filter_excludes_synthetic_units_only():
 def test_every_set_field_becomes_a_parameterised_condition():
     f = ExpertFilter(
         populations=["adult"], tracks=["general"], framings=["email"], vignettes=["V001"],
-        exclude_vignettes=["V009"], include_synthetic=True,
+        exclude_vignettes=["V009"],
     )  # fmt: skip
     conditions, params = f.on_unit("u")
-    assert len(conditions) == 5  # no synthetic condition
+    assert len(conditions) == 5
     assert params == {
         "f_populations": ["adult"], "f_tracks": ["general"], "f_framings": ["email"],
         "f_vignettes": ["V001"], "f_exclude": ["V009"],
@@ -32,7 +32,7 @@ def test_every_set_field_becomes_a_parameterised_condition():
 
 
 def test_experts_filter_limits_units_but_not_cue_keys():
-    f = ExpertFilter(experts=["silver/SYN-001", "silver/SYN-002"], include_synthetic=True)
+    f = ExpertFilter(experts=["silver/SYN-001", "silver/SYN-002"])
     conditions, params = f.on_unit("u")
     assert [text(c) for c in conditions] == ['"u"."expert_id" = ANY(%(f_experts)s)']
     assert params == {"f_experts": ["silver/SYN-001", "silver/SYN-002"]}
@@ -89,11 +89,11 @@ def test_schema_is_quoted_not_interpolated():
 
 def test_cue_search_only_considers_cues_with_an_allowed_unit():
     query, params = q.cues_search(
-        "chips", search="hybrid", filter=ExpertFilter(), dense="[1]", sparse="x"
+        "chips", search="hybrid", filter=ExpertFilter(tracks=["general"]), dense="[1]", sparse="x"
     )
     sql_text = text(query)
     assert 'EXISTS (SELECT 1 FROM "chips"."unit_cues"' in sql_text
-    assert 'NOT "cu".is_synthetic' in sql_text
+    assert '"cu"."track" = ANY(%(f_tracks)s)' in sql_text
     assert "LIMIT 10" in sql_text
 
 

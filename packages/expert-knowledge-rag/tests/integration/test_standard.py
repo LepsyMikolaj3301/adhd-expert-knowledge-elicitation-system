@@ -1,14 +1,14 @@
 """LangChain's standard retriever tests, against the seeded schema (see conftest.py).
 
-Synthetic units are allowed because the seeded second session is the synthetic one: with it there
-are enough notes for the suite's `k=3`. The patient retriever does not merge units here, for the
+Both seeded sessions are searched: with the second one there are enough notes for the suite's
+`k=3`. The patient retriever does not merge units here, for the
 same reason (the cue keys are shared, so there are only 8 fragment units in 2 sessions).
 """
 
 import pytest
 from langchain_tests.integration_tests import RetrieversIntegrationTests
 
-from expert_knowledge_rag import ExpertFilter, ExpertQuestionRetriever, PatientTextRetriever
+from expert_knowledge_rag import ExpertQuestionRetriever, PatientTextRetriever
 
 pytestmark = pytest.mark.integration
 
@@ -29,7 +29,6 @@ class TestExpertQuestionRetriever(_Wired, RetrieversIntegrationTests):
         return {
             "store": self.store,
             "embeddings": self.embeddings,
-            "filter": ExpertFilter(include_synthetic=True),
         }
 
     @property
@@ -47,7 +46,6 @@ class TestPatientTextRetriever(_Wired, RetrieversIntegrationTests):
         return {
             "store": self.store,
             "embeddings": self.embeddings,
-            "filter": ExpertFilter(include_synthetic=True),
             "merge_shared": False,
         }
 

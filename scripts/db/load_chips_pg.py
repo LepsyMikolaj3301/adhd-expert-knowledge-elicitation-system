@@ -84,12 +84,12 @@ async def load(args) -> None:
             await conn.execute("DELETE FROM experts WHERE id LIKE $1", f"{args.tier}/%")
             for doc in docs.values():
                 await conn.execute(
-                    "INSERT INTO experts VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING",
-                    key(doc.expert_id), role_for(args.tier, doc.session_id, doc.expert_id), doc.is_synthetic,
+                    "INSERT INTO experts VALUES ($1, $2) ON CONFLICT (id) DO NOTHING",
+                    key(doc.expert_id), role_for(args.tier, doc.session_id, doc.expert_id),
                 )  # fmt: skip
                 await conn.execute(
-                    "INSERT INTO elicitation_sessions VALUES ($1, $2, $3, $4, $5)",
-                    key(doc.session_id), key(doc.expert_id), doc.is_synthetic,
+                    "INSERT INTO elicitation_sessions VALUES ($1, $2, $3, $4)",
+                    key(doc.session_id), key(doc.expert_id),
                     json.dumps(doc.model_dump(mode="json")), doc.created_at,
                 )  # fmt: skip
                 for v in doc.vignettes:
@@ -148,12 +148,12 @@ async def load(args) -> None:
                     await conn.execute(
                         "INSERT INTO finding_units (id, session_id, expert_id, vignette_id, "
                         "vignette_version, kind, highlight_id, direction, population, track, framing, "
-                        "is_synthetic, segmenter, embed_text, embedding, embed_text_combined, "
+                        "segmenter, embed_text, embedding, embed_text_combined, "
                         "embedding_combined) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,"
-                        "$15,$16,$17)",
+                        "$15,$16)",
                         uid, sid, key(rec["expert_id"]), vid, ver, u["kind"],
                         pid(sid, vid, u["highlight"]) if u["highlight"] else None, u["direction"],
-                        meta["population"], rec["track"], meta["framing"], rec["is_synthetic"],
+                        meta["population"], rec["track"], meta["framing"],
                         segmenter, u["i1"], arrays["i1"][unit_row], u["i3"], arrays["i3"][unit_row],
                     )  # fmt: skip
                     unit_row += 1

@@ -204,7 +204,7 @@ CREATE TABLE finding_units (
     kind text NOT NULL,                        -- fragment | case
     highlight_id text REFERENCES highlights,   -- NULL for case units
     direction text,                            -- copied from the highlight
-    population text NOT NULL, track text NOT NULL, framing text NOT NULL, is_synthetic boolean NOT NULL,
+    population text NOT NULL, track text NOT NULL, framing text NOT NULL,
     segmenter jsonb NOT NULL,                  -- code version, classifier model + prompt version
     embed_text text NOT NULL,                  -- I1
     embedding vector(1024) NOT NULL, sparse sparsevec(1048576),

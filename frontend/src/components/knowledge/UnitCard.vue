@@ -34,9 +34,6 @@ const emit = defineEmits<{ remove: [] }>()
         </span>
         <span class="flex items-center gap-2">
           <PseudonymChip :pseudonym="unit.expert_pseudonym" />
-          <span v-if="unit.expert_is_synthetic" class="quote-tag" data-testid="synthetic"
-            >synthetic</span
-          >
         </span>
         <RouterLink :to="`/reviews/${unit.assignment_id}`">Open review</RouterLink>
       </template>

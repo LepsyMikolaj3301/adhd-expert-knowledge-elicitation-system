@@ -50,11 +50,11 @@ def make_doc() -> ChipDocument:
         highlights.append(dict(chip=n, text=text, span=[a, a + len(text)], direction=direction))
     resp = dict(
         vignette_id="V001", vignette_version=1, vignette_hash=v.content_hash, expert_id="SYN-001",
-        is_synthetic=True, answers=ANSWERS, highlights=highlights, insufficient_information=True,
+        answers=ANSWERS, highlights=highlights, insufficient_information=True,
         started_at=t, submitted_at=t,
     )  # fmt: skip
     return ChipDocument(
-        session_id="DOC-SYN-0001", expert_id="SYN-001", created_at=t, is_synthetic=True,
+        session_id="DOC-SYN-0001", expert_id="SYN-001", created_at=t,
         vignettes=[v], responses=[resp],
     )  # fmt: skip
 

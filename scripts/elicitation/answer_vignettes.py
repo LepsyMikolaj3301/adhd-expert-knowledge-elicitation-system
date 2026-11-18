@@ -30,7 +30,6 @@ from elicitation_schema import (
     Response,
     ShiftAnswer,
     Vignette,
-    is_synthetic_id,
 )
 from elicitation_units import MIN_QUOTE_WORDS, _quotes
 from make_fixtures import fixture_dir, write_json
@@ -155,8 +154,6 @@ def build_document(
 ) -> ElicitationDocument:
     """The document for the vignettes the draft has finished, in the order they were shown."""
     expert_id = draft["expert_id"]
-    if is_synthetic_id(expert_id):
-        raise ValueError(f"{expert_id!r} is a synthetic id: gold answers are written by people")
     done = [
         (vid, draft["answers"][vid])
         for vid in draft["order"]
@@ -177,7 +174,6 @@ def build_document(
                 vignette_version=v.version,
                 vignette_hash=v.content_hash,
                 expert_id=expert_id,
-                is_synthetic=False,
                 answers=answers,
                 quoted_fragments=quoted_fragments(answers, v.text)[0],
                 rating=entry.get("rating"),
@@ -191,7 +187,6 @@ def build_document(
         session_id=session_id,
         expert_id=expert_id,
         created_at=now,
-        is_synthetic=False,
         vignettes=[vignettes[vid] for vid, _ in done],
         responses=responses,
     )
@@ -276,8 +271,6 @@ def open_session(
     `source` is the tier the vignettes come from, `text_source` their origin (synthetic|reddit):
     gold lands next to them in data/fixtures/<text_source>/gold. `load` reads the vignettes:
     the notebook passes its own (chip_answers.py)."""
-    if is_synthetic_id(expert):
-        raise SetupError("expert ids starting with SYN- are synthetic; use e.g. E01")
     gold = fixture_dir("gold", text_source, FIXTURES)
     vignettes = load(gold, fixture_dir(source, text_source, FIXTURES), wanted)
     experts_path = gold / "experts.json"

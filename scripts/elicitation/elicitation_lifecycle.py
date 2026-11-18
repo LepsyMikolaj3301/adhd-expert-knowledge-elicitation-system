@@ -1,8 +1,6 @@
-"""Backend rules around an ElicitationDocument: record status and the synthetic-data guard."""
+"""Backend rules around an ElicitationDocument: record status."""
 
 from enum import StrEnum
-
-from elicitation_schema import ElicitationDocument
 
 
 class DocumentStatus(StrEnum):
@@ -22,18 +20,6 @@ ALLOWED_TRANSITIONS: dict[DocumentStatus, set[DocumentStatus]] = {
 }
 
 
-class SyntheticIngestionError(Exception):
-    pass
-
-
 def check_transition(current: DocumentStatus, new: DocumentStatus) -> None:
     if new not in ALLOWED_TRANSITIONS[current]:
         raise ValueError(f"illegal transition {current} -> {new}")
-
-
-def assert_ingestible(doc: ElicitationDocument, *, production: bool) -> None:
-    """Synthetic documents may run through tests, never into the production knowledge base."""
-    if production and doc.is_synthetic:
-        raise SyntheticIngestionError(
-            f"synthetic document {doc.session_id} cannot be ingested into production"
-        )
