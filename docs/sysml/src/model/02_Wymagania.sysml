@@ -1,13 +1,10 @@
 package WymaganiaElicytacji {
     doc /*
-     * Wymagania (diagram wymagań). Źródłem wymagań oznaczonych @Zaimplementowane jest kod
-     * (nie docs/*.md, które mogą być nieaktualne). Pozostałe: @Propozycja / @Planowane /
-     * @DoUzupelnienia - do uzupełnienia przez autora pracy.
-     *
+     * Wymagania (diagram wymagań).
      * Identyfikatory: WYM-F-xx funkcjonalne, WYM-N-xx niefunkcjonalne. Potrzeby ZAG-xx są
      * w 01_Interesariusze; `frame` wskazuje potrzebę, na którą wymaganie odpowiada.
      * Spelnianie: który element struktury spełnia wymaganie (`satisfy`).
-     * Numer WYM-F-20 jest wolny (usunięte wymaganie); numerów nie przesuwano.
+     * Numery WYM-F-20 i WYM-N-14 są wolne (usunięte wymagania); numerów nie przesuwano.
      */
 
     private import ScalarValues::*;
@@ -265,7 +262,9 @@ package WymaganiaElicytacji {
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/auth/service.py"; }
             attribute maksymalnaLiczbaNieudanychLogowan : Integer = 5;
+            attribute czasBlokady : DurationValue = 15 [min];
             require constraint { system.api.auth.MAX_FAILED_LOGINS <= maksymalnaLiczbaNieudanychLogowan }
+            require constraint { system.api.auth.LOCKOUT >= czasBlokady }
         }
 
         requirement <'WYM-N-05'> czasZyciaSesji : WymaganieSystemowe {
@@ -319,33 +318,41 @@ package WymaganiaElicytacji {
              * Dostępność usługi w okresie zbierania danych. Zależy od dwóch maszyn: VM (aplikacja)
              * i komputera właściciela (modele) - bez niego zgłoszenia i decyzje czekają (WYM-N-16).
              */
-            @DoUzupelnienia;
-            attribute docelowaDostepnosc : Real;   // do uzupełnienia, np. 0.99
+            attribute docelowaDostepnosc : Real = 0.99;
         }
 
         requirement <'WYM-N-12'> szybkoscDzialania : WymaganieSystemowe {
-            doc /* Czas odpowiedzi interfejsu (bez zadań w tle). */
-            @DoUzupelnienia;
-            attribute czasOdpowiedziP95 : DurationValue;   // do uzupełnienia
+            doc /*
+             * Żądanie osoby nie czeka na modele językowe: korekta, przetwarzanie i ingestia są
+             * zadaniami w tle (JOB_ON_ENTRY, worker), a API od razu zwraca nowy stan przydziału.
+             * Wyjątek: wyszukiwanie w podglądzie bazy wiedzy osadza zapytanie (bge-m3) w trakcie
+             * żądania. Bez progu czasu odpowiedzi: system nie ma testów wydajności.
+             */
+            @Zaimplementowane;
+            @OdwolanieDoKodu { sciezka = "backend/app/assignments/state_machine.py"; }
+            frame malyNakladEksperta;
         }
 
         requirement <'WYM-N-13'> jakoscWyszukiwania : WymaganieSystemowe {
             doc /*
-             * Jakość wyszukiwania jednostek na zbiorze ewaluacyjnym. Do rozstrzygnięcia: wcześniej
-             * model miał k = 8, a test regresji wyszukiwania sprawdza hit@4 >= 0,8, MRR >= 0,5,
-             * nDCG@10 >= 0,4 (tolerancja 0,02). Czy przyjąć te progi, decyduje autor.
+             * Jakość wyszukiwania jednostek na zamrożonym zbiorze ewaluacyjnym, progi jak w teście
+             * regresji (tests/integration/test_retrieval_regression.py): retriever hybrydowy
+             * (bge-m3 + BM25), pytanie eksperta jako zapytanie, k = 4. Dodatkowo żadna główna
+             * metryka nie spada o więcej niż tolerancjaRegresji poniżej zapisanej linii bazowej.
              */
-            @DoUzupelnienia;
             frame wiedzaDlaRagKliniki;
-            attribute minimalnaPelnoscAtK : Real;   // do uzupełnienia
-            attribute k : Integer;                   // do uzupełnienia: 4 (test regresji) czy 8
+            attribute k : Integer = 4;
+            attribute minimalnyHitAtK : Real = 0.8;
+            attribute minimalnyMrr : Real = 0.5;
+            attribute minimalnyNdcgAt10 : Real = 0.4;
+            attribute tolerancjaRegresji : Real = 0.02;
         }
 
         requirement <'WYM-N-15'> dostepnoscInterfejsu : WymaganieSystemowe {
-            doc /* Interfejs dostępny (WCAG). */
+            doc /* Interfejs dostępny według WCAG. */
             @Propozycja;
-            @DoUzupelnienia;
             frame malyNakladEksperta;
+            attribute poziomWcag : String;   // do uzupełnienia, np. "2.1 AA"
         }
 
         // ---------------------------------------------------- models on a separate machine
@@ -424,7 +431,7 @@ package WymaganiaElicytacji {
         doc /*
          * Który element struktury (06_Struktura, 03_Kontekst) spełnia wymaganie. Korzeniem ścieżek
          * jest kontekstKliniki; system elicytacji to kontekstKliniki.hosting.system.
-         * Bez `satisfy`: WYM-N-11, WYM-N-12, WYM-N-13, WYM-N-15 (do uzupełnienia), WYM-N-10
+         * Bez `satisfy`: WYM-N-11, WYM-N-13, WYM-N-15 (do uzupełnienia), WYM-N-10
          * (planowane), WYM-N-21 (obowiązek inżyniera wiedzy, nie kodu).
          */
 
@@ -461,6 +468,7 @@ package WymaganiaElicytacji {
         satisfy ograniczonePonawianieZadan by kontekstKliniki.hosting.system.worker.queue;
         satisfy skalowalneWorkery by kontekstKliniki.hosting.system.worker.queue;
         satisfy zadaniaCzekajaNaMoc by kontekstKliniki.hosting.system.worker.compute;
+        satisfy szybkoscDzialania by kontekstKliniki.hosting.system.worker.queue;
 
         // ---- baza danych, baza wiedzy, modele, hosting
         satisfy niezmienneZgloszenie by kontekstKliniki.hosting.system.db;

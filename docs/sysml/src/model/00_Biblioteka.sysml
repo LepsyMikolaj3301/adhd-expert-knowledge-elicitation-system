@@ -2,16 +2,17 @@ package BibliotekaElicytacji {
     doc /*
      * Biblioteka modelu: metadane łączące elementy modelu z kodem. Każdy plik modelu importuje
      * ten pakiet.
-     *
-     * Konwencja oznaczeń:
-     *   @Zaimplementowane - istnieje i działa w kodzie (źródło prawdy: kod, nie docs/*.md)
-     *   @Propozycja       - propozycja autora modelu, do potwierdzenia
-     *   @Planowane        - zaplanowane, jeszcze nie zbudowane
-     *   @DoUzupelnienia   - brak wartości lub treści
-     *   @OdwolanieDoKodu  - ścieżka (względem korzenia repozytorium) do kodu realizującego element
      */
 
     private import ScalarValues::*;
+
+    abstract part def Aktor {
+        doc /*
+         * Aktor systemu elicytacji: osoba lub system zewnętrzny, który sam korzysta z systemu
+         * (ekspert, recenzent, inżynier wiedzy, lokalny LLM). Interesariusz, który z systemu nie
+         * korzysta (pacjent, klinicysta), nie jest aktorem.
+         */
+    }
 
     metadata def OdwolanieDoKodu {
         doc /* Ścieżka (względem korzenia repozytorium) do kodu realizującego element. */
@@ -28,9 +29,5 @@ package BibliotekaElicytacji {
 
     metadata def Planowane {
         doc /* Zaplanowane, jeszcze niezaimplementowane (np. usuwanie danych RODO). */
-    }
-
-    metadata def DoUzupelnienia {
-        doc /* Do uzupełnienia: brak wartości lub treści. */
     }
 }

@@ -1,6 +1,6 @@
 package WidokiElicytacji {
     doc /*
-     * Widoki = diagramy modelu (10). Każdy widok wskazuje (expose) elementy i sposób renderowania.
+     * Widoki = diagramy modelu (12). Każdy widok wskazuje (expose) elementy i sposób renderowania.
      * Typ diagramu w SysON wynika ze specjalizacji `view def` (docs/sysml/push.sh):
      *   InterconnectionView -> Interconnection View, ActionFlowView -> Action Flow View,
      *   StateTransitionView -> State Transition View, pozostałe -> General View.
@@ -31,8 +31,8 @@ package WidokiElicytacji {
     private import Renderowania::*;
 
     // =================================================================== view definitions
-    // Krótka nazwa <...> i specjalizacja widoku standardowego są potrzebne SysON: panel Views
-    // grupuje diagramy po nich (bez tego pokazuje błąd "null"), a push.sh dobiera po nich typ diagramu.
+    // Krótka nazwa i specjalizacja widoku standardowego
+    // grupuje diagramy po nich
     view def <stk> WidokInteresariuszy :> StandardViewDefinitions::GeneralView {
         doc /* Interesariusze i ich potrzeby (concerns). */
         render jakoDiagramWymagan;
@@ -43,6 +43,10 @@ package WidokiElicytacji {
     }
     view def <uc> WidokPrzypadkowUzycia :> StandardViewDefinitions::GeneralView {
         render jakoDiagramPrzypadkowUzycia;
+    }
+    view def <sat> WidokSpelniania :> StandardViewDefinitions::GeneralView {
+        doc /* Wymagania i elementy, które je spełniają (satisfy). */
+        render jakoDiagramWymagan;
     }
     view def <bdd> WidokDefinicji :> StandardViewDefinitions::GeneralView {
         doc /* Bloki i ich części (odpowiednik BDD). */
@@ -66,7 +70,10 @@ package WidokiElicytacji {
 
     // ---- 1. interesariusze i potrzeby
     view interesariuszeIPotrzeby : WidokInteresariuszy {
+        doc /* Aktor (z biblioteki) i jego podtypy: kto z interesariuszy sam korzysta z systemu. */
+        expose BibliotekaElicytacji::Aktor;
         expose InteresariuszeElicytacji::Interesariusze::**;
+        expose KontekstElicytacji::SystemyZewnetrzne::LokalnyLlm;
         expose InteresariuszeElicytacji::Potrzeby::**;
     }
 
@@ -77,6 +84,16 @@ package WidokiElicytacji {
         expose WymaganiaElicytacji::Funkcjonalne::**;
         expose WymaganiaElicytacji::Niefunkcjonalne::**;
         expose InteresariuszeElicytacji::Potrzeby::**;
+    }
+
+    // ---- 2b. wymagania i ich spełnianie
+    view spelnianieWymagan : WidokSpelniania {
+        doc /* Każde `satisfy` łączy wymaganie z częścią systemu (API, worker, baza, hosting). */
+        expose WymaganiaElicytacji::Spelnianie::**;
+        expose WymaganiaElicytacji::Funkcjonalne::**;
+        expose WymaganiaElicytacji::Niefunkcjonalne::**;
+        expose KontekstElicytacji::kontekstKliniki::hosting::**;
+        expose KontekstElicytacji::kontekstKliniki::lokalnyLlm;
     }
 
     // ---- 3. kontekst
@@ -137,6 +154,15 @@ package WidokiElicytacji {
         expose StrukturaElicytacji::ProcessJob;
         expose StrukturaElicytacji::IngestJob;
         expose StrukturaElicytacji::RefitJob;
+    }
+
+    // ---- 7b. model danych (BDD)
+    view modelDanych : WidokDefinicji {
+        doc /* Klasy ORM schematu app i ich powiązania; wyliczenia użyte w atrybutach. */
+        expose StrukturaElicytacji::Data::*;
+        expose StanyElicytacji::State;
+        expose StanyElicytacji::JobKind;
+        expose StanyElicytacji::JobStatus;
     }
 
     // ---- 8. IBD

@@ -4,7 +4,7 @@ Model systemu w notacji tekstowej **SysML v2**, wyprowadzony z **aktualnego kodu
 które miejscami są nieaktualne). Pokazuje jeden przepływ: od wypowiedzi pacjenta, przez sesję elicytacji
 z winietą, korektę, recenzję i decyzję, po bazę wiedzy, z której korzysta **osobny RAG kliniki**.
 
-Szczegóły i wartości oznaczone `@DoUzupelnienia` / `@Propozycja` są do uzupełnienia przez autora.
+Wartości docelowe wymagań (atrybuty bez wartości) i elementy `@Propozycja` są do uzupełnienia przez autora.
 
 ## Konwencja nazw
 
@@ -22,27 +22,29 @@ Szczegóły i wartości oznaczone `@DoUzupelnienia` / `@Propozycja` są do uzupe
 
 | Plik | Pakiet | Zawartość |
 |---|---|---|
-| `00_Biblioteka.sysml` | `BibliotekaElicytacji` | metadane `@OdwolanieDoKodu`, `@Zaimplementowane`, `@Propozycja`, `@Planowane`, `@DoUzupelnienia` |
+| `00_Biblioteka.sysml` | `BibliotekaElicytacji` | `Aktor` (abstrakcyjny typ bazowy aktorów); metadane `@OdwolanieDoKodu`, `@Zaimplementowane`, `@Propozycja`, `@Planowane` |
 | `01_Interesariusze.sysml` | `InteresariuszeElicytacji` | interesariusze (pacjent, ekspert, recenzent, inżynier wiedzy, klinicysta) i ich potrzeby (`concern` ZAG-01..08) |
 | `02_Wymagania.sysml` | `WymaganiaElicytacji` | wymagania WYM-F / WYM-N z `frame` do potrzeb; pakiet `Spelnianie` (`satisfy`) |
-| `03_Kontekst.sysml` | `KontekstElicytacji` | systemy zewnętrzne, `kontekstKliniki` (diagram kontekstu, tory procesu), przypadki użycia |
+| `03_Kontekst.sysml` | `KontekstElicytacji` | systemy zewnętrzne, `kontekstKliniki` (diagram kontekstu, tory procesu, przepływy `flow`), przypadki użycia, `RealizacjaWymagan` (przypadek użycia → wymaganie, `#refinement`) |
 | `04_Proces.sysml` | `ProcesElicytacji` | proces biznesowy: przed systemem / system elicytacji / RAG kliniki |
-| `05_Sekwencja.sysml` | `SekwencjaElicytacji` | sesja elicytacji, system jako czarna skrzynka |
-| `06_Struktura.sysml` | `StrukturaElicytacji` | klasy ORM, porty, bloki (API, worker, baza), IBD systemu |
+| `05_Sekwencja.sysml` | `SekwencjaElicytacji` | sesja elicytacji, system jako czarna skrzynka (komunikaty z `StrukturaElicytacji::Ports`) |
+| `06_Struktura.sysml` | `StrukturaElicytacji` | klasy ORM (`Vignette`, `VignetteVersion`, `Assignment`… z powiązaniami `ref item`), komunikaty i porty (`in`/`out item`), bloki (API, worker, baza), IBD systemu z przepływami |
 | `07_Stany.sysml` | `StanyElicytacji` | `State`, `Action`, `Actor`, `JobKind`, `JobStatus`; `AssignmentLifecycle`, `JobLifecycle` |
-| `08_Widoki.sysml` | `WidokiElicytacji` | definicje widoków i 10 widoków (diagramów) |
+| `08_Widoki.sysml` | `WidokiElicytacji` | definicje widoków i 12 widoków (diagramów) |
 
 ## Widoki (diagramy)
 
 | Widok | Diagram SysML v1 (Visual Paradigm) | Widok w SysON | Źródło |
 |---|---|---|---|
-| `interesariuszeIPotrzeby` | interesariusze i potrzeby (req / bdd) | General View | `01` |
+| `interesariuszeIPotrzeby` | interesariusze, aktorzy (`:> Aktor`) i potrzeby (req / bdd) | General View | `01` |
 | `wymagania` | Requirement Diagram (req) | General View | `02` |
+| `spelnianieWymagan` | Requirement Diagram (req) z relacjami satisfy | General View | `02` |
 | `kontekstSystemu` | IBD kontekstu | Interconnection View | `03` |
 | `przypadkiUzycia` | Use Case Diagram (uc) | General View | `03` |
 | `procesBiznesowy` | Activity Diagram (act) z torami | Action Flow View | `04` |
 | `sekwencjaSesjiElicytacji` | Sequence Diagram (sd) | General View (SysON nie ma widoku sekwencji) | `05` |
 | `strukturaSystemu` | Block Definition Diagram (bdd) | General View | `06` |
+| `modelDanych` | Block Definition Diagram (bdd), model danych | General View | `06` |
 | `wnetrzeSystemu` | Internal Block Diagram (ibd) | Interconnection View | `06` |
 | `stanyPrzydzialu` | State Machine Diagram (stm) | State Transition View | `07` |
 | `stanyZadania` | State Machine Diagram (stm) | State Transition View | `07` |
@@ -52,6 +54,10 @@ Najważniejsze decyzje w modelu:
 - **Granica systemu** to `kontekstKliniki.hosting.system`. Baza wiedzy (schemat `chips`) jest osobnym
   elementem: system tylko do niej zapisuje, RAG kliniki tylko z niej czyta (`expert-knowledge-rag`,
   transakcje READ ONLY). Fizycznie to ta sama instancja PostgreSQL co schemat `app`.
+- **Interesariusz a aktor.** Aktorem jest ten, kto sam korzysta z systemu: `Ekspert` (i przez niego
+  `Recenzent`), `InzynierWiedzy` i `LokalnyLlm` dziedziczą po `BibliotekaElicytacji::Aktor`. Pacjent
+  i klinicysta są interesariuszami, ale nie aktorami. W SysML v2 `actor` jest rolą w przypadku
+  użycia, a nie osobnym rodzajem elementu, dlatego podział zapisuje abstrakcyjny typ bazowy.
 - **Inżynier wiedzy** to rola administratora w aplikacji. Deweloper (autor systemu) nie jest aktorem
   ani interesariuszem: wdrożenie, CI/CD i testy są poza modelem.
 - **Tory** diagramu czynności są zapisane jako `perform` w częściach `kontekstKliniki`; wykonawca jest
@@ -81,22 +87,22 @@ Najważniejsze decyzje w modelu:
 
 ## Jak otworzyć i sprawdzić
 
-1. **SysON** (zalecane): `docs/sysml/README.md`. `./push.sh` wysyła wszystkie pliki jako jeden dokument
-   i tworzy diagram dla każdego widoku (typ diagramu z `view def`). Uwaga: kasuje i tworzy od nowa
-   projekt o nazwie folderu (`model`). Po otwarciu diagramu kliknij **Arrange all**.
-2. **VS Code + SysIDE (Sensmetry)**: otwórz katalog `docs/sysml/src/model/`.
-3. **Visual Paradigm (SysML 1.x)**: widoki z tabeli przerysuj jako diagramy odpowiedniego typu.
+1. **VS Code + wtyczka SysML v2** (zalecane): otwórz katalog `docs/sysml/src/model/`. Wtyczka sprawdza
+   składnię i typy; nie sprawdza końców `flow` ani celów `dependency`.
+2. **Visual Paradigm (SysML 1.x)**: widoki z tabeli przerysuj jako diagramy odpowiedniego typu.
    Model tekstowy pozostaje źródłem prawdy.
+3. SysON (`docs/sysml/README.md`, `./push.sh`) nie jest już używany.
 
-## Do uzupełnienia (`@DoUzupelnienia`, `@Propozycja`)
+## Do uzupełnienia
 
-- `WYM-N-13 jakoscWyszukiwania`: `k` (4 jak w teście regresji czy 8) i próg; test regresji sprawdza
-  hit@4 ≥ 0,8, MRR ≥ 0,5, nDCG@10 ≥ 0,4 (tolerancja 0,02).
-- `WYM-N-11 dostepnosc`, `WYM-N-12 szybkoscDzialania`, `WYM-N-15 dostepnoscInterfejsu`: wartości docelowe.
+- `WYM-N-15 dostepnoscInterfejsu`: `poziomWcag` (np. "2.1 AA").
+- `Compute.REQUIRE_COMPUTE`: bez wartości, bo zależy od środowiska (produkcja true, dev i testy false).
+- Bez `satisfy`: `WYM-N-11 dostepnosc` (0,99), `WYM-N-13 jakoscWyszukiwania` (progi z testu regresji),
+  `WYM-N-15`.
 - `WYM-N-01 modeleLokalne`, `WYM-N-09 tanieHostowanie`, `WYM-N-21 anonimowaWinieta` (@Propozycja): potwierdzić.
 - `WYM-N-10 usuwanieDanychRodo` (@Planowane): element spełniający po implementacji.
 - `RagKliniki` i część procesu `wykorzystanieWKlinice` (@Propozycja): to nie jest część systemu.
-- Numer `WYM-F-20` jest wolny (usunięte wymaganie); numerów nie przesuwano.
+- Numery `WYM-F-20` i `WYM-N-14` są wolne (usunięte wymagania); numerów nie przesuwano.
 
 ## Rozbieżności kod ↔ dokumentacja
 

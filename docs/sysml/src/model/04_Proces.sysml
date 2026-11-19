@@ -17,6 +17,8 @@ package ProcesElicytacji {
 
     private import BibliotekaElicytacji::*;
     private import StrukturaElicytacji::Data::KnowledgeUnit;
+    // Krótka nazwa, żeby warunki przy `decide` mieściły się na diagramie.
+    alias Akcja for StanyElicytacji::Action;
 
     item def WypowiedzPacjenta {
         doc /* Wypowiedź pacjenta (np. z wywiadu); materiał tekstu winiety po usunięciu danych identyfikujących. */
@@ -75,7 +77,7 @@ package ProcesElicytacji {
                  * Wykonawca: inżynier wiedzy. answer-decisions, per pytanie approve / request_changes /
                  * reject. Wynik dla przydziału: approve_answers, request_changes albo reject_all_answers.
                  */
-                out wynik : StanyElicytacji::Action;
+                out wynik : Akcja;
             }
             action zbudujJednostki {
                 doc /* Wykonawca: system (worker, zadanie process). Zatwierdzone odpowiedzi -> AnswerFindings + KnowledgeUnit; processing -> ingesting. */
@@ -90,28 +92,31 @@ package ProcesElicytacji {
                 out item zapisane : KnowledgeUnit[1..*];
             }
 
-            first start;
-            then przygotujWiniete;
-            then przydzielEksperta;
-            then odpowiedzNaWiniete;
-            then zglosOdpowiedzi;
-            then korektaAutomatyczna;
-            then merge poPoprawkach;
-            then sprawdzKorekte;
-            then oddajDoRecenzji;
-            then recenzja;
-            then rozstrzygnij;
-            then decide wgDecyzji;
-                if rozstrzygnij.wynik == StanyElicytacji::Action::approve_answers then zbudujJednostki;
-                if rozstrzygnij.wynik == StanyElicytacji::Action::request_changes then poPoprawkach;
+            // Jawne pary `first a then b`: samo `then b;` po odwołaniu (nie deklaracji) zaczyna
+            // się od ostatnio zadeklarowanego węzła (tu `start`), a nie od poprzedniego kroku.
+            first start then przygotujWiniete;
+            first przygotujWiniete then przydzielEksperta;
+            first przydzielEksperta then odpowiedzNaWiniete;
+            first odpowiedzNaWiniete then zglosOdpowiedzi;
+            first zglosOdpowiedzi then korektaAutomatyczna;
+            first korektaAutomatyczna then poPoprawkach;
+            merge poPoprawkach;
+            first poPoprawkach then sprawdzKorekte;
+            first sprawdzKorekte then oddajDoRecenzji;
+            first oddajDoRecenzji then recenzja;
+            first recenzja then rozstrzygnij;
+            first rozstrzygnij then wgDecyzji;
+            decide wgDecyzji;
+                if rozstrzygnij.wynik == Akcja::approve_answers then zbudujJednostki;
+                if rozstrzygnij.wynik == Akcja::request_changes then poPoprawkach;
                 else done;
 
             first zbudujJednostki then wgrajDoBazyWiedzy;
             first wgrajDoBazyWiedzy then done;
 
-            flow from wypowiedzi to przygotujWiniete.wypowiedzi;
+//            flow from wypowiedzi to przygotujWiniete.wypowiedzi;
             flow from zbudujJednostki.jednostki to wgrajDoBazyWiedzy.jednostki;
-            flow from wgrajDoBazyWiedzy.zapisane to jednostki;
+//            flow from wgrajDoBazyWiedzy.zapisane to jednostki;
         }
 
         // ---------------------------------------------------- poza systemem: RAG kliniki
@@ -140,24 +145,23 @@ package ProcesElicytacji {
                 doc /* Wykonawca: klinicysta. */
             }
 
-            first start;
-            then zadajPytanie;
-            then fork rozwidlenie;
+            first start then zadajPytanie;
+            first zadajPytanie then rozwidlenie;
+            fork rozwidlenie;
                 then szukajWDokumentachMedycznych;
                 then szukajWBazieWiedzy;
             first szukajWDokumentachMedycznych then polaczenie;
             first szukajWBazieWiedzy then polaczenie;
             join polaczenie;
-            then wygenerujOdpowiedz;
-            then przeczytajOdpowiedz;
-            then done;
+            first polaczenie then wygenerujOdpowiedz;
+            first wygenerujOdpowiedz then przeczytajOdpowiedz;
+            first przeczytajOdpowiedz then done;
 
-            flow from wiedza to szukajWBazieWiedzy.wiedza;
+//            flow from wiedza to szukajWBazieWiedzy.wiedza;
         }
 
-        first start;
-        then zebranieWypowiedziPacjenta;
-        then elicytacja;
+        first start then zebranieWypowiedziPacjenta;
+        first zebranieWypowiedziPacjenta then elicytacja;
 
         flow from zebranieWypowiedziPacjenta.wypowiedzi to elicytacja.wypowiedzi;
         flow from elicytacja.jednostki to wykorzystanieWKlinice.wiedza;

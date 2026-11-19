@@ -13,26 +13,7 @@ package SekwencjaElicytacji {
     private import InteresariuszeElicytacji::Interesariusze::*;
     private import KontekstElicytacji::SystemyZewnetrzne::*;
     private import StrukturaElicytacji::SystemElicytacji;
-
-    // =================================================================== messages
-    package Komunikaty {
-        item def HttpRequest {
-            doc /* Żądanie przeglądarki do API (REST /api/v1, JSON, ciasteczko sesji). */
-        }
-        item def HttpResponse {
-            doc /* Odpowiedź API; widok przydziału zawiera stan i allowed_actions. */
-        }
-        item def ModelRequest {
-            doc /* Wywołanie lokalnych modeli: LanguageTool /v2/check, Ollama /api/chat, /api/embed. */
-        }
-        item def ModelResponse;
-        item def SqlStatement {
-            doc /* Instrukcja SQL do bazy wiedzy (schemat chips). */
-        }
-        item def SqlRows;
-    }
-
-    private import Komunikaty::*;
+    private import StrukturaElicytacji::Ports::*;   // komunikaty: HttpRequest, ModelRequest, SqlStatement...
 
     // =================================================================== elicitation session
     occurrence def SesjaElicytacji {

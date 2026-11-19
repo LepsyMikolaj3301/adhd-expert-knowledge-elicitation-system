@@ -24,41 +24,80 @@ package StrukturaElicytacji {
     package Data {
         doc /* Klasy ORM schematu app (backend/app/<moduł>/models.py); tylko pola potrzebne na diagramach. */
 
+        enum def VersionStatus {
+            doc /* Status wersji winiety; przydzielić można tylko wersję published. */
+            @OdwolanieDoKodu { sciezka = "backend/app/vignettes/models.py"; }
+            enum draft;
+            enum published;
+            enum retired;
+        }
+        item def Vignette {
+            doc /* Winieta (kod, np. V900); jej treść jest w wersjach. */
+            @OdwolanieDoKodu { sciezka = "backend/app/vignettes/models.py"; }
+            attribute code : String;
+            ref item versions : VignetteVersion[1..*];
+        }
+        item def VignetteVersion {
+            doc /*
+             * Wersja winiety: tekst pacjenta, streszczenie i zadane pytania (Q1-Q6). Pole design
+             * (zaplanowane wskazówki, notatki punktacji; JSONB) nigdy nie trafia do ekspertów.
+             */
+            @OdwolanieDoKodu { sciezka = "backend/app/vignettes/models.py"; }
+            ref item vignette : Vignette;
+            attribute version : Integer;
+            attribute status : VersionStatus;
+            attribute text : String;
+            attribute content_hash : String;
+            attribute framing : String;
+            attribute question_ids : String[1..6];
+            attribute q4_whatif : String[0..1];
+            attribute patient_summary : String;
+            attribute 'variant' : String[0..1]; // JSONB
+            attribute design : String;          // JSONB
+        }
         item def Assignment {
             doc /* Przydział: jeden ekspert na jednej wersji winiety; nośnik stanu przepływu. */
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/models.py"; }
+            ref item vignette_version : VignetteVersion;
             attribute 'state' : State;
             attribute review_round : Integer;
         }
         item def Submission {
             doc /* Niezmienne zgłoszenie odpowiedzi (wyzwalacz w bazie), ze skrótem winiety. */
             @OdwolanieDoKodu { sciezka = "backend/app/assignments/models.py"; }
+            ref item assignment : Assignment;
             attribute vignette_hash : String;
         }
         item def ProofreadRound {
             doc /* Runda korekty (jedna na rundę recenzji): podświetlenia, flagi, przebiegi korekty. */
             @OdwolanieDoKodu { sciezka = "backend/app/proofread/models.py"; }
+            ref item assignment : Assignment;
             attribute review_round : Integer;
         }
         item def AnswerRevision {
             doc /* Tekst odpowiedzi na pytanie: original, proposed (korekta), final (po sprawdzeniu autora), lines. */
             @OdwolanieDoKodu { sciezka = "backend/app/proofread/models.py"; }
+            ref item round : ProofreadRound;
             attribute question_id : String;
         }
         item def AnswerDecision {
             doc /* Decyzja inżyniera wiedzy o odpowiedzi na pytanie: approve / reject / request_changes. */
             @OdwolanieDoKodu { sciezka = "backend/app/reviews/models.py"; }
+            ref item assignment : Assignment;
             attribute question_id : String;
             attribute decision : String;
         }
         item def AnswerFindings {
             doc /* Rekord ustaleń: zdania odpowiedzi przypisane do cytatów; wejście do cięcia na jednostki. */
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/models.py"; }
+            ref item assignment : Assignment;
             attribute findings_version : Integer;
         }
         item def KnowledgeUnit {
             doc /* Jednostka wiedzy: słowa eksperta przy cytacie (`fragment`) albo cały przypadek (`case`). */
             @OdwolanieDoKodu { sciezka = "backend/app/knowledge/models.py"; }
+            ref item assignment : Assignment;
+            ref item submission : Submission;
             attribute kind : String;
             attribute text : String;
             attribute content_hash : String;
@@ -67,6 +106,7 @@ package StrukturaElicytacji {
         item def Job {
             doc /* Zadanie w tle: wiersz tabeli jobs (kolejka w Postgresie). */
             @OdwolanieDoKodu { sciezka = "backend/app/jobs/models.py"; }
+            ref item assignment : Assignment[0..1]; // brak dla zadania korpusu (refit)
             attribute kind : JobKind;
             attribute status : JobStatus;
             attribute attempts : Integer;
@@ -83,19 +123,52 @@ package StrukturaElicytacji {
 
     // =================================================================== ports
     package Ports {
-        doc /* Port opisuje stronę serwera; klient używa portu sprzężonego (~). */
+        doc /*
+         * Port opisuje stronę serwera (in = żądanie, out = odpowiedź); klient używa portu
+         * sprzężonego (~), w którym kierunki są odwrócone. Te same komunikaty niesie diagram
+         * sekwencji (05_Sekwencja).
+         */
 
+        // ---------------------------------------------------- komunikaty
+        item def HttpRequest {
+            doc /* Żądanie przeglądarki do API (REST /api/v1, JSON, ciasteczko sesji). */
+        }
+        item def HttpResponse {
+            doc /* Odpowiedź API; widok przydziału zawiera stan i allowed_actions. */
+        }
+        item def ModelRequest {
+            doc /* Wywołanie lokalnych modeli: LanguageTool /v2/check, Ollama /api/chat, /api/embed. */
+        }
+        item def ModelResponse {
+            doc /* Wynik modelu: poprawki pisowni, tekst redakcji, klasyfikacja zdań albo wektory. */
+        }
+        item def SqlStatement {
+            doc /* Instrukcja SQL (zapis albo zapytanie). */
+        }
+        item def SqlRows {
+            doc /* Wiersze wyniku zapytania SQL. */
+        }
+
+        // ---------------------------------------------------- porty
         port def HttpPort {
             doc /* REST /api/v1, JSON, ciasteczko sesji. */
+            in item request : HttpRequest;
+            out item response : HttpResponse;
         }
         port def SqlPort {
             doc /* PostgreSQL (asyncpg w aplikacji, psycopg w expert-knowledge-rag). */
+            in item statement : SqlStatement;
+            out item rows : SqlRows;
         }
         port def OllamaPort {
             doc /* Ollama: /api/chat (redakcja, klasyfikator), /api/embed (bge-m3), /api/tags (sonda). */
+            in item request : ModelRequest;
+            out item response : ModelResponse;
         }
         port def LanguageToolPort {
             doc /* LanguageTool: /v2/check (pisownia, gramatyka), /v2/languages (sonda). */
+            in item request : ModelRequest;
+            out item response : ModelResponse;
         }
     }
 
@@ -372,10 +445,11 @@ package StrukturaElicytacji {
         part db : AppDatabase;
 
         // ---------------------------------------------------- IBD: kontenery
+        // przepływ = połączenie z tym, co nim płynie (kierunek żądania; odpowiedź wraca tą samą drogą)
         bind web = frontend.web;
-        connect frontend.api_client to api.http;
-        connect api.sql to db.sql;
-        connect worker.sql to db.sql;
+        flow of HttpRequest from frontend.api_client.request to api.http.request;
+        flow of SqlStatement from api.sql.statement to db.sql.statement;
+        flow of SqlStatement from worker.sql.statement to db.sql.statement;
 
         // ---------------------------------------------------- IBD: przepływ przez bazę
         connection api_transition connect api.assignments.state_machine to db.workflow {
@@ -398,11 +472,12 @@ package StrukturaElicytacji {
         }
 
         // ---------------------------------------------------- IBD: wyjścia poza system
-        connect api.chips to wiedza;            // podgląd, usuwanie
-        connect worker.chips to wiedza;         // ingest, refit
-        connect api.ollama to ollama;           // osadzenie zapytania, sonda
-        connect api.languagetool to languagetool;
-        connect worker.ollama to ollama;
-        connect worker.languagetool to languagetool;
+        // delegacja do portów brzegowych: ten sam kierunek po obu stronach
+        flow of SqlStatement from api.chips.statement to wiedza.statement;           // podgląd, usuwanie
+        flow of SqlStatement from worker.chips.statement to wiedza.statement;        // ingest, refit
+        flow of ModelRequest from api.ollama.request to ollama.request;              // osadzenie zapytania, sonda
+        flow of ModelRequest from api.languagetool.request to languagetool.request;  // sonda
+        flow of ModelRequest from worker.ollama.request to ollama.request;
+        flow of ModelRequest from worker.languagetool.request to languagetool.request;
     }
 }

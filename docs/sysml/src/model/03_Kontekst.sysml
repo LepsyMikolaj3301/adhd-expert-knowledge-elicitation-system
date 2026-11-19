@@ -8,6 +8,7 @@ package KontekstElicytacji {
      *                       korzeń drzewa części dla `satisfy` i torów procesu (`perform`)
      *   PrzypadkiUzycia   - przypadki użycia systemu elicytacji (bez korzystania z wiedzy,
      *                       które należy do RAG kliniki)
+     *   RealizacjaWymagan - przypadek użycia -> wymaganie (#refinement)
      */
 
     private import BibliotekaElicytacji::*;
@@ -46,7 +47,7 @@ package KontekstElicytacji {
             doc /* Dokumenty medyczne kliniki (wytyczne, procedury, dokumentacja), zindeksowane przez RAG kliniki. */
         }
 
-        part def LokalnyLlm {
+        part def LokalnyLlm :> Aktor {
             doc /*
              * Lokalne modele na komputerze właściciela z GPU, osiągalne z serwera tylko przez sieć
              * Tailscale; bywa wyłączony (wtedy działa bramka mocy, Compute). Ollama: qwen3.5:9b
@@ -130,18 +131,18 @@ package KontekstElicytacji {
         connect klinicysta to ragKliniki;
 
         // ---------------------------------------------------- baza wiedzy: zapis tylko z systemu, odczyt z RAG kliniki
-        connection zapisWiedzy connect hosting.system.wiedza to hosting.bazaWiedzy.zapis {
+        flow zapisWiedzy of SqlStatement from hosting.system.wiedza.statement to hosting.bazaWiedzy.zapis.statement {
             doc /* Ingest jednostek, usuwanie wiedzy, przeliczanie BM25 (worker i API). */
         }
-        connection odczytWiedzy connect ragKliniki.wiedza to hosting.bazaWiedzy.odczyt {
-            doc /* expert-knowledge-rag: ExpertKnowledgeStore, transakcje READ ONLY. */
+        flow odczytWiedzy of SqlRows from hosting.bazaWiedzy.odczyt.rows to ragKliniki.wiedza.rows {
+            doc /* Jednostki wiedzy do RAG kliniki: expert-knowledge-rag (ExpertKnowledgeStore), transakcje READ ONLY. */
         }
         connect ragKliniki to dokumentyMedyczne;
 
         // ---------------------------------------------------- lokalne modele
-        connect hosting.system.ollama to lokalnyLlm.ollama;
-        connect hosting.system.languagetool to lokalnyLlm.languagetool;
-        connection ragDoLlm connect ragKliniki.llm to lokalnyLlm.ollama {
+        flow of ModelRequest from hosting.system.ollama.request to lokalnyLlm.ollama.request;
+        flow of ModelRequest from hosting.system.languagetool.request to lokalnyLlm.languagetool.request;
+        flow ragDoLlm of ModelRequest from ragKliniki.llm.request to lokalnyLlm.ollama.request {
             doc /* RAG kliniki może generować odpowiedzi tym samym lokalnym modelem albo własnym. */
             @Propozycja;
         }
@@ -154,6 +155,25 @@ package KontekstElicytacji {
          * (pytania klinicysty) należy do RAG kliniki i nie jest przypadkiem użycia tego systemu.
          * LokalnyLlm jest aktorem drugorzędnym przypadków wykonywanych przez zadania w tle.
          */
+
+        // ----------------------------------------------------- konto
+        use case def PrzyjmijZaproszenie {
+            doc /* POST /auth/accept-invite: link z zaproszenia (ważny 7 dni) jest jednorazowy. */
+            subject system : SystemElicytacji;
+            actor ekspert : Ekspert;
+            objective { doc /* Założyć konto z zaproszenia inżyniera wiedzy i ustawić hasło. */ }
+        }
+
+        use case def ZalogujSie {
+            doc /*
+             * Wykonuje ekspert albo inżynier wiedzy. POST /auth/login, /auth/logout; po 5 nieudanych
+             * próbach blokada na 15 min, sesja ważna 12 h.
+             */
+            subject system : SystemElicytacji;
+            actor ekspert : Ekspert[0..1];
+            actor inzynierWiedzy : InzynierWiedzy[0..1];
+            objective { doc /* Zalogować się i pracować w swojej roli (admin albo expert). */ }
+        }
 
         // ----------------------------------------------------- ekspert: sesja elicytacji
         use case def PrzeprowadzSesjeElicytacji {
@@ -264,5 +284,66 @@ package KontekstElicytacji {
             actor inzynierWiedzy : InzynierWiedzy;
             objective { doc /* Przejrzeć i przeszukać jednostki wiedzy, usunąć jednostkę albo całą wiedzę eksperta, przeliczyć BM25. */ }
         }
+
+        use case def UsunDaneEksperta {
+            doc /* WYM-N-10, jeszcze niezaimplementowane. Szerzej niż ZarzadzajBazaWiedzy: także zgłoszenia i konto. */
+            @Planowane;
+            subject system : SystemElicytacji;
+            actor inzynierWiedzy : InzynierWiedzy;
+            objective { doc /* Na żądanie eksperta (RODO) usunąć jedną jednostkę albo całe zgłoszenie lub eksperta z odpowiedziami. */ }
+        }
+    }
+
+    // =================================================================== use cases -> requirements
+    package RealizacjaWymagan {
+        doc /*
+         * Który przypadek użycia doprecyzowuje które wymaganie (#refinement: przypadek użycia
+         * jest dokładniejszym opisem wymagania, jak «refine» w SysML 1.x). Wymagania przekrojowe
+         * (WYM-F-12, WYM-F-13, WYM-F-22 i większość niefunkcjonalnych) nie mają tu powiązań:
+         * spełniają je elementy struktury (02_Wymagania::Spelnianie).
+         */
+        private import ModelingMetadata::*;
+        private import PrzypadkiUzycia::*;
+        private import WymaganiaElicytacji::Funkcjonalne::*;
+        private import WymaganiaElicytacji::Niefunkcjonalne::*;
+
+        // konto
+        #refinement dependency PrzyjmijZaproszenie to kontaTylkoZZaproszen;
+        #refinement dependency ZalogujSie to dostepWgRol;
+        #refinement dependency ZalogujSie to ochronaLogowania;
+        #refinement dependency ZalogujSie to czasZyciaSesji;
+
+        // ekspert
+        #refinement dependency PrzeprowadzSesjeElicytacji to wszystkiePytaniaWidoczne;
+        #refinement dependency PrzeprowadzSesjeElicytacji to ukrytyProjektWiniety;
+        #refinement dependency CytujFragmenty to cytatyZgodneZWinieta;
+        #refinement dependency CytujFragmenty to kierunekCytatu;
+        #refinement dependency ZapiszSzkic to autozapisSzkicu;
+        #refinement dependency ZglosOdpowiedzi to kompletneZgloszenie;
+        #refinement dependency ZglosOdpowiedzi to niezmienneZgloszenie;
+        #refinement dependency ZglosOdpowiedzi to pseudonimizacja;
+        #refinement dependency KorektaAutomatyczna to automatycznaKorekta;
+        #refinement dependency KorektaAutomatyczna to budzetKontekstu;
+        #refinement dependency KorektaAutomatyczna to zadaniaCzekajaNaMoc;
+        #refinement dependency SprawdzKorekte to autorSprawdzaKorekte;
+
+        // recenzent
+        #refinement dependency RecenzujOdpowiedzi to otwartaRecenzja;
+        #refinement dependency SkomentujOdpowiedz to administratorDecyduje;
+        #refinement dependency ZaglosujNaOdpowiedz to administratorDecyduje;
+
+        // inżynier wiedzy
+        #refinement dependency PrzygotujWiniete to wersjonowanieWiniet;
+        #refinement dependency PrzygotujWiniete to anonimowaWinieta;
+        #refinement dependency ZaprosIPrzydzielEksperta to kontaTylkoZZaproszen;
+        #refinement dependency ZaprosIPrzydzielEksperta to przydzialTylkoOpublikowanych;
+        #refinement dependency RozstrzygnijRecenzje to administratorDecyduje;
+        #refinement dependency RozstrzygnijRecenzje to gotowoscMocyPrzedZadaniem;
+        #refinement dependency ZasilenieBazyWiedzy to budowaJednostek;
+        #refinement dependency ZasilenieBazyWiedzy to ingestiaJednostek;
+        #refinement dependency PonowNieudaneZadanie to ponawianieNieudanychZadan;
+        #refinement dependency ZarzadzajBazaWiedzy to wyszukiwanieWiedzy;
+        #refinement dependency ZarzadzajBazaWiedzy to usuwanieWiedzy;
+        #refinement dependency UsunDaneEksperta to usuwanieDanychRodo;
     }
 }

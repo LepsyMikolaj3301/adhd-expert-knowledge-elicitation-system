@@ -72,6 +72,19 @@ PILOT_TOKEN=... PILOT_PORT=8891 docker compose --profile pilot up -d sysml-pilot
 - Przykład: `%viz --view=state StanyElicytacji::AssignmentLifecycle` (widoki: `tree`, `interconnection`,
   `action`, `state`, `sequence`, `case`, `mixed`).
 
+### Podgląd diagramów: `render.py`
+
+```bash
+./render.py                 # src/model -> diagrams/*.svg + diagrams/index.html
+PILOT_URL=http://host.docker.internal:8890 ./render.py   # z devcontainera
+```
+
+Wysyła model do pilota i renderuje proces, sekwencję, obie maszyny stanów, dwa IBD, model danych (BDD) oraz tabelę `satisfy` (pilot nie rysuje relacji satisfy i przy pakiecie `Spelnianie` przekracza limit 1000 elementów, więc `render.py` składa tabelę z tekstu modelu; diagram `satisfy` rysuje SysON, widok `spelnianieWymagan`); potem
+otwórz `diagrams/index.html` w przeglądarce. Opisy `doc` są usuwane tylko na czas renderowania:
+inaczej każdy staje się notatką na diagramie, a pilot przerywa rysowanie po 1000 elementach
+(„EXCEEDS THE LIMIT”). `diagrams/` jest w `.gitignore`. Wymaga `pip install websocket-client`.
+Listę diagramów zmienia się w `DIAGRAMS` na początku skryptu.
+
 ## Pliki
 
 | Plik | Rola |
@@ -80,5 +93,6 @@ PILOT_TOKEN=... PILOT_PORT=8891 docker compose --profile pilot up -d sysml-pilot
 | `pilot/Dockerfile` | obraz pilota SysML v2 (Jupyter + jądro `sysml`, Java 21, Graphviz) |
 | `push.sh` | tekst `.sysml` -> projekt w SysON |
 | `export.sh` | projekty z SysON -> `models/*/elements.json` |
+| `render.py` | model -> `diagrams/*.svg` + `diagrams/index.html` przez pilota (podgląd, w `.gitignore`) |
 | `src/` | źródła `.sysml` (jeden folder = jeden projekt) |
 | `postgres-data/` | dane bazy (w `.gitignore`) |
