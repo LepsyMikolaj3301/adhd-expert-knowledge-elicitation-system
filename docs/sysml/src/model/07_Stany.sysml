@@ -7,10 +7,14 @@ package StanyElicytacji {
      *   JobLifecycle        - cykl życia zadania w kolejce (backend/app/jobs/worker.py)
      * Sygnał przepływu niesie aktora (`'actor'`), strażnik sprawdza go jak check_transition().
      * Prefiks tNN_ w nazwach przejść odróżnia powtórzone akcje (cancel z czterech stanów).
+     * Obie maszyny łączą się w dwie strony: wejście przydziału w stan zadania tworzy Job
+     * (EnqueueJob, JOB_ON_ENTRY), a koniec zadania wysyła do przydziału sygnał *_succeeded albo
+     * *_failed (ReportJobResult, SUCCESS_ACTION / FAILURE_ACTION w worker.py).
      */
 
     private import ScalarValues::*;
     private import BibliotekaElicytacji::*;
+    private import StrukturaElicytacji::Data::Assignment;
 
     // =================================================================== enums (values from code)
     enum def State {
@@ -125,19 +129,56 @@ package StanyElicytacji {
         in kind : JobKind;
     }
 
+    action def ReportJobResult {
+        doc /*
+         * Koniec zadania -> sygnał do przydziału, w tej samej transakcji: po done worker woła
+         * transition(SUCCESS_ACTION[kind], system), po failed _fail() woła
+         * transition(FAILURE_ACTION[kind], system). Zadanie korpusu (refit, bez przydziału)
+         * niczego nie wysyła.
+         */
+        @OdwolanieDoKodu { sciezka = "backend/app/jobs/worker.py"; }
+        in jobKind : JobKind;
+        in succeeded : Boolean;
+        in item target : Assignment[0..1];   // brak dla refit
+
+        first start then wgRodzaju;
+        decide wgRodzaju;
+            if succeeded and jobKind == JobKind::proofread then proofread_succeeded;
+            if succeeded and jobKind == JobKind::process then processing_succeeded;
+            if succeeded and jobKind == JobKind::ingest then ingestion_succeeded;
+            if not succeeded and jobKind == JobKind::proofread then proofread_failed;
+            if not succeeded and jobKind == JobKind::process then processing_failed;
+            if not succeeded and jobKind == JobKind::ingest then ingestion_failed;
+            else done;   // refit
+
+        // SUCCESS_ACTION
+        action proofread_succeeded send ProofreadSucceeded(Actor::system) to target;
+        action processing_succeeded send ProcessingSucceeded(Actor::system) to target;
+        action ingestion_succeeded send IngestionSucceeded(Actor::system) to target;
+        // FAILURE_ACTION
+        action proofread_failed send ProofreadFailed(Actor::system) to target;
+        action processing_failed send ProcessingFailed(Actor::system) to target;
+        action ingestion_failed send IngestionFailed(Actor::system) to target;
+    }
+
     // =================================================================== assignment
     state def AssignmentLifecycle {
         doc /*
          * Cykl życia przydziału. W stanach zadań (proofreading, processing, ingesting) pracuje
          * worker; frontend odpytuje API, gdy widzi jeden z nich (JOB_STATES).
-         * processing_failed jest wspólny dla nieudanej korekty i nieudanego process - retry
-         * uruchamia to, co się nie powiodło.
+         * processing_failed jest wspólny dla nieudanej korekty i nieudanego process. Inżynier wiedzy
+         * wybiera tylko "retry"; którą akcję dostaje przydział, rozstrzyga rodzaj ostatniego
+         * nieudanego zadania (retry() i RETRY_BY_JOB w assignments/service.py) - strażnik t15/t16.
          * Z REQUIRE_COMPUTE przejście osoby do stanu zadania (t04, t10, t15, t16, t19) najpierw
          * sprawdza komputer z modelami; gdy nie jest gotowy: 503 compute_unavailable i przejście
          * nie zachodzi. Przejść systemu (np. t13) się nie sprawdza: worker sam wstrzymuje zadanie
          * (JobLifecycle).
          */
         @OdwolanieDoKodu { sciezka = "backend/app/assignments/state_machine.py"; }
+
+        attribute last_failed_kind : JobKind[0..1] {
+            doc /* Job.kind najnowszego zadania tego przydziału w stanie failed (zapytanie w retry()). */
+        }
 
         entry; then assigned;
 
@@ -239,12 +280,12 @@ package StanyElicytacji {
 
         transition t15_retry_proofread
             first processing_failed
-            accept s : RetryProofread if s.'actor' == Actor::admin
+            accept s : RetryProofread if s.'actor' == Actor::admin and last_failed_kind == JobKind::proofread
             then proofreading;
 
         transition t16_retry_processing
             first processing_failed
-            accept s : RetryProcessing if s.'actor' == Actor::admin
+            accept s : RetryProcessing if s.'actor' == Actor::admin and last_failed_kind == JobKind::process
             then processing;
 
         transition t17_ingestion_succeeded
@@ -274,13 +315,16 @@ package StanyElicytacji {
          * Zadanie w kolejce (next_job: najstarsze queued albo running z wygasłą dzierżawą,
          * SKIP LOCKED, tylko rodzaje gotowe). Błąd przejściowy wraca do kolejki; błąd przy
          * niedziałającym komputerze z modelami wraca do kolejki bez zużycia próby; błąd trwały
-         * lub ostatnia próba kończy porażką i worker woła transition(*_failed).
+         * lub ostatnia próba kończy porażką. Wejście w finished / failed wysyła do przydziału
+         * sygnał *_succeeded / *_failed (ReportJobResult); zadanie refit nie ma przydziału.
          * Stan `finished` = JobStatus.done (nazwa `done` zajęta przez bibliotekę SysML).
          */
         @OdwolanieDoKodu { sciezka = "backend/app/jobs/worker.py"; }
 
+        attribute kind : JobKind;
+        ref item assignment : Assignment[0..1];   // brak dla refit
         attribute attempts : Integer = 0;
-        attribute MAX_ATTEMPTS : Integer = 3;
+        attribute MAX_ATTEMPTS : Integer = 3;     // JobQueue.MAX_ATTEMPTS
 
         entry; then queued;
 
@@ -289,10 +333,20 @@ package StanyElicytacji {
             doc /* Dzierżawa LEASE (5 min), odnawiana co 1/3 dzierżawy (_heartbeat); attempts + 1. */
         }
         state finished {
-            doc /* JobStatus.done; przydział dostaje *_succeeded. */
+            doc /* JobStatus.done; przydział dostaje *_succeeded (SUCCESS_ACTION). */
+            entry action report : ReportJobResult {
+                in jobKind = kind;
+                in succeeded = true;
+                in item target = assignment;
+            }
         }
         state failed {
-            doc /* JobStatus.failed; przydział dostaje *_failed. */
+            doc /* JobStatus.failed (_fail); przydział dostaje *_failed (FAILURE_ACTION). */
+            entry action report : ReportJobResult {
+                in jobKind = kind;
+                in succeeded = false;
+                in item target = assignment;
+            }
         }
 
         transition claim

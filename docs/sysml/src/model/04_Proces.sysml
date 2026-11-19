@@ -8,7 +8,8 @@ package ProcesElicytacji {
      *   wykorzystanieWKlinice      - POZA SYSTEMEM: RAG kliniki (@Propozycja)
      *
      * Część kliniczna nie jest następnikiem elicytacji: łączy je tylko przepływ jednostek wiedzy
-     * przez bazę wiedzy, a klinika czyta ją niezależnie od konkretnej sesji.
+     * przez bazę wiedzy, a klinika czyta ją niezależnie od konkretnej sesji elicytacji.
+     * Sesja elicytacji = jeden przydział (Assignment); w bazie wiedzy session_id = id przydziału.
      * Tory (kto wykonuje krok) są w KontekstElicytacji::kontekstKliniki (`perform`); wykonawca
      * jest też w pierwszym zdaniu `doc` każdego kroku.
      * Ścieżki błędów (processing_failed, ingestion_failed, retry, cancel) pokazuje maszyna stanów
@@ -34,7 +35,10 @@ package ProcesElicytacji {
 
         // ---------------------------------------------------- system elicytacji
         action elicytacja {
-            doc /* SYSTEM ELICYTACJI: jedna sesja elicytacji wiedzy z winietą, od winiety do jednostek w bazie wiedzy. */
+            doc /*
+             * SYSTEM ELICYTACJI: przygotowanie winiety, a potem jedna sesja elicytacji (jeden
+             * przydział, od przydzielEksperta do wgrajDoBazyWiedzy), kończona jednostkami w bazie wiedzy.
+             */
             in item wypowiedzi : WypowiedzPacjenta[1..*];
             out item jednostki : KnowledgeUnit[0..*];
 
@@ -114,9 +118,9 @@ package ProcesElicytacji {
             first zbudujJednostki then wgrajDoBazyWiedzy;
             first wgrajDoBazyWiedzy then done;
 
-//            flow from wypowiedzi to przygotujWiniete.wypowiedzi;
+            flow from wypowiedzi to przygotujWiniete.wypowiedzi;
             flow from zbudujJednostki.jednostki to wgrajDoBazyWiedzy.jednostki;
-//            flow from wgrajDoBazyWiedzy.zapisane to jednostki;
+            flow from wgrajDoBazyWiedzy.zapisane to jednostki;
         }
 
         // ---------------------------------------------------- poza systemem: RAG kliniki

@@ -134,8 +134,11 @@ package KontekstElicytacji {
         flow zapisWiedzy of SqlStatement from hosting.system.wiedza.statement to hosting.bazaWiedzy.zapis.statement {
             doc /* Ingest jednostek, usuwanie wiedzy, przeliczanie BM25 (worker i API). */
         }
-        flow odczytWiedzy of SqlRows from hosting.bazaWiedzy.odczyt.rows to ragKliniki.wiedza.rows {
-            doc /* Jednostki wiedzy do RAG kliniki: expert-knowledge-rag (ExpertKnowledgeStore), transakcje READ ONLY. */
+        flow odczytWiedzy of SqlStatement from ragKliniki.wiedza.statement to hosting.bazaWiedzy.odczyt.statement {
+            doc /*
+             * RAG kliniki pyta bazę wiedzy przez expert-knowledge-rag (ExpertKnowledgeStore),
+             * w transakcjach READ ONLY; jednostki wiedzy (SqlRows) wracają tą samą drogą.
+             */
         }
         connect ragKliniki to dokumentyMedyczne;
 
@@ -175,11 +178,11 @@ package KontekstElicytacji {
             objective { doc /* Zalogować się i pracować w swojej roli (admin albo expert). */ }
         }
 
-        // ----------------------------------------------------- ekspert: sesja elicytacji
-        use case def PrzeprowadzSesjeElicytacji {
+        // ----------------------------------------------------- ekspert: odpowiedzi w sesji elicytacji
+        use case def OdpowiedzNaWiniete {
             doc /*
-             * Sesja elicytacji wiedzy z winietą: ekspert czyta winietę (tekst pacjenta) i odpowiada
-             * naraz na wszystkie zadane pytania (Q1-Q6), cytując jej fragmenty.
+             * Część sesji elicytacji (przydziału) wykonywana przez eksperta: czyta winietę (tekst
+             * pacjenta) i odpowiada naraz na wszystkie zadane pytania (Q1-Q6), cytując jej fragmenty.
              * Stany: assigned -> in_progress (start) -> proofreading (submit).
              */
             subject system : SystemElicytacji;
@@ -314,8 +317,8 @@ package KontekstElicytacji {
         #refinement dependency ZalogujSie to czasZyciaSesji;
 
         // ekspert
-        #refinement dependency PrzeprowadzSesjeElicytacji to wszystkiePytaniaWidoczne;
-        #refinement dependency PrzeprowadzSesjeElicytacji to ukrytyProjektWiniety;
+        #refinement dependency OdpowiedzNaWiniete to wszystkiePytaniaWidoczne;
+        #refinement dependency OdpowiedzNaWiniete to ukrytyProjektWiniety;
         #refinement dependency CytujFragmenty to cytatyZgodneZWinieta;
         #refinement dependency CytujFragmenty to kierunekCytatu;
         #refinement dependency ZapiszSzkic to autozapisSzkicu;

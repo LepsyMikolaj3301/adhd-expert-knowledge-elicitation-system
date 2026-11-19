@@ -365,6 +365,16 @@ package StrukturaElicytacji {
         part knowledge : Knowledge;
         part compute : Compute;      // watch() startuje z aplikacją
 
+        // schemat app: każdy moduł czyta i zapisuje przez jedno połączenie z bazą (port sql)
+        connect auth to sql;
+        connect users to sql;
+        connect vignettes to sql;
+        connect assignments to sql;
+        connect assignments.state_machine to sql;
+        connect proofread to sql;
+        connect reviews to sql;
+        connect knowledge to sql;    // także enqueue_refit (tabela jobs)
+
         connect knowledge.ollama to ollama;
         connect knowledge.chips to chips;
         connect compute.ollama to ollama;
@@ -397,6 +407,11 @@ package StrukturaElicytacji {
 
         exhibit state jobLifecycle : JobLifecycle;
 
+        // schemat app: kolejka, zapis wyników i przejścia stanu przez port sql
+        connect queue to sql;
+        connect handlers to sql;
+        connect state_machine to sql;
+
         connect handlers.proofread.ollama to ollama;
         connect handlers.proofread.languagetool to languagetool;
         connect handlers.ingest.ollama to ollama;
@@ -424,6 +439,9 @@ package StrukturaElicytacji {
              * answer_findings, knowledge_units, audit_events.
              */
         }
+
+        connect sql to jobs;
+        connect sql to workflow;
     }
 
     // =================================================================== system of interest
@@ -441,7 +459,7 @@ package StrukturaElicytacji {
 
         part frontend : Frontend;
         part api : BackendApi;
-        part worker : Worker[0..*];
+        part worker : Worker[1..*];             // bez workera żadne zadanie (korekta, ingestia) się nie wykona
         part db : AppDatabase;
 
         // ---------------------------------------------------- IBD: kontenery
@@ -452,11 +470,19 @@ package StrukturaElicytacji {
         flow of SqlStatement from worker.sql.statement to db.sql.statement;
 
         // ---------------------------------------------------- IBD: przepływ przez bazę
+        // Połączenia logiczne: co z czym rozmawia przez bazę. Fizycznie każde z nich biegnie
+        // przez porty sql (flow wyżej i delegacje wewnątrz BackendApi, Worker i AppDatabase).
         connection api_transition connect api.assignments.state_machine to db.workflow {
             doc /* Akcje osób (submit, submit_for_review, decyzje, retry, cancel): Assignment.state + AuditEvent. */
         }
         connection api_enqueue connect api.assignments.state_machine to db.jobs {
             doc /* JOB_ON_ENTRY: wejście w proofreading / processing / ingesting tworzy Job w tej samej transakcji. */
+        }
+        connection api_enqueue_refit connect api.knowledge to db.jobs {
+            doc /*
+             * enqueue_refit(): usunięcie wiedzy (jednostki albo eksperta) tworzy Job refit bez
+             * przydziału, o ile żaden refit już nie czeka (knowledge/removal.py).
+             */
         }
         connection next_job connect db.jobs to worker.queue {
             doc /* Worker pobiera Job (SKIP LOCKED, tylko rodzaje z ready_kinds()). */

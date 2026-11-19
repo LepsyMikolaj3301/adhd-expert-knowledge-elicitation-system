@@ -1,76 +1,29 @@
 package WidokiElicytacji {
     doc /*
-     * Widoki = diagramy modelu (12). Każdy widok wskazuje (expose) elementy i sposób renderowania.
-     * Typ diagramu w SysON wynika ze specjalizacji `view def` (docs/sysml/push.sh):
-     *   InterconnectionView -> Interconnection View, ActionFlowView -> Action Flow View,
-     *   StateTransitionView -> State Transition View, pozostałe -> General View.
-     * SysON nie ma widoku sekwencji: sekwencja trafia do General View.
+     * Widoki = diagramy modelu (12). Każdy widok wskazuje (expose) elementy, a jego typ wybiera
+     * diagram w wizualizatorze wtyczki SysML v2 dla VS Code (SysML: Visualize Model na folderze
+     * modelu, potem menu widoków -> SysML Views):
+     *   StandardViewDefinitions::GeneralView         -> General (bloki, wymagania, przypadki użycia)
+     *   StandardViewDefinitions::InterconnectionView -> Interconnection (IBD), render asInterconnectionDiagram
+     *   StandardViewDefinitions::ActionFlowView      -> Action Flow (diagram czynności)
+     *   StandardViewDefinitions::StateTransitionView -> State Transition (maszyna stanów)
+     *   StandardViewDefinitions::SequenceView        -> Sequence (linie życia i komunikaty)
+     * Wizualizator rozpoznaje typ tylko po nazwie typu samego widoku, dlatego widoki są typowane
+     * bezpośrednio widokami standardowymi (bez własnych `view def`). Odpowiednik w SysML 1.x
+     * (Visual Paradigm) jest w pierwszym zdaniu `doc` każdego widoku.
      */
 
     private import Views::*;
-
-    // =================================================================== renderings
-    package Renderowania {
-        rendering jakoDiagramWymagan {
-            doc /* SysML v1: req */
-        }
-        rendering jakoDiagramPrzypadkowUzycia {
-            doc /* SysML v1: uc */
-        }
-        rendering jakoDiagramStanow {
-            doc /* SysML v1: stm */
-        }
-        rendering jakoDiagramCzynnosci {
-            doc /* SysML v1: act */
-        }
-        rendering jakoDiagramSekwencji {
-            doc /* SysML v1: sd */
-        }
-    }
-
-    private import Renderowania::*;
-
-    // =================================================================== view definitions
-    // Krótka nazwa i specjalizacja widoku standardowego
-    // grupuje diagramy po nich
-    view def <stk> WidokInteresariuszy :> StandardViewDefinitions::GeneralView {
-        doc /* Interesariusze i ich potrzeby (concerns). */
-        render jakoDiagramWymagan;
-    }
-    view def <req> WidokWymagan :> StandardViewDefinitions::GeneralView {
-        doc /* Wymagania i potrzeby, na które odpowiadają (frame). */
-        render jakoDiagramWymagan;
-    }
-    view def <uc> WidokPrzypadkowUzycia :> StandardViewDefinitions::GeneralView {
-        render jakoDiagramPrzypadkowUzycia;
-    }
-    view def <sat> WidokSpelniania :> StandardViewDefinitions::GeneralView {
-        doc /* Wymagania i elementy, które je spełniają (satisfy). */
-        render jakoDiagramWymagan;
-    }
-    view def <bdd> WidokDefinicji :> StandardViewDefinitions::GeneralView {
-        doc /* Bloki i ich części (odpowiednik BDD). */
-        render asTreeDiagram;
-    }
-    view def <ibd> WidokPolaczen :> StandardViewDefinitions::InterconnectionView {
-        doc /* Części, porty i połączenia (odpowiednik IBD). */
-        render asInterconnectionDiagram;
-    }
-    view def <stm> WidokStanow :> StandardViewDefinitions::StateTransitionView {
-        render jakoDiagramStanow;
-    }
-    view def <act> WidokCzynnosci :> StandardViewDefinitions::ActionFlowView {
-        render jakoDiagramCzynnosci;
-    }
-    view def <sd> WidokSekwencji :> StandardViewDefinitions::GeneralView {
-        render jakoDiagramSekwencji;
-    }
+    private import StandardViewDefinitions::*;
 
     // =================================================================== views (diagrams)
 
     // ---- 1. interesariusze i potrzeby
-    view interesariuszeIPotrzeby : WidokInteresariuszy {
-        doc /* Aktor (z biblioteki) i jego podtypy: kto z interesariuszy sam korzysta z systemu. */
+    view interesariuszeIPotrzeby : GeneralView {
+        doc /*
+         * SysML 1.x: bdd/req. Interesariusze i ich potrzeby; Aktor (z biblioteki) i jego podtypy
+         * pokazują, kto z interesariuszy sam korzysta z systemu.
+         */
         expose BibliotekaElicytacji::Aktor;
         expose InteresariuszeElicytacji::Interesariusze::**;
         expose KontekstElicytacji::SystemyZewnetrzne::LokalnyLlm;
@@ -78,8 +31,8 @@ package WidokiElicytacji {
     }
 
     // ---- 2. wymagania
-    view wymagania : WidokWymagan {
-        doc /* Bez pakietu Spelnianie, żeby nie wciągać bloków struktury. */
+    view wymagania : GeneralView {
+        doc /* SysML 1.x: req. Wymagania i potrzeby (frame); bez pakietu Spelnianie, żeby nie wciągać bloków struktury. */
         expose WymaganiaElicytacji::WymaganieSystemowe;
         expose WymaganiaElicytacji::Funkcjonalne::**;
         expose WymaganiaElicytacji::Niefunkcjonalne::**;
@@ -87,8 +40,11 @@ package WidokiElicytacji {
     }
 
     // ---- 2b. wymagania i ich spełnianie
-    view spelnianieWymagan : WidokSpelniania {
-        doc /* Każde `satisfy` łączy wymaganie z częścią systemu (API, worker, baza, hosting). */
+    view spelnianieWymagan : GeneralView {
+        doc /*
+         * SysML 1.x: req z relacjami satisfy. Każde `satisfy` łączy wymaganie z częścią systemu
+         * (API, worker, baza, hosting). Tabelę pokrycia daje też SysML: Edit Model -> Traceability.
+         */
         expose WymaganiaElicytacji::Spelnianie::**;
         expose WymaganiaElicytacji::Funkcjonalne::**;
         expose WymaganiaElicytacji::Niefunkcjonalne::**;
@@ -97,14 +53,19 @@ package WidokiElicytacji {
     }
 
     // ---- 3. kontekst
-    view kontekstSystemu : WidokPolaczen {
-        doc /* Klinika: osoby, system elicytacji (czarna skrzynka), baza wiedzy, RAG kliniki, lokalne modele, hosting. */
+    view kontekstSystemu : InterconnectionView {
+        doc /* SysML 1.x: ibd kontekstu. Klinika: osoby, system elicytacji (czarna skrzynka), baza wiedzy, RAG kliniki, lokalne modele, hosting. */
+        render asInterconnectionDiagram;
         expose KontekstElicytacji::kontekstKliniki;
         expose KontekstElicytacji::kontekstKliniki::**;
     }
 
     // ---- 4. przypadki użycia
-    view przypadkiUzycia : WidokPrzypadkowUzycia {
+    view przypadkiUzycia : GeneralView {
+        doc /*
+         * SysML 1.x: uc. Przypadki użycia, aktorzy i include. W wizualizatorze także widok Case
+         * z menu widoków (rysuje aktorów i przypadki użycia całego modelu, bez zawężenia expose).
+         */
         expose KontekstElicytacji::PrzypadkiUzycia::**;
         expose InteresariuszeElicytacji::Interesariusze::Ekspert;
         expose InteresariuszeElicytacji::Interesariusze::Recenzent;
@@ -113,22 +74,22 @@ package WidokiElicytacji {
     }
 
     // ---- 5. proces biznesowy
-    view procesBiznesowy : WidokCzynnosci {
-        doc /* Od wypowiedzi pacjenta do odpowiedzi klinicysty; granica: elicytacja / wykorzystanieWKlinice. */
+    view procesBiznesowy : ActionFlowView {
+        doc /* SysML 1.x: act z torami. Od wypowiedzi pacjenta do odpowiedzi klinicysty; granica: elicytacja / wykorzystanieWKlinice. */
         expose ProcesElicytacji::ProcesBiznesowy;
         expose ProcesElicytacji::ProcesBiznesowy::**;
     }
 
     // ---- 6. sekwencja
-    view sekwencjaSesjiElicytacji : WidokSekwencji {
-        doc /* System jako czarna skrzynka; linie życia: role i systemy zewnętrzne. */
+    view sekwencjaSesjiElicytacji : SequenceView {
+        doc /* SysML 1.x: sd. System jako czarna skrzynka; linie życia: role i systemy zewnętrzne, komunikaty m01-m22 (odpowiedzi HTTP tylko po odpytaniu). */
         expose SekwencjaElicytacji::SesjaElicytacji;
         expose SekwencjaElicytacji::SesjaElicytacji::**;
     }
 
     // ---- 7. BDD
-    view strukturaSystemu : WidokDefinicji {
-        doc /* Bloki systemu: kontenery, moduły API, części workera. */
+    view strukturaSystemu : GeneralView {
+        doc /* SysML 1.x: bdd. Bloki systemu: kontenery, moduły API, części workera. */
         expose StrukturaElicytacji::SystemElicytacji;
         expose StrukturaElicytacji::SystemElicytacji::*;
         expose StrukturaElicytacji::Frontend;
@@ -157,8 +118,8 @@ package WidokiElicytacji {
     }
 
     // ---- 7b. model danych (BDD)
-    view modelDanych : WidokDefinicji {
-        doc /* Klasy ORM schematu app i ich powiązania; wyliczenia użyte w atrybutach. */
+    view modelDanych : GeneralView {
+        doc /* SysML 1.x: bdd (model danych). Klasy ORM schematu app i ich powiązania; wyliczenia użyte w atrybutach. */
         expose StrukturaElicytacji::Data::*;
         expose StanyElicytacji::State;
         expose StanyElicytacji::JobKind;
@@ -166,18 +127,24 @@ package WidokiElicytacji {
     }
 
     // ---- 8. IBD
-    view wnetrzeSystemu : WidokPolaczen {
-        doc /* Gdzie leży logika: API i worker przekazują sobie pracę przez bazę (tabela jobs, schemat app). */
+    view wnetrzeSystemu : InterconnectionView {
+        doc /*
+         * SysML 1.x: ibd. Gdzie leży logika: API i worker przekazują sobie pracę przez bazę (tabela
+         * jobs, schemat app); przepływy (flow) niosą komunikaty z portów.
+         */
+        render asInterconnectionDiagram;
         expose StrukturaElicytacji::SystemElicytacji;
         expose StrukturaElicytacji::SystemElicytacji::**;
     }
 
     // ---- 9-10. maszyny stanów
-    view stanyPrzydzialu : WidokStanow {
+    view stanyPrzydzialu : StateTransitionView {
+        doc /* SysML 1.x: stm. Cykl życia przydziału (19 przejść z TRANSITIONS). */
         expose StanyElicytacji::AssignmentLifecycle;
         expose StanyElicytacji::AssignmentLifecycle::**;
     }
-    view stanyZadania : WidokStanow {
+    view stanyZadania : StateTransitionView {
+        doc /* SysML 1.x: stm. Cykl życia zadania w kolejce (jobs). */
         expose StanyElicytacji::JobLifecycle;
         expose StanyElicytacji::JobLifecycle::**;
     }

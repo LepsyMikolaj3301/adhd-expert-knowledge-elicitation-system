@@ -27,27 +27,35 @@ Wartości docelowe wymagań (atrybuty bez wartości) i elementy `@Propozycja` s�
 | `02_Wymagania.sysml` | `WymaganiaElicytacji` | wymagania WYM-F / WYM-N z `frame` do potrzeb; pakiet `Spelnianie` (`satisfy`) |
 | `03_Kontekst.sysml` | `KontekstElicytacji` | systemy zewnętrzne, `kontekstKliniki` (diagram kontekstu, tory procesu, przepływy `flow`), przypadki użycia, `RealizacjaWymagan` (przypadek użycia → wymaganie, `#refinement`) |
 | `04_Proces.sysml` | `ProcesElicytacji` | proces biznesowy: przed systemem / system elicytacji / RAG kliniki |
-| `05_Sekwencja.sysml` | `SekwencjaElicytacji` | sesja elicytacji, system jako czarna skrzynka (komunikaty z `StrukturaElicytacji::Ports`) |
+| `05_Sekwencja.sysml` | `SekwencjaElicytacji` | sesja elicytacji (jeden przydział), system jako czarna skrzynka (komunikaty z `StrukturaElicytacji::Ports`; odpowiedzi HTTP tylko po odpytaniu API) |
 | `06_Struktura.sysml` | `StrukturaElicytacji` | klasy ORM (`Vignette`, `VignetteVersion`, `Assignment`… z powiązaniami `ref item`), komunikaty i porty (`in`/`out item`), bloki (API, worker, baza), IBD systemu z przepływami |
 | `07_Stany.sysml` | `StanyElicytacji` | `State`, `Action`, `Actor`, `JobKind`, `JobStatus`; `AssignmentLifecycle`, `JobLifecycle` |
-| `08_Widoki.sysml` | `WidokiElicytacji` | definicje widoków i 12 widoków (diagramów) |
+| `08_Widoki.sysml` | `WidokiElicytacji` | 12 widoków (diagramów) typowanych widokami standardowymi, pod wizualizator VS Code |
 
 ## Widoki (diagramy)
 
-| Widok | Diagram SysML v1 (Visual Paradigm) | Widok w SysON | Źródło |
+Typ widoku (widok standardowy z `StandardViewDefinitions`) wybiera diagram w wizualizatorze wtyczki
+SysML v2 dla VS Code: **SysML: Visualize Model** na folderze `src/model/`, potem menu widoków →
+**SysML Views** → nazwa widoku. Wizualizator rozpoznaje typ tylko po nazwie typu samego widoku, dlatego
+widoki nie mają własnych `view def`.
+
+| Widok | Typ widoku → diagram w wizualizatorze | Diagram SysML v1 (Visual Paradigm) | Źródło |
 |---|---|---|---|
-| `interesariuszeIPotrzeby` | interesariusze, aktorzy (`:> Aktor`) i potrzeby (req / bdd) | General View | `01` |
-| `wymagania` | Requirement Diagram (req) | General View | `02` |
-| `spelnianieWymagan` | Requirement Diagram (req) z relacjami satisfy | General View | `02` |
-| `kontekstSystemu` | IBD kontekstu | Interconnection View | `03` |
-| `przypadkiUzycia` | Use Case Diagram (uc) | General View | `03` |
-| `procesBiznesowy` | Activity Diagram (act) z torami | Action Flow View | `04` |
-| `sekwencjaSesjiElicytacji` | Sequence Diagram (sd) | General View (SysON nie ma widoku sekwencji) | `05` |
-| `strukturaSystemu` | Block Definition Diagram (bdd) | General View | `06` |
-| `modelDanych` | Block Definition Diagram (bdd), model danych | General View | `06` |
-| `wnetrzeSystemu` | Internal Block Diagram (ibd) | Interconnection View | `06` |
-| `stanyPrzydzialu` | State Machine Diagram (stm) | State Transition View | `07` |
-| `stanyZadania` | State Machine Diagram (stm) | State Transition View | `07` |
+| `interesariuszeIPotrzeby` | `GeneralView` → General | interesariusze, aktorzy (`:> Aktor`) i potrzeby (req / bdd) | `01` |
+| `wymagania` | `GeneralView` → General | Requirement Diagram (req) | `02` |
+| `spelnianieWymagan` | `GeneralView` → General | Requirement Diagram (req) z relacjami satisfy | `02` |
+| `kontekstSystemu` | `InterconnectionView` → Interconnection | IBD kontekstu | `03` |
+| `przypadkiUzycia` | `GeneralView` → General (rysunek uc: widok Case z menu) | Use Case Diagram (uc) | `03` |
+| `procesBiznesowy` | `ActionFlowView` → Action Flow | Activity Diagram (act) z torami | `04` |
+| `sekwencjaSesjiElicytacji` | `SequenceView` → Sequence | Sequence Diagram (sd) | `05` |
+| `strukturaSystemu` | `GeneralView` → General | Block Definition Diagram (bdd) | `06` |
+| `modelDanych` | `GeneralView` → General | Block Definition Diagram (bdd), model danych | `06` |
+| `wnetrzeSystemu` | `InterconnectionView` → Interconnection | Internal Block Diagram (ibd) | `06` |
+| `stanyPrzydzialu` | `StateTransitionView` → State Transition | State Machine Diagram (stm) | `07` |
+| `stanyZadania` | `StateTransitionView` → State Transition | State Machine Diagram (stm) | `07` |
+
+Powiązania przypadek użycia → wymaganie (`RealizacjaWymagan`) i `satisfy` można też przejrzeć jako
+macierz: **SysML: Edit Model** → Traceability.
 
 Najważniejsze decyzje w modelu:
 
@@ -65,7 +73,12 @@ Najważniejsze decyzje w modelu:
 - **Gdzie leży logika** (`wnetrzeSystemu`): akcje osób idą przez API do `state_machine.transition()`,
   który w jednej transakcji zapisuje stan, zdarzenie audytowe i zadanie (`JOB_ON_ENTRY`); worker
   pobiera zadania z tabeli `jobs` i sam woła `transition()` jako `system`. Etapy przekazują sobie dane
-  przez bazę, nie w pamięci.
+  przez bazę, nie w pamięci. Połączenia między modułami a tabelami są logiczne; fizycznie biegną
+  przez porty `sql` (delegowane wewnątrz `BackendApi`, `Worker` i `AppDatabase`).
+- **Maszyny stanów są sprzężone**: wejście przydziału w stan zadania tworzy `Job` (`EnqueueJob`),
+  a koniec zadania wysyła do przydziału `*_succeeded` / `*_failed` (`ReportJobResult`).
+- **HTTP w sekwencji**: system niczego nie wysyła do przeglądarki sam; o końcu zadania w tle frontend
+  dowiaduje się, odpytując API.
 
 ## Słowniczek: pojęcie ↔ kod
 
@@ -73,6 +86,7 @@ Najważniejsze decyzje w modelu:
 |---|---|
 | winieta, wersja winiety | `Vignette`, `VignetteVersion` (`draft` → `published` → `retired`) |
 | przydział | `Assignment`, stan `Assignment.state` |
+| sesja elicytacji | jeden przydział, od `assigned` do `ingested`; w bazie wiedzy `session_id` = id przydziału. Część eksperta (start → submit) to przypadek użycia `OdpowiedzNaWiniete` |
 | szkic, zgłoszenie | `AnswerDraft`, `Submission` |
 | cytat (chip [n]) | podświetlenie (`highlight`) |
 | korekta, sprawdzenie korekty | `proofread` (`ProofreadRound`, `AnswerRevision`), stan `proofread_check` |
@@ -87,8 +101,9 @@ Najważniejsze decyzje w modelu:
 
 ## Jak otworzyć i sprawdzić
 
-1. **VS Code + wtyczka SysML v2** (zalecane): otwórz katalog `docs/sysml/src/model/`. Wtyczka sprawdza
-   składnię i typy; nie sprawdza końców `flow` ani celów `dependency`.
+1. **VS Code + wtyczka SysML v2** (zalecane): otwórz katalog `docs/sysml/src/model/`; diagramy przez
+   **SysML: Visualize Model** (sekcja „Widoki”), eksport do PNG/SVG przez **SysML: Export Visualization**.
+   Wtyczka sprawdza składnię i typy; nie sprawdza końców `flow` ani celów `dependency`.
 2. **Visual Paradigm (SysML 1.x)**: widoki z tabeli przerysuj jako diagramy odpowiedniego typu.
    Model tekstowy pozostaje źródłem prawdy.
 3. SysON (`docs/sysml/README.md`, `./push.sh`) nie jest już używany.
