@@ -5,7 +5,7 @@ diataxis: reference
 
 # Runtime and deployment
 
-Language: **English** · [Polski](../pl/reference/runtime-and-deploy.md)
+Language: **English** · [Polski](../../pl/reference/runtime-and-deploy.md)
 
 This page maps the files that run the stack: the local compose file and the Azure VM compose file, the Dockerfiles, the backend package metadata, the database setup and migrations, the prompt loader and prompt files, and the scripts outside `scripts/corpus/chunking`.
 

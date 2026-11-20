@@ -5,7 +5,7 @@ diataxis: reference
 
 # Chunking i konfiguracja korpusu
 
-Język: **Polski** · [English](../../reference/chunking.md)
+Język: **Polski** · [English](../../eng/reference/chunking.md)
 
 `scripts/corpus/chunking` tnie sparsowane dokumenty korpusu na chunki za pomocą semantycznego chunkera, sterowanego przez `config/chunking.yaml`. Ta strona wymienia także klucze `config/indexing.yaml` (ustawienia embeddingu i BM25 indeksu chunków) oraz `config/sources.yaml` (manifest źródeł etapu pobierania korpusu) wraz z wartościami domyślnymi, które definiują ich modele pydantic. Uzasadnienie projektu jest w stronie [Wyszukiwanie i indeksowanie](../explanation/retrieval-and-indexing.md); pakiet dostarczający ustawienia BM25 opisuje strona [Pakiety](packages.md), a moduł backendu walidujący `indexing.yaml` opisuje strona [Backend: indeksowanie i korekta](backend-indexing-proofread.md).
 

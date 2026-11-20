@@ -5,7 +5,7 @@ diataxis: reference
 
 # Packages `expert-knowledge-core` and `expert-knowledge-rag`
 
-Language: **English** · [Polski](../pl/reference/packages.md)
+Language: **English** · [Polski](../../pl/reference/packages.md)
 
 `expert-knowledge-core` (`packages/expert-knowledge-core`) holds BM25 sparse vectors, note packing, evaluated prompts, the findings record types and retrieval constants, and depends on pydantic, pgvector and snowballstemmer only. `expert-knowledge-rag` (`packages/expert-knowledge-rag`) provides LangChain retrievers and answer chains that read the Postgres schema `chips`, and depends on the core package, `langchain-core`, `psycopg` and `numpy`. Both are Python libraries (`requires-python >=3.12`) without a CLI or a server.
 

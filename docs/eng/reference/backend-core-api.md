@@ -5,11 +5,11 @@ diataxis: reference
 
 # Backend core: app factory, settings, auth, users, home, audit
 
-Language: **English** · [Polski](../pl/reference/backend-core-api.md)
+Language: **English** · [Polski](../../pl/reference/backend-core-api.md)
 
 The `backend/app` top level and the packages `core`, `auth`, `users`, `home` and `audit` provide the FastAPI application under `/api/v1`, the `Settings` object, the database and error plumbing, password and session handling, the readiness probe for the machine that runs Ollama and LanguageTool, the Ollama chat and embedding clients, the prompt loader, the audit trail and the operator CLI.
 
-Routes of the other routers (`vignettes`, `assignments`, `reviews`, `knowledge`) are in [backend-vignettes-knowledge.md](backend-vignettes-knowledge.md), [backend-assignments-jobs.md](backend-assignments-jobs.md) and [backend-reviews.md](backend-reviews.md). Indexing configuration and proofreading are in [backend-indexing-proofread.md](backend-indexing-proofread.md). Deployment and runtime wiring are in [runtime-and-deploy.md](runtime-and-deploy.md); the component view is in [architecture](../explanation/architecture.md). The page list is in [docs/index.md](../index.md).
+Routes of the other routers (`vignettes`, `assignments`, `reviews`, `knowledge`) are in [backend-vignettes-knowledge.md](backend-vignettes-knowledge.md), [backend-assignments-jobs.md](backend-assignments-jobs.md) and [backend-reviews.md](backend-reviews.md). Indexing configuration and proofreading are in [backend-indexing-proofread.md](backend-indexing-proofread.md). Deployment and runtime wiring are in [runtime-and-deploy.md](runtime-and-deploy.md); the component view is in [architecture](../explanation/architecture.md). The page list is in [index.md](../index.md).
 
 ## Application (`app.main`)
 

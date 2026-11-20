@@ -5,7 +5,7 @@ diataxis: tutorial
 
 # Run the stack locally
 
-Language: **English** · [Polski](../pl/tutorials/run-the-stack-locally.md)
+Language: **English** · [Polski](../../pl/tutorials/run-the-stack-locally.md)
 
 In this tutorial you start the database, the object store, the API and the web app with Docker Compose, make your first request to the API, create an admin account and sign in to the web app. For how the parts fit together, see [Architecture](../explanation/architecture.md).
 

@@ -5,7 +5,7 @@ diataxis: reference
 
 # Frontend components and answering helpers
 
-Language: **English** · [Polski](../pl/reference/frontend-components.md)
+Language: **English** · [Polski](../../pl/reference/frontend-components.md)
 
 `frontend/src/components` holds the Vue single-file components that the views mount: shared widgets at the top level, and the folders `answering/`, `knowledge/` and `admin/`. `frontend/src/answering` holds the TypeScript modules behind the answering and review screens: citation model, step rules, draft saving, word diff and quote focus. Neither folder has an entry point of its own; the views in `frontend/src/views` and `frontend/src/layouts/AppLayout.vue` import the components. For the app shell, see [frontend-app.md](frontend-app.md); for the place of the frontend in the system, see [architecture.md](../explanation/architecture.md). The documentation index is [index.md](../index.md).
 

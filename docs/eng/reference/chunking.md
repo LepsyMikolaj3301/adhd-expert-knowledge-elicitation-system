@@ -5,7 +5,7 @@ diataxis: reference
 
 # Chunking and corpus configuration
 
-Language: **English** · [Polski](../pl/reference/chunking.md)
+Language: **English** · [Polski](../../pl/reference/chunking.md)
 
 `scripts/corpus/chunking` cuts parsed corpus documents into chunks with a semantic chunker, driven by `config/chunking.yaml`. This page also lists the keys of `config/indexing.yaml` (embedding and BM25 settings of the chunk index) and `config/sources.yaml` (the source manifest of the corpus fetch stage), with the defaults their pydantic models define. The design reasons are in [Retrieval and indexing](../explanation/retrieval-and-indexing.md); the package that supplies the BM25 settings is in [Packages](packages.md), and the backend module that validates `indexing.yaml` is in [Backend: indexing and proofreading](backend-indexing-proofread.md).
 

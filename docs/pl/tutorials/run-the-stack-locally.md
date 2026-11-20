@@ -5,7 +5,7 @@ diataxis: tutorial
 
 # Uruchomienie stosu lokalnie
 
-Język: **Polski** · [English](../../tutorials/run-the-stack-locally.md)
+Język: **Polski** · [English](../../eng/tutorials/run-the-stack-locally.md)
 
 W tym samouczku uruchamiasz bazę danych, magazyn obiektów, API i aplikację webową za pomocą Docker Compose, wysyłasz pierwsze żądanie do API, tworzysz konto administratora i logujesz się do aplikacji webowej. Jak te części współpracują, opisuje strona [Architektura](../explanation/architecture.md).
 

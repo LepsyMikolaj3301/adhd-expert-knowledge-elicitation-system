@@ -5,7 +5,7 @@ diataxis: reference
 
 # Komponenty frontendu i pomocniki odpowiadania
 
-Język: **Polski** · [English](../../reference/frontend-components.md)
+Język: **Polski** · [English](../../eng/reference/frontend-components.md)
 
 `frontend/src/components` zawiera jednoplikowe komponenty Vue, które montują widoki: wspólne widgety na najwyższym poziomie oraz foldery `answering/`, `knowledge/` i `admin/`. `frontend/src/answering` zawiera moduły TypeScript stojące za ekranami odpowiadania i recenzji: model cytatów, reguły kroków, zapis szkicu, różnicę słów i fokus cytatu. Żaden z folderów nie ma własnego punktu wejścia; komponenty są importowane przez widoki z `frontend/src/views` oraz `frontend/src/layouts/AppLayout.vue`. Powłokę aplikacji opisuje [frontend-app.md](frontend-app.md); miejsce frontendu w systemie opisuje [architecture.md](../explanation/architecture.md). Indeks dokumentacji to [index.md](../index.md).
 

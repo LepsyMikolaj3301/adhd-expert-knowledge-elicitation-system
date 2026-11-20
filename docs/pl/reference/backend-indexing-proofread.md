@@ -5,7 +5,7 @@ diataxis: reference
 
 # Moduły backendu `app.indexing` i `app.proofread`
 
-Język: **Polski** · [English](../../reference/backend-indexing-proofread.md)
+Język: **Polski** · [English](../../eng/reference/backend-indexing-proofread.md)
 
 `app.indexing` wczytuje i waliduje `config/indexing.yaml` oraz buduje embeddera Ollama. `app.proofread` koryguje przesłaną odpowiedź (usuwanie śmieci, gramatyka LanguageTool, opcjonalne ulepszenie przez model, jedno zdanie w wierszu), wiąże każdy wiersz z cytatem i obsługuje krok edycji i zatwierdzenia przez autora. `app.proofread` nie ma własnego routera; router przydziałów udostępnia jego funkcje serwisowe.
 

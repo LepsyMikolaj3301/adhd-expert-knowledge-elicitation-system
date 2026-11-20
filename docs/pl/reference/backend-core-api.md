@@ -5,11 +5,11 @@ diataxis: reference
 
 # Rdzeń backendu: fabryka aplikacji, ustawienia, uwierzytelnianie, użytkownicy, strona główna, audyt
 
-Język: **Polski** · [English](../../reference/backend-core-api.md)
+Język: **Polski** · [English](../../eng/reference/backend-core-api.md)
 
 Najwyższy poziom `backend/app` oraz pakiety `core`, `auth`, `users`, `home` i `audit` dostarczają aplikację FastAPI pod `/api/v1`, obiekt `Settings`, obsługę bazy danych i błędów, obsługę haseł i sesji, sondę gotowości maszyny, na której działają Ollama i LanguageTool, klientów czatu i embeddingów Ollamy, loader promptów, ślad audytu oraz CLI operatora.
 
-Trasy pozostałych routerów (`vignettes`, `assignments`, `reviews`, `knowledge`) opisują strony [backend-vignettes-knowledge.md](backend-vignettes-knowledge.md), [backend-assignments-jobs.md](backend-assignments-jobs.md) i [backend-reviews.md](backend-reviews.md). Konfiguracja indeksowania i korekta są w [backend-indexing-proofread.md](backend-indexing-proofread.md). Wdrożenie i połączenia w czasie działania opisuje [runtime-and-deploy.md](runtime-and-deploy.md); widok komponentów jest w [architecture](../explanation/architecture.md). Lista stron jest w [docs/index.md](../index.md).
+Trasy pozostałych routerów (`vignettes`, `assignments`, `reviews`, `knowledge`) opisują strony [backend-vignettes-knowledge.md](backend-vignettes-knowledge.md), [backend-assignments-jobs.md](backend-assignments-jobs.md) i [backend-reviews.md](backend-reviews.md). Konfiguracja indeksowania i korekta są w [backend-indexing-proofread.md](backend-indexing-proofread.md). Wdrożenie i połączenia w czasie działania opisuje [runtime-and-deploy.md](runtime-and-deploy.md); widok komponentów jest w [architecture](../explanation/architecture.md). Lista stron jest w [index.md](../index.md).
 
 ## Aplikacja (`app.main`)
 

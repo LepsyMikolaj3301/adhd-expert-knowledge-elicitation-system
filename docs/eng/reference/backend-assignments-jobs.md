@@ -5,7 +5,7 @@ diataxis: reference
 
 # Backend: `app.assignments` and `app.jobs`
 
-Language: **English** · [Polski](../pl/reference/backend-assignments-jobs.md)
+Language: **English** · [Polski](../../pl/reference/backend-assignments-jobs.md)
 
 `app.assignments` holds the per-expert workflow of one published vignette version: HTTP routes, a state machine whose only writer of `Assignment.state` is `transition()`, the answer payload models and the tables `assignments`, `answer_drafts` and `submissions`. `app.jobs` is a Postgres-backed job queue with leases, the handlers of each job kind and the worker process (`python -m app.jobs.worker`) that drains it. Peer-review routes are in [backend-reviews.md](backend-reviews.md); the way the pieces fit together is in [assignment-lifecycle.md](../explanation/assignment-lifecycle.md).
 

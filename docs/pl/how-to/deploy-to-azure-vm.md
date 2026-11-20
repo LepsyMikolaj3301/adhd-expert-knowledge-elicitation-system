@@ -5,7 +5,7 @@ diataxis: how-to
 
 # Jak wdrożyć na maszynie wirtualnej Azure
 
-Język: **Polski** · [English](../../how-to/deploy-to-azure-vm.md)
+Język: **Polski** · [English](../../eng/how-to/deploy-to-azure-vm.md)
 
 Skorzystaj z tej strony, aby jednorazowo skonfigurować maszynę wirtualną Azure, opublikować na niej Ollamę i LanguageTool z komputera PC, wdrożyć wydanie oraz uruchamiać, zatrzymywać i archiwizować maszynę skryptami z `infra/`.
 

@@ -5,7 +5,7 @@ diataxis: reference
 
 # Backend: `app.assignments` i `app.jobs`
 
-Język: **Polski** · [English](../../reference/backend-assignments-jobs.md)
+Język: **Polski** · [English](../../eng/reference/backend-assignments-jobs.md)
 
 `app.assignments` zawiera przepływ pracy pojedynczego eksperta nad jedną opublikowaną wersją winiety: endpointy HTTP, maszynę stanów, w której jedynym zapisującym `Assignment.state` jest `transition()`, modele payloadu odpowiedzi oraz tabele `assignments`, `answer_drafts` i `submissions`. `app.jobs` to kolejka zadań oparta na Postgresie z dzierżawami, handlery każdego rodzaju zadania oraz proces workera (`python -m app.jobs.worker`), który ją opróżnia. Endpointy recenzji koleżeńskiej opisuje [backend-reviews.md](backend-reviews.md); sposób współpracy tych elementów opisuje [assignment-lifecycle.md](../explanation/assignment-lifecycle.md).
 

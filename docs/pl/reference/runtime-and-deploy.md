@@ -5,7 +5,7 @@ diataxis: reference
 
 # Środowisko uruchomieniowe i wdrożenie
 
-Język: **Polski** · [English](../../reference/runtime-and-deploy.md)
+Język: **Polski** · [English](../../eng/reference/runtime-and-deploy.md)
 
 Strona opisuje pliki, które uruchamiają stos: lokalny plik compose i plik compose maszyny wirtualnej Azure, pliki Dockerfile, metadane pakietu backendu, konfigurację bazy danych i migracje, loader promptów wraz z plikami promptów oraz skrypty poza `scripts/corpus/chunking`.
 

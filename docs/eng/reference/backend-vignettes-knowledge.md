@@ -5,7 +5,7 @@ diataxis: reference
 
 # Backend modules `app.vignettes` and `app.knowledge`
 
-Language: **English** · [Polski](../pl/reference/backend-vignettes-knowledge.md)
+Language: **English** · [Polski](../../pl/reference/backend-vignettes-knowledge.md)
 
 `app.vignettes` holds the admin-authored vignette texts, their versions and the fixed question set, and serves the admin endpoints under `/api/v1/vignettes` and `/api/v1/vignette-versions`. `app.knowledge` cuts approved answers into knowledge units, embeds them, writes them to the `chips` schema, and serves the admin endpoints under `/api/v1/knowledge-units`. Both routers are mounted in `backend/app/main.py` under the prefix `/api/v1`; every endpoint below requires an admin user (`AdminUser`).
 

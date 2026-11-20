@@ -5,7 +5,7 @@ diataxis: reference
 
 # Powłoka aplikacji frontendowej (`frontend/src`)
 
-Język: **Polski** · [English](../../reference/frontend-app.md)
+Język: **Polski** · [English](../../eng/reference/frontend-app.md)
 
 Frontend to jednostronicowa aplikacja Vue 3 (Pinia, Vue Router, `openapi-fetch`) budowana przez Vite. Ta strona opisuje jej powłokę: start aplikacji, trasy, strażnika tras, obsługę sesji, klienta API, store'y, listy nawigacji, widoki, stałe, eksporty `copy.ts`, pomocniki formularza winiety oraz konfigurację Vite, Vitest i ESLint. Komponenty i pomocniki odpowiadania opisuje [frontend-components.md](frontend-components.md); endpointy wywoływane przez klienta opisuje [backend-core-api.md](backend-core-api.md); sposób połączenia elementów opisuje [architecture](../explanation/architecture.md).
 

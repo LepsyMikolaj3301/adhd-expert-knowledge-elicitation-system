@@ -5,7 +5,7 @@ diataxis: explanation
 
 # O wyszukiwaniu i indeksowaniu
 
-Język: **Polski** · [English](../../explanation/retrieval-and-indexing.md)
+Język: **Polski** · [English](../../eng/explanation/retrieval-and-indexing.md)
 
 System przechowuje dwa przeszukiwalne magazyny w jednej bazie Postgres i oba łączą gęsty embedding bge-m3 z rzadkim wektorem BM25. Chunki literatury trafiają do tabeli `chunks`, którą zapisują skrypty korpusu. Zatwierdzone spostrzeżenia ekspertów trafiają do schematu `chips`, który zapisuje backend webowy. Kod BM25, pakowanie notatek i stałe wyszukiwania znajdują się w niezależnym od frameworków pakiecie `expert-knowledge-core`, więc ingest i wyszukiwanie używają jednej kopii; pakiet `expert-knowledge-rag` czyta `chips` przez połączenie tylko do odczytu. Strona wyjaśnia, dlaczego części mają taki kształt. Listy nazw, sygnatur i wartości domyślnych są w [Pakiety](../reference/packages.md) i [Chunking i konfiguracja korpusu](../reference/chunking.md).
 

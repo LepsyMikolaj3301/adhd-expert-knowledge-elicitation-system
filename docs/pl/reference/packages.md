@@ -5,7 +5,7 @@ diataxis: reference
 
 # Pakiety `expert-knowledge-core` i `expert-knowledge-rag`
 
-Język: **Polski** · [English](../../reference/packages.md)
+Język: **Polski** · [English](../../eng/reference/packages.md)
 
 `expert-knowledge-core` (`packages/expert-knowledge-core`) zawiera wektory rzadkie BM25, pakowanie notatek, sprawdzone prompty, typy rekordów findings i stałe wyszukiwania; zależy wyłącznie od pydantic, pgvector i snowballstemmer. `expert-knowledge-rag` (`packages/expert-knowledge-rag`) udostępnia retrievery LangChain i łańcuchy odpowiedzi, które czytają schemat Postgres `chips`; zależy od pakietu core, `langchain-core`, `psycopg` i `numpy`. Oba pakiety to biblioteki Pythona (`requires-python >=3.12`) bez CLI i bez serwera.
 

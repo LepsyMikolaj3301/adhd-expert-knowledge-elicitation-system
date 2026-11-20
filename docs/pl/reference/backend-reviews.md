@@ -5,7 +5,7 @@ diataxis: reference
 
 # Backend: `app.reviews`
 
-Język: **Polski** · [English](../../reference/backend-reviews.md)
+Język: **Polski** · [English](../../eng/reference/backend-reviews.md)
 
 `app.reviews` implementuje recenzję koleżeńską przesłanego przydziału: recenzenci otwierają recenzję, komentują i głosują nad każdą odpowiedzią, a decyzja administratora dla każdej odpowiedzi zamyka recenzję. Moduł udostępnia poniższe trasy, reguły dostępu określające, kto może czytać zgłoszenie, oraz tabele `review_participants`, `answer_comments`, `answer_votes` i `answer_decisions`. Stany i przejścia, przez które przechodzi recenzja, opisuje [backend-assignments-jobs.md](backend-assignments-jobs.md); kontekst jest w [assignment-lifecycle.md](../explanation/assignment-lifecycle.md).
 

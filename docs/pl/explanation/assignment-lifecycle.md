@@ -5,7 +5,7 @@ diataxis: explanation
 
 # O cyklu życia przydziału
 
-Język: **Polski** · [English](../../explanation/assignment-lifecycle.md)
+Język: **Polski** · [English](../../eng/explanation/assignment-lifecycle.md)
 
 Przydział to jeden ekspert odpowiadający na jedną opublikowaną wersję winiety. Jego życie biegnie od przydzielenia przez administratora, przez odpowiadanie, korektę, recenzję koleżeńską i przetwarzanie, do ingestu zatwierdzonych odpowiedzi jako jednostek wiedzy albo do odrzucenia lub anulowania. Strona wyjaśnia, jak współgrają elementy, które prowadzą przydział przez ten cykl, i dlaczego mają taki kształt: jedna maszyna stanów, kolejka zadań oparta na Postgresie, która wykonuje wolną pracę, oraz recenzja, którą zamyka wyłącznie administrator. Tabele stanów, tras i stałych są w [backend-assignments-jobs.md](../reference/backend-assignments-jobs.md) i [backend-reviews.md](../reference/backend-reviews.md); nie są tu powtarzane.
 
