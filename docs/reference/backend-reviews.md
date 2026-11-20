@@ -5,6 +5,8 @@ diataxis: reference
 
 # Backend: `app.reviews`
 
+Language: **English** · [Polski](../pl/reference/backend-reviews.md)
+
 `app.reviews` implements the peer review of a submitted assignment: reviewers open a review, comment and vote on each answer, and the admin's decision per answer closes the review. The module provides the routes below, the access rules that tell who may read a submission, and the tables `review_participants`, `answer_comments`, `answer_votes` and `answer_decisions`. The states and transitions the review moves through are in [backend-assignments-jobs.md](backend-assignments-jobs.md); the context is in [assignment-lifecycle.md](../explanation/assignment-lifecycle.md).
 
 The routes are mounted under `/api/v1` with the tag `reviews`. Errors use `{code, message, details}`; `DomainError` defaults to HTTP 409, `not_found` is 404, `invalid` is 422 and `forbidden` is 403.

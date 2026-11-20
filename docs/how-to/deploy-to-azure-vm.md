@@ -5,6 +5,8 @@ diataxis: how-to
 
 # How to deploy to the Azure VM
 
+Language: **English** · [Polski](../pl/how-to/deploy-to-azure-vm.md)
+
 Use this to set up the Azure VM once, publish the PC's Ollama and LanguageTool to it, deploy a release, and start, stop and back up the VM with the scripts in `infra/`.
 
 ## Prerequisites

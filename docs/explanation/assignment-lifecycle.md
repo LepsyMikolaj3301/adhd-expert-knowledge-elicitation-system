@@ -5,6 +5,8 @@ diataxis: explanation
 
 # About the assignment lifecycle
 
+Language: **English** · [Polski](../pl/explanation/assignment-lifecycle.md)
+
 An assignment is one expert answering one published vignette version. Its life runs from the admin's assignment, through answering, proofreading, peer review and processing, to ingestion of the approved answers as knowledge units, or to a rejection or cancellation. This page explains how the pieces that carry an assignment along fit together and why they are shaped as they are: a single state machine, a Postgres-backed job queue that does the slow work, and a review that only the admin closes. The tables of states, routes and constants are in [backend-assignments-jobs.md](../reference/backend-assignments-jobs.md) and [backend-reviews.md](../reference/backend-reviews.md); they are not repeated here.
 
 ## How it fits together

@@ -5,6 +5,8 @@ diataxis: reference
 
 # Backend modules `app.indexing` and `app.proofread`
 
+Language: **English** · [Polski](../pl/reference/backend-indexing-proofread.md)
+
 `app.indexing` loads and validates `config/indexing.yaml` and builds the Ollama embedder. `app.proofread` proofreads a submitted answer (garbage removal, LanguageTool grammar, optional model enhancement, one sentence per line), links each line to a citation, and holds the author's edit-and-submit step. `app.proofread` has no router of its own; the assignments router exposes its service functions.
 
 Related pages: [vignettes and knowledge](backend-vignettes-knowledge.md), [assignments and jobs](backend-assignments-jobs.md), [reviews](backend-reviews.md), [shared packages](packages.md), [retrieval and indexing](../explanation/retrieval-and-indexing.md), [architecture](../explanation/architecture.md).
