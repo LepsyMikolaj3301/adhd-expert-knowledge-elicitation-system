@@ -64,7 +64,6 @@ def test_units_carry_a_body_a_reviewer_can_read():
     assert units["case"]["body"] == "Q3: What was the baseline before the move?"
     # The embedded text is that body under a header, never the other way round.
     assert units["h1"]["i1"].endswith(units["h1"]["body"])
-    assert units["h1"]["i3"].splitlines()[1] == f'Patient: "{SLEEP}"'
 
 
 def test_a_submission_becomes_a_response():

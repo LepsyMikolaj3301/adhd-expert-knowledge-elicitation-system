@@ -105,7 +105,6 @@ def example_record(
         head = header(meta, unit)
         unit["body"] = "\n".join(lines)
         unit["i1"] = "\n".join([head, *lines])
-        unit["i3"] = "\n".join([head, f'Patient: "{h["text"]}"', *lines]) if h else unit["i1"]
         units.append(unit)
     return cast(
         Record,

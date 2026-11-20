@@ -7,8 +7,7 @@ Usage: python scripts/db/load_chips_pg.py --tier silver [--classifier qwen3.5:9b
 
 Reads what build_chip_units.py wrote (units.json + embeddings.npz) and the chip documents. Creates
 the tables from chips_schema.sql, replaces the rows of this tier (a reload is idempotent), then
-refits BM25 separately for the units (I1 and I3 each) and for the cue keys, over everything in the
-schema. Ids carry the tier (`silver/DOC-SYN-0001`) because the tiers reuse session and expert ids.
+refits BM25 separately for the units (I1) and for the cue keys, over everything in the schema. Ids carry the tier (`silver/DOC-SYN-0001`) because the tiers reuse session and expert ids.
 Synthetic data: nothing here touches public.chunks or backend/db/init.sql, and it refuses the
 schema `chips`, which is where the web application ingests approved answers.
 """
@@ -45,19 +44,16 @@ def rng(span) -> asyncpg.Range:
 
 
 async def refresh_sparse(conn: asyncpg.Connection) -> dict[str, int]:
-    """BM25 refit: units (I1 and I3 separately) and cue keys, each over its own corpus."""
+    """BM25 refit: units (I1) and cue keys, each over its own corpus."""
     cfg = load_indexing_config(ROOT / "config/indexing.yaml").sparse
-    units = await conn.fetch(
-        "SELECT id, embed_text, embed_text_combined FROM finding_units ORDER BY id"
-    )
+    units = await conn.fetch("SELECT id, embed_text FROM finding_units ORDER BY id")
     keys = await conn.fetch("SELECT id, text FROM cue_keys ORDER BY id")
     sparse = bm25.fit([r["embed_text"] for r in units], cfg)
-    combined = bm25.fit([r["embed_text_combined"] for r in units], cfg)
     cue = bm25.fit([r["text"] for r in keys], cfg)
     async with conn.transaction():
         await conn.executemany(
-            "UPDATE finding_units SET sparse = $2, sparse_combined = $3 WHERE id = $1",
-            [(r["id"], a, b) for r, a, b in zip(units, sparse, combined, strict=True)],
+            "UPDATE finding_units SET sparse = $2 WHERE id = $1",
+            [(r["id"], a) for r, a in zip(units, sparse, strict=True)],
         )
         await conn.executemany(
             "UPDATE cue_keys SET sparse = $2 WHERE id = $1",
@@ -148,13 +144,12 @@ async def load(args) -> None:
                     await conn.execute(
                         "INSERT INTO finding_units (id, session_id, expert_id, vignette_id, "
                         "vignette_version, kind, highlight_id, direction, population, track, framing, "
-                        "segmenter, embed_text, embedding, embed_text_combined, "
-                        "embedding_combined) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,"
-                        "$15,$16)",
+                        "segmenter, embed_text, embedding) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,"
+                        "$11,$12,$13,$14)",
                         uid, sid, key(rec["expert_id"]), vid, ver, u["kind"],
                         pid(sid, vid, u["highlight"]) if u["highlight"] else None, u["direction"],
                         meta["population"], rec["track"], meta["framing"],
-                        segmenter, u["i1"], arrays["i1"][unit_row], u["i3"], arrays["i3"][unit_row],
+                        segmenter, u["i1"], arrays["i1"][unit_row],
                     )  # fmt: skip
                     unit_row += 1
                     await conn.executemany(

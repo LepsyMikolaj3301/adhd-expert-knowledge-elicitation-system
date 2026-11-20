@@ -43,7 +43,7 @@ class KnowledgeUnit(Base):
     review_round: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     # What a reviewer reads: the unit's sentences verbatim, chips shown as short quotes.
     text: Mapped[str] = mapped_column(Text)
-    # Covers the two embedded texts, so an approval is for exactly what gets embedded.
+    # Covers the embedded text, so an approval is for exactly what gets embedded.
     content_hash: Mapped[str] = mapped_column(String(64))
     kind: Mapped[str | None] = mapped_column(String(16))  # fragment | case
     highlight_id: Mapped[str | None] = mapped_column(String(16))  # h1, i1; None for the case unit
@@ -52,7 +52,6 @@ class KnowledgeUnit(Base):
     sentence_ids: Mapped[list[str] | None] = mapped_column(ARRAY(String(16)))
     context: Mapped[list[str] | None] = mapped_column(ARRAY(String(16)))  # co-cited highlights
     embed_text: Mapped[str | None] = mapped_column(Text)  # I1
-    embed_text_combined: Mapped[str | None] = mapped_column(Text)  # I3
     status: Mapped[UnitStatus] = mapped_column(
         enum_column(UnitStatus, "status"), default=UnitStatus.PENDING, index=True
     )

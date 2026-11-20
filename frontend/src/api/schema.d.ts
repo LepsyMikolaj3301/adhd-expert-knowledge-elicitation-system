@@ -1380,8 +1380,6 @@ export interface components {
             direction: ("toward" | "away" | "neutral" | "unclear") | null;
             /** Embed Text */
             embed_text: string | null;
-            /** Embed Text Combined */
-            embed_text_combined: string | null;
             /**
              * Expert Id
              * Format: uuid

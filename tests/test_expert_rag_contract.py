@@ -58,7 +58,7 @@ def test_the_example_is_cut_into_units_exactly_as_the_backend_cuts_it():
     record, example = backend_record(), example_record("S1", "X1")
     assert [u["id"] for u in record["units"]] == [u["id"] for u in example["units"]]
     for built, expected in zip(record["units"], example["units"], strict=True):
-        for key in ("kind", "highlight", "direction", "sentences", "context", "body", "i1", "i3"):
+        for key in ("kind", "highlight", "direction", "sentences", "context", "body", "i1"):
             assert built[key] == expected[key], (built["id"], key)
 
 

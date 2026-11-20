@@ -7,8 +7,8 @@
 --   * chips.* rows are written in ONE transaction per assignment (ingest.write), replacing that
 --     assignment's rows. session_id = app.assignments.id, expert_id = app.users.id (as text).
 --   * every chips id is  <session uuid>-<vignette code>-<local id>,  local id = h1, h2, .., i1 .. or case.
---   * a unit stores TWO embedded texts: I1 (embed_text) and I3 (embed_text_combined = I1 + the
---     patient's words). I2 is not a unit column: it is chips.cue_keys (the patient's words alone).
+--   * a unit stores ONE embedded text: I1 (embed_text). I2 is not a unit column: it is
+--     chips.cue_keys (the patient's words alone).
 
 \pset null '∅'
 \x auto
@@ -134,7 +134,7 @@ SELECT substr(f.id, length(f.session_id) + length(f.vignette_id) + 3) AS unit,
        f.kind, f.direction,
        (SELECT count(*) FROM chips.finding_unit_sentences x WHERE x.unit_id = f.id) AS sentences,
        (SELECT count(*) FROM chips.unit_cues c WHERE c.unit_id = f.id AND c.role = 'context') AS context_cues,
-       length(f.embed_text) AS len_i1, length(f.embed_text_combined) AS len_i3
+       length(f.embed_text) AS len_i1
 FROM chips.finding_units f
 WHERE f.session_id = :'session_id'
 ORDER BY f.kind DESC, f.id;
@@ -173,44 +173,21 @@ GROUP BY c.role;
 
 
 -- ======================================================================================
--- 5. THE THREE EMBEDDED TEXTS: I1, I2, I3
+-- 5. THE TWO EMBEDDED TEXTS: I1, I2
 -- ======================================================================================
 \echo
-\echo '== 5.1 I1 versus I3 of one unit: the only difference is one "Patient:" line =='
-SELECT 'I1 (embed_text)' AS index, embed_text AS text FROM chips.finding_units WHERE id = :'unit_id'
-UNION ALL
-SELECT 'I3 (embed_text_combined)', embed_text_combined FROM chips.finding_units WHERE id = :'unit_id';
-
-\echo
-\echo '== 5.2 the lines that I3 has and I1 has not (every fragment unit; case units have none) =='
-SELECT f.kind, substr(f.id, length(f.session_id) + length(f.vignette_id) + 3) AS unit, left(l, 90) AS extra_line_in_i3
-FROM chips.finding_units f
-CROSS JOIN LATERAL regexp_split_to_table(f.embed_text_combined, E'\n') AS l
-WHERE l NOT IN (SELECT regexp_split_to_table(f.embed_text, E'\n'))
-ORDER BY f.id;
-
-\echo
-\echo '== 5.3 for CASE units I3 is the very same text as I1: a second, identical vector is stored =='
-SELECT kind, count(*) AS units,
-       count(*) FILTER (WHERE embed_text = embed_text_combined) AS identical_text,
-       count(*) FILTER (WHERE embedding = embedding_combined)   AS identical_vector
-FROM chips.finding_units
-GROUP BY kind;
-
-\echo
-\echo '== 5.4 size of each stored representation (dense dims; sparse non-zero terms) =='
+\echo '== 5.1 size of each stored representation (dense dims; sparse non-zero terms) =='
 -- sparsevec text looks like {12:0.8,407:1.2}/1048576: the number of "term:weight" pairs is the BM25 terms.
 SELECT substr(id, length(session_id) + length(vignette_id) + 3) AS unit, kind,
-       vector_dims(embedding) AS dim_i1, vector_dims(embedding_combined) AS dim_i3,
+       vector_dims(embedding) AS dim_i1,
        cardinality(string_to_array(trim(both '{}' from split_part(sparse::text, '/', 1)), ',')) AS bm25_terms_i1,
-       cardinality(string_to_array(trim(both '{}' from split_part(sparse_combined::text, '/', 1)), ',')) AS bm25_terms_i3,
        round(vector_norm(embedding)::numeric, 3) AS norm_i1
 FROM chips.finding_units
 WHERE session_id = :'session_id'
 ORDER BY kind DESC, id;
 
 \echo
-\echo '== 5.5 I2 = chips.cue_keys.embedding (the patient''s words alone); the units point to it through unit_cues =='
+\echo '== 5.2 I2 = chips.cue_keys.embedding (the patient''s words alone); the units point to it through unit_cues =='
 SELECT substr(c.unit_id, length(f.session_id) + length(f.vignette_id) + 3) AS unit, c.role,
        k.id AS cue_key_id, left(k.text, 50) AS patient_words,
        vector_dims(k.embedding) AS dim_i2
@@ -222,72 +199,11 @@ ORDER BY c.unit_id, c.role;
 
 
 -- ======================================================================================
--- 6. IS I3 REDUNDANT? (measure it on your own data)
--- ======================================================================================
-\echo
-\echo '== 6.1 cosine similarity between a unit''s I1 vector and its I3 vector =='
--- Close to 1 = the patient line barely moves the vector. Case units are exactly 1.
-SELECT kind, count(*) AS units,
-       round(min(1 - (embedding <=> embedding_combined))::numeric, 4) AS min_cos,
-       round(avg(1 - (embedding <=> embedding_combined))::numeric, 4) AS avg_cos,
-       round(max(1 - (embedding <=> embedding_combined))::numeric, 4) AS max_cos
-FROM chips.finding_units
-GROUP BY kind;
-
-\echo
-\echo '== 6.2 would retrieval differ? for each unit used as the query: top-3 neighbours under I1 vs under I3 =='
--- overlap 3 = identical neighbour set. Everything else in the table is a unit competing with it.
-WITH n1 AS (
-  SELECT a.id AS q, b.id AS n,
-         row_number() OVER (PARTITION BY a.id ORDER BY a.embedding <=> b.embedding, b.id) AS r
-  FROM chips.finding_units a JOIN chips.finding_units b ON a.id <> b.id),
-n3 AS (
-  SELECT a.id AS q, b.id AS n,
-         row_number() OVER (PARTITION BY a.id ORDER BY a.embedding_combined <=> b.embedding_combined, b.id) AS r
-  FROM chips.finding_units a JOIN chips.finding_units b ON a.id <> b.id),
-per_query AS (
-  SELECT n1.q, count(n3.n) AS overlap_top3
-  FROM n1 LEFT JOIN n3 ON n3.q = n1.q AND n3.n = n1.n AND n3.r <= 3
-  WHERE n1.r <= 3
-  GROUP BY n1.q)
-SELECT count(*) AS queries,
-       round(avg(overlap_top3), 2) AS avg_overlap_of_3,
-       count(*) FILTER (WHERE overlap_top3 = 3) AS queries_with_identical_top3
-FROM per_query;
-
-\echo
-\echo '== 6.3 the case I3 is FOR: the same highlight cited by different experts. Do their units get closer under I3? =='
--- Empty until two experts answer the same vignette and cite the same span (the chips_scale fixture does).
-SELECT k.vignette_id, left(k.text, 40) AS patient_words,
-       count(*) AS pairs,
-       round(avg(1 - (a.embedding <=> b.embedding))::numeric, 4)                   AS avg_cos_i1,
-       round(avg(1 - (a.embedding_combined <=> b.embedding_combined))::numeric, 4) AS avg_cos_i3
-FROM chips.unit_cues ca
-JOIN chips.unit_cues cb ON cb.cue_key_id = ca.cue_key_id AND cb.unit_id > ca.unit_id
-                       AND ca.role = 'cue' AND cb.role = 'cue'
-JOIN chips.finding_units a ON a.id = ca.unit_id
-JOIN chips.finding_units b ON b.id = cb.unit_id AND b.session_id <> a.session_id
-JOIN chips.cue_keys k ON k.id = ca.cue_key_id
-GROUP BY k.id
-ORDER BY pairs DESC
-LIMIT 20;
-
-\echo
-\echo '== 6.4 baseline for 6.3: average cosine of ALL different-session fragment pairs, I1 vs I3 =='
-SELECT count(*) AS pairs,
-       round(avg(1 - (a.embedding <=> b.embedding))::numeric, 4)                   AS avg_cos_i1,
-       round(avg(1 - (a.embedding_combined <=> b.embedding_combined))::numeric, 4) AS avg_cos_i3
-FROM chips.finding_units a
-JOIN chips.finding_units b ON a.id < b.id AND a.session_id <> b.session_id
-WHERE a.kind = 'fragment' AND b.kind = 'fragment';
-
-
--- ======================================================================================
--- 7. RETRIEVAL, DONE BY HAND IN SQL (what expert-knowledge-rag sends to the database)
+-- 6. RETRIEVAL, DONE BY HAND IN SQL (what expert-knowledge-rag sends to the database)
 -- ======================================================================================
 -- The unit chosen at the top is the "query" (its stored vectors stand in for an embedded question).
 \echo
-\echo '== 7.1 dense (cosine) over I1: the five units closest to the chosen unit =='
+\echo '== 6.1 dense (cosine) over I1: the five units closest to the chosen unit =='
 SELECT f.id AS unit, f.kind, f.direction,
        round((1 - (f.embedding <=> q.embedding))::numeric, 4) AS cosine,
        left(replace(f.embed_text, E'\n', ' '), 70) AS text
@@ -297,7 +213,7 @@ ORDER BY f.embedding <=> q.embedding
 LIMIT 5;
 
 \echo
-\echo '== 7.2 BM25 over I1: `sparse <#> q` is -BM25, so more negative = better; 0 = no shared term =='
+\echo '== 6.2 BM25 over I1: `sparse <#> q` is -BM25, so more negative = better; 0 = no shared term =='
 SELECT f.id AS unit, f.kind,
        round((-(f.sparse <#> q.sparse))::numeric, 3) AS bm25,
        left(replace(f.embed_text, E'\n', ' '), 70) AS text
@@ -307,7 +223,7 @@ ORDER BY f.sparse <#> q.sparse
 LIMIT 5;
 
 \echo
-\echo '== 7.3 hybrid = both rankings fused with RRF (k = 60, depth 50), the production default over I1 =='
+\echo '== 6.3 hybrid = both rankings fused with RRF (k = 60, depth 50), the production default over I1 =='
 WITH q AS (SELECT embedding, sparse FROM chips.finding_units WHERE id = :'unit_id'),
 dense AS (
   SELECT f.id, row_number() OVER (ORDER BY f.embedding <=> q.embedding) AS rank
@@ -326,7 +242,7 @@ ORDER BY fused.score DESC, f.id
 LIMIT 5;
 
 \echo
-\echo '== 7.4 patient-text mode: nearest CUE KEYS (I2) to the chosen unit''s own cue, then the units behind them =='
+\echo '== 6.4 patient-text mode: nearest CUE KEYS (I2) to the chosen unit''s own cue, then the units behind them =='
 SELECT k.id AS cue_key_id, left(k.text, 50) AS patient_words,
        round((1 - (k.embedding <=> q.embedding))::numeric, 4) AS cosine,
        f.id AS unit, f.kind, f.direction
@@ -341,24 +257,23 @@ ORDER BY k.embedding <=> q.embedding;
 
 
 -- ======================================================================================
--- 8. STAGING (app) VERSUS THE KNOWLEDGE BASE (chips)
+-- 7. STAGING (app) VERSUS THE KNOWLEDGE BASE (chips)
 -- ======================================================================================
 -- app.knowledge_units = the cut units with their TEXTS (no vectors), status approved -> ingested.
 -- chips.finding_units = the same units with VECTORS, written by the ingest job. 'removed' units are deleted from chips.
 \echo
-\echo '== 8.1 staging units by status and kind =='
+\echo '== 7.1 staging units by status and kind =='
 SELECT status, kind, count(*) AS units, count(DISTINCT assignment_id) AS assignments
 FROM app.knowledge_units
 GROUP BY status, kind
 ORDER BY status, kind;
 
 \echo
-\echo '== 8.2 every staged unit and whether (and how identically) it is in chips =='
+\echo '== 7.2 every staged unit and whether (and how identically) it is in chips =='
 SELECT ku.assignment_id, ku.review_round AS round, ku.ordinal, ku.status, ku.kind,
        coalesce(ku.highlight_id, 'case') AS local_id,
        fu.id IS NOT NULL AS in_chips,
-       fu.embed_text = ku.embed_text AS same_i1,
-       fu.embed_text_combined = ku.embed_text_combined AS same_i3
+       fu.embed_text = ku.embed_text AS same_i1
 FROM app.knowledge_units ku
 JOIN app.assignments a ON a.id = ku.assignment_id
 JOIN app.vignette_versions vv ON vv.id = a.vignette_version_id
@@ -368,7 +283,7 @@ LEFT JOIN chips.finding_units fu
 ORDER BY ku.assignment_id, ku.review_round, ku.ordinal;
 
 \echo
-\echo '== 8.3 workflow state of each assignment next to what it has in chips =='
+\echo '== 7.3 workflow state of each assignment next to what it has in chips =='
 SELECT a.id AS assignment_id, a.state, a.review_round,
        (SELECT count(*) FROM app.knowledge_units ku WHERE ku.assignment_id = a.id AND ku.status = 'ingested') AS ingested_units,
        (SELECT count(*) FROM chips.finding_units fu WHERE fu.session_id = a.id::text) AS units_in_chips
@@ -378,32 +293,32 @@ ORDER BY a.updated_at DESC;
 
 
 -- ======================================================================================
--- 9. INTEGRITY CHECKS (each should return 0 rows / 0)
+-- 8. INTEGRITY CHECKS (each should return 0 rows / 0)
 -- ======================================================================================
 \echo
-\echo '== 9.1 units with no sentence =='
+\echo '== 8.1 units with no sentence =='
 SELECT f.id FROM chips.finding_units f
 WHERE NOT EXISTS (SELECT 1 FROM chips.finding_unit_sentences x WHERE x.unit_id = f.id);
 
 \echo
-\echo '== 9.2 cue keys no highlight uses (removal should have deleted them) =='
+\echo '== 8.2 cue keys no highlight uses (removal should have deleted them) =='
 SELECT k.id, k.text FROM chips.cue_keys k
 WHERE NOT EXISTS (SELECT 1 FROM chips.highlights h WHERE h.cue_key_id = k.id);
 
 \echo
-\echo '== 9.3 sentence targets that name no highlight of the same session =='
+\echo '== 8.3 sentence targets that name no highlight of the same session =='
 SELECT a.id, t AS dangling_target
 FROM chips.answer_sentences a, unnest(a.targets) t
 WHERE t <> 'case' AND NOT EXISTS (SELECT 1 FROM chips.highlights h WHERE h.id = t AND h.session_id = a.session_id);
 
 \echo
-\echo '== 9.4 missing vectors (dense or sparse), units and cue keys =='
-SELECT 'units: dense missing'  AS problem, count(*) FROM chips.finding_units WHERE embedding IS NULL OR embedding_combined IS NULL
-UNION ALL SELECT 'units: sparse missing', count(*) FROM chips.finding_units WHERE sparse IS NULL OR sparse_combined IS NULL
+\echo '== 8.4 missing vectors (dense or sparse), units and cue keys =='
+SELECT 'units: dense missing'  AS problem, count(*) FROM chips.finding_units WHERE embedding IS NULL
+UNION ALL SELECT 'units: sparse missing', count(*) FROM chips.finding_units WHERE sparse IS NULL
 UNION ALL SELECT 'cue keys: sparse missing', count(*) FROM chips.cue_keys WHERE sparse IS NULL;
 
 \echo
-\echo '== 9.5 fragment units whose highlight has no cue row in unit_cues, and case units that have one =='
+\echo '== 8.5 fragment units whose highlight has no cue row in unit_cues, and case units that have one =='
 SELECT f.id, f.kind FROM chips.finding_units f
 WHERE (f.kind = 'fragment' AND NOT EXISTS (SELECT 1 FROM chips.unit_cues c WHERE c.unit_id = f.id AND c.role = 'cue'))
    OR (f.kind = 'case'     AND EXISTS     (SELECT 1 FROM chips.unit_cues c WHERE c.unit_id = f.id));

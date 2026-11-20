@@ -24,8 +24,7 @@ def test_every_assignment_job_moves_the_workflow_on_success_and_on_failure():
     ) == 2 * len(assignment_jobs)
 
 
-def test_a_unit_hash_covers_both_embedded_texts():
-    base = handlers.unit_content_hash("i1", "i3")
-    assert base == handlers.unit_content_hash("i1", "i3")
-    assert base != handlers.unit_content_hash("i1", "other i3")
-    assert base != handlers.unit_content_hash("other i1", "i3")
+def test_a_unit_hash_covers_the_embedded_text():
+    base = handlers.unit_content_hash("i1")
+    assert base == handlers.unit_content_hash("i1")
+    assert base != handlers.unit_content_hash("other i1")

@@ -497,13 +497,10 @@ async def test_what_is_cut_is_what_will_be_embedded():
     async with session_factory()() as db:
         rows = list(await db.scalars(select(KnowledgeUnit).order_by(KnowledgeUnit.ordinal)))
     fragment = rows[0]
-    assert fragment.embed_text is not None and fragment.embed_text_combined is not None
+    assert fragment.embed_text is not None
     assert fragment.embed_text.splitlines()[0].startswith("Clinician on an adult's journal entry")
     assert fragment.embed_text.endswith(fragment.text)
-    assert fragment.embed_text_combined.splitlines()[1] == f'Patient: "{CUE}"'
-    assert fragment.content_hash == unit_content_hash(
-        fragment.embed_text, fragment.embed_text_combined
-    )
+    assert fragment.content_hash == unit_content_hash(fragment.embed_text)
     assert fragment.sentence_ids == ["Q1.1"] and fragment.highlight_id == "h1"
 
 
@@ -572,14 +569,13 @@ async def test_approved_units_land_in_chips_with_their_embeddings(models):
 
     rows = await chips(
         "SELECT id, kind, direction, highlight_id, embed_text, embedding IS NOT NULL, "
-        "sparse IS NOT NULL, embedding_combined IS NOT NULL, sparse_combined IS NOT NULL "
-        "FROM chips.finding_units ORDER BY id"
+        "sparse IS NOT NULL FROM chips.finding_units ORDER BY id"
     )
     ids = [r[0] for r in rows]
     assert ids == sorted([f"{session}-{vignette_code}-case", f"{session}-{vignette_code}-h1"])
     fragment = next(r for r in rows if r[1] == "fragment")
     assert fragment[2:4] == ("toward", f"{session}-{vignette_code}-h1")
-    assert all(all(r[5:]) for r in rows), "dense and sparse vectors for both texts"
+    assert all(all(r[5:]) for r in rows), "dense and sparse vectors"
     assert await count("highlights") == 1 and await count("cue_keys") == 1
     assert await count("answer_sentences") == 4
     assert await count("finding_unit_sentences") == 4
@@ -589,33 +585,26 @@ async def test_approved_units_land_in_chips_with_their_embeddings(models):
 
 async def test_a_unit_searched_with_its_own_text_comes_back_first(models):
     await ingested_single(models)
-    for column, vector_column in (
-        ("embed_text", "embedding"),
-        ("embed_text_combined", "embedding_combined"),
-    ):
-        rows = await chips(f"SELECT id, {column} FROM chips.finding_units ORDER BY id")
-        assert len(rows) == 2, "nothing to search yet"
-        for unit_id, embed_text in rows:
-            vector = "[" + ",".join(map(str, FakeModels.vector(embed_text))) + "]"
-            [(nearest,)] = await chips(
-                f"SELECT id FROM chips.finding_units "
-                f"ORDER BY {vector_column} <=> CAST(CAST(:v AS text) AS vector) LIMIT 1",
-                v=vector,
-            )
-            assert nearest == unit_id
+    rows = await chips("SELECT id, embed_text FROM chips.finding_units ORDER BY id")
+    assert len(rows) == 2, "nothing to search yet"
+    for unit_id, embed_text in rows:
+        vector = "[" + ",".join(map(str, FakeModels.vector(embed_text))) + "]"
+        [(nearest,)] = await chips(
+            "SELECT id FROM chips.finding_units "
+            "ORDER BY embedding <=> CAST(CAST(:v AS text) AS vector) LIMIT 1",
+            v=vector,
+        )
+        assert nearest == unit_id
 
 
 async def test_the_stored_text_is_exactly_what_the_reviewers_approved(models):
     admin, _, assignment_id = await ingested_single(models)
     async with session_factory()() as db:
         reviewed = {
-            u.highlight_id or "case": (u.embed_text, u.embed_text_combined)
-            for u in await db.scalars(select(KnowledgeUnit))
+            u.highlight_id or "case": u.embed_text for u in await db.scalars(select(KnowledgeUnit))
         }
-    rows = await chips(
-        "SELECT highlight_id, kind, embed_text, embed_text_combined FROM chips.finding_units"
-    )
-    stored = {(r[0].rsplit("-", 1)[-1] if r[0] else "case"): (r[2], r[3]) for r in rows}
+    rows = await chips("SELECT highlight_id, kind, embed_text FROM chips.finding_units")
+    stored = {(r[0].rsplit("-", 1)[-1] if r[0] else "case"): r[2] for r in rows}
     assert stored == reviewed
 
 
@@ -742,7 +731,7 @@ async def test_colleagues_answering_the_same_vignette_share_its_cue_keys(models)
 async def test_units_from_before_the_pipeline_cannot_be_ingested(models):
     admin, _, assignment_id = await approved()
     async with session_factory()() as db:
-        await db.execute(update(KnowledgeUnit).values(embed_text=None, embed_text_combined=None))
+        await db.execute(update(KnowledgeUnit).values(embed_text=None))
         await db.commit()
     assert await run_jobs() == 1, "retrying can't help"
     assert (await admin.ok("GET", f"/assignments/{assignment_id}"))["state"] == "ingestion_failed"

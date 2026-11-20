@@ -69,7 +69,7 @@ Rekord findings zapisany w `chips.elicitation_sessions.document`. Rekordy to zwy
 | `Direction` | `Literal["toward", "away", "neutral", "unclear"]` |
 | `Highlight` | `id` (`h1..` ekspert, `i1..` niejawne), `origin` (`expert` lub `implicit`), `chip` (`int \| None`), `span` (`[start, end)` w winiecie), `text`, `direction` (`Direction \| None`). |
 | `Sentence` | `id` (na przykład `Q2.3`), `question_id`, `idx`, `span`, `text`, `targets` (identyfikatory zaznaczeń i/lub `case`), `assigned_by` (`chip`, `quote`, `llm`, `expert` lub `None`). |
-| `Unit` | `id`, `kind` (`fragment` lub `case`), `highlight`, `direction`, `sentences`, `context` (współcytowane zaznaczenia), `body`, `i1`, `i3`. |
+| `Unit` | `id`, `kind` (`fragment` lub `case`), `highlight`, `direction`, `sentences`, `context` (współcytowane zaznaczenia), `body`, `i1`. |
 | `Meta` | `role`, `framing`, `population`, `rating` (`int \| None`), `insufficient` (`bool`). |
 | `Record` (`total=False`) | `version`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `meta`, `highlights`, `sentences`, `units`, `flags`. |
 | `is_readable(document) -> bool` | Prawda dla słownika, którego `version` jest równe `FINDINGS_VERSION` i który ma klucze `meta`, `highlights`, `sentences` i `units`. |
@@ -143,7 +143,6 @@ Oba retrievery dziedziczą po `BaseRetriever` z LangChain, implementują synchro
 
 | Pole | Typ | Domyślnie | Opis |
 |---|---|---|---|
-| `index` | `"i1"`, `"i3"` lub `"both"` | `"i1"` | `i1` przeszukuje zrecenzowany tekst, `i3` tekst z dopisanymi słowami pacjenta, `both` łączy oba. |
 | `downweight_duplicate_cases` | `bool` | `True` | Jednostki case, które są niemal duplikatem lepiej ocenionej jednostki case, przesuwają się na koniec. |
 
 Zachowanie: puste zapytanie zwraca `[]`. Gdy `search` ma wartość inną niż `"dense"`, zapytanie jest zamieniane na wektor BM25; jeśli po tokenizacji nie zostaje żaden termin, `hybrid` przechodzi na `dense`, a `bm25` zwraca `[]`. Przy `search="bm25"` model embeddingów nie jest wywoływany. Wyszukiwanie jednostek, reguła niemal-duplikatów, zapytanie o rekordy sesji i `build_documents` wykonują się w tej kolejności, a zwracanych jest pierwszych `k` notatek.
@@ -204,13 +203,13 @@ Te moduły nie wchodzą do `__all__`, ale definiują reguły wyszukiwania.
 | `ranking.downweight_duplicate_cases(hits)` | Jednostki case, których kosinus względem zachowanej jednostki case stojącej przed nimi w rankingu wynosi co najmniej `NEAR_DUPLICATE`, trafiają na koniec; pozostałe jednostki zachowują kolejność. |
 | `ranking.cue_scores(rankings, rrf_k)` | Suma `1 / (rrf_k + rank)` dla każdej wskazówki po rankingach zdań. |
 | `ranking.rank_by_cues(rows, score)` | Jednostki, których własna wskazówka uzyskała wynik, z wynikiem `own + CONTEXT_BONUS * sum(context cue scores)`, posortowane malejąco według wyniku, a następnie według identyfikatora. |
-| `sql.units_search(schema, *, index, search, limit, filter, dense=None, sparse=None, depth=FUSION_DEPTH)` | Zapytanie po `finding_units`: jedno CTE rankingu na parę kolumn gęstych i/lub rzadkich, łączone przez `sum(1.0 / (RRF_K + rank))`, uporządkowane według wyniku, a następnie identyfikatora. Ranking gęsty używa odległości kosinusowej `<=>`; ranking rzadki używa `<#>` i zachowuje tylko wiersze z wartością ujemną (wspólny termin). Jednostki case zwracają swój `embedding` jako tekst w `vector`. |
+| `sql.units_search(schema, *, search, limit, filter, dense=None, sparse=None, depth=FUSION_DEPTH)` | Zapytanie po `finding_units`: jedno CTE rankingu na parę kolumn gęstych i/lub rzadkich, łączone przez `sum(1.0 / (RRF_K + rank))`, uporządkowane według wyniku, a następnie identyfikatora. Ranking gęsty używa odległości kosinusowej `<=>`; ranking rzadki używa `<#>` i zachowuje tylko wiersze z wartością ujemną (wspólny termin). Jednostki case zwracają swój `embedding` jako tekst w `vector`. |
 | `sql.cues_search(schema, *, search, filter, dense=None, sparse=None, top=PATIENT_TOP_CUES, depth=FUSION_DEPTH)` | Rankinguje `cue_keys` jako `cue_id`, `score`. Biorą udział tylko wskazówki, które mają jednostkę dopuszczoną przez filtr. |
 | `sql.units_for_cues(schema, cue_ids, filter)` | Jednostki, których własna wskazówka (`unit_cues.role = 'cue'`) należy do `cue_ids`, z `cue_id` i tablicą `context_ids` (`role = 'context'`). |
 | `sql.sessions(schema, session_ids)` | `id` i `document` wierszy `elicitation_sessions`. |
-| `sql.INDEXES` | `i1` to (`embedding`, `sparse`); `i3` to (`embedding_combined`, `sparse_combined`); `both` to obie pary. |
+| `sql.UNIT_INDEX` | Para kolumn (`embedding`, `sparse`) w `finding_units`, którą przeszukują pytania (I1). |
 | `sql.UNIT_COLUMNS` | `id`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `kind`, `highlight_id`, `direction`, `embed_text`. |
-| `sql.Search`, `sql.Index`, `sql.Query` | `Literal["hybrid", "dense", "bm25"]`, `Literal["i1", "i3", "both"]`, `tuple[Composed, dict]`. |
+| `sql.Search`, `sql.Query` | `Literal["hybrid", "dense", "bm25"]`, `tuple[Composed, dict]`. |
 
 Metadane notatki (`documents._metadata`): `source`, `unit_ids`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `kinds`, `directions`, `patient_words` (lista `text` i `direction`), `score` (najlepszej jednostki) i `merged` (`True`, gdy notatka zawiera więcej niż jedną jednostkę).
 

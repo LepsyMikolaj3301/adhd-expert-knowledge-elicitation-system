@@ -14,13 +14,13 @@ def snapshot():
 
 def test_the_vectors_match_the_rows_they_belong_to(snapshot):
     tables, vectors, queries = snapshot
-    assert vectors["i1"].shape == vectors["i3"].shape == (len(tables["units"]), 1024)
+    assert vectors["i1"].shape == (len(tables["units"]), 1024)
     assert vectors["cues"].shape == (len(tables["cue_keys"]), 1024)
     assert vectors["queries"].shape == (len(queries["embedded_texts"]), 1024)
     assert len(set(queries["embedded_texts"])) == len(queries["embedded_texts"])
 
 
-@pytest.mark.parametrize("name", ["i1", "i3", "cues", "queries"])
+@pytest.mark.parametrize("name", ["i1", "cues", "queries"])
 def test_the_vectors_are_unit_length_within_half_precision(snapshot, name):
     norms = np.linalg.norm(snapshot[1][name], axis=1)
     assert np.allclose(norms, 1.0, atol=0.01)
@@ -72,9 +72,8 @@ def test_crowding_adds_near_identical_copies_of_every_expert(snapshot):
     copy = crowd["units"][n]
     assert copy["id"].startswith(f"{copy['session_id']}-") and copy["expert_id"].endswith("~1")
     assert copy["embed_text"] == tables["units"][0]["embed_text"]
-    for name in ("i1", "i3"):
-        cosine = np.sum(moved[name][:n] * moved[name][n : 2 * n], axis=1)
-        assert cosine.min() > 0.99
+    cosine = np.sum(moved["i1"][:n] * moved["i1"][n : 2 * n], axis=1)
+    assert cosine.min() > 0.99
 
 
 def test_crowding_is_repeatable(snapshot):

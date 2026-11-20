@@ -94,7 +94,6 @@ def _item(
         status=unit.status,
         created_at=unit.created_at,
         embed_text=unit.embed_text,
-        embed_text_combined=unit.embed_text_combined,
         sentences=_sentences(unit.sentence_ids or [], record),
         context=_context(unit.context or [], record),
         framing=framing,

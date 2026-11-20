@@ -3,7 +3,7 @@
 Records are plain dicts (JSON in, JSON out). One record per response:
   highlights  [{id h1|i1, origin expert|implicit, chip, span, text, direction}]
   sentences   [{id Q1.3, question_id, idx, span, text, targets [h1.. | i1.. | case], assigned_by}]
-  units       [{id, kind fragment|case, highlight, direction, sentences, context, body, i1, i3}]
+  units       [{id, kind fragment|case, highlight, direction, sentences, context, body, i1}]
   flags       checks that only flag (coverage, direction vs text)
 Step 3 (the classifier, ids only) happens outside this module; `apply_classification` takes its
 output. Sentence splitting and quote matching are written here because the B1 helpers in
@@ -229,8 +229,8 @@ def check(highlights: list[dict], sentences: list[dict]) -> list[dict]:
 
 def build_units(rec: dict) -> list[dict]:
     """One fragment unit per highlight that has sentences, one case unit. I1 = header + the unit's
-    sentences, each question's sentences prefixed with the question label; I3 adds the patient's
-    words after the header. Highlights cited together become each other's `context`."""
+    sentences, each question's sentences prefixed with the question label. Highlights cited together
+    become each other's `context`."""
     meta, sents = rec["meta"], rec["sentences"]
     by_id = {h["id"]: h for h in rec["highlights"]}
     targeted: dict[str, list[dict]] = {}
@@ -261,7 +261,6 @@ def build_units(rec: dict) -> list[dict]:
         # What a reviewer reads, and the tail of what is embedded: the same sentences either way.
         unit["body"] = "\n".join(lines)
         unit["i1"] = "\n".join([head, *lines])
-        unit["i3"] = "\n".join([head, f'Patient: "{h["text"]}"', *lines]) if h else unit["i1"]
         units.append(unit)
     return units
 

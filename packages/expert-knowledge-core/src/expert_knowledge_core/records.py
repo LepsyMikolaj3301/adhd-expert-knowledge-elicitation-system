@@ -41,7 +41,6 @@ class Unit(TypedDict):
     context: list[str]  # co-cited highlights
     body: str
     i1: str
-    i3: str
 
 
 class Meta(TypedDict):

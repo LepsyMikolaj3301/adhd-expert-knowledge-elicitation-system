@@ -59,11 +59,7 @@ class Ingestion:
         return self.document["units"]
 
     def texts(self) -> list[str]:
-        return (
-            [u["i1"] for u in self.units]
-            + [h["text"] for h in self.highlights]
-            + [u["i3"] for u in self.units]
-        )
+        return [u["i1"] for u in self.units] + [h["text"] for h in self.highlights]
 
 
 def _as_time(value: str | datetime) -> datetime:
@@ -109,7 +105,7 @@ async def load(db: AsyncSession, assignment_id: UUID) -> Ingestion:
     )
     if not units:
         raise NoUnits
-    if any(u.embed_text is None or u.embed_text_combined is None for u in units):
+    if any(u.embed_text is None for u in units):
         raise UnitsNotEmbeddable
     row = await db.get(AnswerFindings, assignment_id)
     if row is None:
@@ -150,7 +146,6 @@ async def load(db: AsyncSession, assignment_id: UUID) -> Ingestion:
                 "context": u.context or [],
                 "body": u.text,
                 "i1": u.embed_text,
-                "i3": u.embed_text_combined,
             }
             for u in units
         ],
@@ -181,13 +176,13 @@ async def load(db: AsyncSession, assignment_id: UUID) -> Ingestion:
 
 
 async def embed(data: Ingestion) -> Ingestion:
-    """I1 (what was reviewed), I2 (the patient's words of each citation), I3 (I1 with the patient's
-    words), in one call. `embedding.embed_texts` is looked up here so that tests can replace it."""
+    """I1 (what was reviewed) and I2 (the patient's words of each citation), in one call.
+    `embedding.embed_texts` is looked up here so that tests can replace it."""
     vectors = await embedding.embed_texts(data.texts())
     n, m = len(data.units), len(data.highlights)
-    if len(vectors) != 2 * n + m:
-        raise RuntimeError(f"expected {2 * n + m} vectors, got {len(vectors)}")
-    data.vectors = {"i1": vectors[:n], "i2": vectors[n : n + m], "i3": vectors[n + m :]}
+    if len(vectors) != n + m:
+        raise RuntimeError(f"expected {n + m} vectors, got {len(vectors)}")
+    data.vectors = {"i1": vectors[:n], "i2": vectors[n:]}
     return data
 
 
@@ -287,16 +282,15 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
         )  # fmt: skip
 
     segmenter = json.dumps(d.segmenter)
-    for unit, i1, i3 in zip(d.units, d.vectors["i1"], d.vectors["i3"], strict=True):
+    for unit, i1 in zip(d.units, d.vectors["i1"], strict=True):
         unit_id = pid(unit["id"])
         await db.execute(
             text(
                 "INSERT INTO chips.finding_units (id, session_id, expert_id, vignette_id, "
                 "vignette_version, kind, highlight_id, direction, population, track, framing, "
-                "segmenter, embed_text, embedding, embed_text_combined, "
-                "embedding_combined) VALUES (:id, :sid, :expert, :vid, :ver, :kind, :hid, "
-                ":direction, :pop, :track, :framing, CAST(:seg AS jsonb), :i1text, "
-                "CAST(CAST(:i1 AS text) AS vector), :i3text, CAST(CAST(:i3 AS text) AS vector))"
+                "segmenter, embed_text, embedding) VALUES (:id, :sid, :expert, :vid, :ver, "
+                ":kind, :hid, :direction, :pop, :track, :framing, CAST(:seg AS jsonb), :i1text, "
+                "CAST(CAST(:i1 AS text) AS vector))"
             ),
             {
                 "id": unit_id, "sid": d.session_id, "expert": d.expert_id, "vid": v["code"],
@@ -304,7 +298,7 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
                 "hid": pid(unit["highlight"]) if unit["highlight"] else None,
                 "direction": unit["direction"], "pop": v["population"], "track": d.track,
                 "framing": v["framing"], "seg": segmenter,
-                "i1text": unit["i1"], "i1": _vec(i1), "i3text": unit["i3"], "i3": _vec(i3),
+                "i1text": unit["i1"], "i1": _vec(i1),
             },
         )  # fmt: skip
         for order, sentence in enumerate(unit["sentences"]):
@@ -336,17 +330,15 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
 
 
 async def refresh_sparse(db: AsyncSession) -> None:
-    """Refits BM25 over everything in `chips`: the units' two texts and the cue keys, each with
-    its own statistics, as the experiments did.
+    """Refits BM25 over everything in `chips`: the units' text and the cue keys, each with its own
+    statistics, as the experiments did.
 
     shortcut: this refits the whole corpus on every ingestion. Fine for hundreds of units; at
     thousands, fit incrementally or in a nightly job.
     """
     config = load_indexing_config(settings.project_root / "config" / "indexing.yaml").sparse
     units = (
-        await db.execute(
-            text("SELECT id, embed_text, embed_text_combined FROM chips.finding_units ORDER BY id")
-        )
+        await db.execute(text("SELECT id, embed_text FROM chips.finding_units ORDER BY id"))
     ).all()
     keys = (await db.execute(text("SELECT id, text FROM chips.cue_keys ORDER BY id"))).all()
 
@@ -354,18 +346,14 @@ async def refresh_sparse(db: AsyncSession) -> None:
         return vector.to_text()
 
     first = bm25.fit([u.embed_text for u in units], config)
-    second = bm25.fit([u.embed_text_combined for u in units], config)
     cues = bm25.fit([k.text for k in keys], config)
     if units:
         await db.execute(
             text(
-                "UPDATE chips.finding_units SET sparse = CAST(CAST(:a AS text) AS sparsevec), "
-                "sparse_combined = CAST(CAST(:b AS text) AS sparsevec) WHERE id = :id"
+                "UPDATE chips.finding_units SET sparse = CAST(CAST(:a AS text) AS sparsevec) "
+                "WHERE id = :id"
             ),
-            [
-                {"id": u.id, "a": sparse(a), "b": sparse(b)}
-                for u, a, b in zip(units, first, second, strict=True)
-            ],
+            [{"id": u.id, "a": sparse(a)} for u, a in zip(units, first, strict=True)],
         )
     if keys:
         await db.execute(

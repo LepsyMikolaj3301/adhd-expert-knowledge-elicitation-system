@@ -86,7 +86,6 @@ class _ExpertRetriever(BaseRetriever):
 class ExpertQuestionRetriever(_ExpertRetriever):
     """A clinician's question -> notes. The evaluations chose the reviewed text (I1)."""
 
-    index: sql.Index = "i1"
     # Generic case answers repeat across sessions; near-duplicates of a better one go last.
     downweight_duplicate_cases: bool = True
 
@@ -97,7 +96,6 @@ class ExpertQuestionRetriever(_ExpertRetriever):
             return None
         return sql.units_search(
             self.store.schema,
-            index=self.index,
             search=mode,
             limit=k * self.overfetch,
             filter=self.filter,

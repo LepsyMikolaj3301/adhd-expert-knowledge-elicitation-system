@@ -139,7 +139,7 @@ The CLI command `python -m app.cli import-vignettes --dir DIR --whatifs FILE --a
 
 | Model | Table | Columns |
 |---|---|---|
-| `KnowledgeUnit` | `knowledge_units` | `id`, `assignment_id` (FK), `submission_id` (FK), `ordinal`, `review_round` (default 1), `text`, `content_hash` String(64), `kind` (`fragment` or `case`), `highlight_id` (`h1`, `i1`; `None` for the case unit), `direction` (`toward`, `away`, `neutral`, `unclear`), `patient_words`, `sentence_ids` ARRAY, `context` ARRAY (co-cited highlights), `embed_text` (I1), `embed_text_combined` (I3), `status` (indexed, default `pending`), `created_at`; unique (`assignment_id`, `review_round`, `ordinal`) |
+| `KnowledgeUnit` | `knowledge_units` | `id`, `assignment_id` (FK), `submission_id` (FK), `ordinal`, `review_round` (default 1), `text`, `content_hash` String(64), `kind` (`fragment` or `case`), `highlight_id` (`h1`, `i1`; `None` for the case unit), `direction` (`toward`, `away`, `neutral`, `unclear`), `patient_words`, `sentence_ids` ARRAY, `context` ARRAY (co-cited highlights), `embed_text` (I1), `status` (indexed, default `pending`), `created_at`; unique (`assignment_id`, `review_round`, `ordinal`) |
 | `AnswerFindings` | `answer_findings` | `assignment_id` (PK, FK, cascade delete), `record` JSONB, `version` (default 1), `check_outcome` (`completed` or `skipped`), `classifier`, `prompt`, `findings_version`, `created_at`, `updated_at` |
 
 `UnitStatus` values: `pending`, `approved`, `rejected`, `ingested`, `superseded`, `removed`. A superseded unit was cut in an earlier review round. A removed unit was taken out of the knowledge base after ingestion.
@@ -160,7 +160,7 @@ The CLI command `python -m app.cli import-vignettes --dir DIR --whatifs FILE --a
 | `unresolved(sentences) -> list[str]` | ids of sentences without targets |
 | `apply_classification(sentences, labels) -> list[str]` | applies classifier labels; `prev` copies the previous sentence's targets in the same answer; a missing or invalid label becomes `case`; returns the fallback ids; sets `assigned_by` to `llm` |
 | `check(highlights, sentences) -> list[dict]` | flags of kind `coverage` (an expert highlight with no sentence) and `direction` (regex patterns `LOWERING` and `RAISING` against the marked direction); changes nothing |
-| `build_units(rec) -> list[dict]` | one fragment unit per highlight that is the target of at least one sentence, plus a `case` unit when at least one sentence targets `case`; sets `body`, `i1` (header and sentences) and `i3` (header, a `Patient: "<highlight text>"` line, sentences; equal to `i1` for the case unit) |
+| `build_units(rec) -> list[dict]` | one fragment unit per highlight that is the target of at least one sentence, plus a `case` unit when at least one sentence targets `case`; sets `body` and `i1` (header and sentences) |
 | `record_from_lines(resp, lines, highlights, session_id, expert_id, role, framing, population) -> dict` | builds sentences from already linked lines, then `flags` and `units`; links nothing again |
 
 `Highlight` (`chip`, `text`, `span`, `direction`) and `Response` (`vignette_id`, `vignette_version`, `answers`, `highlights`, `rating`, `insufficient_information`) are frozen dataclasses. The module re-exports helpers from `expert_knowledge_core.notes` and `CASE`, `FINDINGS_VERSION` from `expert_knowledge_core.records` (see [packages](packages.md)).
@@ -186,10 +186,10 @@ The CLI command `python -m app.cli import-vignettes --dir DIR --whatifs FILE --a
 |---|---|
 | `TIER` | `"app"`, the `tier` written to `chips.vignettes` |
 | `BM25_LOCK` | `4_715_331_001`, the advisory lock key shared by `write`, `remove_units` and the refit job |
-| `load(db, assignment_id) -> Ingestion` | reads the assignment's units with status `approved` or `ingested`; raises `NoUnits` when there are none, `UnitsNotEmbeddable` when a unit lacks `embed_text` or `embed_text_combined`, `NoFindings` when there is no `answer_findings` row; cuts the stored record down to the units' highlights and sentences |
-| `embed(data) -> Ingestion` | embeds the I1 texts of the units, the highlight texts (I2) and the I3 texts in one call; raises `RuntimeError` if the vector count differs from 2 x units + highlights |
+| `load(db, assignment_id) -> Ingestion` | reads the assignment's units with status `approved` or `ingested`; raises `NoUnits` when there are none, `UnitsNotEmbeddable` when a unit lacks `embed_text`, `NoFindings` when there is no `answer_findings` row; cuts the stored record down to the units' highlights and sentences |
+| `embed(data) -> Ingestion` | embeds the I1 texts of the units and the highlight texts (I2) in one call; raises `RuntimeError` if the vector count differs from units + highlights |
 | `write(db, data)` | takes the advisory lock, deletes the assignment's `chips.elicitation_sessions` row, then inserts into `chips.experts`, `chips.vignettes`, `chips.elicitation_sessions`, `chips.cue_keys`, `chips.highlights`, `chips.answer_sentences`, `chips.finding_units`, `chips.finding_unit_sentences`, `chips.unit_cues` and `chips.review_events`, then calls `refresh_sparse`; runs inside the caller's transaction |
-| `refresh_sparse(db)` | refits BM25 over the unit texts I1 and I3 and the cue key texts, each with its own statistics, using the `sparse` section of `config/indexing.yaml`; writes `sparse`, `sparse_combined` and `chips.cue_keys.sparse` |
+| `refresh_sparse(db)` | refits BM25 over the unit texts I1 and the cue key texts, each with its own statistics, using the `sparse` section of `config/indexing.yaml`; writes `chips.finding_units.sparse` and `chips.cue_keys.sparse` |
 | `Ingestion` | dataclass: `session_id`, `expert_id`, `created_at`, `vignette`, `document`, `events`, `segmenter`, `meta`, `track`, `vectors` |
 
 `load` builds review events from the findings `record`: `record["flags_shown"]` entries become `flag_shown` events, and `record["corrections"]` entries of kind `sentence_moved` or `toggle_changed` become events of the same name; a `check_outcome` of `skipped` adds a `skipped` event. The proofread job writes `flags_shown` and an empty `corrections` list when it records the findings (`backend/app/jobs/handlers.py:79-88`); no code under `backend/app` fills `corrections` with entries.

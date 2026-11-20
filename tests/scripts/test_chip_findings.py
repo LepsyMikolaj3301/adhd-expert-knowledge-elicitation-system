@@ -130,9 +130,7 @@ def test_embedded_text():
     assert "fragment marked: unclear" in first[0] and "insufficient information" in first[0]
     assert any(line.startswith("Q1: «every time I try to type a formula…»") for line in first)
     assert "⟦" not in unit["i1"]
-    assert unit["i3"].splitlines()[1] == f'Patient: "{FRAGS[2][0]}"'
-    case = next(u for u in rec["units"] if u["kind"] == "case")
-    assert case["i3"] == case["i1"]
+    assert "i3" not in unit
 
 
 def test_merge_and_pack_print_each_sentence_once():

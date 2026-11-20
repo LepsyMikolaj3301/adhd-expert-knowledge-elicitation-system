@@ -307,7 +307,7 @@ package StrukturaElicytacji {
         doc /*
          * Zadanie ingest (stan ingesting). PREPARE: ingest.load (odmowy: NoUnits,
          * UnitsNotEmbeddable, NoFindings) i osadzenie bge-m3 w jednym wywołaniu: I1 tekst jednostki,
-         * I2 słowa pacjenta cytatów, I3 = I1 + słowa pacjenta. HANDLERS (pod blokadą przydziału,
+         * I2 słowa pacjenta cytatów. HANDLERS (pod blokadą przydziału,
          * w transakcji przejścia): pg_advisory_xact_lock (jedna ingestia naraz), zastąpienie wierszy
          * sesji w chips, przeliczenie BM25 (refresh_sparse) dla całego schematu, jednostki -> ingested.
          */

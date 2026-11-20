@@ -27,7 +27,6 @@ function unit(overrides: Partial<KnowledgeUnit> = {}): KnowledgeUnit {
     status: 'ingested',
     created_at: '2026-11-10T10:00:00Z',
     embed_text: 'Clinician on an adult’s journal entry\nQ1: The report gives childhood evidence.',
-    embed_text_combined: 'Clinician on an adult’s journal entry\nPatient: "the box"\nQ1: …',
     sentences: [{ id: 'Q1.1', question_id: 'Q1', assigned_by: 'chip' }],
     context: [],
     framing: 'personal_journal',
@@ -188,12 +187,10 @@ describe('Knowledge base: units', () => {
     expect(view().get('[data-testid="context"]').text()).toContain('h2 “sleep loss”')
     expect(view().get('[data-testid="unit-direction"]').text()).toBe('Points toward ADHD traits')
     expect(view().get('[data-testid="embedded"]').text()).toContain('qwen3.5:9b')
-    // The embedded texts are on show, whole, with nothing to unfold.
+    // The embedded text is on show, whole, with nothing to unfold.
     expect(view().find('[data-testid="embedded"] details').exists()).toBe(false)
     expect(view().get('[data-testid="embed-text"]').text()).toBe(unit().embed_text)
-    expect(view().get('[data-testid="embed-text-combined"]').text()).toBe(
-      unit().embed_text_combined,
-    )
+    expect(view().find('[data-testid="embed-text-combined"]').exists()).toBe(false)
   })
 
   it('removes one unit after asking, and the index is refit in the background', async () => {

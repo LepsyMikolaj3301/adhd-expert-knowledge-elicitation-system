@@ -41,9 +41,8 @@ class KnowledgeUnitListItem(BaseModel):
     patient_words: str | None
     status: UnitStatus
     created_at: datetime
-    # What is embedded: I1 (the reviewed text with its header) and I3 (I1 plus the patient's words).
+    # What is embedded: I1, the reviewed text with its header.
     embed_text: str | None
-    embed_text_combined: str | None
     sentences: list[UnitSentence]
     context: list[CitedTogether]
     framing: str | None

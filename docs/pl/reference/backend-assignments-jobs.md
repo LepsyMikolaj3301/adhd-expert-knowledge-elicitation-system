@@ -208,7 +208,7 @@ Pobiera i uruchamia jedno zadanie; zwraca False, gdy zadania nie było.
 - `prepare_ingest(assignment_id)` wczytuje to, co zatwierdzono (`ingest.load`), i tworzy embeddingi (`ingest.embed`), poza transakcją workera.
 - `ingest(db, assignment, prepared)` zapisuje przygotowane jednostki przez `ingest.write` i ustawia jednostki `approved` danego przydziału na `ingested`.
 - `refit(db)` bierze `pg_advisory_xact_lock(BM25_LOCK)` i wywołuje `ingest.refresh_sparse`. Komentarz w module mówi, że funkcja dopasowuje BM25 ponownie do całej bazy wiedzy; jako wyzwalacz komentarz wskazuje usunięcie jednostek.
-- `unit_content_hash(embed_text, embed_text_combined) -> str` haszuje oba teksty połączone znakiem nowego wiersza.
+- `unit_content_hash(embed_text) -> str` haszuje osadzany tekst.
 
 ### Błędy (`errors.py`)
 

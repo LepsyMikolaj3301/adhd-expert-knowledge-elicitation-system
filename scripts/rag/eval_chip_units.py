@@ -8,12 +8,12 @@ fixtures in data/fixtures_chips). B1 is the regex pipeline run on the same sessi
 rendered as quotes. A claim is held by a chip unit when its highlight overlaps the claim's quote,
 otherwise by the unit of that answer nearest to the claim text (chip_retrieval.cover_chip_claims).
 An experiment label is `<index>[@35b][+dw][+merge]`:
-  index   B1 | I1 | I3 | I1|I3 (I1|I3: both texts searched, the better one counts)
+  index   B1 | I1
   @35b    units built with the labels of the second classifier (--alt-classifier)
   +dw     near-duplicate case units pushed down;  +merge  units sharing sentences become one block
 Question mode uses the pooled labels (every system's top 8 judged by a Claude agent through the
 inbox, prompts/Expert_unit_pooling.v1.md), original and pooled labels are both reported. Patient
-mode (--patient): B1 and I3 over the patient's sentences, I2 through the cue keys; its labels are
+mode (--patient): B1 over the patient's sentences, I2 through the cue keys; its labels are
 weak (claims sharing a planted trait). Writes data/eval/chip_units/<timestamp>.json and latest.json.
 """
 
@@ -49,21 +49,20 @@ from rag_common import bm25_config, query_embedder, write_json
 OUT = ROOT / "data/eval/chip_units"
 DEFAULT_EXPERIMENTS = [
     "B1",
-    "I1", "I1+merge", "I3", "I3+merge", "I1|I3", "I1|I3+merge",
+    "I1", "I1+merge",
     "I1+dw", "I1+dw+merge",
-    "I1@35b", "I1@35b+merge", "I3@35b",
+    "I1@35b", "I1@35b+merge",
 ]  # fmt: skip
 COMPARISONS = [  # (a, b): what a adds over b
-    ("I1", "B1"), ("I1+merge", "B1"), ("I3", "B1"), ("I3+merge", "B1"), ("I1|I3", "B1"),
-    ("I1|I3+merge", "B1"), ("I1+merge", "I1"), ("I3", "I1"), ("I1|I3", "I1"), ("I1+dw", "I1"),
+    ("I1", "B1"), ("I1+merge", "B1"), ("I1+merge", "I1"), ("I1+dw", "I1"),
     ("I1@35b", "I1"), ("I1@35b+merge", "I1+merge"),
 ]  # fmt: skip
-PATIENT_LABELS = ["B1", "I3", "I2", "I3@35b", "I2@35b"]
+PATIENT_LABELS = ["B1", "I2", "I2@35b"]
 Q_KEYS = ["recall@1", "recall@8", "hit@8", *HEADLINE, *(f"recall@{b}t" for b in BUDGETS)]
 
 
 def parse(label: str) -> tuple[str, str, set[str]]:
-    """'I1|I3@35b+dw+merge' -> ('I1|I3', '35b', {'dw', 'merge'})."""
+    """'I1@35b+dw+merge' -> ('I1', '35b', {'dw', 'merge'})."""
     rest, *mods = label.split("+")
     name, _, alt = rest.partition("@")
     return name, alt, set(mods)
@@ -152,8 +151,7 @@ def main(argv=None) -> int:
 
     searchers = {("B1", ""): Searcher(b1_idx["B1"], embed, cfg)}
     for alt, ci in indexes.items():
-        for name in ("I1", "I3", "I1|I3"):
-            searchers[(name, alt)] = Searcher(ci.items(name), embed, cfg)
+        searchers[("I1", alt)] = Searcher(ci.items("I1"), embed, cfg)
 
     def rank(label: str, query: dict) -> list:
         name, alt, mods = parse(label)

@@ -52,7 +52,6 @@ async def test_units_know_what_they_embed():
         "sentence_ids",
         "context",
         "embed_text",
-        "embed_text_combined",
     ):
         assert columns.get(name) == "YES", name
 

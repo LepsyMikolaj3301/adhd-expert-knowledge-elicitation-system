@@ -22,8 +22,15 @@ if config.config_file_name is not None and config.attributes.get("configure_logg
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 
+# Tables of the unit-by-unit review that migration 0006 keeps as history. Their models are gone,
+# so autogenerate would propose dropping them.
+HISTORY_TABLES = frozenset({"unit_decisions", "unit_comments", "submission_votes"})
+
+
 def _include_name(name, type_, parent_names) -> bool:
-    return name == APP_SCHEMA if type_ == "schema" else True
+    if type_ == "schema":
+        return name == APP_SCHEMA
+    return not (type_ == "table" and name in HISTORY_TABLES)
 
 
 def _run(connection: Connection) -> None:

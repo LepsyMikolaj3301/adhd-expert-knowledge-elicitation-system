@@ -71,13 +71,12 @@ def seed(conn: psycopg.Connection, schema: str) -> None:
             conn.execute(
                 "INSERT INTO finding_units (id, session_id, expert_id, vignette_id, vignette_version, "
                 "kind, highlight_id, direction, population, track, framing, segmenter, "
-                "embed_text, embedding, embed_text_combined, embedding_combined) VALUES (%s, %s, %s, %s, 1, "
-                "%s, %s, %s, %s, 'general', %s, '{}'::jsonb, %s, CAST(%s AS vector), %s, CAST(%s AS vector))",
+                "embed_text, embedding) VALUES (%s, %s, %s, %s, 1, "
+                "%s, %s, %s, %s, 'general', %s, '{}'::jsonb, %s, CAST(%s AS vector))",
                 (
                     pid(session, u["id"]), session, expert, VID, u["kind"],
                     pid(session, u["highlight"]) if u["highlight"] else None, u["direction"],
                     meta["population"], meta["framing"], u["i1"], vec(u["i1"]),
-                    u["i3"], vec(u["i3"]),
                 ),
             )  # fmt: skip
             hl = {h["id"]: h for h in rec["highlights"]}
@@ -94,20 +93,12 @@ def seed(conn: psycopg.Connection, schema: str) -> None:
 
 def refit_sparse(conn: psycopg.Connection) -> None:
     cfg = Bm25Config()
-    units = conn.execute(
-        "SELECT id, embed_text, embed_text_combined FROM finding_units ORDER BY id"
-    ).fetchall()
+    units = conn.execute("SELECT id, embed_text FROM finding_units ORDER BY id").fetchall()
     keys = conn.execute("SELECT id, text FROM cue_keys ORDER BY id").fetchall()
-    for (uid, _, _), a, b in zip(
-        units,
-        bm25.fit([u[1] for u in units], cfg),
-        bm25.fit([u[2] for u in units], cfg),
-        strict=True,
-    ):
+    for (uid, _), a in zip(units, bm25.fit([u[1] for u in units], cfg), strict=True):
         conn.execute(
-            "UPDATE finding_units SET sparse = CAST(%s AS sparsevec), sparse_combined = CAST(%s AS sparsevec) "
-            "WHERE id = %s",
-            (a.to_text(), b.to_text(), uid),
+            "UPDATE finding_units SET sparse = CAST(%s AS sparsevec) WHERE id = %s",
+            (a.to_text(), uid),
         )
     for (kid, _), v in zip(keys, bm25.fit([k[1] for k in keys], cfg), strict=True):
         conn.execute(

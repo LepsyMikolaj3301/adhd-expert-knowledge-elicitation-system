@@ -47,7 +47,7 @@ BM25 needs corpus-wide statistics (`idf` and the average document length). The i
 
 A search ranks candidates twice, once by dense cosine distance and once by BM25, and fuses the two rankings with reciprocal rank fusion: the score of an item is the sum of `1 / (RRF_K + rank)` over the rankings. Fusion works on ranks, so it needs no common scale for cosine and BM25 values. A row that shares no term with the query has a BM25 score of 0 and is not a match in the sparse ranking. A query that consists only of stopwords has no sparse vector, so a hybrid search falls back to the dense ranking alone.
 
-The expert store holds findings units: one per targeted highlight, plus one for the sentences about the case as a whole. Each unit has two texts, `i1` (the reviewed text) and `i3` (the same with the patient's words added), each with its own dense and sparse vector. Questions search `i1` by default, the index the evaluations chose (comment in `sql.py`). Two retrievers enter this store:
+The expert store holds findings units: one per targeted highlight, plus one for the sentences about the case as a whole. Each unit has one embedded text, `i1` (the reviewed text), with a dense and a sparse vector; the patient's words are embedded separately as cue keys. Questions search `i1`. Two retrievers enter this store:
 
 - `ExpertQuestionRetriever` searches the units with a clinician's question.
 - `PatientTextRetriever` splits a patient's text into sentences, ranks the cue keys (the patient's words that experts highlighted) per sentence, fuses the sentence rankings, and ranks units by their own cue's score plus a bonus for the other cues cited together with it. A combination of patient words therefore outranks a single one.
@@ -98,7 +98,7 @@ The design gives up some things for simplicity. BM25 is refitted for the whole c
 - `packages/expert-knowledge-core/pyproject.toml` - core dependencies
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/store.py` - read-only transactions, pools, prepared statements
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/retrievers.py` - the two retrievers and their steps
-- `packages/expert-knowledge-rag/src/expert_knowledge_rag/sql.py` - hybrid SQL, RRF, indexes i1 and i3, text-cast vectors
+- `packages/expert-knowledge-rag/src/expert_knowledge_rag/sql.py` - hybrid SQL, RRF, index i1, text-cast vectors
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/ranking.py` - near-duplicate rule and cue scoring
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/documents.py` - packing hits into notes
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/chains.py` - abstention and [E#] numbering

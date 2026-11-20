@@ -49,7 +49,6 @@ def test_cue_conditions_only_use_the_vignette():
 def test_units_search_has_the_rankings_of_the_search_mode(search, dense, sparse):
     query, params = q.units_search(
         "chips",
-        index="i1",
         search=search,
         limit=8,
         filter=ExpertFilter(),
@@ -62,24 +61,6 @@ def test_units_search_has_the_rankings_of_the_search_mode(search, dense, sparse)
     assert '"chips"."finding_units"' in sql_text and f"LIMIT {FUSION_DEPTH}" in sql_text
     assert f"({RRF_K} + rank)" in sql_text and "LIMIT 8" in sql_text
     assert params["dense"] == "[1]" and params["sparse"] == "{1:1}/3"
-
-
-def test_index_both_ranks_the_reviewed_and_the_combined_text():
-    query, _ = q.units_search(
-        "chips",
-        index="both",
-        search="hybrid",
-        limit=4,
-        filter=ExpertFilter(),
-        dense="[1]",
-        sparse="x",
-    )
-    sql_text = text(query)
-    assert "embedding_combined" in sql_text and "sparse_combined" in sql_text
-    assert (
-        'SELECT * FROM "r0" UNION ALL SELECT * FROM "r1" UNION ALL SELECT * FROM "r2"' in sql_text
-    )
-    assert 'SELECT * FROM "r3"' in sql_text
 
 
 def test_schema_is_quoted_not_interpolated():

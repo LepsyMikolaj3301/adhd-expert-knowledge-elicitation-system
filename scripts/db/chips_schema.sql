@@ -68,9 +68,7 @@ CREATE TABLE IF NOT EXISTS finding_units (
     population text NOT NULL, track text NOT NULL, framing text NOT NULL,
     segmenter jsonb NOT NULL,                  -- code version, classifier model + prompt version
     embed_text text NOT NULL,                  -- I1
-    embedding vector(1024) NOT NULL, sparse sparsevec(1048576),
-    embed_text_combined text,                  -- I3
-    embedding_combined vector(1024), sparse_combined sparsevec(1048576)
+    embedding vector(1024) NOT NULL, sparse sparsevec(1048576)
 );
 
 CREATE TABLE IF NOT EXISTS finding_unit_sentences (

@@ -1645,17 +1645,6 @@
             ],
             "title": "Embed Text"
           },
-          "embed_text_combined": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Embed Text Combined"
-          },
           "expert_id": {
             "format": "uuid",
             "title": "Expert Id",
@@ -1784,7 +1773,6 @@
           "status",
           "created_at",
           "embed_text",
-          "embed_text_combined",
           "sentences",
           "context",
           "framing",

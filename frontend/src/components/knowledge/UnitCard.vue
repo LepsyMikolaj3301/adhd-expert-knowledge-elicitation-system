@@ -103,17 +103,6 @@ const emit = defineEmits<{ remove: [] }>()
             {{ unit.embed_text }}
           </p>
         </figure>
-        <figure class="min-w-0 rounded-sm border-l-2 border-line bg-page px-3 py-2">
-          <figcaption class="text-xs font-medium text-muted">
-            The same with the patient's words
-          </figcaption>
-          <p
-            class="mt-1 text-sm leading-relaxed whitespace-pre-wrap text-text [overflow-wrap:anywhere]"
-            data-testid="embed-text-combined"
-          >
-            {{ unit.embed_text_combined }}
-          </p>
-        </figure>
       </div>
       <p class="mt-2 text-xs text-muted">
         Filed by {{ unit.classifier ?? 'rules alone (no sentence needed the model)'

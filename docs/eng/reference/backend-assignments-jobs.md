@@ -208,7 +208,7 @@ Claims and runs one job; returns False when there was none.
 - `prepare_ingest(assignment_id)` loads what was approved (`ingest.load`) and embeds it (`ingest.embed`), outside the worker's transaction.
 - `ingest(db, assignment, prepared)` writes the prepared units with `ingest.write` and sets the assignment's `approved` units to `ingested`.
 - `refit(db)` takes `pg_advisory_xact_lock(BM25_LOCK)` and calls `ingest.refresh_sparse`. The module comment says it refits BM25 over the whole knowledge base; the comment names the removal of units as the trigger.
-- `unit_content_hash(embed_text, embed_text_combined) -> str` hashes both texts joined by a newline.
+- `unit_content_hash(embed_text) -> str` hashes the embedded text.
 
 ### Errors (`errors.py`)
 

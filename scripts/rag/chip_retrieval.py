@@ -2,7 +2,7 @@
 
 Reuses Searcher (dense + BM25, RRF), the metrics and the claim/label machinery of
 expert_retrieval.py, so chips and B1 are scored on the same questions and the same claims:
-  * ChipIndex      units + stored embeddings; Items for I1 / I3 / I1|I3; pack-time merge; the
+  * ChipIndex      units + stored embeddings; Items for I1; pack-time merge; the
                    down-weighting of near-duplicate case units; patient mode through the cue keys
   * cover_chip_claims   which units hold a reference claim (same answer, highlight overlaps the
                    claim's quote; otherwise the nearest unit of that answer by bge-m3)
@@ -105,7 +105,6 @@ class ChipIndex:
         self.primed: dict[str, np.ndarray] = {}
         for name, texts in (
             ("i1", [u["i1"] for u in self.units]),
-            ("i3", [u["i3"] for u in self.units]),
             ("i2", [k["text"] for k in self.built["cue_keys"]]),
         ):
             self.primed |= dict(zip(texts, arrays[name], strict=True))
@@ -120,12 +119,10 @@ class ChipIndex:
         return cf.pack_block(self.rec_of[uids[0]], uids)
 
     def items(self, name: str) -> list[Item]:
-        """name: I1 | I3 | I1|I3 (searched through both texts, the best one counts)."""
-        out = []
-        for u in self.units:
-            reps = {"I1": [u["i1"]], "I3": [u["i3"]], "I1|I3": [u["i1"], u["i3"]]}[name]
-            out.append(Item([u["id"]], self.block([u["id"]]), reps))
-        return out
+        """name: I1, the text the reviewers approved."""
+        if name != "I1":
+            raise ValueError(f"unknown index {name!r}")
+        return [Item([u["id"]], self.block([u["id"]]), [u["i1"]]) for u in self.units]
 
     def merge(self, ranked: list[Item]) -> list[Item]:
         """Units of one session and vignette that share a sentence become one item (one block,

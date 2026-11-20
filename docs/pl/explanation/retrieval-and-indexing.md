@@ -47,7 +47,7 @@ BM25 potrzebuje statystyk całego korpusu (`idf` i średnia długość dokumentu
 
 Wyszukiwanie szereguje kandydatów dwa razy, raz według gęstej odległości cosinusowej i raz według BM25, a oba rankingi łączy fuzją rang (reciprocal rank fusion): wynik elementu to suma `1 / (RRF_K + rank)` po rankingach. Fuzja działa na rangach, więc nie potrzebuje wspólnej skali dla wartości cosinusowych i BM25. Wiersz, który nie ma wspólnego terminu z zapytaniem, ma wynik BM25 równy 0 i nie jest trafieniem w rankingu rzadkim. Zapytanie złożone wyłącznie ze stopwords nie ma wektora rzadkiego, więc wyszukiwanie hybrydowe wraca do samego rankingu gęstego.
 
-Magazyn ekspertów przechowuje jednostki spostrzeżeń: po jednej na każde ukierunkowane zaznaczenie oraz jedną dla zdań o przypadku jako całości. Każda jednostka ma dwa teksty, `i1` (tekst po recenzji) i `i3` (ten sam z dodanymi słowami pacjenta), każdy z własnym wektorem gęstym i rzadkim. Pytania domyślnie przeszukują `i1`, czyli indeks wybrany w ewaluacjach (komentarz w `sql.py`). Do tego magazynu prowadzą dwa retrievery:
+Magazyn ekspertów przechowuje jednostki spostrzeżeń: po jednej na każde ukierunkowane zaznaczenie oraz jedną dla zdań o przypadku jako całości. Każda jednostka ma jeden osadzany tekst, `i1` (tekst po recenzji), z wektorem gęstym i rzadkim; słowa pacjenta są osadzane osobno jako klucze cue. Pytania przeszukują `i1`. Do tego magazynu prowadzą dwa retrievery:
 
 - `ExpertQuestionRetriever` przeszukuje jednostki pytaniem klinicysty.
 - `PatientTextRetriever` dzieli tekst pacjenta na zdania, szereguje klucze cue (słowa pacjenta, które eksperci zaznaczyli) dla każdego zdania, łączy rankingi zdań i szereguje jednostki według wyniku ich własnego cue plus bonusu za pozostałe cue cytowane razem z nim. Kombinacja słów pacjenta wyprzedza więc pojedyncze słowo.
@@ -98,7 +98,7 @@ Projekt rezygnuje z pewnych rzeczy dla prostoty. BM25 jest dopasowywane od nowa 
 - `packages/expert-knowledge-core/pyproject.toml` - zależności core
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/store.py` - transakcje tylko do odczytu, pule, prepared statements
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/retrievers.py` - dwa retrievery i ich kroki
-- `packages/expert-knowledge-rag/src/expert_knowledge_rag/sql.py` - hybrydowy SQL, RRF, indeksy i1 i i3, wektory rzutowane przez tekst
+- `packages/expert-knowledge-rag/src/expert_knowledge_rag/sql.py` - hybrydowy SQL, RRF, indeks i1, wektory rzutowane przez tekst
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/ranking.py` - reguła prawie-duplikatu i punktacja cue
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/documents.py` - pakowanie trafień w notatki
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/chains.py` - powstrzymanie się od odpowiedzi i numeracja [E#]

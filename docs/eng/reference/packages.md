@@ -69,7 +69,7 @@ The findings record stored in `chips.elicitation_sessions.document`. Records are
 | `Direction` | `Literal["toward", "away", "neutral", "unclear"]` |
 | `Highlight` | `id` (`h1..` expert, `i1..` implicit), `origin` (`expert` or `implicit`), `chip` (`int \| None`), `span` (`[start, end)` in the vignette), `text`, `direction` (`Direction \| None`). |
 | `Sentence` | `id` (for example `Q2.3`), `question_id`, `idx`, `span`, `text`, `targets` (highlight ids and/or `case`), `assigned_by` (`chip`, `quote`, `llm`, `expert` or `None`). |
-| `Unit` | `id`, `kind` (`fragment` or `case`), `highlight`, `direction`, `sentences`, `context` (co-cited highlights), `body`, `i1`, `i3`. |
+| `Unit` | `id`, `kind` (`fragment` or `case`), `highlight`, `direction`, `sentences`, `context` (co-cited highlights), `body`, `i1`. |
 | `Meta` | `role`, `framing`, `population`, `rating` (`int \| None`), `insufficient` (`bool`). |
 | `Record` (`total=False`) | `version`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `meta`, `highlights`, `sentences`, `units`, `flags`. |
 | `is_readable(document) -> bool` | True for a dict whose `version` equals `FINDINGS_VERSION` and that has the keys `meta`, `highlights`, `sentences` and `units`. |
@@ -143,7 +143,6 @@ Both retrievers subclass LangChain `BaseRetriever`, implement sync and async ret
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `index` | `"i1"`, `"i3"` or `"both"` | `"i1"` | `i1` searches the reviewed text, `i3` the text with the patient's words added, `both` fuses both. |
 | `downweight_duplicate_cases` | `bool` | `True` | Case units near-duplicate to a better-ranked case unit move to the end. |
 
 Behaviour: a blank query returns `[]`. With `search` other than `"dense"` the query is turned into a BM25 vector; if no term survives tokenising, `hybrid` falls back to `dense` and `bm25` returns `[]`. With `search="bm25"` the embedding model is not called. The unit search, the near-duplicate rule, a query for the sessions' records and `build_documents` run in that order, and the first `k` notes are returned.
@@ -204,13 +203,13 @@ These modules are not in `__all__` but define the retrieval rules.
 | `ranking.downweight_duplicate_cases(hits)` | Case units whose cosine to an earlier kept case unit is at least `NEAR_DUPLICATE` go to the end; other units keep their order. |
 | `ranking.cue_scores(rankings, rrf_k)` | Sum of `1 / (rrf_k + rank)` per cue over the sentence rankings. |
 | `ranking.rank_by_cues(rows, score)` | Units whose own cue scored, with score `own + CONTEXT_BONUS * sum(context cue scores)`, sorted by descending score, then id. |
-| `sql.units_search(schema, *, index, search, limit, filter, dense=None, sparse=None, depth=FUSION_DEPTH)` | Query over `finding_units`: one ranking CTE per dense and/or sparse column pair, fused by `sum(1.0 / (RRF_K + rank))`, ordered by score then id. Dense ranking uses cosine distance `<=>`; sparse ranking uses `<#>` and keeps only rows with a negative value (a shared term). Case units return their `embedding` as text in `vector`. |
+| `sql.units_search(schema, *, search, limit, filter, dense=None, sparse=None, depth=FUSION_DEPTH)` | Query over `finding_units`: one ranking CTE per dense and/or sparse column pair, fused by `sum(1.0 / (RRF_K + rank))`, ordered by score then id. Dense ranking uses cosine distance `<=>`; sparse ranking uses `<#>` and keeps only rows with a negative value (a shared term). Case units return their `embedding` as text in `vector`. |
 | `sql.cues_search(schema, *, search, filter, dense=None, sparse=None, top=PATIENT_TOP_CUES, depth=FUSION_DEPTH)` | Ranks `cue_keys` as `cue_id`, `score`. Only cues that have a unit the filter allows take part. |
 | `sql.units_for_cues(schema, cue_ids, filter)` | Units whose own cue (`unit_cues.role = 'cue'`) is in `cue_ids`, with `cue_id` and the `context_ids` array (`role = 'context'`). |
 | `sql.sessions(schema, session_ids)` | `id` and `document` of the `elicitation_sessions` rows. |
-| `sql.INDEXES` | `i1` is (`embedding`, `sparse`); `i3` is (`embedding_combined`, `sparse_combined`); `both` is both pairs. |
+| `sql.UNIT_INDEX` | The (`embedding`, `sparse`) column pair of `finding_units` that questions search (I1). |
 | `sql.UNIT_COLUMNS` | `id`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `kind`, `highlight_id`, `direction`, `embed_text`. |
-| `sql.Search`, `sql.Index`, `sql.Query` | `Literal["hybrid", "dense", "bm25"]`, `Literal["i1", "i3", "both"]`, `tuple[Composed, dict]`. |
+| `sql.Search`, `sql.Query` | `Literal["hybrid", "dense", "bm25"]`, `tuple[Composed, dict]`. |
 
 Metadata of a note (`documents._metadata`): `source`, `unit_ids`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `kinds`, `directions`, `patient_words` (list of `text` and `direction`), `score` (of the best unit) and `merged` (`True` when the note holds more than one unit).
 

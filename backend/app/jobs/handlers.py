@@ -32,9 +32,9 @@ Prepare = Callable[[UUID], Awaitable[Any]]
 Handler = Callable[[AsyncSession, Assignment, Any], Awaitable[None]]
 
 
-def unit_content_hash(embed_text: str, embed_text_combined: str) -> str:
-    """Both texts that will be embedded, not only the one shown."""
-    return content_hash(embed_text + "\n" + embed_text_combined)
+def unit_content_hash(embed_text: str) -> str:
+    """The text that will be embedded."""
+    return content_hash(embed_text)
 
 
 async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None) -> None:
@@ -106,7 +106,7 @@ async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None
             ordinal=ordinal,
             review_round=assignment.review_round,
             text=unit["body"],
-            content_hash=unit_content_hash(unit["i1"], unit["i3"]),
+            content_hash=unit_content_hash(unit["i1"]),
             kind=unit["kind"],
             highlight_id=unit["highlight"],
             direction=unit["direction"],
@@ -114,7 +114,6 @@ async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None
             sentence_ids=unit["sentences"],
             context=unit["context"],
             embed_text=unit["i1"],
-            embed_text_combined=unit["i3"],
             status=UnitStatus.APPROVED,
         )
         for ordinal, unit in enumerate(units, start=1)

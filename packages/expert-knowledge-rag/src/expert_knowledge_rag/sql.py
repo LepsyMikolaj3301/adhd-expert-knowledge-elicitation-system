@@ -14,16 +14,10 @@ from expert_knowledge_core.retrieval import FUSION_DEPTH, PATIENT_TOP_CUES, RRF_
 from expert_knowledge_rag.filters import ExpertFilter, all_of
 
 Search = Literal["hybrid", "dense", "bm25"]
-Index = Literal["i1", "i3", "both"]
 Query = tuple[sql.Composed, dict[str, Any]]
 
-# (dense column, sparse column) pairs of finding_units: I1 is what was reviewed, I3 adds the
-# patient's words. The evaluations chose I1 for questions.
-INDEXES: dict[str, list[tuple[str, str]]] = {
-    "i1": [("embedding", "sparse")],
-    "i3": [("embedding_combined", "sparse_combined")],
-    "both": [("embedding", "sparse"), ("embedding_combined", "sparse_combined")],
-}
+# (dense column, sparse column) of finding_units: I1, the text the reviewers approved.
+UNIT_INDEX: list[tuple[str, str]] = [("embedding", "sparse")]
 
 UNIT_COLUMNS = (
     "id",
@@ -110,7 +104,6 @@ def _fused(count: int) -> sql.Composable:
 def units_search(
     schema: str,
     *,
-    index: Index,
     search: Search,
     limit: int,
     filter: ExpertFilter,
@@ -118,11 +111,11 @@ def units_search(
     sparse: str | None = None,
     depth: int = FUSION_DEPTH,
 ) -> Query:
-    """Units ranked by `search` over the `index` texts. `dense` / `sparse` are the query vectors
+    """Units ranked by `search` over the I1 texts. `dense` / `sparse` are the query vectors
     as text. Case units come back with their I1 vector (`vector`), for the near-duplicate rule."""
     conditions, params = filter.on_unit("u")
     ctes, count = _rankings(
-        _table(schema, "finding_units"), "u", INDEXES[index], search, all_of(conditions), depth
+        _table(schema, "finding_units"), "u", UNIT_INDEX, search, all_of(conditions), depth
     )
     columns = sql.SQL(", ").join(sql.SQL("u.{}").format(sql.Identifier(c)) for c in UNIT_COLUMNS)
     query = sql.SQL(

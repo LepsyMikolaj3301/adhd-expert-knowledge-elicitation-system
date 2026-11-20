@@ -7,10 +7,10 @@ Usage:
 
 Runs steps 2 to 7 of notes/new-chips-knowledge.md (chip_findings.py) on every response, using the
 labels classify_sentence_targets.py wrote for the sentences without a chip. Then embeds with bge-m3
-in the order of the doc: I1 (unit text), I2 (cue keys: the patient's words, shared across experts),
-I3 (I1 with the patient line). Writes, in data/expert_units_chips/synthetic/<tier>/<tag>/:
+in the order of the doc: I1 (unit text), I2 (cue keys: the patient's words, shared across experts).
+Writes, in data/expert_units_chips/synthetic/<tier>/<tag>/:
     units.json       records (highlights, sentences, units, flags), cue_keys, unit_cues, events
-    embeddings.npz   i1, i2, i3 (float32, one row per unit / cue key, same order as units.json)
+    embeddings.npz   i1, i2 (float32, one row per unit / cue key, same order as units.json)
 Review (step 5) has no screen here: flags are logged as `flag_shown`, the review as `skipped`, and
 toggles and groupings stay as the expert wrote them.
 """
@@ -97,14 +97,13 @@ def build_tier(tier: str, tag: str, model: str, fixtures: Path, out: Path) -> di
 
 
 def embed_all(built: dict) -> dict[str, np.ndarray]:
-    """I1, then I2, then I3 (the order of the doc)."""
+    """I1, then I2 (the order of the doc)."""
     embedder = build_embedder(load_indexing_config(ROOT / "config/indexing.yaml"))
     units = [u for r in built["records"] for u in r["units"]]
     arrays = {}
     for name, texts in (
         ("i1", [u["i1"] for u in units]),
         ("i2", [k["text"] for k in built["cue_keys"]]),
-        ("i3", [u["i3"] for u in units]),
     ):
         print(f"embedding {name}: {len(texts)} texts", file=sys.stderr)
         arrays[name] = np.asarray(embedder.embed(texts), dtype=np.float32)

@@ -64,8 +64,7 @@ def test_the_schema_holds_the_whole_snapshot(silver, silver_store):
                     "SELECT (SELECT count(*) FROM {u}) AS units,"
                     " (SELECT count(*) FROM {c}) AS cues,"
                     " (SELECT count(*) FROM {s}) AS sessions,"
-                    " (SELECT count(*) FROM {u} WHERE sparse IS NOT NULL"
-                    " AND sparse_combined IS NOT NULL) AS fitted"
+                    " (SELECT count(*) FROM {u} WHERE sparse IS NOT NULL) AS fitted"
                 ).format(
                     u=sql.Identifier(silver_store.schema, "finding_units"),
                     c=sql.Identifier(silver_store.schema, "cue_keys"),
@@ -81,7 +80,7 @@ def test_the_schema_holds_the_whole_snapshot(silver, silver_store):
         len(tables["cue_keys"]),
         len(tables["sessions"]),
     )
-    assert row["fitted"] == row["units"]  # BM25 was fitted for I1 and I3
+    assert row["fitted"] == row["units"]  # BM25 was fitted for I1
 
 
 # --- search modes ------------------------------------------------------------------------------
@@ -124,19 +123,9 @@ def test_a_question_of_only_stopwords_falls_back_to_dense(silver_store):
     assert question(silver_store, FAKE, search="bm25").invoke("the of and to") == []
 
 
-@pytest.mark.parametrize("index", ["i1", "i3", "both"])
-def test_every_index_returns_notes_and_i3_differs_from_i1(silver_store, frozen, questions, index):
-    docs = question(silver_store, frozen, index=index).invoke(questions[0]["question"])
+def test_a_question_returns_notes(silver_store, frozen, questions):
+    docs = question(silver_store, frozen).invoke(questions[0]["question"])
     assert docs and all(d.metadata["unit_ids"] for d in docs)
-
-
-def test_i3_ranks_some_question_differently_from_i1(silver_store, frozen, questions):
-    i1 = question(silver_store, frozen, index="i1", merge_shared=False)
-    i3 = question(silver_store, frozen, index="i3", merge_shared=False)
-    assert any(
-        unit_ids(i1.invoke(q["question"])) != unit_ids(i3.invoke(q["question"]))
-        for q in questions[:10]
-    )
 
 
 # --- filters -----------------------------------------------------------------------------------

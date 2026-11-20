@@ -21,10 +21,9 @@ async def test_the_list_says_how_each_unit_was_cut_and_what_is_embedded(models):
     assert fragment["patient_words"] == CUE
     assert fragment["expert_pseudonym"] == expert.pseudonym
     assert fragment["framing"] == "personal_journal"
-    # What gets embedded: the reviewed text with its header, and that plus the patient's words.
+    # What gets embedded: the reviewed text with its header.
     assert fragment["embed_text"].endswith(fragment["text"])
-    assert f'Patient: "{CUE}"' in fragment["embed_text_combined"]
-    assert "Patient:" not in fragment["embed_text"]
+    assert "embed_text_combined" not in fragment
     # Every sentence says which question it came from and how it was filed.
     assert fragment["sentences"]
     assert {s["question_id"] for s in fragment["sentences"]} <= {"Q1", "Q2", "Q3", "Q5"}

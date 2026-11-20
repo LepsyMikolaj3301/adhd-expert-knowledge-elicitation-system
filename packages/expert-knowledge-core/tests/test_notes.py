@@ -30,7 +30,7 @@ def test_embedded_text():
     assert first[0].startswith("Clinician on an adult's journal entry")
     assert "fragment marked: unclear" in first[0] and "insufficient information" in first[0]
     assert "⟦" not in unit["i1"]
-    assert unit["i3"].splitlines()[1].startswith('Patient: "every time I try to type')
+    assert "i3" not in unit
 
 
 def test_merge_and_pack_print_each_sentence_once():

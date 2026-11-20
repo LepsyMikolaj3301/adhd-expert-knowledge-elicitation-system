@@ -6,7 +6,7 @@ Usage: python scripts/db/chips_snapshot.py freeze [--tier silver] [--classifier 
 
 `freeze` needs data/ (gitignored) and Ollama with bge-m3. It writes tests/fixtures/retrieval_silver/:
   tables.json    every row of the chips tables the retrievers read (sessions, units, cue keys, ...)
-  vectors.npz    float16: the I1 / I3 vectors of the units, the cue key vectors, and the vectors of
+  vectors.npz    float16: the I1 vectors of the units, the cue key vectors, and the vectors of
                  every text the tests send as a query (so tests never need Ollama)
   queries.json   the questions and patient texts, their relevance labels (original and pooled), the
                  vignettes the labels come from (the "oracle" filter) and claim -> unit ids
@@ -80,7 +80,7 @@ def crowded(
         return moved / np.linalg.norm(moved)
 
     new = {key: list(rows) if isinstance(rows, list) else rows for key, rows in t.items()}
-    rows_i1, rows_i3 = list(vectors["i1"]), list(vectors["i3"])
+    rows_i1 = list(vectors["i1"])
     for n in range(1, copies + 1):
         suffix = f"~{n}"
 
@@ -116,14 +116,13 @@ def crowded(
                  "highlight_id": rename(u["highlight_id"], sessions)}  # fmt: skip
             )  # fmt: skip
             rows_i1.append(move(vectors["i1"][i]))
-            rows_i3.append(move(vectors["i3"][i]))
         for unit, sentence, order in t["unit_sentences"]:
             new["unit_sentences"].append(
                 [rename(unit, sessions), rename(sentence, sessions), order]
             )
         for unit, key, role in t["unit_cues"]:
             new["unit_cues"].append([rename(unit, sessions), key, role])
-    return new, {**vectors, "i1": np.stack(rows_i1), "i3": np.stack(rows_i3)}
+    return new, {**vectors, "i1": np.stack(rows_i1)}
 
 
 def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> dict[str, int]:
@@ -178,11 +177,11 @@ def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> d
     for n, u in enumerate(t["units"]):
         conn.execute(
             "INSERT INTO finding_units (id, session_id, expert_id, vignette_id, vignette_version, kind, highlight_id, direction, "
-            "population, track, framing, segmenter, embed_text, embedding, embed_text_combined, embedding_combined) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, CAST(%s AS vector), %s, CAST(%s AS vector))",
+            "population, track, framing, segmenter, embed_text, embedding) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, CAST(%s AS vector))",
             (u["id"], u["session_id"], u["expert_id"], u["vignette_id"], u["vignette_version"], u["kind"], u["highlight_id"], u["direction"],
              u["population"], u["track"], u["framing"], json.dumps(t["segmenter"]), u["embed_text"],
-             vector_text(vectors["i1"][n]), u["embed_text_combined"], vector_text(vectors["i3"][n])),
+             vector_text(vectors["i1"][n])),
         )  # fmt: skip
     for unit, sentence, order in t["unit_sentences"]:
         conn.execute(
@@ -200,20 +199,13 @@ def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> d
 
 
 def refit_sparse(conn: Any, cfg: Any, bm25: Any) -> None:
-    """BM25 for the units (I1 and I3 each) and the cue keys, every one over its own corpus."""
-    units = conn.execute(
-        "SELECT id, embed_text, embed_text_combined FROM finding_units ORDER BY id"
-    ).fetchall()
+    """BM25 for the units (I1) and the cue keys, each over its own corpus."""
+    units = conn.execute("SELECT id, embed_text FROM finding_units ORDER BY id").fetchall()
     keys = conn.execute("SELECT id, text FROM cue_keys ORDER BY id").fetchall()
-    for (uid, _, _), a, b in zip(
-        units,
-        bm25.fit([u[1] for u in units], cfg),
-        bm25.fit([u[2] for u in units], cfg),
-        strict=True,
-    ):
+    for (uid, _), a in zip(units, bm25.fit([u[1] for u in units], cfg), strict=True):
         conn.execute(
-            "UPDATE finding_units SET sparse = CAST(%s AS sparsevec), sparse_combined = CAST(%s AS sparsevec) WHERE id = %s",
-            (a.to_text(), b.to_text(), uid),
+            "UPDATE finding_units SET sparse = CAST(%s AS sparsevec) WHERE id = %s",
+            (a.to_text(), uid),
         )
     for (kid, _), v in zip(keys, bm25.fit([k[1] for k in keys], cfg), strict=True):
         conn.execute(
@@ -289,7 +281,7 @@ def freeze(args: argparse.Namespace) -> int:
     # --- rows -------------------------------------------------------------------------------
     experts, seen_experts = [], set()
     sessions, highlights, sentences, units, unit_sentences = [], [], [], [], []
-    vec_i1, vec_i3 = [], []
+    vec_i1 = []
     cue_key_of = {
         (k["vignette_id"], k["vignette_version"], tuple(k["span"])): n
         for n, k in enumerate(built["cue_keys"])
@@ -349,11 +341,10 @@ def freeze(args: argparse.Namespace) -> int:
                 "id": uid, "session_id": sid, "expert_id": expert, "vignette_id": vid, "vignette_version": ver,
                 "kind": u["kind"], "highlight_id": f"{sid}-{vid}-{u['highlight']}" if u["highlight"] else None,
                 "direction": u["direction"], "population": meta["population"], "track": rec["track"],
-                "framing": meta["framing"], "embed_text": u["i1"], "embed_text_combined": u["i3"],
+                "framing": meta["framing"], "embed_text": u["i1"],
             })  # fmt: skip
             unit_sentences += [[uid, f"{sid}-{vid}-{s}", n] for n, s in enumerate(u["sentences"])]
             vec_i1.append(arrays["i1"][row])
-            vec_i3.append(arrays["i3"][row])
             row += 1
     unit_cues = [
         [local_of[u], k, role]
@@ -420,7 +411,7 @@ def freeze(args: argparse.Namespace) -> int:
     dump("queries.json", queries)
     np.savez_compressed(
         SNAPSHOT / "vectors.npz",
-        i1=_half(np.stack(vec_i1)), i3=_half(np.stack(vec_i3)), cues=_half(arrays["i2"]), queries=_half(query_vectors),
+        i1=_half(np.stack(vec_i1)), cues=_half(arrays["i2"]), queries=_half(query_vectors),
     )  # fmt: skip
     dump("manifest.json", {
         "frozen_at": datetime.now(UTC).isoformat(timespec="seconds"), "tier": tier, "classifier": args.classifier,
@@ -437,7 +428,7 @@ def check(_: argparse.Namespace) -> int:
     t, vectors, q = load_snapshot()
     ids = {u["id"] for u in t["units"]}
     problems = []
-    if len(t["units"]) != len(vectors["i1"]) or len(t["units"]) != len(vectors["i3"]):
+    if len(t["units"]) != len(vectors["i1"]):
         problems.append("unit vectors do not match the units")
     if len(t["cue_keys"]) != len(vectors["cues"]):
         problems.append("cue vectors do not match the cue keys")
