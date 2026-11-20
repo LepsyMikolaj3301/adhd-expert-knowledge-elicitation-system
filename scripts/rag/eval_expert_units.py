@@ -3,7 +3,7 @@
 Usage: python scripts/rag/eval_expert_units.py --tier silver [--experiments B B1 B1+mmr ...]
        python scripts/rag/eval_expert_units.py --tier silver --make-queries   # write the request
 
-Representations (searched with bge-m3 dense + BM25, fused with RRF like the literature chunks):
+Representations (searched with bge-m3 dense + BM25, fused with RRF):
   A  answer-level: each Q answer verbatim          C   the LLM reading rule alone is the unit
   B  header + 2 vignette sentences + the point     D   B, searched also through rule + questions
   B1 as B, one short vignette sentence (lean)      D1  B1, searched also through rule + questions

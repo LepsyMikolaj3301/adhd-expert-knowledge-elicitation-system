@@ -8,7 +8,7 @@ Usage: python scripts/db/load_chips_pg.py --tier silver [--classifier qwen3.5:9b
 Reads what build_chip_units.py wrote (units.json + embeddings.npz) and the chip documents. Creates
 the tables from chips_schema.sql, replaces the rows of this tier (a reload is idempotent), then
 refits BM25 separately for the units (I1) and for the cue keys, over everything in the schema. Ids carry the tier (`silver/DOC-SYN-0001`) because the tiers reuse session and expert ids.
-Synthetic data: nothing here touches public.chunks or backend/db/init.sql, and it refuses the
+Synthetic data: nothing here touches the application's tables, and it refuses the
 schema `chips`, which is where the web application ingests approved answers.
 """
 

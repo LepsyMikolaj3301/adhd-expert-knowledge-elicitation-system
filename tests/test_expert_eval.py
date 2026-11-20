@@ -105,16 +105,16 @@ def test_expert_judgment_parser_accepts_null_fidelity_only_without_notes_fields(
 
     systems = {"A": ["answer"]}
     reply = {"A": {"samples": [EXPERT_SAMPLE], "consistency": None}}
-    assert parse_judgment(reply, systems, expert=True)["A"]["samples"][0]["pass"] is True
+    assert parse_judgment(reply, systems)["A"]["samples"][0]["pass"] is True
     no_notes = {**EXPERT_SAMPLE, "fidelity": None, "citation_quality": None}
-    parse_judgment({"A": {"samples": [no_notes]}}, systems, expert=True)
+    parse_judgment({"A": {"samples": [no_notes]}}, systems)
     with pytest.raises(ValueError, match="key_points"):
-        parse_judgment({"A": {"samples": [{**EXPERT_SAMPLE, "key_points": None}]}}, systems, True)
+        parse_judgment({"A": {"samples": [{**EXPERT_SAMPLE, "key_points": None}]}}, systems)
     with pytest.raises(ValueError, match="unsupported_claims"):
         bad = {k: v for k, v in EXPERT_SAMPLE.items() if k != "unsupported_claims"}
-        parse_judgment({"A": {"samples": [bad]}}, systems, expert=True)
+        parse_judgment({"A": {"samples": [bad]}}, systems)
     with pytest.raises(ValueError, match="attribution"):
-        parse_judgment({"A": {"samples": [{**EXPERT_SAMPLE, "attribution": 7}]}}, systems, True)
+        parse_judgment({"A": {"samples": [{**EXPERT_SAMPLE, "attribution": 7}]}}, systems)
 
 
 def test_expert_judge_prompt_shows_notes_points_and_the_no_notes_case():
@@ -133,6 +133,6 @@ def test_expert_judge_prompt_shows_notes_points_and_the_no_notes_case():
 def test_expert_judge_zero_key_points_counts_as_the_lowest_score():
     from rag_common import parse_sample_judgment
 
-    assert parse_sample_judgment({**EXPERT_SAMPLE, "key_points": 0}, expert=True)["key_points"] == 1
+    assert parse_sample_judgment({**EXPERT_SAMPLE, "key_points": 0})["key_points"] == 1
     with pytest.raises(ValueError, match="fidelity"):
-        parse_sample_judgment({**EXPERT_SAMPLE, "fidelity": 0}, expert=True)
+        parse_sample_judgment({**EXPERT_SAMPLE, "fidelity": 0})

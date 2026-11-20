@@ -25,14 +25,6 @@ SELECT relname AS table, n_live_tup AS est_rows,
 FROM pg_stat_user_tables ORDER BY pg_total_relation_size(relid) DESC;
 \echo '== indexes =='
 SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public' ORDER BY 1, 2;
-\echo '== documents by status =='
-SELECT status, count(*) FROM documents GROUP BY 1 ORDER BY 2 DESC;
-\echo '== chunks per embedding model =='
-SELECT embedding_model, vector_dims(embedding) AS dims, count(*), round(avg(n_tokens)) AS avg_tokens
-FROM chunks GROUP BY 1, 2;
-\echo '== sample chunks =='
-SELECT id, n_tokens, left(replace(text, E'\n', ' '), 80) AS text, left(embedding::text, 40) || '...' AS embedding
-FROM chunks ORDER BY random() LIMIT 5;
 SQL
 else
   "${PSQL[@]}" "$@"

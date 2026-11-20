@@ -29,13 +29,6 @@ notebooks = [
     "jupyterlab>=4.3",
 ]
 scripts = [
-    "beautifulsoup4>=4.15.0",
-    # Corpus scripts only (scripts/corpus): PDF parsing, chunking and S3 uploads. Kept out of the API
-    # image.
-    "boto3>=1.35",
-    "docling>=2.0",
-    "tokenizers>=0.20",
-    "lxml>=6.1.3",
     "prompt-toolkit>=3.0.53",
     "pyyaml>=6.0",
     "langchain-ollama>=1.0",
@@ -52,7 +45,7 @@ select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM"]
 
 [tool.ty.environment]
 python-version = "3.12"
-extra-paths = ["backend", "scripts/elicitation", "scripts/rag", "scripts/corpus"]
+extra-paths = ["backend", "scripts/elicitation", "scripts/rag"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "packages/expert-knowledge-core/tests", "packages/expert-knowledge-rag/tests"]

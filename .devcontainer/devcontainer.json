@@ -2,7 +2,7 @@
   "name": "RAG Workspace",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "dev",
-  "runServices": ["dev", "postgres", "minio", "minio-init", "ollama"],
+  "runServices": ["dev", "postgres", "ollama"],
   "workspaceFolder": "/workspace",
   "shutdownAction": "stopCompose",
   "remoteUser": "vscode",
