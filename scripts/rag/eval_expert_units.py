@@ -3,7 +3,7 @@
 Usage: python scripts/rag/eval_expert_units.py --tier silver [--experiments B B1 B1+mmr ...]
        python scripts/rag/eval_expert_units.py --tier silver --make-queries   # write the request
 
-Representations (searched with bge-m3 dense + BM25, fused with RRF like the literature chunks):
+Representations (searched with bge-m3 dense + BM25, fused with RRF):
   A  answer-level: each Q answer verbatim          C   the LLM reading rule alone is the unit
   B  header + 2 vignette sentences + the point     D   B, searched also through rule + questions
   B1 as B, one short vignette sentence (lean)      D1  B1, searched also through rule + questions
@@ -232,7 +232,7 @@ def distortion(units, keys, claims, covers) -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver", "gold"])
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic"])
     ap.add_argument("--inbox", type=Path, default=ROOT / "data/inbox")
     ap.add_argument("--out", type=Path, default=ROOT / "data/eval/expert_units")
     ap.add_argument("--experiments", nargs="+", default=DEFAULT_EXPERIMENTS)

@@ -5,8 +5,7 @@ Usage:
         # no model
     python scripts/elicitation/make_fixtures.py --persona-source ollama --answer-source ollama \
         --model qwen3.5:9b
-    python scripts/elicitation/make_fixtures.py --source reddit --answer-source ollama \
-        [--reddit-vignettes 12] [--reddit-pool data/raw/reddit_adhd.jsonl] [--n-documents 0]
+    python scripts/elicitation/make_fixtures.py --answer-source ollama [--n-documents 0]
     python scripts/elicitation/make_fixtures.py --dry-run
 
 Sources (see llm_clients.py):
@@ -22,9 +21,6 @@ Tiers (notes/fixtures.md): answers and reference claims are only as trustworthy 
     bronze  small local model (ollama / its samples)   plumbing and regression tests only
     silver  Claude instances (claude / its samples)    development metrics
     gold    real expert answers - cannot be generated here
-
-Text sources (--source): synthetic = model-written vignettes; reddit = real r/ADHD posts only
-(scripts/elicitation/fetch_reddit_pool.py makes the pool). The two never mix in one run.
 
 Output: <out>/<source>/<tier>/{vignettes,documents,claims}/ + manifest.json, and <out>/edge_cases/
 (default out: data/fixtures). --n-documents 0 writes the vignettes only. Same arguments and
@@ -72,15 +68,13 @@ from llm_clients import (
 )
 from prompt_loader import load_prompt
 from pydantic import ValidationError
-from reddit_posts import load_pool as load_reddit_pool
-from reddit_posts import pick_posts
 
 from app.vignettes.questions import QUESTIONS, SHIFT_LABELS, TOWARD_LABELS, render_question
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "data/fixtures"
 CHIP_SOURCE = "chips"
-SOURCES = ("synthetic", "reddit")
+SOURCES = ("synthetic",)
 
 
 def fixture_dir(tier: str, source: str = "synthetic", root: Path = FIXTURES) -> Path:
@@ -906,45 +900,6 @@ def edge_cases() -> dict[str, dict]:
     }
 
 
-# --- real posts as vignettes -------------------------------------------------------------------
-
-
-def add_reddit_vignettes(vignettes: list[Vignette], args) -> list[Vignette]:
-    """Append real r/ADHD posts that fit the text_analysis scenarios' target traits."""
-    if not args.reddit_pool.exists():
-        raise SystemExit(f"--reddit-pool {args.reddit_pool} does not exist")
-    posts = load_reddit_pool(args.reddit_pool)
-    targets = [sc for sc in TEXT_ANALYSIS if not sc["control"]]
-    taken: set[str] = set()
-    for i in range(args.reddit_vignettes):
-        sc = targets[i % len(targets)]
-        picked = pick_posts(posts, sc["trait_key"], 1, taken, args.seed)
-        if not picked:
-            print(f"  no reddit post fits {sc['trait_key']}", file=sys.stderr)
-            continue
-        post = picked[0]
-        taken.add(post.id)
-        vignettes.append(
-            Vignette(
-                id=f"V{len(vignettes) + 1:03d}",
-                version=1,
-                text=post.text,
-                content_hash=content_hash(post.text),
-                framing="forum_post",
-                question_ids=question_ids(None),  # no hand-picked fragment for Q4
-                design=VignetteDesign(
-                    purpose=f"real r/ADHD post fitting {sc['trait_key']}; sentences naming the "
-                    "construct, medication, links or handles were dropped",
-                    track="text_analysis",
-                    knowledge_target=sc["knowledge_target"],
-                    origin="real_text",
-                    source_ref=f"reddit:{post.id}",
-                ),
-            )
-        )
-    return vignettes
-
-
 # --- tiers -------------------------------------------------------------------------------------
 
 TIER_QUALITY = {
@@ -996,23 +951,12 @@ def parse_args(argv=None):
         "--source",
         choices=SOURCES,
         default="synthetic",
-        help="vignette texts: model-written (synthetic) or real r/ADHD posts (reddit)",
+        help="vignette texts (only the model-written ones)",
     )
     ap.add_argument("--persona-dir", type=Path, default=ROOT / "tests/sample_inputs/personas")
     ap.add_argument("--answer-dir", type=Path, help="default: tests/sample_inputs/answers/<tier>")
     ap.add_argument("--inbox", type=Path, default=ROOT / "data/inbox")
     ap.add_argument("--seed-pool", type=Path, default=ROOT / "data/raw/seed_pool.jsonl")
-    ap.add_argument(
-        "--reddit-pool",
-        type=Path,
-        default=ROOT / "data/raw/reddit_adhd.jsonl",
-        help="JSONL of r/ADHD posts (see reddit_posts.py)",
-    )
-    ap.add_argument(
-        "--reddit-vignettes",
-        type=int,
-        help="--source reddit: number of real posts used as vignettes (default 12)",
-    )
     ap.add_argument("--out", type=Path, default=FIXTURES)
     ap.add_argument("--cache", type=Path, default=ROOT / "data/cache")
     ap.add_argument(
@@ -1069,26 +1013,18 @@ def main(
     n_docs = n_personas if args.n_documents is None else args.n_documents
     args.n_documents = min(n_docs, n_personas)  # 0 = vignettes only
     args.answer_dir = args.answer_dir or ROOT / "tests/sample_inputs/answers" / tier
-    if args.source == "reddit":
-        args.n_vignettes = 0  # real posts only, no model-written texts
-        args.reddit_vignettes = 12 if args.reddit_vignettes is None else args.reddit_vignettes
-    elif args.reddit_vignettes:
-        raise SystemExit("real posts are their own source: use --source reddit")
-    else:
-        args.reddit_vignettes = 0
     out = fixture_dir(tier, args.source, args.out)
 
     if args.dry_run:
-        n_vig = args.n_vignettes + args.reddit_vignettes
         print(
             f"{args.source}/{tier}; persona source: {args.persona_source} -> up to "
             f"{args.n_vignettes} vignettes (scenarios {[s['id'] for s in SCENARIOS]}, S05 is an "
-            f"A/B pair, {len(TEXT_ANALYSIS)} are text_analysis) + {args.reddit_vignettes} real "
-            "r/ADHD posts"
+            f"A/B pair, {len(TEXT_ANALYSIS)} are text_analysis)"
         )
         print(
-            f"answer source:  {args.answer_source} -> {args.n_documents} documents x ~{n_vig} "
-            f"responses, one call each, kinds rotate over {KINDS} (+ pair_no_difference)"
+            f"answer source:  {args.answer_source} -> {args.n_documents} documents x "
+            f"~{args.n_vignettes} responses, one call each, kinds rotate over {KINDS} "
+            "(+ pair_no_difference)"
         )
         print(
             "models: "
@@ -1113,8 +1049,6 @@ def main(
 
     print("vignettes ...", file=sys.stderr)
     vignettes = make_vignettes(mk(args.persona_source, pg), args, pool)
-    if args.reddit_vignettes:
-        vignettes = add_reddit_vignettes(vignettes, args)
     if not vignettes:
         print("no vignettes produced:\n  " + "\n  ".join(log), file=sys.stderr)
         return 1
@@ -1124,15 +1058,14 @@ def main(
     persona_prompt = BASE_PROMPT if args.persona_source == "local" else PERSONA_PROMPT
     for v in vignettes:
         write_json(out / "vignettes" / f"{v.id}.json", v.model_dump(mode="json"))
-        real = v.design.origin == "real_text"
         manifest.append(
             dict(
                 id=v.id,
                 kind="vignette",
                 tier=tier,
-                source="reddit" if real else args.persona_source,
-                prompt=None if real else persona_prompt,
-                model=None if real else pg.name,
+                source=args.persona_source,
+                prompt=persona_prompt,
+                model=pg.name,
                 seed=args.seed,
                 created_at=created,
                 path=f"vignettes/{v.id}.json",

@@ -7,41 +7,29 @@ diataxis: explanation
 
 Język: **Polski** · [English](../../eng/explanation/retrieval-and-indexing.md)
 
-System przechowuje dwa przeszukiwalne magazyny w jednej bazie Postgres i oba łączą gęsty embedding bge-m3 z rzadkim wektorem BM25. Chunki literatury trafiają do tabeli `chunks`, którą zapisują skrypty korpusu. Zatwierdzone spostrzeżenia ekspertów trafiają do schematu `chips`, który zapisuje backend webowy. Kod BM25, pakowanie notatek i stałe wyszukiwania znajdują się w niezależnym od frameworków pakiecie `expert-knowledge-core`, więc ingest i wyszukiwanie używają jednej kopii; pakiet `expert-knowledge-rag` czyta `chips` przez połączenie tylko do odczytu. Strona wyjaśnia, dlaczego części mają taki kształt. Listy nazw, sygnatur i wartości domyślnych są w [Pakiety](../reference/packages.md) i [Chunking i konfiguracja korpusu](../reference/chunking.md).
+System przechowuje jeden przeszukiwalny magazyn wiedzy eksperckiej w Postgresie, schemat `chips`, i łączy w nim gęsty embedding bge-m3 z rzadkim wektorem BM25. Backend webowy zapisuje do `chips` zatwierdzone spostrzeżenia ekspertów. Kod BM25, pakowanie notatek i stałe wyszukiwania znajdują się w niezależnym od frameworków pakiecie `expert-knowledge-core`, więc ingest i wyszukiwanie używają jednej kopii; pakiet `expert-knowledge-rag` czyta `chips` przez połączenie tylko do odczytu. Strona wyjaśnia, dlaczego części mają taki kształt. Listy nazw, sygnatur i wartości domyślnych są w [Pakiety](../reference/packages.md).
 
 ## Jak to się łączy
 
 ```mermaid
 flowchart LR
-  parsed["Sparsowane dokumenty<br/>(bucket S3)"] --> chunker["Semantyczny chunker<br/>scripts/corpus/chunking"]
-  chunker --> chunked["Dokumenty podzielone na chunki<br/>(bucket S3)"]
-  chunked --> indexer["index_chunks.py"]
-  indexer --> chunksTable[("Tabela chunks<br/>gęsty + rzadki")]
-
   answers["Zatwierdzone odpowiedzi ekspertów"] --> ingest["Ingest w backendzie<br/>app.knowledge"]
   ingest --> chips[("Schemat chips<br/>jednostki, klucze cue, sesje")]
 
   core["expert-knowledge-core<br/>BM25, notatki, prompty, stałe"]
-  core -.-> indexer
   core -.-> ingest
   core -.-> rag["expert-knowledge-rag<br/>retrievery i łańcuchy tylko do odczytu"]
   chips --> rag
   rag --> notes["Notatki z numerami [E#]"]
 ```
 
-Górna ścieżka indeksuje literaturę: chunker tnie sparsowane dokumenty, `index_chunks.py` tworzy embeddingi chunków i dopasowuje BM25 na tabeli. Dolna ścieżka indeksuje spostrzeżenia ekspertów: backend zapisuje jednostki, klucze cue i sesje oraz dopasowuje na nich BM25. Linie przerywane pokazują ponowne użycie kodu pakietu core; `expert-knowledge-rag` odpytuje `chips` i zwraca notatki, które jego łańcuchy przekazują modelowi czatu. `scripts/rag/rag_common.py` wykonuje wyszukiwanie hybrydowe po `chunks` z tymi samymi stałymi (`RRF_K`, `FUSION_DEPTH`).
-
-### Chunking: gdzie tekst jest cięty
-
-Chunker tnie dokument tam, gdzie odległość embeddingów między sąsiednimi jednostkami gwałtownie rośnie (docstring modułu `semantic.py`). Jednostką jest zdanie akapitu albo cały element listy lub tabela. Każda jednostka dostaje embedding razem z sąsiadami: `buffer_size` określa, ile jednostek z każdej strony wchodzi do tekstu jej embeddingu (`semantic.py:83-86`), a skonfigurowana wartość to 1, czyli jedna jednostka przed i jedna po (`config/chunking.yaml:32`). Odległość powyżej skonfigurowanego progu oznacza zmianę tematu. Granice sekcji są twardymi przerwaniami, a sąsiedzi wchodzący do tekstu embeddingu jednostki pochodzą z tej samej sekcji, więc kontekst nie przecieka przez nagłówek. Dwa limity rozmiaru korygują wynik: chunk powyżej `max_tokens` jest cięty ponownie w miejscu największej odległości wewnętrznej, a chunk poniżej `min_tokens` jest łączony z sąsiadem po bliższej granicy, o ile oba mają wspólne pierwsze `merge_scope_level` elementów ścieżki nagłówków (1 w `config/chunking.yaml`), a połączenie mieści się w `max_tokens`. Rozmiar mierzy tokenizer Hugging Face wskazany w `config/chunking.yaml` (`BAAI/bge-m3`).
-
-Każdy chunk przechowuje dwa teksty: zwykły `text` i `contextual_text`, który zaczyna się od ścieżki nagłówków. Indeks domyślnie tworzy embedding z `contextual_text` (`text_field` w `config/indexing.yaml`), więc nagłówek staje się częścią tego, co zapytanie może dopasować.
+Backend zapisuje jednostki, klucze cue i sesje oraz dopasowuje na nich BM25. Linie przerywane pokazują ponowne użycie kodu pakietu core; `expert-knowledge-rag` odpytuje `chips` i zwraca notatki, które jego łańcuchy przekazują modelowi czatu. Skrypty ewaluacyjne w `scripts/rag/` używają tego samego embeddera zapytań i ustawień BM25 przez `rag_common.py`, który czyta `config/indexing.yaml`.
 
 ### Indeksowanie: gęsty i rzadki w jednym wierszu
 
-Wektor gęsty to embedding bge-m3 chunka (1024 wartości, w `chunks` indeksowany indeksem HNSW na odległości cosinusowej). Wektor rzadki zawiera wagi BM25, tak że zwykły iloczyn skalarny między zapisanym wektorem a wektorem zapytania jest równy wynikowi BM25. Dzięki temu jedna kolumna pgvector i jeden operator (`<#>`, ujemny iloczyn skalarny) wyrażają BM25 wewnątrz Postgresa. Terminy są haszowane do 2^20 wymiarów, więc nie istnieje tabela słownika; kolizja haszy tylko łączy dwa terminy (docstring `bm25.py`). Kolumna rzadka celowo nie ma indeksu: korpus jest mały, a indeks HNSW na `sparsevec` byłby przybliżony (komentarz w `backend/db/init.sql`).
+Wektor gęsty to embedding bge-m3 tekstu jednostki (kolumny `vector(1024)` w `chips`). Wektor rzadki zawiera wagi BM25, tak że zwykły iloczyn skalarny między zapisanym wektorem a wektorem zapytania jest równy wynikowi BM25. Dzięki temu jedna kolumna pgvector i jeden operator (`<#>`, ujemny iloczyn skalarny) wyrażają BM25 wewnątrz Postgresa. Terminy są haszowane do 2^20 wymiarów, więc nie istnieje tabela słownika; kolizja haszy tylko łączy dwa terminy (docstring `bm25.py`). Migracja 0003 tworzy kolumny `sparsevec(1048576)` bez indeksu wektorowego, więc wyszukiwanie jest dokładnym skanem.
 
-BM25 potrzebuje statystyk całego korpusu (`idf` i średnia długość dokumentu). Dlatego indekser dopasowuje wektory rzadkie od nowa na całej tabeli przy każdym uruchomieniu, nawet gdy wszystkie dokumenty zostały pominięte, a backend robi to samo na całości `chips` po ingeście. Z tego powodu hasz, który decyduje, czy dokument wymaga ponownego embeddingu, pomija `sparse`: zmiana ustawień BM25 nigdy nie wymaga nowego embeddingu. Strona gęsta jest pomijana dla dokumentu, którego hasz pliku z chunkami i hasz indeksowania są niezmienione.
+BM25 potrzebuje statystyk całego korpusu (`idf` i średnia długość dokumentu). Dlatego backend dopasowuje wektory rzadkie od nowa na całości `chips` po ingeście (`refresh_sparse` w `ingest.py`). Zmiana ustawień BM25 wymaga ponownego dopasowania, ale nie nowego embeddingu, ponieważ wektor gęsty nie zależy od ustawień rzadkich.
 
 ### Wyszukiwanie: ranking, fuzja i notatki
 
@@ -72,16 +60,15 @@ Inne wybory w pakiecie wspierają użycie z różnych hostów. Gdy store otwiera
 
 Kilka wartości to ta sama liczba w różnych miejscach i muszą pozostać równe:
 
-- Model embeddingów i szerokość: `EMBEDDING_MODEL` i `EMBEDDING_DIMENSIONS` w pakiecie core, `embeddings.model` i `dimensions` w `config/indexing.yaml` oraz kolumny `vector(1024)` w bazie danych. `ExpertKnowledgeStore.vector_text` odrzuca wektor zapytania o złej szerokości, a `index_chunks.py` sprawdza szerokość kolumny tabeli i wyjścia modelu.
+- Model embeddingów i szerokość: `EMBEDDING_MODEL` i `EMBEDDING_DIMENSIONS` w pakiecie core, `embeddings.model` i `dimensions` w `config/indexing.yaml` oraz kolumny `vector(1024)` w bazie danych. `ExpertKnowledgeStore.vector_text` odrzuca wektor zapytania o złej szerokości, a `config/indexing.yaml` stwierdza, że `dimensions` jest sprawdzane względem wyjścia modelu i kolumny tabeli.
 - Szerokość wektora rzadkiego: `DIMENSIONS` (`1 << 20`) i kolumny `sparsevec(1048576)`.
 - Ustawienia BM25: pole `bm25` retrieverów musi być równe blokowi `sparse` z `config/indexing.yaml`, według którego dopasowano zapisane wektory.
 
-Projekt rezygnuje z pewnych rzeczy dla prostoty. BM25 jest dopasowywane od nowa dla całego korpusu przy każdym ingeście; komentarz w backendzie oznacza to jako skrót, który odpowiada setkom jednostek. Wyszukiwanie rzadkie w `chunks` to dokładny skan bez indeksu. Prompty i stałe to te, które ewaluowano, a moduł promptów stwierdza, że zmiana jednego słowa zmienia to, co zmierzono.
+Projekt rezygnuje z pewnych rzeczy dla prostoty. BM25 jest dopasowywane od nowa dla całego korpusu przy każdym ingeście; komentarz w backendzie oznacza to jako skrót, który odpowiada setkom jednostek. Wyszukiwania w `chips` to dokładne skany bez indeksu wektorowego. Prompty i stałe to te, które ewaluowano, a moduł promptów stwierdza, że zmiana jednego słowa zmienia to, co zmierzono.
 
 ## Powiązane strony
 
 - [Pakiety](../reference/packages.md) - API, stałe i wartości domyślne obu pakietów
-- [Chunking i konfiguracja korpusu](../reference/chunking.md) - chunker, `chunking.yaml`, `indexing.yaml`, `sources.yaml`
 - [Backend: indeksowanie i korekta](../reference/backend-indexing-proofread.md) - moduły backendu, które używają pakietu core
 - [Rdzeń API backendu](../reference/backend-core-api.md) - embedder i ustawienia w backendzie
 - [Architektura](architecture.md) - kontenery całego systemu
@@ -102,14 +89,9 @@ Projekt rezygnuje z pewnych rzeczy dla prostoty. BM25 jest dopasowywane od nowa 
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/ranking.py` - reguła prawie-duplikatu i punktacja cue
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/documents.py` - pakowanie trafień w notatki
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/chains.py` - powstrzymanie się od odpowiedzi i numeracja [E#]
-- `scripts/corpus/chunking/semantic.py` - algorytm chunkingu semantycznego
-- `scripts/corpus/chunking/config.py` - parametry chunkingu i hasz konfiguracji
-- `scripts/corpus/chunking/base.py` - jednostki, tekst kontekstowy, liczenie tokenów
-- `scripts/corpus/index_chunks.py` - indeksowanie gęste, reguła pomijania, ponowne dopasowanie rzadkie, sprawdzenia wymiarów
-- `scripts/rag/rag_common.py:1-30,81-100` - wyszukiwanie hybrydowe po tabeli chunks
-- `config/chunking.yaml` - ustawienia chunkingu
-- `config/indexing.yaml` - ustawienia embeddingów i wektora rzadkiego, text_field
-- `backend/db/init.sql:35-69` - tabela chunks, indeks HNSW, kolumna rzadka bez indeksu
+- `scripts/rag/rag_common.py:1-35` - embedder zapytań i ustawienia BM25 skryptów
+- `config/indexing.yaml` - ustawienia embeddingów i wektora rzadkiego
+- `backend/migrations/versions/0003_pipeline.py:55,94` - kolumny vector i sparsevec w chips
 - `backend/app/indexing/config.py` - IndexingConfig używa Bm25Config
 - `backend/app/indexing/__init__.py` - pakiet indexing importuje moduł bm25 z core
 - `backend/app/knowledge/ingest.py:285-377` - jednostki, klucze cue i ponowne dopasowanie BM25 po chips

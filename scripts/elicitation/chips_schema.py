@@ -8,7 +8,7 @@ back into a plain ElicitationDocument (chips rendered as quotes) for the B1 base
 `load_document` does so for the tools that read plain documents.
 
 The synthetic chip answers leave Q4 out and always have highlights (make_chip_fixtures.py checks
-that). Gold answers from notebooks/answer_vignettes.ipynb have Q4, and may cite nothing.
+that). Other chip documents may have Q4, and may cite nothing.
 """
 
 import json

@@ -1,12 +1,11 @@
 # ============================================================================
-# Indexing config — consumed by scripts/corpus/index_chunks.py
-# (s3://$S3_BUCKET/chunked/ -> Postgres `chunks` table, pgvector).
+# Indexing config: the embedding model and the BM25 settings of the knowledge base
+# (units of the approved answers -> Postgres, pgvector).
 # Schema + validation: backend/app/indexing/config.py.
 #
-# Changing anything below re-embeds all documents (the config hash is stored
-# on every row). `dimensions` must match `chunks.embedding` in
-# backend/db/init.sql; a different width needs DROP TABLE chunks, then
-# scripts/db/init_db.py, then a re-index.
+# `dimensions` must match the vector column of the units table
+# (backend/migrations/versions/0003_pipeline.py); a different width needs a new
+# migration and a re-embedding of every unit.
 # ============================================================================
 
 embeddings:
@@ -17,8 +16,7 @@ embeddings:
 
 text_field: contextual_text # contextual_text | text — what gets embedded
 
-# BM25 side of hybrid retrieval, stored as chunks.sparse. Refitted over the whole corpus on every
-# scripts/corpus/index_chunks.py run (idf is corpus-global), so changing it does not re-embed anything.
+# BM25 side of hybrid retrieval, stored as the sparse vector of every unit.
 sparse:
   k1: 1.2
   b: 0.75

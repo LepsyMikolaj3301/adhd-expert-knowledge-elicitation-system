@@ -16,7 +16,7 @@ Use this when you want to run the backend tests, the frontend tests, the linters
 
 ## Backend
 
-1. Install the packages of the workspace with the `dev` group only. The default groups also pull docling and the notebooks (`.github/workflows/ci.yml:21-22`).
+1. Install the packages of the workspace with the `dev` group only. The default groups also pull the notebooks and the script dependencies (`.github/workflows/ci.yml:21-22`).
 
    ```bash
    uv sync --frozen --no-default-groups --all-packages --group dev

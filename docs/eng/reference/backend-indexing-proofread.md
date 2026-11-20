@@ -32,12 +32,12 @@ The file is `config/indexing.yaml`. `app.knowledge.embedding` and `app.knowledge
 | `embeddings.batch_size` | `int`, > 0 | `64` | `32` | texts per Ollama request |
 | `embeddings.truncate` | `bool` | `True` | `true` | passed to Ollama as `truncate` |
 | `embeddings.dimensions` | `int`, > 0 | required | `1024` | expected vector width; `embed_texts` raises `RuntimeError` on a different shape |
-| `text_field` | `contextual_text` or `text` | `contextual_text` | `contextual_text` | selects the chunk column to embed |
+| `text_field` | `contextual_text` or `text` | `contextual_text` | `contextual_text` | validated and stored in `IndexingConfig`; no code reads it |
 | `sparse.k1` | `float`, > 0 | `1.2` | `1.2` | BM25 term-frequency saturation |
 | `sparse.b` | `float`, 0 to 1 | `0.75` | `0.75` | BM25 length normalisation |
 | `sparse.stemmer` | `str` or `None` | `english` | `english` | Snowball language, or `null` for no stemming |
 
-`text_field` has no reader under `backend/app`. `scripts/corpus/index_chunks.py` reads it as `cfg.text_field` to pick the column it embeds. The BM25 fields are defined in `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py` (`Bm25Config`).
+No Python file under `backend`, `scripts` or `packages` reads `text_field`; `backend/app/indexing/config.py:29` only declares it. The BM25 fields are defined in `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py` (`Bm25Config`).
 
 The models `EmbeddingConfig`, `IndexEmbeddingConfig`, `IndexingConfig` and the base `Model` use `extra="forbid"`.
 
@@ -199,7 +199,6 @@ The assignments router mounts these under `/api/v1` (`backend/app/assignments/ro
 - `backend/app/indexing/config.py` - IndexingConfig models and load_indexing_config
 - `backend/app/embeddings.py` - OllamaEmbedder behaviour and defaults
 - `config/indexing.yaml` - configured values
-- `scripts/corpus/index_chunks.py:84,193` - the reader of text_field
 - `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py:21-26` - Bm25Config fields and defaults
 - `backend/app/knowledge/embedding.py` - where the config file is read
 - `backend/app/proofread/pipeline.py` - proofread_answer, passes, skip rules

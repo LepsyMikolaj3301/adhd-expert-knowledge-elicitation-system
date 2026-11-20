@@ -7,41 +7,29 @@ diataxis: explanation
 
 Language: **English** · [Polski](../../pl/explanation/retrieval-and-indexing.md)
 
-The system keeps two searchable stores in one Postgres database, and both combine a dense bge-m3 embedding with a BM25 sparse vector. Literature chunks go to the table `chunks`, written by the corpus scripts. Approved expert findings go to the schema `chips`, written by the web backend. The BM25 code, the note packing and the retrieval constants live in the framework-free package `expert-knowledge-core`, so ingestion and retrieval use one copy; the package `expert-knowledge-rag` reads `chips` through a read-only connection. This page explains why the parts are shaped this way. The lists of names, signatures and defaults are in [Packages](../reference/packages.md) and [Chunking and corpus configuration](../reference/chunking.md).
+The system keeps one searchable store of expert knowledge in Postgres, the schema `chips`, and it combines a dense bge-m3 embedding with a BM25 sparse vector. The web backend writes approved expert findings to `chips`. The BM25 code, the note packing and the retrieval constants live in the framework-free package `expert-knowledge-core`, so ingestion and retrieval use one copy; the package `expert-knowledge-rag` reads `chips` through a read-only connection. This page explains why the parts are shaped this way. The lists of names, signatures and defaults are in [Packages](../reference/packages.md).
 
 ## How it fits together
 
 ```mermaid
 flowchart LR
-  parsed["Parsed documents<br/>(S3 bucket)"] --> chunker["Semantic chunker<br/>scripts/corpus/chunking"]
-  chunker --> chunked["Chunked documents<br/>(S3 bucket)"]
-  chunked --> indexer["index_chunks.py"]
-  indexer --> chunksTable[("Table chunks<br/>dense + sparse")]
-
   answers["Approved expert answers"] --> ingest["Backend ingestion<br/>app.knowledge"]
   ingest --> chips[("Schema chips<br/>units, cue keys, sessions")]
 
   core["expert-knowledge-core<br/>BM25, notes, prompts, constants"]
-  core -.-> indexer
   core -.-> ingest
   core -.-> rag["expert-knowledge-rag<br/>read-only retrievers and chains"]
   chips --> rag
   rag --> notes["Notes with [E#] numbers"]
 ```
 
-The upper path indexes literature: the chunker cuts parsed documents, `index_chunks.py` embeds the chunks and fits BM25 over the table. The lower path indexes expert findings: the backend stores units, cue keys and sessions and fits BM25 over them. Dotted lines show code reuse of the core package; `expert-knowledge-rag` queries `chips` and returns notes that its chains hand to a chat model. `scripts/rag/rag_common.py` runs a hybrid search over `chunks` with the same constants (`RRF_K`, `FUSION_DEPTH`).
-
-### Chunking: where a text is cut
-
-The chunker cuts a document where the embedding distance between neighbouring units spikes (module docstring of `semantic.py`). A unit is a sentence of a paragraph, or a whole list item or table. Each unit is embedded together with its neighbours: `buffer_size` sets how many units on each side are joined into its embedding text (`semantic.py:83-86`), and the configured value is 1, so one unit before and one after (`config/chunking.yaml:32`). A distance above the configured threshold marks a topic shift. Section boundaries are hard breaks, and the neighbours that enter a unit's embedding text come from the same section, so context does not leak across a heading. Two size limits correct the result: a chunk above `max_tokens` is cut again at its largest internal distance, and a chunk below `min_tokens` is merged with the neighbour across the closer boundary, provided both share the first `merge_scope_level` heading-path entries (1 in `config/chunking.yaml`) and the merge fits `max_tokens`. Size is measured with the Hugging Face tokenizer named in `config/chunking.yaml` (`BAAI/bge-m3`).
-
-Each chunk keeps two texts: the plain `text` and a `contextual_text` that starts with the heading path. The index embeds `contextual_text` by default (`text_field` in `config/indexing.yaml`), so the heading becomes part of what a query can match.
+The backend stores units, cue keys and sessions and fits BM25 over them. Dotted lines show code reuse of the core package; `expert-knowledge-rag` queries `chips` and returns notes that its chains hand to a chat model. The evaluation scripts in `scripts/rag/` reach the same query embedder and BM25 settings through `rag_common.py`, which reads `config/indexing.yaml`.
 
 ### Indexing: dense and sparse in one row
 
-The dense vector is the bge-m3 embedding of the chunk (1024 values, indexed in `chunks` with an HNSW index on cosine distance). The sparse vector holds BM25 weights, so that a plain inner product between a stored vector and a query vector equals the BM25 score. This lets one pgvector column and one operator (`<#>`, negative inner product) express BM25 inside Postgres. Terms are hashed into 2^20 dimensions, so no vocabulary table exists; a hash collision only merges two terms (docstring of `bm25.py`). The sparse column has no index on purpose: the corpus is small, and an HNSW index on `sparsevec` would be approximate (comment in `backend/db/init.sql`).
+The dense vector is the bge-m3 embedding of the unit text (`vector(1024)` columns in `chips`). The sparse vector holds BM25 weights, so that a plain inner product between a stored vector and a query vector equals the BM25 score. This lets one pgvector column and one operator (`<#>`, negative inner product) express BM25 inside Postgres. Terms are hashed into 2^20 dimensions, so no vocabulary table exists; a hash collision only merges two terms (docstring of `bm25.py`). Migration 0003 creates the `sparsevec(1048576)` columns without a vector index, so a search is an exact scan.
 
-BM25 needs corpus-wide statistics (`idf` and the average document length). The indexer therefore refits the sparse vectors over the whole table on every run, even when all documents were skipped, and the backend does the same over everything in `chips` after an ingestion. For that reason the hash that decides whether a document must be re-embedded leaves `sparse` out: a change of BM25 settings never needs a new embedding. The dense side is skipped for a document whose chunked file hash and indexing hash are unchanged.
+BM25 needs corpus-wide statistics (`idf` and the average document length). The backend therefore refits the sparse vectors over everything in `chips` after an ingestion (`refresh_sparse` in `ingest.py`). A change of BM25 settings needs a refit but no new embedding, because the dense vector does not depend on the sparse settings.
 
 ### Retrieval: ranking, fusion and notes
 
@@ -72,16 +60,15 @@ Other choices in the package support use from different hosts. When the store op
 
 Several values are the same number in different places and must stay equal:
 
-- The embedding model and width: `EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` in the core package, `embeddings.model` and `dimensions` in `config/indexing.yaml`, and the `vector(1024)` columns in the database. `ExpertKnowledgeStore.vector_text` rejects a query vector of the wrong width, and `index_chunks.py` checks the width of the table column and of the model output.
+- The embedding model and width: `EMBEDDING_MODEL` and `EMBEDDING_DIMENSIONS` in the core package, `embeddings.model` and `dimensions` in `config/indexing.yaml`, and the `vector(1024)` columns in the database. `ExpertKnowledgeStore.vector_text` rejects a query vector of the wrong width, and `config/indexing.yaml` states that `dimensions` is checked against the model output and the table column.
 - The sparse width: `DIMENSIONS` (`1 << 20`) and the `sparsevec(1048576)` columns.
 - The BM25 settings: the retrievers' `bm25` field must equal the `sparse` block of `config/indexing.yaml` that the stored vectors were fitted with.
 
-The design gives up some things for simplicity. BM25 is refitted for the whole corpus on every ingestion; the backend comment marks this as a shortcut that suits hundreds of units. The sparse search on `chunks` is an exact scan without an index. The prompts and constants are the ones that were evaluated, and the prompt module states that changing a word changes what was measured.
+The design gives up some things for simplicity. BM25 is refitted for the whole corpus on every ingestion; the backend comment marks this as a shortcut that suits hundreds of units. The searches on `chips` are exact scans without a vector index. The prompts and constants are the ones that were evaluated, and the prompt module states that changing a word changes what was measured.
 
 ## Related pages
 
 - [Packages](../reference/packages.md) - API, constants and defaults of both packages
-- [Chunking and corpus configuration](../reference/chunking.md) - chunker, `chunking.yaml`, `indexing.yaml`, `sources.yaml`
 - [Backend: indexing and proofreading](../reference/backend-indexing-proofread.md) - the backend modules that use the core package
 - [Backend core API](../reference/backend-core-api.md) - embedder and settings in the backend
 - [Architecture](architecture.md) - containers of the whole system
@@ -102,14 +89,9 @@ The design gives up some things for simplicity. BM25 is refitted for the whole c
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/ranking.py` - near-duplicate rule and cue scoring
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/documents.py` - packing hits into notes
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/chains.py` - abstention and [E#] numbering
-- `scripts/corpus/chunking/semantic.py` - semantic chunking algorithm
-- `scripts/corpus/chunking/config.py` - chunking parameters and config hash
-- `scripts/corpus/chunking/base.py` - units, contextual text, token counting
-- `scripts/corpus/index_chunks.py` - dense indexing, skip rule, sparse refit, dimension checks
-- `scripts/rag/rag_common.py:1-30,81-100` - hybrid search over the chunks table
-- `config/chunking.yaml` - chunking settings
-- `config/indexing.yaml` - embedding and sparse settings, text_field
-- `backend/db/init.sql:35-69` - chunks table, HNSW index, sparse column without index
+- `scripts/rag/rag_common.py:1-35` - query embedder and BM25 settings of the scripts
+- `config/indexing.yaml` - embedding and sparse settings
+- `backend/migrations/versions/0003_pipeline.py:55,94` - vector and sparsevec columns of chips
 - `backend/app/indexing/config.py` - IndexingConfig reuses Bm25Config
 - `backend/app/indexing/__init__.py` - indexing package imports the core bm25 module
 - `backend/app/knowledge/ingest.py:285-377` - units, cue keys and the BM25 refit over chips

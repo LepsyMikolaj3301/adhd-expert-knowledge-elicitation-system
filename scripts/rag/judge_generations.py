@@ -1,19 +1,20 @@
-"""LLM-as-judge scoring of the answers in a generation run (scripts/rag/eval_generation.py).
+"""LLM-as-judge scoring of the answers in an expert generation run (eval_expert_generation.py,
+eval_chip_generation.py).
 
 Usage: python scripts/rag/judge_generations.py --run-dir data/eval/runs/<ts> --judge-model M
        python scripts/rag/judge_generations.py --run-dir ... --export-blind [--parts N] [--models M ...]
        python scripts/rag/judge_generations.py --run-dir ... --import-blind RESULTS... --judge-name N
 
-A run with "kind": "expert" (eval_expert_generation.py) is graded with the clinician rubric
-rag_common.EXPERT_JUDGE_RUBRIC instead. --tag keeps a judge pass apart (judgments_<tag>.json,
+A run must have "kind": "expert". --tag keeps a judge pass apart (judgments_<tag>.json,
 judge_blind_part<i>_<tag>.json, judge_key_<tag>.json), so two passes by different judges can be
 compared; --export-sheet N writes a markdown sheet of N items for a human to mark.
 
-Answers are graded per (question, context) item: the judge sees the question, the reference
-answer, the context passages and every system's samples, and returns per-sample scores with the
-rubric in rag_common.JUDGE_RUBRIC (correctness, faithfulness, citation quality, completeness 1-5,
-abstention, pass) plus, per system, how consistent its samples were (consistency 1-5,
-behaviour_changed, a note). Results are merged into <run-dir>/judgments.json, so a later round
+Answers are graded per (question, context) item: the judge sees the question, the key points, the
+notes the generator saw and every system's samples, and returns per-sample scores with the
+clinician rubric rag_common.EXPERT_JUDGE_RUBRIC (key points, fidelity, attribution, usefulness,
+citation quality 1-5, unsupported claims, abstention, pass) plus, per system, how consistent its
+samples were (consistency 1-5, behaviour_changed, a note). Results are merged into
+<run-dir>/judgments.json, so a later round
 (e.g. only a newly added model, via --models) adds to the earlier ones.
 
 --judge-model grades with a local Ollama model. Avoid a model that is also a contestant.
@@ -30,26 +31,21 @@ import re
 import secrets
 import string
 from collections import defaultdict
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
 from rag_common import (
     EXPERT_JUDGE_RUBRIC,
-    JUDGE_RUBRIC,
     OllamaChat,
     expert_judge_prompt,
-    judge_prompt,
     parse_judgment,
     write_json,
 )
 
 
-def rubric_for(run: dict) -> tuple[str, Callable[..., str], bool]:
-    """(rubric, prompt builder, expert?) for this run."""
-    if run.get("kind") == "expert":
-        return EXPERT_JUDGE_RUBRIC, expert_judge_prompt, True
-    return JUDGE_RUBRIC, judge_prompt, False
+def check_kind(run: dict) -> None:
+    if run.get("kind") != "expert":
+        raise SystemExit(f"not an expert run (kind={run.get('kind')!r}): nothing to grade")
 
 
 def tagged(name: str, tag: str) -> str:
@@ -122,14 +118,14 @@ def write_judgments(
 
 def local_judge(run: dict, args: argparse.Namespace) -> None:
     chat = OllamaChat(args.judge_model, think=False, num_predict=2000)
-    rubric, build_prompt, expert = rubric_for(run)
+    check_kind(run)
     samples, consistency = [], []
     for item in grading_items(run, args.models):
         q = run["questions"][item["id"]]
         labels, systems = blind(item)
-        prompt = build_prompt(q, q["contexts"][item["context"]], systems)
+        prompt = expert_judge_prompt(q, q["contexts"][item["context"]], systems)
         try:
-            parsed = parse_judgment(chat.chat(rubric, prompt)[0], systems, expert)
+            parsed = parse_judgment(chat.chat(EXPERT_JUDGE_RUBRIC, prompt)[0], systems)
         except Exception as e:  # keep going: one bad reply must not stop the run
             print(f"FAILED  {item['id']} {item['context']}: {type(e).__name__}: {e}")
             continue
@@ -138,19 +134,24 @@ def local_judge(run: dict, args: argparse.Namespace) -> None:
         consistency += c
         print(f"{item['id']} {item['context']:9}  pass {sum(r['pass'] for r in s)}/{len(s)}")
     write_judgments(
-        args.run_dir, f"ollama:{args.judge_model}", samples, consistency, rubric, args.tag
+        args.run_dir,
+        f"ollama:{args.judge_model}",
+        samples,
+        consistency,
+        EXPERT_JUDGE_RUBRIC,
+        args.tag,
     )
 
 
 def export_blind(run: dict, args: argparse.Namespace) -> None:
-    rubric, build_prompt, _ = rubric_for(run)
+    check_kind(run)
     key, exported = {}, []
     for item in grading_items(run, args.models):
         q = run["questions"][item["id"]]
         labels, systems = blind(item)
         label = secrets.token_hex(4)
         key[label] = {**item, "labels": labels}
-        prompt = build_prompt(q, q["contexts"][item["context"]], systems)
+        prompt = expert_judge_prompt(q, q["contexts"][item["context"]], systems)
         exported.append({"label": label, "id": item["id"], "prompt": prompt})
     # Parts of about equal size, never splitting one question's items.
     by_question: dict[str, list] = defaultdict(list)
@@ -161,13 +162,13 @@ def export_blind(run: dict, args: argparse.Namespace) -> None:
         min(parts, key=lambda p: sum(len(x["prompt"]) for x in p)).extend(items)
     for i, part in enumerate(parts, 1):
         name = tagged(f"judge_blind_part{i}.json", args.tag)
-        write_json(args.run_dir / name, {"rubric": rubric, "items": part})
+        write_json(args.run_dir / name, {"rubric": EXPERT_JUDGE_RUBRIC, "items": part})
         print(f"wrote {name} ({len(part)} items)")
     write_json(args.run_dir / tagged("judge_key.json", args.tag), key)
 
 
 def import_blind(run: dict, args: argparse.Namespace) -> None:
-    rubric, _, expert = rubric_for(run)
+    check_kind(run)
     key = json.loads((args.run_dir / tagged("judge_key.json", args.tag)).read_text())
     results = {}
     for path in args.import_blind:
@@ -181,14 +182,16 @@ def import_blind(run: dict, args: argparse.Namespace) -> None:
         item["systems"] = {m: [tuple(s) for s in v] for m, v in entry["systems"].items()}
         systems = {lab: [a for _, a in item["systems"][m]] for lab, m in entry["labels"].items()}
         try:
-            parsed = parse_judgment(results[label], systems, expert)
+            parsed = parse_judgment(results[label], systems)
         except ValueError as e:
             print(f"INVALID {label}  {entry['id']} {entry['context']}: {e}")
             continue
         s, c = rows_from_reply(item, entry["labels"], parsed)
         samples += s
         consistency += c
-    write_judgments(args.run_dir, args.judge_name, samples, consistency, rubric, args.tag)
+    write_judgments(
+        args.run_dir, args.judge_name, samples, consistency, EXPERT_JUDGE_RUBRIC, args.tag
+    )
 
 
 def export_sheet(run: dict, args: argparse.Namespace) -> None:

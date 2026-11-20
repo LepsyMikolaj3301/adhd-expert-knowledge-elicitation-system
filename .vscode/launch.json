@@ -11,47 +11,6 @@
       "jinja": true
     },
     {
-      "name": "Script: scrape_wikipedia",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/scripts/scrape_wikipedia.py",
-      "args": ["data/raw"],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Script: fetch_sources",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/scripts/corpus/fetch_sources.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Script: upload_raw_documents",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/scripts/corpus/upload_raw_documents.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Script: parse_raw_documents",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/scripts/corpus/parse_raw_documents.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Script: chunk_parsed_documents",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/scripts/corpus/chunk_parsed_documents.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "Pytest: current file (debug)",
       "type": "debugpy",
       "request": "launch",

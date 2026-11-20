@@ -11,7 +11,7 @@ The documentation of the expert knowledge platform: a web app and API that colle
 
 ## Tutorials
 
-- [Run the stack locally](tutorials/run-the-stack-locally.md) - start the database, object store, API and web app with Docker Compose, make a first API request, create an admin account and sign in.
+- [Run the stack locally](tutorials/run-the-stack-locally.md) - start the database, API and web app with Docker Compose, make a first API request, create an admin account and sign in.
 
 ## How-to guides
 
@@ -26,7 +26,6 @@ The documentation of the expert knowledge platform: a web app and API that colle
 - [Backend vignettes and knowledge](reference/backend-vignettes-knowledge.md) - the admin endpoints for vignette versions and the question set, and for knowledge units, with their validation rules.
 - [Backend indexing and proofread](reference/backend-indexing-proofread.md) - the indexing configuration and embedder, and the proofreading, linking and edit-and-submit steps for an answer.
 - [Packages expert-knowledge-core and expert-knowledge-rag](reference/packages.md) - BM25 sparse vectors, note packing, retrieval constants, and the read-only retrievers and chains over the `chips` schema.
-- [Chunking and corpus configuration](reference/chunking.md) - the semantic chunker of the corpus scripts and the keys of `config/chunking.yaml`, `config/indexing.yaml` and `config/sources.yaml`.
 - [Frontend app shell](reference/frontend-app.md) - bootstrap, routes, route guard, session handler, API client, stores, views, constants and the Vite, Vitest and ESLint configuration.
 - [Frontend components and answering helpers](reference/frontend-components.md) - the Vue components with their props and events, and the TypeScript modules behind the answering and review screens.
 - [Runtime and deployment](reference/runtime-and-deploy.md) - the local and Azure VM compose files, the Dockerfiles, database setup and migrations, the prompt files and the scripts.
@@ -35,7 +34,7 @@ The documentation of the expert knowledge platform: a web app and API that colle
 
 - [About the architecture](explanation/architecture.md) - the system at three levels (context, containers, components) and the values that must agree between the parts.
 - [About the assignment lifecycle](explanation/assignment-lifecycle.md) - how the state machine, the Postgres job queue and the admin-closed review carry an assignment from assignment to ingestion.
-- [About retrieval and indexing](explanation/retrieval-and-indexing.md) - why literature chunks and expert findings are two stores that share one BM25 implementation and one embedder.
+- [About retrieval and indexing](explanation/retrieval-and-indexing.md) - why expert findings are stored with a dense and a BM25 sparse vector, and why the core package and the read-only retrieval package are separate.
 
 ## Sources in code
 

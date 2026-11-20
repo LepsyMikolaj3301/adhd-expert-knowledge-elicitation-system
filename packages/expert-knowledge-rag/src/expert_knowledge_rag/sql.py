@@ -1,4 +1,4 @@
-"""The queries, schema-qualified. Mirrors the hybrid search of scripts/rag/rag_common.py.
+"""The queries, schema-qualified: hybrid search over the chips tables.
 
 Dense: pgvector cosine distance. Sparse: `sparse <#> q` is -BM25 (see expert_knowledge_core.bm25),
 rows sharing no term with the query (score 0) are not matches. The rankings are fused with RRF.

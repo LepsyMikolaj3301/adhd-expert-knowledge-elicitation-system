@@ -16,7 +16,7 @@ Skorzystaj z tej strony, gdy chcesz uruchomić testy backendu, testy frontendu, 
 
 ## Backend
 
-1. Zainstaluj pakiety workspace'u wyłącznie z grupą `dev`. Domyślne grupy pobierają też docling i notebooki (`.github/workflows/ci.yml:21-22`).
+1. Zainstaluj pakiety workspace'u wyłącznie z grupą `dev`. Domyślne grupy pobierają też notebooki i zależności skryptów (`.github/workflows/ci.yml:21-22`).
 
    ```bash
    uv sync --frozen --no-default-groups --all-packages --group dev

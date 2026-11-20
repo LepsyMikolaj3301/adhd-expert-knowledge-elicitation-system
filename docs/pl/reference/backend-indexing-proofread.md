@@ -32,12 +32,12 @@ Plik to `config/indexing.yaml`. `app.knowledge.embedding` i `app.knowledge.inges
 | `embeddings.batch_size` | `int`, > 0 | `64` | `32` | liczba tekstów na żądanie do Ollama |
 | `embeddings.truncate` | `bool` | `True` | `true` | przekazywane do Ollama jako `truncate` |
 | `embeddings.dimensions` | `int`, > 0 | wymagane | `1024` | oczekiwana szerokość wektora; `embed_texts` zgłasza `RuntimeError` przy innym kształcie |
-| `text_field` | `contextual_text` lub `text` | `contextual_text` | `contextual_text` | wybiera kolumnę chunka do embedowania |
+| `text_field` | `contextual_text` lub `text` | `contextual_text` | `contextual_text` | walidowane i zapisywane w `IndexingConfig`; żaden kod go nie czyta |
 | `sparse.k1` | `float`, > 0 | `1.2` | `1.2` | nasycenie częstości terminu w BM25 |
 | `sparse.b` | `float`, 0 do 1 | `0.75` | `0.75` | normalizacja długości w BM25 |
 | `sparse.stemmer` | `str` lub `None` | `english` | `english` | język Snowball albo `null` oznaczające brak stemmingu |
 
-`text_field` nie ma czytelnika w `backend/app`. `scripts/corpus/index_chunks.py` czyta go jako `cfg.text_field`, aby wybrać kolumnę do embedowania. Pola BM25 są zdefiniowane w `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py` (`Bm25Config`).
+Żaden plik Pythona w `backend`, `scripts` ani `packages` nie czyta `text_field`; `backend/app/indexing/config.py:29` tylko go deklaruje. Pola BM25 są zdefiniowane w `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py` (`Bm25Config`).
 
 Modele `EmbeddingConfig`, `IndexEmbeddingConfig`, `IndexingConfig` i bazowy `Model` używają `extra="forbid"`.
 
@@ -199,7 +199,6 @@ Router przydziałów montuje je pod `/api/v1` (`backend/app/assignments/router.p
 - `backend/app/indexing/config.py` - modele IndexingConfig i load_indexing_config
 - `backend/app/embeddings.py` - zachowanie i wartości domyślne OllamaEmbedder
 - `config/indexing.yaml` - skonfigurowane wartości
-- `scripts/corpus/index_chunks.py:84,193` - czytelnik text_field
 - `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py:21-26` - pola i wartości domyślne Bm25Config
 - `backend/app/knowledge/embedding.py` - miejsce odczytu pliku konfiguracji
 - `backend/app/proofread/pipeline.py` - proofread_answer, passes, reguły pomijania
