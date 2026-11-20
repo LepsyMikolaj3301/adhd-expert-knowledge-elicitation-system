@@ -5,6 +5,8 @@ diataxis: explanation
 
 # About retrieval and indexing
 
+Language: **English** · [Polski](../pl/explanation/retrieval-and-indexing.md)
+
 The system keeps two searchable stores in one Postgres database, and both combine a dense bge-m3 embedding with a BM25 sparse vector. Literature chunks go to the table `chunks`, written by the corpus scripts. Approved expert findings go to the schema `chips`, written by the web backend. The BM25 code, the note packing and the retrieval constants live in the framework-free package `expert-knowledge-core`, so ingestion and retrieval use one copy; the package `expert-knowledge-rag` reads `chips` through a read-only connection. This page explains why the parts are shaped this way. The lists of names, signatures and defaults are in [Packages](../reference/packages.md) and [Chunking and corpus configuration](../reference/chunking.md).
 
 ## How it fits together

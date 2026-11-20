@@ -5,6 +5,8 @@ diataxis: reference
 
 # Frontend app shell (`frontend/src`)
 
+Language: **English** · [Polski](../pl/reference/frontend-app.md)
+
 The frontend is a Vue 3 single-page app (Pinia, Vue Router, `openapi-fetch`) built with Vite. This page covers its shell: bootstrap, routes, route guard, session handler, API client, stores, navigation lists, views, constants, the `copy.ts` exports, the vignette form helpers and the Vite, Vitest and ESLint configuration. Components and the answering helpers are in [frontend-components.md](frontend-components.md); the endpoints the client calls are in [backend-core-api.md](backend-core-api.md); how the pieces fit together is in [architecture](../explanation/architecture.md).
 
 ## Bootstrap

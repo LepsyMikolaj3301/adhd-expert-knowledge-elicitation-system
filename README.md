@@ -1,5 +1,7 @@
 # ADHD expert knowledge elicitation system
 
+Language: **English** · [Polski](README.pl.md)
+
 A web platform that collects written answers from experts to case vignettes, has the answers proofread and peer-reviewed, and turns the approved ones into searchable knowledge units. It has a Vue single-page app (shown as "PsyKnowHow"), a FastAPI backend under `/api/v1`, a background worker that runs the slow steps, a PostgreSQL database with pgvector, and Ollama and LanguageTool for language models and grammar checks.
 
 ## Quick start
