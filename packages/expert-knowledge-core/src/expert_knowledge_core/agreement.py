@@ -11,6 +11,7 @@ a-b and b-c put all three in one group. Whether two different passages are expla
 separate question that is not answered here.
 """
 
+import re
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -124,3 +125,39 @@ def render_agreement(a: Agreement) -> str:
         f"Agreement: {a.k} of {a.n} {who} who answered this text cited it; "
         f"{', '.join(parts)} ({a.label})."
     )
+
+
+_CLAIM = re.compile(r"\b(\d+)\s+(?:of|out of)\s+(\d+)\b", re.IGNORECASE)
+_CITATION = re.compile(r"\[E(\d+)\]")
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\[])")
+
+
+@dataclass(frozen=True)
+class Claim:
+    k: int
+    n: int
+    note: int | None  # the note the sentence cites ([E3] -> 3), None when it cites none
+    ok: bool  # the cited note says exactly this (any note's count, when none is cited)
+
+
+def agreement_claims(answer: str, counts: Sequence[tuple[int, int] | None]) -> list[Claim]:
+    """Every "k of n" in an answer, checked against the counts of the notes it was given.
+
+    `counts[i]` is (k, n) of note [E{i+1}], or None for a note without an agreement line. A claim
+    in a sentence that cites notes is true when one of them says exactly that; a claim in a
+    sentence that cites none is true when any note does. This is the faithfulness check of the
+    numbers: the model is told to copy them, and this finds when it did not.
+    """
+    claims: list[Claim] = []
+    for sentence in _SENTENCE_END.split(answer):
+        cited = [int(m) for m in _CITATION.findall(sentence)]
+        for found in _CLAIM.finditer(sentence):
+            k, n = int(found.group(1)), int(found.group(2))
+            holders = [
+                i
+                for i in (cited or range(1, len(counts) + 1))
+                if 0 < i <= len(counts) and counts[i - 1] == (k, n)
+            ]
+            note = holders[0] if holders and cited else (cited[0] if cited else None)
+            claims.append(Claim(k, n, note, bool(holders)))
+    return claims

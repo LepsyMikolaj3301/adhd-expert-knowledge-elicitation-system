@@ -42,7 +42,7 @@ def expert_answer_chain(retriever: BaseRetriever, llm: BaseChatModel) -> Runnabl
     return (
         RunnableLambda(normalise)
         | RunnablePassthrough.assign(docs=itemgetter("question") | retriever)
-        | _answer(expert_prompt(), llm)
+        | _answer(expert_prompt(getattr(retriever, "group_fragments", False)), llm)
     )
 
 
@@ -57,5 +57,5 @@ def patient_answer_chain(retriever: BaseRetriever, llm: BaseChatModel) -> Runnab
     return (
         RunnableLambda(normalise)
         | RunnablePassthrough.assign(docs=itemgetter("patient_text") | retriever)
-        | _answer(patient_prompt(), llm)
+        | _answer(patient_prompt(getattr(retriever, "group_fragments", False)), llm)
     )

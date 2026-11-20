@@ -71,3 +71,33 @@ def test_a_line_break_always_ends_a_sentence():
         "First line is long enough.",
         "Second line is also long enough.",
     ]
+
+
+def test_the_voices_a_grouped_note_quotes_always_include_the_minority_reading():
+    # Best match first. Four read it as toward, the last one as away.
+    assert notes.pick_voices(["toward", "toward", "toward", "toward", "away"]) == [0, 1, 4]
+    assert notes.pick_voices(["toward", "away", "toward", "neutral"]) == [0, 1, 3]
+    assert notes.pick_voices(["toward", "toward"]) == [0, 1]
+    assert notes.pick_voices(["toward"] * 6, limit=2) == [0, 1]
+    assert notes.pick_voices([]) == []
+
+
+def test_a_grouped_note_numbers_the_clinicians_and_keeps_their_words_verbatim():
+    one, two = example_record("S1", "X1"), example_record("S2", "X2")
+    block = notes.pack_group_block(
+        [(one, ["h1"]), (two, ["h1"])],
+        "Agreement: 2 of 5 clinicians who answered this text cited it; 2 away (agreed).",
+    )
+    lines = block.splitlines()
+    assert lines[0].startswith("Teaching case ")
+    assert lines[2].startswith("Agreement: 2 of 5")
+    assert [line for line in lines if line.startswith("Clinician ")] == [
+        f"Clinician 1 (marked: away; {notes.overall(one['meta'])}):",
+        f"Clinician 2 (marked: away; {notes.overall(two['meta'])}):",
+    ]
+    assert "S1" not in block and "X1" not in block, "clinicians are never named"
+    verbatim = notes.by_question(
+        [s for s in one["sentences"] if s["id"] in units_by_id(one)["h1"]["sentences"]],
+        one["highlights"],
+    )
+    assert all(line in lines for line in verbatim)

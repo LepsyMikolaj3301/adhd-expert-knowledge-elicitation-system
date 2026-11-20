@@ -14,21 +14,24 @@ def format_notes(docs: Sequence[Document]) -> str:
     return core.format_notes([d.page_content for d in docs])
 
 
-def expert_prompt() -> ChatPromptTemplate:
-    """Variables: `notes` (see format_notes) and `question`."""
+def expert_prompt(grouped: bool = False) -> ChatPromptTemplate:
+    """Variables: `notes` (see format_notes) and `question`. `grouped`: the notes come from a
+    retriever with `group_fragments`, so the prompt also says how to treat the agreement line."""
+    system = core.EXPERT_SYSTEM_PROMPT
     return ChatPromptTemplate.from_messages(
         [
-            SystemMessage(content=core.EXPERT_SYSTEM_PROMPT),
+            SystemMessage(content=core.with_agreement_rule(system) if grouped else system),
             ("human", "Notes:\n\n{notes}\n\nQuestion: {question}"),
         ]
     )
 
 
-def patient_prompt() -> ChatPromptTemplate:
-    """Variables: `notes`, `patient_text` and `question`."""
+def patient_prompt(grouped: bool = False) -> ChatPromptTemplate:
+    """Variables: `notes`, `patient_text` and `question`. `grouped` as for expert_prompt."""
+    system = core.PATIENT_SYSTEM_PROMPT
     return ChatPromptTemplate.from_messages(
         [
-            SystemMessage(content=core.PATIENT_SYSTEM_PROMPT),
+            SystemMessage(content=core.with_agreement_rule(system) if grouped else system),
             (
                 "human",
                 'Notes:\n\n{notes}\n\nPatient text:\n"{patient_text}"\n\nQuestion: {question}',

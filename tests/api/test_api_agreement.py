@@ -143,3 +143,24 @@ async def test_recomputing_gives_the_same_groups_and_the_backfill_rebuilds_them(
         assert await agreement.recompute_all(db) == 3
         await db.commit()
     assert await chips(GROUPS) == before
+
+
+async def test_the_admins_search_says_how_many_clinicians_marked_the_passage(models):
+    admin, experts, _ = await four_experts()
+    listed = await admin.ok("GET", "/knowledge-units", params={"status": "ingested"})
+    cue = next(
+        u
+        for u in listed
+        if u["kind"] == "fragment" and u["patient_words"] == CUE and u["direction"] == "toward"
+    )
+    found = await admin.ok(
+        "POST", "/knowledge-units/search", json={"query": cue["embed_text"], "k": 20}
+    )
+    hits = {h["unit"]["id"]: h for h in found["hits"]}
+    agreement = hits[cue["id"]]["agreement"]
+    assert (agreement["attending"], agreement["answered"], agreement["label"]) == (3, 4, "split")
+    assert agreement["counts"] == {"toward": 2, "away": 1}
+    assert agreement["line"].startswith("Agreement: 3 of 4 clinicians")
+    # every fragment unit belongs to a group, here and only here: there is no case unit
+    assert [h["unit"]["kind"] for h in found["hits"]] == ["fragment"] * len(found["hits"])
+    assert all(h["agreement"] is not None for h in found["hits"])

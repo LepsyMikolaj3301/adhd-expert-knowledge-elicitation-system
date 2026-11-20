@@ -246,6 +246,49 @@
         "title": "AdminAssignment",
         "type": "object"
       },
+      "AgreementInfo": {
+        "description": "How many of the clinicians who answered this text marked the unit's passage, and how they\nread it. Counted by the application, never by a model (expert_knowledge_core.agreement).",
+        "properties": {
+          "answered": {
+            "title": "Answered",
+            "type": "integer"
+          },
+          "attending": {
+            "title": "Attending",
+            "type": "integer"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "label": {
+            "enum": [
+              "single",
+              "split",
+              "agreed",
+              "leaning"
+            ],
+            "title": "Label",
+            "type": "string"
+          },
+          "line": {
+            "title": "Line",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attending",
+          "answered",
+          "counts",
+          "label",
+          "line"
+        ],
+        "title": "AgreementInfo",
+        "type": "object"
+      },
       "AnswerDecisionInput": {
         "additionalProperties": false,
         "properties": {
@@ -1496,6 +1539,16 @@
       },
       "KnowledgeHit": {
         "properties": {
+          "agreement": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgreementInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "matched_sentence": {
             "anyOf": [
               {

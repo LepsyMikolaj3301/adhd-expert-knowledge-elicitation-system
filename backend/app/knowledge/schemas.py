@@ -60,6 +60,17 @@ class KnowledgeSearchRequest(BaseModel):
     k: int = Field(default=8, ge=1, le=20)
 
 
+class AgreementInfo(BaseModel):
+    """How many of the clinicians who answered this text marked the unit's passage, and how they
+    read it. Counted by the application, never by a model (expert_knowledge_core.agreement)."""
+
+    attending: int
+    answered: int
+    counts: dict[str, int]  # clinicians per direction; `mixed` = contradicted themselves
+    label: Literal["single", "split", "agreed", "leaning"]
+    line: str  # the sentence a grouped note carries
+
+
 class KnowledgeHit(BaseModel):
     rank: int
     # The platform's own ranking score (reciprocal rank fusion): only good for ordering hits.
@@ -69,6 +80,8 @@ class KnowledgeHit(BaseModel):
     # Patient mode: the typed sentence that matched this unit's highlight best.
     matched_sentence: str | None
     unit: KnowledgeUnitListItem
+    # None for case units and for passages no group was computed for.
+    agreement: AgreementInfo | None = None
 
 
 class KnowledgeSearchResponse(BaseModel):

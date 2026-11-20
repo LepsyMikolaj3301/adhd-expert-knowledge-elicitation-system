@@ -1,5 +1,7 @@
 from expert_knowledge_core.agreement import (
+    Claim,
     Mark,
+    agreement_claims,
     agreement_groups,
     expert_directions,
     group_marks,
@@ -122,3 +124,32 @@ def test_the_groups_do_not_depend_on_the_order_the_marks_come_in():
     backward = agreement_groups(marks[::-1], 3)
     assert [a for _, a in forward] == [a for _, a in backward]
     assert [a.span for _, a in forward] == [(0, 10), (50, 60)]
+
+
+COUNTS = [(3, 4), None, (1, 4)]  # note [E1] says 3 of 4, [E2] has no line, [E3] says 1 of 4
+
+
+def test_a_number_copied_from_the_cited_note_is_faithful():
+    claims = agreement_claims("Three of them agree: 3 of 4 clinicians marked it [E1].", COUNTS)
+    assert claims == [Claim(3, 4, 1, True)]
+
+
+def test_a_number_the_cited_note_does_not_give_is_flagged_even_if_another_note_has_it():
+    claims = agreement_claims(
+        "2 of 4 clinicians read it so [E1]. 1 of 4 read it otherwise [E3].", COUNTS
+    )
+    assert claims == [Claim(2, 4, 1, False), Claim(1, 4, 3, True)]
+    assert agreement_claims("1 out of 4 clinicians marked it [E1].", COUNTS)[0].ok is False
+
+
+def test_without_a_citation_any_note_may_bear_the_number_out():
+    assert agreement_claims("3 of 4 clinicians marked it.", COUNTS) == [Claim(3, 4, None, True)]
+    assert agreement_claims("4 of 4 clinicians marked it.", COUNTS) == [Claim(4, 4, None, False)]
+
+
+def test_an_answer_without_counts_has_no_claims():
+    assert agreement_claims("Clinicians differ on this passage [E1].", COUNTS) == []
+
+
+def test_a_citation_of_a_note_that_does_not_exist_is_just_unfaithful():
+    assert agreement_claims("3 of 4 clinicians marked it [E9].", COUNTS) == [Claim(3, 4, 9, False)]

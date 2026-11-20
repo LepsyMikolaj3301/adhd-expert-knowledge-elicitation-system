@@ -190,6 +190,33 @@ def units_for_cues(schema: str, cue_ids: list[int], filter: ExpertFilter) -> Que
     return query, {**params, "cue_ids": cue_ids}
 
 
+def groups_of(schema: str, highlight_ids: list[str]) -> Query:
+    """The agreement group each highlight belongs to (derived by the application on ingestion)."""
+    query = sql.SQL(
+        "SELECT m.highlight_id, g.id AS group_id, lower(g.span) AS span_start, "
+        "upper(g.span) AS span_end, g.n_answered, g.n_attending, g.n_toward, g.n_away, "
+        "g.n_neutral, g.n_unclear, g.n_mixed, g.label "
+        "FROM {m} m JOIN {g} g ON g.id = m.group_id WHERE m.highlight_id = ANY(%(ids)s)"
+    ).format(m=_table(schema, "fragment_group_members"), g=_table(schema, "fragment_groups"))
+    return query, {"ids": highlight_ids}
+
+
+def group_units(schema: str, group_ids: list[int], filter: ExpertFilter) -> Query:
+    """Every unit of the groups, those that were not hits too, with the group they belong to."""
+    conditions, params = filter.on_unit("u")
+    columns = sql.SQL(", ").join(sql.SQL("u.{}").format(sql.Identifier(c)) for c in UNIT_COLUMNS)
+    query = sql.SQL(
+        "SELECT {cols}, m.group_id FROM {m} m JOIN {u} u ON u.highlight_id = m.highlight_id "
+        "WHERE m.group_id = ANY(%(group_ids)s) AND {w} ORDER BY m.group_id, u.id"
+    ).format(
+        cols=columns,
+        m=_table(schema, "fragment_group_members"),
+        u=_table(schema, "finding_units"),
+        w=all_of(conditions),
+    )
+    return query, {**params, "group_ids": group_ids}
+
+
 def sessions(schema: str, session_ids: list[str]) -> Query:
     """The findings records of the sessions the hits come from."""
     query = sql.SQL("SELECT id, document FROM {t} WHERE id = ANY(%(ids)s)").format(

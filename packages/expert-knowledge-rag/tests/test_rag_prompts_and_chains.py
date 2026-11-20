@@ -89,3 +89,29 @@ async def test_chains_run_async():
         FixedRetriever(docs=DOCS), FakeListChatModel(responses=["async ok"])
     )
     assert (await chain.ainvoke("Why?"))["answer"] == "async ok"
+
+
+def test_the_agreement_rule_is_added_only_for_grouped_notes():
+    plain = expert_prompt().format_messages(notes="n", question="q")[0].content
+    grouped = expert_prompt(True).format_messages(notes="n", question="q")[0].content
+    assert plain == core.EXPERT_SYSTEM_PROMPT
+    assert grouped == core.with_agreement_rule(core.EXPERT_SYSTEM_PROMPT)
+    assert "Agreement:" in grouped and "Agreement:" not in plain
+    patient = patient_prompt(True).format_messages(notes="n", patient_text="t", question="q")
+    assert patient[0].content == core.with_agreement_rule(core.PATIENT_SYSTEM_PROMPT)
+
+
+def test_a_chain_over_a_grouping_retriever_uses_the_prompt_with_the_rule():
+    class Grouping(FixedRetriever):
+        group_fragments: bool = True
+
+    seen: list[str] = []
+
+    class Recording(FakeListChatModel):
+        def _generate(self, messages, *args: Any, **kwargs: Any):
+            seen.append(messages[0].content)
+            return super()._generate(messages, *args, **kwargs)
+
+    expert_answer_chain(Grouping(docs=DOCS), Recording(responses=["ok"])).invoke("Why?")
+    expert_answer_chain(FixedRetriever(docs=DOCS), Recording(responses=["ok"])).invoke("Why?")
+    assert seen == [core.with_agreement_rule(core.EXPERT_SYSTEM_PROMPT), core.EXPERT_SYSTEM_PROMPT]

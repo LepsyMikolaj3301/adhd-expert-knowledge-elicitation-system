@@ -24,9 +24,12 @@ _END = re.compile(r"(?:(?<=[.!?])|(?<=[.!?][\"”’]))\s+")
 _ABBREV = ("e.g.", "i.e.", "vs.", "etc.", "approx.", "hx.", "dr.", "r/o.")
 _LIST_NUMBER = re.compile(r"(?:^|\s)\(?\d{1,2}[.)]$")
 
+GROUP_VOICES = 3  # clinicians whose own words a grouped note quotes, at most
+
 __all__ = [
     "CASE",
     "CHIP_RE",
+    "GROUP_VOICES",
     "FRAMING_LABEL",
     "MIN_SENTENCE_WORDS",
     "RENDER_WORDS",
@@ -36,6 +39,8 @@ __all__ = [
     "merge_groups",
     "overall",
     "pack_block",
+    "pack_group_block",
+    "pick_voices",
     "quote_pieces",
     "quote_spans",
     "render_sentence",
@@ -188,3 +193,57 @@ def pack_block(rec: Mapping[str, Any], unit_ids: list[str]) -> str:
     if words:
         lines.append("Patient's words: " + " · ".join(words))
     return "\n".join([*lines, "Clinician's own words:", *by_question(sents, hls)])
+
+
+def _voice_direction(rec: Mapping[str, Any], unit_ids: list[str]) -> str:
+    by_id = {h["id"]: h for h in rec["highlights"]}
+    for u in rec["units"]:
+        h = by_id.get(u["highlight"] or "")
+        if u["id"] in unit_ids and h and h["direction"]:
+            return h["direction"]
+    return "unclear"
+
+
+def pick_voices(directions: list[str], limit: int = GROUP_VOICES) -> list[int]:
+    """Which voices a grouped note quotes, as positions in `directions` (best match first): the
+    best one, then the best of every other direction, then the best of the rest. So a reading that
+    only one clinician holds is quoted, however many agree against it."""
+    chosen = [0] if directions else []
+    for n, direction in enumerate(directions):
+        if len(chosen) < limit and direction not in {directions[i] for i in chosen}:
+            chosen.append(n)
+    chosen += [n for n in range(len(directions)) if n not in chosen][: max(0, limit - len(chosen))]
+    return sorted(chosen)
+
+
+def pack_group_block(
+    voices: list[tuple[Mapping[str, Any], list[str]]], agreement: str, limit: int = GROUP_VOICES
+) -> str:
+    """The note for a group of clinicians who marked the same passage. `voices` are (record,
+    unit ids) of one clinician each, best match first; `agreement` is the line from
+    agreement.render_agreement, which covers every clinician, not only those quoted.
+
+    Each quoted clinician's sentences are verbatim, in question order, chips as short quotes, and
+    clinicians are numbered, never named.
+    """
+    first = voices[0][0]
+    meta = first["meta"]
+    words: list[str] = []
+    for rec, unit_ids in voices:
+        by_id = {h["id"]: h for h in rec["highlights"]}
+        for u in rec["units"]:
+            h = by_id.get(u["highlight"] or "")
+            if u["id"] in unit_ids and h and f'"{h["text"]}"' not in words:
+                words.append(f'"{h["text"]}"')
+    lines = [f"Teaching case {first['vignette_id']}: {case_label(meta)}"]
+    if words:
+        lines.append("Patient's words: " + " · ".join(words))
+    lines.append(agreement)
+    quoted = pick_voices([_voice_direction(r, ids) for r, ids in voices], limit)
+    for number, n in enumerate(quoted, 1):
+        rec, unit_ids = voices[n]
+        wanted = {sid for u in rec["units"] if u["id"] in unit_ids for sid in u["sentences"]}
+        sents = [s for s in rec["sentences"] if s["id"] in wanted]
+        head = f"Clinician {number} (marked: {_voice_direction(rec, unit_ids)}; {overall(rec['meta'])}):"
+        lines += [head, *by_question(sents, rec["highlights"])]
+    return "\n".join(lines)

@@ -6,9 +6,10 @@ from typing import Any
 
 from langchain_core.documents import Document
 
-from expert_knowledge_core.notes import merge_groups, pack_block
+from expert_knowledge_core.agreement import render_agreement
+from expert_knowledge_core.notes import merge_groups, pack_block, pack_group_block
 from expert_knowledge_core.records import is_readable
-from expert_knowledge_rag.ranking import UnitHit
+from expert_knowledge_rag.ranking import Grouping, UnitHit
 
 logger = logging.getLogger(__name__)
 
@@ -64,22 +65,107 @@ def _local_ids(record: Any, hits: Sequence[UnitHit]) -> dict[str, str] | None:
     return ids if all(local in in_record for local in ids.values()) else None
 
 
+def _group_note(
+    group_id: int, best: Sequence[UnitHit], grouping: Grouping, records: Mapping[str, Any]
+) -> Document | None:
+    """One note for every clinician who marked a passage, in the rank of the best hit. The
+    agreement line counts all of them; the words quoted are those of at most GROUP_VOICES, the
+    hits first. None when the best hit's record can't be read (the caller falls back)."""
+    agreement = grouping.agreements[group_id]
+    seen = {h.id for h in best}
+    members = [*best, *(m for m in grouping.members.get(group_id, ()) if m.id not in seen)]
+    by_session: dict[str, list[UnitHit]] = {}
+    for member in members:
+        by_session.setdefault(member.session_id, []).append(member)
+    voices: list[tuple[Any, list[str]]] = []
+    used: list[UnitHit] = []
+    for session_id, session_hits in by_session.items():
+        record = records.get(session_id)
+        ids = _local_ids(record, session_hits)
+        if record is None or ids is None:
+            if session_id == best[0].session_id:
+                return None
+            continue
+        voices.append((record, [ids[h.id] for h in session_hits]))
+        used += session_hits
+    words: list[dict[str, Any]] = []
+    for record, unit_ids in voices:
+        by_unit = {u["id"]: u for u in record["units"]}
+        by_highlight = {h["id"]: h for h in record["highlights"]}
+        for unit_id in unit_ids:
+            h = by_highlight.get(by_unit[unit_id]["highlight"] or "")
+            if h:
+                words.append({"text": h["text"], "direction": h["direction"]})
+    first = best[0]
+    line = render_agreement(agreement)
+    return Document(
+        id=first.id,
+        page_content=pack_group_block(voices, line),
+        metadata={
+            "source": SOURCE,
+            "unit_ids": [h.id for h in used],
+            "session_id": first.session_id,
+            "expert_id": first.expert_id,
+            "expert_ids": sorted({h.expert_id for h in used}),
+            "vignette_id": first.vignette_id,
+            "vignette_version": first.vignette_version,
+            "kinds": [h.kind for h in used],
+            "directions": [h.direction for h in used],
+            "patient_words": words,
+            "score": first.score,
+            "merged": len(used) > 1,
+            "group_id": group_id,
+            "agreement": {
+                "k": agreement.k,
+                "n": agreement.n,
+                "counts": dict(agreement.counts),
+                "label": agreement.label,
+                "line": line,
+            },
+        },
+    )
+
+
 def build_documents(
-    hits: Sequence[UnitHit], records: Mapping[str, Any], *, merge: bool = True
+    hits: Sequence[UnitHit],
+    records: Mapping[str, Any],
+    *,
+    merge: bool = True,
+    grouping: Grouping | None = None,
 ) -> list[Document]:
     """One Document per note, in the rank of its best unit.
+
+    With a `grouping`, the fragment units of clinicians who marked the same passage become one
+    note with an agreement line and a few of their words (`_group_note`); case units and units
+    in no group are packed as below.
 
     Units of one session that share a sentence become one note (each sentence once), as the
     evaluations packed them. A session whose `document` is not a findings record this version can
     read (for example the raw ChipDocument that `chips_eval` stores) gives one note per unit: the
     text that was embedded, with a warning.
     """
+    notes: list[tuple[int, Document]] = []
+    position = {hit.id: n for n, hit in enumerate(hits)}
+    if grouping is not None:
+        ungrouped: list[UnitHit] = []
+        grouped: dict[int, list[UnitHit]] = {}
+        for hit in hits:
+            group_id = grouping.of_highlight.get(hit.highlight_id or "")
+            if group_id is None or hit.kind != "fragment":
+                ungrouped.append(hit)
+            else:
+                grouped.setdefault(group_id, []).append(hit)
+        for group_id, best in grouped.items():
+            note = _group_note(group_id, best, grouping, records)
+            if note is None:
+                ungrouped += best
+            else:
+                notes.append((position[best[0].id], note))
+        hits = ungrouped
+
     by_session: dict[str, list[UnitHit]] = {}
     for hit in hits:
         by_session.setdefault(hit.session_id, []).append(hit)
-
-    notes: list[tuple[int, Document]] = []
-    position = {hit.id: n for n, hit in enumerate(hits)}
     for session_id, session_hits in by_session.items():
         record = records.get(session_id)
         ids = _local_ids(record, session_hits)

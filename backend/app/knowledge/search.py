@@ -19,11 +19,13 @@ from app.core.errors import DomainError
 from app.knowledge import embedding
 from app.knowledge.models import KnowledgeUnit, UnitStatus
 from app.knowledge.schemas import (
+    AgreementInfo,
     KnowledgeHit,
     KnowledgeSearchRequest,
     KnowledgeSearchResponse,
 )
 from app.knowledge.service import unit_items
+from expert_knowledge_core.agreement import DIRECTIONS, Agreement, render_agreement
 from expert_knowledge_core.records import CASE
 from expert_knowledge_rag import (
     ExpertFilter,
@@ -115,6 +117,7 @@ async def search(db: AsyncSession, request: KnowledgeSearchRequest) -> Knowledge
     by_key = {(str(i.assignment_id), i.highlight_id): i for i in items}
 
     similarity, matched = await _similarities(db, request, embeddings, notes)
+    agreements = await _agreements(db, [n.metadata["unit_ids"][0] for n in notes])
     hits = []
     for note, key in zip(notes, wanted, strict=True):
         unit = by_key.get(key)
@@ -128,9 +131,38 @@ async def search(db: AsyncSession, request: KnowledgeSearchRequest) -> Knowledge
                 similarity=similarity.get(unit_id),
                 matched_sentence=matched.get(unit_id),
                 unit=unit,
+                agreement=agreements.get(unit_id),
             )
         )
     return KnowledgeSearchResponse(hits=hits)
+
+
+async def _agreements(db: AsyncSession, unit_ids: list[str]) -> dict[str, AgreementInfo]:
+    """The group of each fragment unit: a fragment unit's id is its highlight's id in `chips`."""
+    rows = (
+        await db.execute(
+            text(
+                "SELECT m.highlight_id, g.n_answered, g.n_attending, g.n_toward, g.n_away, "
+                "g.n_neutral, g.n_unclear, g.n_mixed, g.label FROM chips.fragment_group_members m "
+                "JOIN chips.fragment_groups g ON g.id = m.group_id WHERE m.highlight_id = ANY(:ids)"
+            ),
+            {"ids": unit_ids},
+        )
+    ).all()
+    out: dict[str, AgreementInfo] = {}
+    for r in rows:
+        counts = {d: getattr(r, f"n_{d}") for d in (*DIRECTIONS, "mixed") if getattr(r, f"n_{d}")}
+        summary = Agreement(
+            span=(0, 0), k=r.n_attending, n=r.n_answered, counts=counts, label=r.label
+        )
+        out[r.highlight_id] = AgreementInfo(
+            attending=r.n_attending,
+            answered=r.n_answered,
+            counts=counts,
+            label=r.label,
+            line=render_agreement(summary),
+        )
+    return out
 
 
 async def _similarities(

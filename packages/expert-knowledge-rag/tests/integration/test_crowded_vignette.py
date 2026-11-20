@@ -103,3 +103,27 @@ def test_notes_never_mix_the_answers_of_different_experts(crowd_store, frozen, q
             assert len({u.rsplit("-", 2)[0] for u in d.metadata["unit_ids"]}) == 1
             merged += len(d.metadata["unit_ids"]) > 1
     assert merged  # merging happened, within one expert's answer
+
+
+def passages(docs) -> int:
+    """How many different passages of the patient's text the notes are about."""
+    return len({tuple(sorted(w["text"] for w in d.metadata["patient_words"])) for d in docs})
+
+
+def test_grouping_returns_a_passage_once_and_counts_every_clinician(crowd_store, frozen, questions):
+    for docs in results(crowd_store, frozen, questions, group_fragments=True):
+        group_ids = [d.metadata["group_id"] for d in docs if "group_id" in d.metadata]
+        assert len(group_ids) == len(set(group_ids)), "a group is one note"
+        for d in docs:
+            if "agreement" in d.metadata:
+                a = d.metadata["agreement"]
+                assert 1 <= a["k"] <= a["n"] and a["line"] in d.page_content
+
+
+def test_grouping_gives_the_places_of_repeated_fragments_to_other_passages(
+    crowd_store, frozen, questions
+):
+    plain = results(crowd_store, frozen, questions)
+    grouped = results(crowd_store, frozen, questions, group_fragments=True)
+    assert sum(passages(d) for d in grouped) > sum(passages(d) for d in plain)
+    assert all(passages(g) >= passages(p) for g, p in zip(grouped, plain, strict=True))

@@ -31,6 +31,20 @@ the patient's text. A note is one clinician's opinion, not a diagnostic criterio
 - If the notes do not bear on the text, reply exactly: {NOT_IN_SOURCES}"""
 
 
+# Added to a system prompt only when the notes are grouped (they then carry an agreement line). It
+# is not part of the evaluated prompts above: a note without the line needs no such rule.
+AGREEMENT_RULE = (
+    '- A note may contain a line starting with "Agreement:". It was counted from the whole '
+    "knowledge base, not by you: give its numbers exactly as written, never count or estimate "
+    "how many clinicians agree yourself, and when clinicians read a passage differently, say so "
+    "and give each reading with its note number."
+)
+
+
+def with_agreement_rule(system_prompt: str) -> str:
+    return f"{system_prompt}\n{AGREEMENT_RULE}"
+
+
 def format_notes(texts: list[str]) -> str:
     """`[E1] text` blocks separated by a blank line."""
     return "\n\n".join(f"[E{n}] {text}" for n, text in enumerate(texts, 1))

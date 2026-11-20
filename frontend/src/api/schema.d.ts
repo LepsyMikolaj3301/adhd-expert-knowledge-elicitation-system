@@ -872,6 +872,28 @@ export interface components {
              */
             vignette_version_id: string;
         };
+        /**
+         * AgreementInfo
+         * @description How many of the clinicians who answered this text marked the unit's passage, and how they
+         *     read it. Counted by the application, never by a model (expert_knowledge_core.agreement).
+         */
+        AgreementInfo: {
+            /** Answered */
+            answered: number;
+            /** Attending */
+            attending: number;
+            /** Counts */
+            counts: {
+                [key: string]: number;
+            };
+            /**
+             * Label
+             * @enum {string}
+             */
+            label: "single" | "split" | "agreed" | "leaning";
+            /** Line */
+            line: string;
+        };
         /** AnswerDecisionInput */
         AnswerDecisionInput: {
             /** Comment */
@@ -1329,6 +1351,7 @@ export interface components {
         };
         /** KnowledgeHit */
         KnowledgeHit: {
+            agreement?: components["schemas"]["AgreementInfo"] | null;
             /** Matched Sentence */
             matched_sentence: string | null;
             /** Rank */

@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 
+from expert_knowledge_core.agreement import DIRECTIONS, Agreement
 from expert_knowledge_core.retrieval import CONTEXT_BONUS, NEAR_DUPLICATE
 
 
@@ -43,6 +44,43 @@ class UnitHit:
             score=float(row["score"] if score is None else score),
             vector=np.asarray(text.strip("[]").split(","), dtype=np.float32) if text else None,
         )
+
+
+@dataclass(frozen=True)
+class Grouping:
+    """Which units are one passage read by several clinicians: from `fragment_groups`.
+
+    `of_highlight` maps a stored highlight id to its group, `agreements` holds each group's counts
+    (over every clinician, however many are retrieved), `members` its units (all of them, hits
+    first is the caller's business).
+    """
+
+    of_highlight: Mapping[str, int]
+    agreements: Mapping[int, Agreement]
+    members: Mapping[int, Sequence[UnitHit]]
+
+
+def make_grouping(
+    group_rows: Sequence[Mapping[str, Any]], unit_rows: Sequence[Mapping[str, Any]]
+) -> Grouping:
+    of_highlight: dict[str, int] = {}
+    agreements: dict[int, Agreement] = {}
+    for r in group_rows:
+        of_highlight[r["highlight_id"]] = r["group_id"]
+        counts = {
+            d: r[f"n_{d}"] for d in (*DIRECTIONS, "mixed") if r[f"n_{d}"]
+        }  # only the directions someone read it in
+        agreements[r["group_id"]] = Agreement(
+            span=(r["span_start"], r["span_end"]),
+            k=r["n_attending"],
+            n=r["n_answered"],
+            counts=counts,
+            label=r["label"],
+        )
+    members: dict[int, list[UnitHit]] = {}
+    for r in unit_rows:
+        members.setdefault(r["group_id"], []).append(UnitHit.from_row(r, score=0.0))
+    return Grouping(of_highlight, agreements, members)
 
 
 def downweight_duplicate_cases(hits: Sequence[UnitHit]) -> list[UnitHit]:

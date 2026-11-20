@@ -28,9 +28,11 @@ from expert_knowledge_rag import sql
 from expert_knowledge_rag.documents import build_documents
 from expert_knowledge_rag.filters import ExpertFilter
 from expert_knowledge_rag.ranking import (
+    Grouping,
     UnitHit,
     cue_scores,
     downweight_duplicate_cases,
+    make_grouping,
     rank_by_cues,
 )
 from expert_knowledge_rag.store import ExpertKnowledgeStore, Rows
@@ -46,6 +48,11 @@ class _ExpertRetriever(BaseRetriever):
     search: sql.Search = "hybrid"  # hybrid: dense + BM25 fused with RRF
     filter: ExpertFilter = Field(default_factory=ExpertFilter)
     merge_shared: bool = True  # units of one expert that share a sentence become one note
+    # Fragments that several clinicians marked (chips.fragment_groups) become ONE note with an
+    # agreement line ("3 of 4 clinicians ..."). Off until the generation evaluation has measured
+    # it; ignored when the filter names experts, since the counts would then cover more people
+    # than the note shows.
+    group_fragments: bool = False
     # Matches config/indexing.yaml `sparse`: the query must be tokenised as the stored vectors were.
     bm25: Bm25Config = Field(default_factory=Bm25Config)
     fusion_depth: int = FUSION_DEPTH
@@ -78,9 +85,48 @@ class _ExpertRetriever(BaseRetriever):
     def _sessions_query(self, hits: list[UnitHit]) -> sql.Query:
         return sql.sessions(self.store.schema, sorted({h.session_id for h in hits}))
 
-    def _documents(self, hits: list[UnitHit], session_rows: Rows, k: int) -> list[Document]:
+    def _documents(
+        self, hits: list[UnitHit], session_rows: Rows, k: int, grouping: Grouping | None = None
+    ) -> list[Document]:
         records: dict[str, Any] = {r["id"]: r["document"] for r in session_rows}
-        return build_documents(hits, records, merge=self.merge_shared)[:k]
+        return build_documents(hits, records, merge=self.merge_shared, grouping=grouping)[:k]
+
+    def _wants_groups(self, hits: list[UnitHit]) -> bool:
+        return (
+            self.group_fragments
+            and self.filter.experts is None
+            and any(h.kind == "fragment" and h.highlight_id for h in hits)
+        )
+
+    def _group_query(self, hits: list[UnitHit]) -> sql.Query:
+        ids = sorted({h.highlight_id for h in hits if h.kind == "fragment" and h.highlight_id})
+        return sql.groups_of(self.store.schema, ids)
+
+    def _members_query(self, group_rows: Rows) -> sql.Query:
+        ids = sorted({r["group_id"] for r in group_rows})
+        return sql.group_units(self.store.schema, ids, self.filter)
+
+    def _finish(self, hits: list[UnitHit], k: int) -> list[Document]:
+        grouping, everyone = None, hits
+        if self._wants_groups(hits):
+            group_rows = self.store.run([self._group_query(hits)])[0]
+            if group_rows:
+                member_rows = self.store.run([self._members_query(group_rows)])[0]
+                grouping = make_grouping(group_rows, member_rows)
+                everyone = [*hits, *(m for ms in grouping.members.values() for m in ms)]
+        sessions = self.store.run([self._sessions_query(everyone)])[0]
+        return self._documents(hits, sessions, k, grouping)
+
+    async def _afinish(self, hits: list[UnitHit], k: int) -> list[Document]:
+        grouping, everyone = None, hits
+        if self._wants_groups(hits):
+            group_rows = (await self.store.arun([self._group_query(hits)]))[0]
+            if group_rows:
+                member_rows = (await self.store.arun([self._members_query(group_rows)]))[0]
+                grouping = make_grouping(group_rows, member_rows)
+                everyone = [*hits, *(m for ms in grouping.members.values() for m in ms)]
+        sessions = (await self.store.arun([self._sessions_query(everyone)]))[0]
+        return self._documents(hits, sessions, k, grouping)
 
 
 class ExpertQuestionRetriever(_ExpertRetriever):
@@ -121,7 +167,7 @@ class ExpertQuestionRetriever(_ExpertRetriever):
         hits = self._ranked(self.store.run([units])[0])
         if not hits:
             return []
-        return self._documents(hits, self.store.run([self._sessions_query(hits)])[0], k)
+        return self._finish(hits, k)
 
     async def _aget_relevant_documents(
         self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun, k: int | None = None
@@ -136,7 +182,7 @@ class ExpertQuestionRetriever(_ExpertRetriever):
         hits = self._ranked((await self.store.arun([units]))[0])
         if not hits:
             return []
-        return self._documents(hits, (await self.store.arun([self._sessions_query(hits)]))[0], k)
+        return await self._afinish(hits, k)
 
 
 class PatientTextRetriever(_ExpertRetriever):
@@ -196,7 +242,7 @@ class PatientTextRetriever(_ExpertRetriever):
         hits = self._units(rows, score, k)
         if not hits:
             return []
-        return self._documents(hits, self.store.run([self._sessions_query(hits)])[0], k)
+        return self._finish(hits, k)
 
     async def _aget_relevant_documents(
         self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun, k: int | None = None
@@ -218,4 +264,4 @@ class PatientTextRetriever(_ExpertRetriever):
         hits = self._units(rows, score, k)
         if not hits:
             return []
-        return self._documents(hits, (await self.store.arun([self._sessions_query(hits)]))[0], k)
+        return await self._afinish(hits, k)
