@@ -2,7 +2,7 @@
 -- Read-only: every statement is a SELECT. Run it in psql from the repo root, section by section:
 --     scripts/db/psql.sh                 then:   \i scripts/db/explore_chips.sql      (everything)
 -- or paste one section at a time. `\x auto` below switches to vertical output for wide rows.
--- Background: docs/new-chips-knowledge.md (design), backend/app/knowledge/ingest.py (the writer).
+-- Background: notes/new-chips-knowledge.md (design), backend/app/knowledge/ingest.py (the writer).
 -- Facts used throughout (all checked against the code, not the docs):
 --   * chips.* rows are written in ONE transaction per assignment (ingest.write), replacing that
 --     assignment's rows. session_id = app.assignments.id, expert_id = app.users.id (as text).

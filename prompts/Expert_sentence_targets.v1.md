@@ -2,7 +2,7 @@
 id: expert_sentence_targets
 version: 1
 target: local instruct model (qwen3.5:9b, qwen3.6:35b-a3b), JSON mode
-use: step 3 of docs/new-chips-knowledge.md: assigns the sentences of a clinician's answers that carry no chip and no matching quote to the highlights they are about (ids only); the model never writes text that is stored or shown
+use: step 3 of notes/new-chips-knowledge.md: assigns the sentences of a clinician's answers that carry no chip and no matching quote to the highlights they are about (ids only); the model never writes text that is stored or shown
 output: JSON (schema at the end)
 ---
 

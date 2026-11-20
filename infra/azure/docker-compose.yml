@@ -1,6 +1,6 @@
 # The stack on the Azure VM: docker compose --env-file .env up -d   (infra/azure/deploy.sh does this).
 # Ollama and LanguageTool are not here: they run on the owner's PC, reached over Tailscale at PC_HOST.
-# Setup: docs/azure-setup-guide.md. Design: docs/deployment.md.
+# Setup: notes/azure-setup-guide.md. Design: notes/deployment.md.
 #
 # Sized for a 4 GB VM (B2s): the limits add up to about 2 GB, the rest is the OS, the page cache and swap.
 

@@ -1,6 +1,6 @@
 """Writes an assignment's approved units into the RAG tables (schema `chips`).
 
-The tables and their meaning are in docs/new-chips-knowledge.md ("Storage"); scripts/db/
+The tables and their meaning are in notes/new-chips-knowledge.md ("Storage"); scripts/db/
 load_chips_pg.py does the same for the fixture data, and this is the same SQL run inside the
 job's transaction, so that the rows, the units' new status and the workflow state commit together.
 

@@ -12,7 +12,7 @@
 #   PORT              port to listen on (default 8080)
 #   API_UPSTREAM_URL  backend with scheme, no trailing slash: http://rag-backend:8000
 #   API_HOST          host name of that backend, no scheme: sent as Host header and TLS server name
-# See docs/deployment.md.
+# See notes/deployment.md.
 
 # package.json "engines": ^22.18 || >=24.12
 ARG NODE_VERSION=24

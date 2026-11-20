@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
 # Development image only: docker-compose.yml uses `target: dev`. Build context: frontend/.
-# The production image (nginx) is infra/frontend.Dockerfile. See docs/deployment.md.
+# The production image (nginx) is infra/frontend.Dockerfile. See notes/deployment.md.
 
 # package.json "engines": ^22.18 || >=24.12
 ARG NODE_VERSION=24

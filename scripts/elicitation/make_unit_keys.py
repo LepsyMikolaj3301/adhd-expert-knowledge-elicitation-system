@@ -1,4 +1,4 @@
-"""Write retrieval keys for expert units with a local model (docs/expert-knowledge.md, option D).
+"""Write retrieval keys for expert units with a local model (notes/expert-knowledge.md, option D).
 
 Usage: python scripts/elicitation/make_unit_keys.py --tier silver [--model qwen3.5:9b] [--limit N]
 

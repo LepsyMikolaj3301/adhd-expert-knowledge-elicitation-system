@@ -1,5 +1,5 @@
-"""Retrieval constants the evaluations settled on (docs/new-chips-knowledge.md,
-docs/chips-test-findings.md)."""
+"""Retrieval constants the evaluations settled on (notes/new-chips-knowledge.md,
+notes/chips-test-findings.md)."""
 
 RRF_K = 60  # reciprocal rank fusion: score = sum over rankings of 1 / (RRF_K + rank)
 FUSION_DEPTH = 50  # candidates taken from each ranking before fusing

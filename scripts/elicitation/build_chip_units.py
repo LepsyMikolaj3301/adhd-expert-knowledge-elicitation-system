@@ -5,7 +5,7 @@ Usage:
     python scripts/elicitation/build_chip_units.py --tier silver --classifier qwen3.6:35b-a3b
     python scripts/elicitation/build_chip_units.py --tier bronze --classifier qwen3.5:9b --no-embed
 
-Runs steps 2 to 7 of docs/new-chips-knowledge.md (chip_findings.py) on every response, using the
+Runs steps 2 to 7 of notes/new-chips-knowledge.md (chip_findings.py) on every response, using the
 labels classify_sentence_targets.py wrote for the sentences without a chip. Then embeds with bge-m3
 in the order of the doc: I1 (unit text), I2 (cue keys: the patient's words, shared across experts),
 I3 (I1 with the patient line). Writes, in data/expert_units_chips/synthetic/<tier>/<tag>/:

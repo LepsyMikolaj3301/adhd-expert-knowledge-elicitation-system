@@ -1,5 +1,5 @@
 # ruff: noqa: E501  (the sentence table is data)
-"""The worked example of docs/new-chips-knowledge.md (vignette V001) as a findings record.
+"""The worked example of notes/new-chips-knowledge.md (vignette V001) as a findings record.
 
 For tests, the READMEs and smoke scripts: a record shaped like what the web application stores,
 one sentence per proofread line, cut into units the way `app.knowledge.findings.build_units` does

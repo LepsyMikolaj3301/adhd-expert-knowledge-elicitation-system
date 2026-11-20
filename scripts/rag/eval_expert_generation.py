@@ -1,6 +1,6 @@
 """Answer the clinician questions from expert notes with a local 9B model.
 
-See docs/expert-knowledge.md.
+See notes/expert-knowledge.md.
 
 Usage: python scripts/rag/eval_expert_generation.py --tier silver [--model qwen3.5:9b] [--limit N]
        python scripts/rag/eval_expert_generation.py --report data/eval/expert_runs/<ts>

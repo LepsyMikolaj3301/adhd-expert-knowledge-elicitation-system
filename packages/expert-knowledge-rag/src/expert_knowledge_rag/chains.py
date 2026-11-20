@@ -2,7 +2,7 @@
 
 The models and prompts are the evaluated ones (expert-knowledge-core). With no notes the model is
 not called: the answer is NOT_IN_SOURCES, because without notes it answers from general knowledge
-and passes nothing (docs/expert-knowledge.md).
+and passes nothing (notes/expert-knowledge.md).
 """
 
 from operator import itemgetter

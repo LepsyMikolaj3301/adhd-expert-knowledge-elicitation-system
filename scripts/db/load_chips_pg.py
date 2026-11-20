@@ -1,5 +1,5 @@
 # ruff: noqa: E501  (long SQL strings)
-"""Load built chip units into Postgres, schema `chips` (docs/new-chips-knowledge.md "Storage").
+"""Load built chip units into Postgres, schema `chips` (notes/new-chips-knowledge.md "Storage").
 
 Usage: python scripts/db/load_chips_pg.py --tier silver [--classifier qwen3.5:9b] [--schema chips_eval]
        python scripts/db/load_chips_pg.py --tier bronze

@@ -1,4 +1,4 @@
-"""LangChain retrievers over the expert knowledge database (docs/new-chips-knowledge.md, steps 8-9).
+"""LangChain retrievers over the expert knowledge database (notes/new-chips-knowledge.md, steps 8-9).
 
 Two ways in, as in the evaluations:
   * ExpertQuestionRetriever  a clinician's question -> units (dense + BM25 over what was reviewed)

@@ -1,8 +1,8 @@
 """Elicitation-session schema: what the web platform hands to the backend after one expert session.
 
-An ElicitationDocument is the unit the backend ingests (see docs/elicitation-document.md).
+An ElicitationDocument is the unit the backend ingests (see notes/elicitation-document.md).
 ReferenceClaim is fixture-only: it lives next to a document in
-data/fixtures/<source>/<tier>/claims/, never inside it (tiers: see docs/fixtures.md).
+data/fixtures/<source>/<tier>/claims/, never inside it (tiers: see notes/fixtures.md).
 
 Validation errors carry a stable snake_case code at the start of the message (e.g.
 "vignette_hash_mismatch: ...") so tests and edge-case fixtures can name the error they expect.

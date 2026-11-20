@@ -6,7 +6,7 @@
 #
 # It installs Docker and Tailscale, adds 2 GB of swap, turns on security updates, copies this folder to
 # /opt/rag (where deploy.sh and the compose file live) and installs the daily database backup.
-# What it does not do: `tailscale up` and .env (both need you; see docs/azure-setup-guide.md).
+# What it does not do: `tailscale up` and .env (both need you; see notes/azure-setup-guide.md).
 set -euo pipefail
 
 [[ $EUID -eq 0 ]] || { echo "run it with sudo" >&2; exit 1; }
@@ -52,7 +52,7 @@ ln -sf /opt/rag/backup.sh /etc/cron.daily/rag-backup  # a link: a new backup.sh 
 
 cat <<DONE
 
-Done. Next (docs/azure-setup-guide.md, step 6):
+Done. Next (notes/azure-setup-guide.md, step 6):
   1. log out and in again (the docker group)
   2. sudo tailscale up --ssh --advertise-tags=tag:vm
   3. cp /opt/rag/env.example /opt/rag/.env && nano /opt/rag/.env

@@ -1,6 +1,6 @@
 """Chip documents: highlights, direction toggles, `⟦hN⟧` citation chips.
 
-See docs/new-chips-knowledge.md.
+See notes/new-chips-knowledge.md.
 
 Scripts only: the backend schema is untouched. A ChipDocument is an ElicitationDocument whose
 responses also carry `highlights`; every rule of the base schema still applies. `to_legacy` turns it

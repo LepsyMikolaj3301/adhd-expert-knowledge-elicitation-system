@@ -2,7 +2,7 @@
 
 Fixture loading, the clinician questions (written by a Claude agent through the inbox), which units
 hold which reference claim, the candidate representations of the expert answers, and a hybrid
-searcher over them (docs/expert-knowledge.md).
+searcher over them (notes/expert-knowledge.md).
 """
 
 import hashlib

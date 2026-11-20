@@ -2,7 +2,7 @@
 id: expert_unit_keys
 version: 1
 target: local instruct model (qwen3.5:9b), JSON mode, one call per expert unit
-use: retrieval keys for an expert unit (docs/expert-knowledge.md); the keys are only searched, never shown to the answer generator
+use: retrieval keys for an expert unit (notes/expert-knowledge.md); the keys are only searched, never shown to the answer generator
 output: JSON (schema at the end)
 ---
 

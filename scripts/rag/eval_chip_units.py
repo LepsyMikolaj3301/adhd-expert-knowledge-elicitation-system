@@ -1,4 +1,4 @@
-"""Chip units against the B1 baseline, retrieval only, in memory (docs/new-chips-knowledge.md).
+"""Chip units against the B1 baseline, retrieval only, in memory (notes/new-chips-knowledge.md).
 
 Usage: python scripts/rag/eval_chip_units.py --tier silver [--patient]
        python scripts/rag/eval_chip_units.py --tier silver --make-queries   # write request, stop

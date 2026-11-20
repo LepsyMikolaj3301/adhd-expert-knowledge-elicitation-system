@@ -20,7 +20,7 @@ If the PC is not reachable, the backend must fail loudly instead of quietly degr
 - No custom domain, no Cloudflare, no new worker protocol (the worker still polls the `jobs` table).
 - Ollama and LanguageTool are never exposed on the public internet (Ollama has no authentication).
 - No change to retry behaviour of jobs already queued (3 attempts, then failed).
-- No Render or Neon: their files, docs and code are removed (`docs/deployment.md` now describes Azure).
+- No Render or Neon: their files, docs and code are removed (`notes/deployment.md` now describes Azure).
 
 ## Approaches considered
 
@@ -77,7 +77,7 @@ exact firewall commands for the PC, log/restart settings.
 ## Revisions after planning (same day)
 
 - **Uptime and budget:** B2s, started only when needed (about $6/month while stopped). Budget alerts,
-  auto-shutdown and the stop/start routine are in `docs/azure-setup-guide.md`.
+  auto-shutdown and the stop/start routine are in `notes/azure-setup-guide.md`.
 - **Neon removed from the code too:** pooler detection, sslmode rewriting, `DATABASE_URL_UNPOOLED`.
 - **CI/CD:** `.github/workflows/ci.yml` (manual) and `deploy.yml` (manual; skippable tests and deploy).
   Images are built on GitHub, pushed to GHCR and pulled by the VM. The runner reaches the VM over

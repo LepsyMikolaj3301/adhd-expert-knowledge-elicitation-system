@@ -222,7 +222,7 @@ __marimo__/
 data/
 .claude/
 
-# Elicitation fixture inputs: vignette texts and synthetic expert answers (see docs/fixtures.md).
+# Elicitation fixture inputs: vignette texts and synthetic expert answers (see notes/fixtures.md).
 # Kept local like data/; tests skip when they are absent.
 tests/sample_inputs/
 

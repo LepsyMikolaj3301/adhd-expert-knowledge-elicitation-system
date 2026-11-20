@@ -1,4 +1,4 @@
-"""Step 3 of docs/new-chips-knowledge.md: a local model files the sentences that carry no citation.
+"""Step 3 of notes/new-chips-knowledge.md: a local model files the sentences that carry no citation.
 
 One JSON-mode call per answer (prompt Expert_sentence_targets.v1): the numbered vignette, the
 highlights with ids, every sentence (known targets shown), and the ids still open. The reply is ids

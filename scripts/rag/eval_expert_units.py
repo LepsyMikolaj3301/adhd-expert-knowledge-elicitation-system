@@ -1,4 +1,4 @@
-"""Compare ways to index expert answers for retrieval, in memory (docs/expert-knowledge.md).
+"""Compare ways to index expert answers for retrieval, in memory (notes/expert-knowledge.md).
 
 Usage: python scripts/rag/eval_expert_units.py --tier silver [--experiments B B1 B1+mmr ...]
        python scripts/rag/eval_expert_units.py --tier silver --make-queries   # write the request

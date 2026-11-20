@@ -1,6 +1,6 @@
 """The rules behind notebooks/answer_vignettes.ipynb: citations, chips, the lock-in, the document.
 
-A clinician answers the chip vignettes the way the web platform asks them (docs/frontend-vignettes.md):
+A clinician answers the chip vignettes the way the web platform asks them (notes/frontend-vignettes.md):
 cite passages, give each a direction, write free text that cites them, lock in Q1-Q3, then answer
 Q4-Q6. The result is a gold ChipDocument in data/fixtures_chips/synthetic/gold.
 
