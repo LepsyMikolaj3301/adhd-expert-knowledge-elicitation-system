@@ -1,6 +1,7 @@
 package InteresariuszeElicytacji {
     doc /*
-     * Interesariusze i ich potrzeby. Potrzeba to `concern` (ZAG-xx); wymagania, które na nią
+     * Interesariusze i ich potrzeby.
+     * Potrzeba to `concern` (ZAG-xx); wymagania, które na nią
      * odpowiadają, wskazują ją przez `frame` (02_Wymagania).
      *
      * Interesariusze to role, nie konkretne osoby. Ci, którzy sami korzystają z systemu

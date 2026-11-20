@@ -336,7 +336,7 @@ package KontekstElicytacji {
         #refinement dependency ZaglosujNaOdpowiedz to administratorDecyduje;
 
         // inżynier wiedzy
-        #refinement dependency PrzygotujWiniete to wersjonowanieWiniet;
+        #refinement dependency PrzygotujWiniete to statusyWiniet;
         #refinement dependency PrzygotujWiniete to anonimowaWinieta;
         #refinement dependency ZaprosIPrzydzielEksperta to kontaTylkoZZaproszen;
         #refinement dependency ZaprosIPrzydzielEksperta to przydzialTylkoOpublikowanych;

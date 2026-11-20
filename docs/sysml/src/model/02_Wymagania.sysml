@@ -39,7 +39,7 @@ package WymaganiaElicytacji {
         }
 
         // ---------------------------------------------------- vignettes
-        requirement <'WYM-F-03'> wersjonowanieWiniet : WymaganieSystemowe {
+        requirement <'WYM-F-03'> statusyWiniet : WymaganieSystemowe {
             doc /* Winieta ma wersje o statusie draft -> published -> retired. */
             @Zaimplementowane;
             @OdwolanieDoKodu { sciezka = "backend/app/vignettes/models.py"; }
@@ -440,7 +440,7 @@ package WymaganiaElicytacji {
         satisfy kontaTylkoZZaproszen by kontekstKliniki.hosting.system.api.auth;
         satisfy ochronaLogowania by kontekstKliniki.hosting.system.api.auth;
         satisfy czasZyciaSesji by kontekstKliniki.hosting.system.api.auth;
-        satisfy wersjonowanieWiniet by kontekstKliniki.hosting.system.api.vignettes;
+        satisfy statusyWiniet by kontekstKliniki.hosting.system.api.vignettes;
         satisfy przydzialTylkoOpublikowanych by kontekstKliniki.hosting.system.api.assignments;
         satisfy ukrytyProjektWiniety by kontekstKliniki.hosting.system.api.assignments;
         satisfy wszystkiePytaniaWidoczne by kontekstKliniki.hosting.system.api.assignments;
