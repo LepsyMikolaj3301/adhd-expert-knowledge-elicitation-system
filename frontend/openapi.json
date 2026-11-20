@@ -543,6 +543,21 @@
         "title": "CaseCounts",
         "type": "object"
       },
+      "CheckInviteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "maxLength": 256,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "CheckInviteRequest",
+        "type": "object"
+      },
       "CitedTogether": {
         "description": "A quote cited together with the unit's own, shown beside the unit's text.",
         "properties": {
@@ -661,6 +676,27 @@
           "is_mine"
         ],
         "title": "CommentView",
+        "type": "object"
+      },
+      "ComputeStatus": {
+        "properties": {
+          "checked_seconds_ago": {
+            "title": "Checked Seconds Ago",
+            "type": "integer"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          }
+        },
+        "required": [
+          "missing",
+          "checked_seconds_ago"
+        ],
+        "title": "ComputeStatus",
         "type": "object"
       },
       "Confounder": {
@@ -1369,6 +1405,16 @@
           "reviews_waiting_total": {
             "title": "Reviews Waiting Total",
             "type": "integer"
+          },
+          "system": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SystemStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "unread_activity": {
             "title": "Unread Activity",
@@ -2760,6 +2806,58 @@
           "payload"
         ],
         "title": "SubmissionView",
+        "type": "object"
+      },
+      "SystemStatus": {
+        "description": "For the admin: is the background work moving?",
+        "properties": {
+          "compute": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComputeStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failed_last_day": {
+            "title": "Failed Last Day",
+            "type": "integer"
+          },
+          "oldest_waiting_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest Waiting Minutes"
+          },
+          "stuck": {
+            "title": "Stuck",
+            "type": "boolean"
+          },
+          "waiting": {
+            "title": "Waiting",
+            "type": "integer"
+          },
+          "waiting_for_pc": {
+            "title": "Waiting For Pc",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "compute",
+          "waiting",
+          "waiting_for_pc",
+          "oldest_waiting_minutes",
+          "stuck",
+          "failed_last_day"
+        ],
+        "title": "SystemStatus",
         "type": "object"
       },
       "UnitSentence": {
@@ -4624,6 +4722,41 @@
           }
         },
         "summary": "Accept Invite",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/check-invite": {
+      "post": {
+        "description": "A POST, so that the token stays out of access logs.",
+        "operationId": "check_invite_api_v1_auth_check_invite_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Check Invite",
         "tags": [
           "auth"
         ]

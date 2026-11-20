@@ -12,6 +12,7 @@ import {
   type Direction,
   type LinkedHighlight,
   type ReviewItem,
+  type SystemStatus,
   type Speaker,
 } from '@/api/client'
 
@@ -101,7 +102,7 @@ export const INTRO = {
   hints: {
     heading: 'Setting quotes and directions',
     items: [
-      'To make a quote, select words in the text. The selection snaps to whole words.',
+      'To make a quote, select words in the text and press “Add quote”. The selection snaps to whole words.',
       'Click a quote in the list to put a reference to it in your answer, where your cursor is.',
       'Every quote needs a direction: what it does to your reading. If something is missing when you try to go on, it is marked in red.',
       "Not every text has something worth quoting. If that's your reading, that's fine.",
@@ -121,7 +122,107 @@ export const CASE_TEXT = {
   reviewLead: 'The text the answers are about.',
 } as const
 
+/** Quoting from the case: select words, then press the button at the bottom of the screen. */
+export const CITE = {
+  add: 'Add quote',
+  toComment: 'Quote in comment',
+  help: 'How to add a quote',
+  helpSteps: 'Select words in the text above, then press “Add quote” at the bottom of the screen.',
+  helpThen: 'Then choose its direction in the list of quotes.',
+} as const
+
+/** Setting a password from the link the study team sent. */
+export const INVITE = {
+  heading: 'Set your password',
+  label: (min: number) => `Password (at least ${min} characters)`,
+  submit: 'Set password',
+  tooShort: (min: number, length: number) =>
+    `The password needs at least ${min} characters. It has ${length} now.`,
+  checking: 'Checking your link…',
+  deadHeading: "This link can't be used",
+  deadLead:
+    'It has already been used to set a password, or it has expired. Each link works only once.',
+  deadNext:
+    'If you already set your password, sign in. Otherwise, ask the study team for a new link.',
+  signIn: 'Go to sign in',
+} as const
+
 type ByRole<T> = { expert: T; admin: T }
+
+/** "12 min", "2 h": how long a job has waited. */
+function waited(minutes: number): string {
+  return minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h`
+}
+
+function jobs(count: number): string {
+  return count === 1 ? '1 job' : `${count} jobs`
+}
+
+/** "ollama" → "Ollama can't be reached", as the API words it in `compute_unavailable`. */
+function missingText(missing: string): string {
+  if (missing === 'ollama') return "Ollama can't be reached"
+  if (missing === 'languagetool') return "LanguageTool can't be reached"
+  return `Ollama has no ${missing}`
+}
+
+/** For the admin only: is the background work (the PC with the models, the worker) moving? */
+export const SYSTEM = {
+  heading: 'System status',
+  seeStatus: 'See status',
+  /** What is wrong, most urgent first. Empty: nothing to tell. */
+  problems(s: SystemStatus | null | undefined): string[] {
+    if (!s) return []
+    const out: string[] = []
+    if (s.compute?.missing.length) {
+      const why = s.compute.missing.map(missingText).join('; ')
+      const queue = s.waiting_for_pc
+        ? ` ${jobs(s.waiting_for_pc)} wait for it, the oldest for ${waited(s.oldest_waiting_minutes ?? 0)}.`
+        : ''
+      out.push(`The computer with the models is off or not ready (${why}).${queue}`)
+    }
+    if (s.stuck)
+      out.push(
+        `A job has waited ${waited(s.oldest_waiting_minutes ?? 0)} although it could run: the worker may be down.`,
+      )
+    if (s.failed_last_day)
+      out.push(`${jobs(s.failed_last_day)} failed in the last day. Cases shows what to retry.`)
+    return out
+  },
+  /** The three lines of the status panel. */
+  rows(s: SystemStatus): { label: string; ok: boolean; text: string }[] {
+    const missing = s.compute?.missing ?? []
+    return [
+      {
+        label: 'Computer with the models',
+        ok: !missing.length,
+        text: !s.compute
+          ? 'Not checked here (REQUIRE_COMPUTE is off).'
+          : missing.length
+            ? missing.map(missingText).join('; ')
+            : `Ready, checked ${s.compute.checked_seconds_ago} s ago.`,
+      },
+      {
+        label: 'Worker',
+        ok: !s.stuck,
+        text: s.stuck ? 'Jobs that could run are not being taken.' : 'Taking jobs.',
+      },
+      {
+        label: 'Queue',
+        ok: !s.failed_last_day && !s.waiting_for_pc,
+        text: [
+          s.waiting
+            ? `${jobs(s.waiting)} waiting, the oldest for ${waited(s.oldest_waiting_minutes ?? 0)}` +
+              (s.waiting_for_pc ? ` (${s.waiting_for_pc} for the computer)` : '')
+            : 'Nothing waiting',
+          s.failed_last_day ? `${s.failed_last_day} failed in the last day` : '',
+        ]
+          .filter(Boolean)
+          .join('; ')
+          .concat('.'),
+      },
+    ]
+  },
+}
 
 /**
  * The home page: what PsyKnowHow is, in the order a newcomer needs it. `about` is always
@@ -473,6 +574,8 @@ export function describeError(error: unknown, { serverWording = false } = {}): s
       return 'Please sign in again.'
     case 'unavailable':
       return "We can't reach the server right now. Please try again in a moment."
+    case 'compute_unavailable':
+      return 'The computer that checks answers is not ready right now. Your text is safe. Please try again later.'
     case 'embedding_unavailable':
       return "The embedding model can't be reached, so search is off right now. The list of units still works."
     case 'internal_error':

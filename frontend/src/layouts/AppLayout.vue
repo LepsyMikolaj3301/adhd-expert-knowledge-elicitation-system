@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import SignInAgainDialog from '@/components/SignInAgainDialog.vue'
+import { SYSTEM } from '@/copy'
 import { navFor } from '@/navigation'
 import { SITE_NAME } from '@/site'
 import { useAuthStore } from '@/stores/auth'
@@ -38,6 +39,8 @@ watch(
     refresh()
   },
 )
+/** Only the admin's home answer carries `system`. */
+const problems = computed(() => (auth.role === 'admin' ? SYSTEM.problems(home.data?.system) : []))
 const items = computed(() => (auth.user ? navFor(auth.user.role) : []))
 
 /** A section stays current on the pages under it, such as one vignette under Vignettes. */
@@ -134,6 +137,13 @@ function tabClass(active: boolean): string {
       :class="route.meta.wide ? 'min-w-0 px-4 py-6 md:px-8' : 'min-w-0 px-4 py-8 md:px-12 md:py-12'"
     >
       <div :class="route.meta.wide ? '' : 'max-w-4xl'">
+        <div v-if="problems.length" class="alert mb-6" role="status" data-testid="system-banner">
+          {{ problems[0] }}
+          <template v-if="problems.length > 1"> And {{ problems.length - 1 }} more.</template>
+          <RouterLink to="/#system" class="ml-1 font-medium text-danger underline">{{
+            SYSTEM.seeStatus
+          }}</RouterLink>
+        </div>
         <RouterView />
       </div>
     </main>

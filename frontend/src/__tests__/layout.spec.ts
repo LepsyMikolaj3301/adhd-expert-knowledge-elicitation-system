@@ -306,3 +306,76 @@ describe('account page', () => {
     expect(router.currentRoute.value.name).toBe('account')
   })
 })
+
+describe('system status', () => {
+  const healthy = {
+    compute: { missing: [], checked_seconds_ago: 4 },
+    waiting: 0,
+    waiting_for_pc: 0,
+    oldest_waiting_minutes: null,
+    stuck: false,
+    failed_last_day: 0,
+  }
+
+  function serveSystem(system: object | null) {
+    stubFetch((url) =>
+      jsonResponse(
+        200,
+        url.endsWith('/me/home')
+          ? {
+              next_up: [],
+              next_up_total: 0,
+              reviews_waiting: [],
+              reviews_waiting_total: 0,
+              recent_reviews: [],
+              activity: [],
+              unread_activity: 0,
+              system,
+            }
+          : url.endsWith('/assignments') || url.includes('/reviews')
+            ? []
+            : {},
+      ),
+    )
+  }
+
+  it('warns the admin on every page when the computer with the models is off', async () => {
+    serveSystem({
+      ...healthy,
+      compute: { missing: ['ollama'], checked_seconds_ago: 3 },
+      waiting: 3,
+      waiting_for_pc: 3,
+      oldest_waiting_minutes: 130,
+    })
+    const w = await open(admin, '/reviews')
+    const banner = w.get('[data-testid="system-banner"]')
+    expect(banner.text()).toContain("Ollama can't be reached")
+    expect(banner.text()).toContain('3 jobs wait for it, the oldest for 2 h')
+    expect(banner.get('a').attributes('href')).toBe('/#system')
+  })
+
+  it('says the worker may be down when a job that could run keeps waiting', async () => {
+    serveSystem({ ...healthy, waiting: 1, oldest_waiting_minutes: 12, stuck: true })
+    const w = await open(admin, '/')
+    expect(w.get('[data-testid="system-banner"]').text()).toContain('the worker may be down')
+    const panel = w.get('[data-testid="system-status"]')
+    expect(panel.findAll('[data-ok="false"]')).toHaveLength(1)
+    expect(panel.text()).toContain('Jobs that could run are not being taken.')
+  })
+
+  it('shows no banner when all is well, only the green panel on home', async () => {
+    serveSystem(healthy)
+    const w = await open(admin, '/')
+    expect(w.find('[data-testid="system-banner"]').exists()).toBe(false)
+    const panel = w.get('[data-testid="system-status"]')
+    expect(panel.findAll('[data-ok="true"]')).toHaveLength(3)
+    expect(panel.text()).toContain('Ready, checked 4 s ago.')
+  })
+
+  it('tells an expert nothing about it', async () => {
+    serveSystem(null)
+    const w = await open(expert, '/')
+    expect(w.find('[data-testid="system-banner"]').exists()).toBe(false)
+    expect(w.find('[data-testid="system-status"]').exists()).toBe(false)
+  })
+})

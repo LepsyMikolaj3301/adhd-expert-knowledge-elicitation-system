@@ -41,6 +41,11 @@ export const useAuthStore = defineStore('auth', () => {
     loaded.value = true
   }
 
+  /** Throws `invalid_invite` when the link was used, replaced or has expired. */
+  async function checkInvite(token: string): Promise<void> {
+    await api.POST('/api/v1/auth/check-invite', { body: { token } })
+  }
+
   async function logout(): Promise<void> {
     await api.POST('/api/v1/auth/logout')
     user.value = null
@@ -68,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
     load,
     login,
     acceptInvite,
+    checkInvite,
     logout,
     clear,
     endSession,

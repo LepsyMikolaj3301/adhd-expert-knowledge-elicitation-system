@@ -188,7 +188,8 @@ function buttonNamed(name: string) {
   return button
 }
 
-async function selectInText(text: string) {
+/** Drag over the words: the selection is made, the pointer lifts, nothing is added yet. */
+async function dragOver(text: string) {
   const root = app().get('[data-testid="vignette-text"]')
   const node = root.element.firstElementChild?.firstChild as Text
   const start = (node.textContent ?? '').indexOf(text)
@@ -199,8 +200,31 @@ async function selectInText(text: string) {
   selection.removeAllRanges()
   await root.trigger('pointerdown')
   selection.addRange(range)
+  document.dispatchEvent(new Event('selectionchange'))
   window.dispatchEvent(new Event('pointerup'))
   await flushPromises()
+}
+
+/** The "Add quote" button, which lives at the bottom of the screen, outside the app's tree. */
+function addQuoteButton(): HTMLButtonElement | null {
+  return document.querySelector('[data-testid="add-quote"]')
+}
+
+async function pressAddQuote() {
+  const button = addQuoteButton()
+  if (!button) throw new Error('no "Add quote" button')
+  button.dispatchEvent(new Event('pointerdown', { cancelable: true }))
+  // The phone drops the selection as the button is touched.
+  window.getSelection()?.removeAllRanges()
+  document.dispatchEvent(new Event('selectionchange'))
+  await flushPromises()
+  button.click()
+  await flushPromises()
+}
+
+async function selectInText(text: string) {
+  await dragOver(text)
+  await pressAddQuote()
 }
 
 // jsdom has no layout, and focusing an editor scrolls the cursor into view.
@@ -303,6 +327,47 @@ describe('the vignette text', () => {
     expect(rows()).toHaveLength(1)
   })
 
+  it('adds nothing when the pointer lifts: the selection waits for "Add quote"', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    expect(addQuoteButton()).toBeNull()
+    await dragOver('barely slept')
+    expect(rows()).toHaveLength(0)
+    expect(addQuoteButton()?.textContent).toContain('Add quote')
+    expect(window.getSelection()?.isCollapsed).toBe(false)
+  })
+
+  it('hides "Add quote" when the selection goes away', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    await dragOver('barely slept')
+    window.getSelection()?.removeAllRanges()
+    document.dispatchEvent(new Event('selectionchange'))
+    await flushPromises()
+    expect(addQuoteButton()).toBeNull()
+    expect(rows()).toHaveLength(0)
+  })
+
+  it('offers no "Add quote" for words selected outside the patient text', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    const range = document.createRange()
+    range.selectNodeContents(app().get('h1').element)
+    window.getSelection()?.removeAllRanges()
+    window.getSelection()?.addRange(range)
+    document.dispatchEvent(new Event('selectionchange'))
+    await flushPromises()
+    expect(addQuoteButton()).toBeNull()
+  })
+
+  it('adds one quote from the keyboard too', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    await dragOver('barely slept')
+    addQuoteButton()!.click()
+    await flushPromises()
+    addQuoteButton()?.click()
+    await flushPromises()
+    expect(rows()).toHaveLength(1)
+    expect(addQuoteButton()).toBeNull()
+  })
+
   it('ignores selections on a submitted vignette', async () => {
     await open(
       assignment(
@@ -310,8 +375,9 @@ describe('the vignette text', () => {
         { state: 'processing', allowed_actions: [], submitted_at: 'now' },
       ),
     )
-    await selectInText('barely slept')
+    await dragOver('barely slept')
     expect(rows()).toHaveLength(0)
+    expect(addQuoteButton()).toBeNull()
   })
 
   it('puts "How to add a quote" under the text box, and only while quotes can be added', async () => {
@@ -331,13 +397,16 @@ describe('the vignette text', () => {
     expect(app().find('[data-testid="cite-help"]').exists()).toBe(false)
   })
 
-  it('shows a cursor selecting words in the help, once it is open', async () => {
+  it('shows words being selected and "Add quote" pressed in the help, once it is open', async () => {
     await open(assignment({ answers: {}, highlights: [] }))
     expect(app().find('[data-testid="cite-demo"]').exists()).toBe(false)
     await app().get('[data-testid="cite-help"]').trigger('focusin')
     const demo = app().get('[data-testid="cite-demo"]')
     expect(demo.find('svg.cursor').exists()).toBe(true)
     expect(demo.get('.words').text()).toContain('lose my keys')
+    expect(demo.get('[data-testid="cite-demo-button"]').text()).toBe('+ Add quote')
+    expect(demo.find('.tap').exists()).toBe(true)
+    expect(app().text()).toContain('then press “Add quote” at the bottom of the screen')
   })
 
   it('says how the text was written in the text box, not in the breadcrumb', async () => {

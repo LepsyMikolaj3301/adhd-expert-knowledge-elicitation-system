@@ -12,6 +12,7 @@ import {
   commentExcerpt,
   describeError,
   HOME,
+  SYSTEM,
   tallyLabel,
   TRUST_SENTENCE,
 } from '@/copy'
@@ -227,6 +228,31 @@ watch(
             :action="`Open ${item.label}`"
           />
         </div>
+      </section>
+
+      <section
+        v-if="data?.system"
+        id="system"
+        class="mt-10"
+        aria-labelledby="system-heading"
+        data-testid="system-status"
+      >
+        <h2 id="system-heading" class="text-2xl">{{ SYSTEM.heading }}</h2>
+        <ul class="mt-2 divide-y divide-line border-y border-line">
+          <li v-for="row in SYSTEM.rows(data.system)" :key="row.label" class="flex gap-3 py-3">
+            <span
+              class="mt-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              :class="row.ok ? 'bg-success' : 'bg-danger'"
+              role="img"
+              :aria-label="row.ok ? 'OK' : 'Problem'"
+              :data-ok="row.ok"
+            />
+            <span>
+              <span class="font-medium text-ink">{{ row.label }}</span>
+              <span class="block text-base text-muted">{{ row.text }}</span>
+            </span>
+          </li>
+        </ul>
       </section>
 
       <section v-if="data" class="mt-10" aria-labelledby="news" data-testid="news">

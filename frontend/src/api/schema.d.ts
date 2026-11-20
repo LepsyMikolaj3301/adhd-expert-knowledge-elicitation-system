@@ -324,6 +324,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/check-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Invite
+         * @description A POST, so that the token stays out of access logs.
+         */
+        post: operations["check_invite_api_v1_auth_check_invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -966,6 +986,11 @@ export interface components {
             /** Stopped */
             stopped: number;
         };
+        /** CheckInviteRequest */
+        CheckInviteRequest: {
+            /** Token */
+            token: string;
+        };
         /**
          * CitedTogether
          * @description A quote cited together with the unit's own, shown beside the unit's text.
@@ -1006,6 +1031,13 @@ export interface components {
             question_id: string;
             speaker: components["schemas"]["Speaker"];
             stance: components["schemas"]["Stance"] | null;
+        };
+        /** ComputeStatus */
+        ComputeStatus: {
+            /** Checked Seconds Ago */
+            checked_seconds_ago: number;
+            /** Missing */
+            missing: string[];
         };
         /** Confounder */
         Confounder: {
@@ -1267,6 +1299,7 @@ export interface components {
             reviews_waiting: components["schemas"]["ReviewItem"][];
             /** Reviews Waiting Total */
             reviews_waiting_total: number;
+            system?: components["schemas"]["SystemStatus"] | null;
             /** Unread Activity */
             unread_activity: number;
         };
@@ -1770,6 +1803,23 @@ export interface components {
             submitted_at: string;
             /** Vignette Hash */
             vignette_hash: string;
+        };
+        /**
+         * SystemStatus
+         * @description For the admin: is the background work moving?
+         */
+        SystemStatus: {
+            compute: components["schemas"]["ComputeStatus"] | null;
+            /** Failed Last Day */
+            failed_last_day: number;
+            /** Oldest Waiting Minutes */
+            oldest_waiting_minutes: number | null;
+            /** Stuck */
+            stuck: boolean;
+            /** Waiting */
+            waiting: number;
+            /** Waiting For Pc */
+            waiting_for_pc: number;
         };
         /** UnitSentence */
         UnitSentence: {
@@ -2666,6 +2716,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserView"];
                 };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_invite_api_v1_auth_check_invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Client Error */
             "4XX": {

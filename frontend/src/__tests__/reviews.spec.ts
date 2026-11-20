@@ -92,6 +92,7 @@ describe('wording', () => {
     expect(describeError(err('review_closed'))).toContain('still here')
     expect(describeError(err('stale_round'))).toContain('changed')
     expect(describeError(err('email_taken'))).toContain('already')
+    expect(describeError(err('compute_unavailable'))).toContain('not ready')
   })
 
   it('says what was not found, and what a conflict is about', () => {

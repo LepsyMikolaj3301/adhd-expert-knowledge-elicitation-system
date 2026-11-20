@@ -19,7 +19,7 @@ import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import DecisionButtons, { type Decision } from '@/components/answering/DecisionButtons.vue'
 import ReviewAnswerCard from '@/components/answering/ReviewAnswerCard.vue'
 import VignetteText from '@/components/answering/VignetteText.vue'
-import { CASE_TEXT, describeError, reviewOutcome } from '@/copy'
+import { CASE_TEXT, CITE, describeError, reviewOutcome } from '@/copy'
 
 const REFRESH_MS = 30_000
 
@@ -277,6 +277,7 @@ onUnmounted(() => {
               :text="caseText"
               :active="activeMark"
               :can-cite="sink !== null"
+              :cite-label="CITE.toComment"
               @cite="citeFromCase"
             />
           </CasePanel>
