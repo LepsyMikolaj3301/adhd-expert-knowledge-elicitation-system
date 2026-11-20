@@ -138,24 +138,34 @@ async def issue_invite(db: AsyncSession, user: User, actor_id) -> str:
     return f"/invite/{token}"
 
 
-async def accept_invite(db: AsyncSession, token: str, password: str) -> tuple[User, str]:
-    # Before touching the database, so that no connection or lock is held during the slow hash.
-    password_hash = await run_hash(hash_password, password)
-    invite = await db.scalar(
-        select(Invite).where(Invite.token_hash == hash_token(token)).with_for_update()
-    )
-    now = utcnow()
+async def _usable_invite(db: AsyncSession, token: str, *, lock: bool) -> tuple[Invite, User]:
+    """The invite behind a link, if it can still set a password: unused, unexpired, active user."""
+    query = select(Invite).where(Invite.token_hash == hash_token(token))
+    invite = await db.scalar(query.with_for_update() if lock else query)
     user = await db.get(User, invite.user_id) if invite else None
     if (
         invite is None
         or user is None
         or not user.is_active
         or invite.used_at
-        or invite.expires_at <= now
+        or invite.expires_at <= utcnow()
     ):
         raise DomainError(
             "invalid_invite", "This invite is not valid.", status.HTTP_400_BAD_REQUEST
         )
+    return invite, user
+
+
+async def check_invite(db: AsyncSession, token: str) -> None:
+    """Lets the invite page say a used or expired link is dead before asking for a password."""
+    await _usable_invite(db, token, lock=False)
+
+
+async def accept_invite(db: AsyncSession, token: str, password: str) -> tuple[User, str]:
+    # Before touching the database, so that no connection or lock is held during the slow hash.
+    password_hash = await run_hash(hash_password, password)
+    invite, user = await _usable_invite(db, token, lock=True)
+    now = utcnow()
     invite.used_at = now
     user.password_hash = password_hash
     user.failed_logins = 0

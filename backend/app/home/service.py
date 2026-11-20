@@ -1,17 +1,29 @@
 """What the home page shows. Computed when read from the workflow's own records, so nothing is
 stored per user (only when they last looked) and new experts see their feed at once."""
 
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from app import compute
 from app.assignments.models import Assignment
 from app.assignments.states import Actor, State
 from app.audit.models import AuditEvent
 from app.core.db import utcnow
-from app.home.schemas import ActivityItem, ActivityKind, HomeView, NextAction, NextUpItem, Outcome
+from app.home.schemas import (
+    ActivityItem,
+    ActivityKind,
+    ComputeStatus,
+    HomeView,
+    NextAction,
+    NextUpItem,
+    Outcome,
+    SystemStatus,
+)
+from app.jobs.models import Job, JobStatus
 from app.reviews import access
 from app.reviews import service as reviews
 from app.reviews.models import AnswerComment, ReviewParticipant
@@ -23,6 +35,8 @@ WAITING = 5
 RECENT = 10
 ACTIVITY = 30
 EXCERPT = 140
+# A job that could run and has waited this long means the worker isn't taking jobs.
+STUCK_MINUTES = 5
 
 EXPERT_ACTIONS: dict[State, NextAction] = {
     State.ASSIGNED: "start",
@@ -213,6 +227,45 @@ async def _activity(db: AsyncSession, viewer: User) -> list[ActivityItem]:
     ]
 
 
+async def system_status(db: AsyncSession) -> SystemStatus:
+    seen = await compute.latest()
+    now = utcnow()
+    rows = (
+        await db.execute(
+            select(Job.kind, Job.created_at).where(
+                or_(
+                    Job.status == JobStatus.QUEUED,
+                    (Job.status == JobStatus.RUNNING) & (Job.locked_until < now),
+                )
+            )
+        )
+    ).all()
+    for_pc = [seen is not None and compute.blocked(seen, kind) for kind, _ in rows]
+    stuck = timedelta(minutes=STUCK_MINUTES)
+    failed = await db.scalar(
+        select(func.count())
+        .select_from(Job)
+        .where(Job.status == JobStatus.FAILED, Job.created_at > now - timedelta(days=1))
+    )
+    return SystemStatus(
+        compute=None
+        if seen is None
+        else ComputeStatus(
+            missing=compute.missing_now(seen),
+            checked_seconds_ago=round(time.monotonic() - seen.at),
+        ),
+        waiting=len(rows),
+        waiting_for_pc=sum(for_pc),
+        oldest_waiting_minutes=(
+            int((now - min(at for _, at in rows)).total_seconds() // 60) if rows else None
+        ),
+        stuck=any(
+            now - at > stuck for (_, at), blocked in zip(rows, for_pc, strict=True) if not blocked
+        ),
+        failed_last_day=failed or 0,
+    )
+
+
 async def home(db: AsyncSession, viewer: User) -> HomeView:
     next_up, total = await _next_up(db, viewer)
     open_reviews = await reviews.list_reviews(db, viewer, status="open")
@@ -231,6 +284,7 @@ async def home(db: AsyncSession, viewer: User) -> HomeView:
         recent_reviews=await reviews.list_reviews(db, viewer, limit=RECENT),
         activity=activity,
         unread_activity=sum(item.unread for item in activity),
+        system=await system_status(db) if viewer.role == Role.ADMIN else None,
     )
 
 

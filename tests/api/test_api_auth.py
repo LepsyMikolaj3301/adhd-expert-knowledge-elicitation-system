@@ -18,6 +18,7 @@ PUBLIC = {
     ("post", "/api/v1/auth/login"),
     ("post", "/api/v1/auth/logout"),
     ("post", "/api/v1/auth/accept-invite"),
+    ("post", "/api/v1/auth/check-invite"),
     ("get", "/api/v1/health"),
 }
 ID = "00000000-0000-0000-0000-000000000000"
@@ -145,6 +146,49 @@ async def test_invite_flow():
     other = Api()
     await other.fails("POST", "/auth/accept-invite", 400, "invalid_invite", json=accept)
     await other.ok("POST", "/auth/login", json=login)
+
+
+async def test_checking_an_invite_says_whether_it_can_still_set_a_password():
+    admin = await admin_api()
+    created = await admin.ok(
+        "POST",
+        "/users",
+        201,
+        json={"email": "new@example.com", "display_name": "New", "role": "expert"},
+    )
+    first = created["invite_path"].removeprefix("/invite/")
+    guest = Api()
+    await guest.ok("POST", "/auth/check-invite", 204, json={"token": first})
+    await guest.fails("POST", "/auth/check-invite", 400, "invalid_invite", json={"token": "nope"})
+
+    # Re-issuing kills the first link; using the second kills it too.
+    second = (await admin.ok("POST", f"/users/{created['user']['id']}/invite"))["invite_path"]
+    second = second.removeprefix("/invite/")
+    await guest.fails("POST", "/auth/check-invite", 400, "invalid_invite", json={"token": first})
+    await guest.ok("POST", "/auth/check-invite", 204, json={"token": second})
+    await guest.ok("POST", "/auth/accept-invite", json={"token": second, "password": PASSWORD})
+    await Api().fails(
+        "POST", "/auth/check-invite", 400, "invalid_invite", json={"token": second}
+    )
+
+
+async def test_checking_an_expired_or_deactivated_invite_fails():
+    admin = await admin_api()
+    created = await admin.ok(
+        "POST",
+        "/users",
+        201,
+        json={"email": "new@example.com", "display_name": "New", "role": "expert"},
+    )
+    token = {"token": created["invite_path"].removeprefix("/invite/")}
+    await admin.ok("PATCH", f"/users/{created['user']['id']}", json={"is_active": False})
+    await Api().fails("POST", "/auth/check-invite", 400, "invalid_invite", json=token)
+    await admin.ok("PATCH", f"/users/{created['user']['id']}", json={"is_active": True})
+    await Api().ok("POST", "/auth/check-invite", 204, json=token)
+    async with session_factory()() as db:
+        await db.execute(update(Invite).values(expires_at=utcnow() - timedelta(seconds=1)))
+        await db.commit()
+    await Api().fails("POST", "/auth/check-invite", 400, "invalid_invite", json=token)
 
 
 async def test_reissued_invite_replaces_the_old_one_and_expiry_applies():

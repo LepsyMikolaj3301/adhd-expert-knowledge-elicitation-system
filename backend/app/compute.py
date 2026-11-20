@@ -170,6 +170,23 @@ async def is_down_for(kind: JobKind) -> bool:
     return bool(_missing(await probe(), [kind]))
 
 
+async def latest() -> Probe | None:
+    """The last probe, for the admin's status. None: the check is off (REQUIRE_COMPUTE)."""
+    if not settings.require_compute:
+        return None
+    return await _recent(API_TRUSTS)
+
+
+def missing_now(seen: Probe) -> list[str]:
+    """Everything any job needs that the PC doesn't offer, e.g. ["ollama", "languagetool"]."""
+    return _missing(seen, list(JobKind))
+
+
+def blocked(seen: Probe, kind: JobKind) -> bool:
+    """A job of this kind can't run on what the probe saw."""
+    return bool(_missing(seen, [kind]))
+
+
 async def watch() -> None:
     """The API's background probe. Runs until cancelled."""
     while True:

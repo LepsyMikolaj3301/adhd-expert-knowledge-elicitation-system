@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Response, status
 
 from app.auth import service
 from app.auth.dependencies import CurrentUser
-from app.auth.schemas import AcceptInviteRequest, LoginRequest
+from app.auth.schemas import AcceptInviteRequest, CheckInviteRequest, LoginRequest
 from app.core.db import DbSession
 from app.users.schemas import UserView
 
@@ -20,6 +20,12 @@ async def login(body: LoginRequest, response: Response, db: DbSession) -> UserVi
 async def logout(request: Request, response: Response, db: DbSession) -> None:
     await service.logout(db, request.cookies.get(service.SESSION_COOKIE))
     response.delete_cookie(service.SESSION_COOKIE, path="/")
+
+
+@router.post("/auth/check-invite", status_code=status.HTTP_204_NO_CONTENT)
+async def check_invite(body: CheckInviteRequest, db: DbSession) -> None:
+    """A POST, so that the token stays out of access logs."""
+    await service.check_invite(db, body.token)
 
 
 @router.post("/auth/accept-invite")

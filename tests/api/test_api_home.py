@@ -3,6 +3,8 @@
 from collections import Counter
 from datetime import timedelta
 
+import httpx
+import pytest
 from api_helpers import (
     Api,
     admin_api,
@@ -16,9 +18,11 @@ from api_helpers import (
     to_review,
 )
 
-from app.core.db import utcnow
+from app import compute
+from app.core.db import session_factory, utcnow
 from app.jobs import handlers
-from app.jobs.models import JobKind
+from app.jobs.models import Job, JobKind, JobStatus
+from app.settings import settings
 
 
 async def home(api: Api):
@@ -63,6 +67,7 @@ async def test_a_new_account_has_an_empty_home():
         "recent_reviews": [],
         "activity": [],
         "unread_activity": 0,
+        "system": None,
     }
 
 
@@ -357,3 +362,85 @@ async def test_each_person_has_their_own_last_look():
     await e1.ok("POST", "/me/activity/seen", 204)
     assert (await home(e1))["unread_activity"] == 0
     assert (await home(e2))["unread_activity"] > 0
+
+
+# --- system status (admin only) -------------------------------------------------------------
+
+
+@pytest.fixture
+def pc(monkeypatch):
+    """REQUIRE_COMPUTE on; `pc(up)` switches the mocked Ollama and LanguageTool on or off."""
+    monkeypatch.setattr(settings, "require_compute", True)
+    monkeypatch.setattr(settings, "enhance_model", "")
+    compute.forget()
+
+    def switch(up: bool):
+        def handler(request: httpx.Request) -> httpx.Response:
+            if not up:
+                raise httpx.ConnectError("down", request=request)
+            if request.url.path == "/api/tags":
+                models = [{"name": settings.classifier_model}, {"name": "bge-m3:latest"}]
+                return httpx.Response(200, json={"models": models})
+            return httpx.Response(200, json=[])
+
+        monkeypatch.setattr(
+            compute,
+            "client",
+            lambda base_url: httpx.AsyncClient(
+                base_url=base_url, transport=httpx.MockTransport(handler)
+            ),
+        )
+        compute.forget()
+
+    yield switch
+    compute.forget()
+
+
+async def add_job(kind: JobKind, minutes_ago: int = 0, status: JobStatus = JobStatus.QUEUED):
+    async with session_factory()() as db:
+        db.add(Job(kind=kind, status=status, created_at=utcnow() - timedelta(minutes=minutes_ago)))
+        await db.commit()
+
+
+async def system(api: Api):
+    return (await home(api))["system"]
+
+
+async def test_only_the_admin_is_told_how_the_system_runs():
+    assert (await home(await expert_api("e@example.com")))["system"] is None
+    assert await system(await admin_api()) == {
+        "compute": None,
+        "waiting": 0,
+        "waiting_for_pc": 0,
+        "oldest_waiting_minutes": None,
+        "stuck": False,
+        "failed_last_day": 0,
+    }
+
+
+async def test_jobs_waiting_for_a_pc_that_is_off_are_not_called_stuck(pc):
+    pc(False)
+    await add_job(JobKind.INGEST, minutes_ago=30)
+    status = await system(await admin_api())
+    assert status["compute"]["missing"] == ["ollama", "languagetool"]
+    assert (status["waiting"], status["waiting_for_pc"], status["stuck"]) == (1, 1, False)
+    assert status["oldest_waiting_minutes"] == 30
+
+
+async def test_a_job_that_could_run_but_waits_means_the_worker_is_down(pc):
+    pc(True)
+    admin = await admin_api()
+    await add_job(JobKind.INGEST, minutes_ago=1)
+    status = await system(admin)
+    assert status["compute"]["missing"] == []
+    assert (status["waiting_for_pc"], status["stuck"]) == (0, False)
+
+    await add_job(JobKind.REFIT, minutes_ago=10)
+    assert (await system(admin))["stuck"] is True
+
+
+async def test_failed_jobs_of_the_last_day_are_counted():
+    await add_job(JobKind.REFIT, status=JobStatus.FAILED)
+    await add_job(JobKind.REFIT, minutes_ago=2 * 24 * 60, status=JobStatus.FAILED)
+    status = await system(await admin_api())
+    assert (status["failed_last_day"], status["waiting"]) == (1, 0)

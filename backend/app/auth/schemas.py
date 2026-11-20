@@ -16,3 +16,9 @@ class AcceptInviteRequest(BaseModel):
 
     token: str = Field(max_length=256)
     password: str = Field(min_length=MIN_PASSWORD_LENGTH, max_length=MAX_PASSWORD_LENGTH)
+
+
+class CheckInviteRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    token: str = Field(max_length=256)

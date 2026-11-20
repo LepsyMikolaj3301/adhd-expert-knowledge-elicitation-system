@@ -49,6 +49,27 @@ class ActivityItem(BaseModel):
     outcome: Outcome | None = None
 
 
+class ComputeStatus(BaseModel):
+    # What the PC with the models doesn't offer ("ollama", "languagetool", "model X"); empty: ready.
+    missing: list[str]
+    checked_seconds_ago: int
+
+
+class SystemStatus(BaseModel):
+    """For the admin: is the background work moving?"""
+
+    # None: the PC isn't checked here (REQUIRE_COMPUTE off).
+    compute: ComputeStatus | None
+    # Queued, or running on a lease that ran out.
+    waiting: int
+    # Of those: the PC can't run them now.
+    waiting_for_pc: int
+    oldest_waiting_minutes: int | None
+    # A job that could run has waited for minutes: the worker isn't taking jobs.
+    stuck: bool
+    failed_last_day: int
+
+
 class HomeView(BaseModel):
     next_up: list[NextUpItem]
     next_up_total: int
@@ -60,6 +81,8 @@ class HomeView(BaseModel):
     activity: list[ActivityItem]
     # Counted among the items in `activity`.
     unread_activity: int
+    # Only for the admin.
+    system: SystemStatus | None = None
 
 
 class ActivitySeen(BaseModel):
