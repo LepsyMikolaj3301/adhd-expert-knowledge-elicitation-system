@@ -1,4 +1,4 @@
-"""Notes: what the generator reads, cut from a findings record (docs/new-chips-knowledge.md, steps 2
+"""Notes: what the generator reads, cut from a findings record (notes/new-chips-knowledge.md, steps 2
 and 9). Pure functions over plain dicts (`records.Record`), no models, no database.
 
 Moved here from app.knowledge.findings so that the web application's ingestion and the retrieval

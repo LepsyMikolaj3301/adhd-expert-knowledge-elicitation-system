@@ -1,5 +1,5 @@
 """Is the machine with the models up? Ollama and LanguageTool run on the owner's PC, not on the
-server that hosts the API (docs/deployment.md). Switched on by REQUIRE_COMPUTE; development and the
+server that hosts the API (notes/deployment.md). Switched on by REQUIRE_COMPUTE; development and the
 tests leave it off.
 
 Two places ask:

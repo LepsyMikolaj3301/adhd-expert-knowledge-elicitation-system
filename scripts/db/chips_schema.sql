@@ -1,4 +1,4 @@
--- Tables of docs/new-chips-knowledge.md ("Storage"), in their own schema so that nothing touches
+-- Tables of notes/new-chips-knowledge.md ("Storage"), in their own schema so that nothing touches
 -- backend/db/init.sql or the literature tables. {schema} is filled in by load_chips_pg.py (default
 -- chips_eval: `chips` itself is the web application's, created by migration 0003, which holds a
 -- frozen copy of these tables; change both together). vector / sparsevec come from the extension

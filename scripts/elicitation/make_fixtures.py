@@ -18,7 +18,7 @@ Sources (see llm_clients.py):
     claude  a Claude agent in the loop: requests are written to --inbox/requests, replies are read
             from --inbox/responses; the script itself never calls an API
 
-Tiers (docs/fixtures.md): answers and reference claims are only as trustworthy as their author.
+Tiers (notes/fixtures.md): answers and reference claims are only as trustworthy as their author.
     bronze  small local model (ollama / its samples)   plumbing and regression tests only
     silver  Claude instances (claude / its samples)    development metrics
     gold    real expert answers - cannot be generated here
@@ -966,7 +966,7 @@ def resolve_tier(args) -> str:
     if tier == "gold":
         raise SystemExit(
             "tier gold is real expert answers (non-synthetic documents, expert-confirmed claims); "
-            "it cannot be generated here - see docs/fixtures.md"
+            "it cannot be generated here - see notes/fixtures.md"
         )
     if args.answer_source == "ollama" and tier != "bronze":
         raise SystemExit("answers from a local model are bronze; use --tier bronze")

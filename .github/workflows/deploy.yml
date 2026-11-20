@@ -1,8 +1,8 @@
 # Deploys to the Azure VM. Manual only: Actions > Deploy > Run workflow. Both steps can be skipped:
 #   run_tests  off: don't run the CI workflow first
 #   deploy     off: build and push the images, leave the VM alone
-# The VM must be running (it is switched off when not in use: docs/azure-setup-guide.md).
-# One-time setup of the secrets and variables below: docs/azure-setup-guide.md, step 8.
+# The VM must be running (it is switched off when not in use: notes/azure-setup-guide.md).
+# One-time setup of the secrets and variables below: notes/azure-setup-guide.md, step 8.
 name: Deploy
 
 on:

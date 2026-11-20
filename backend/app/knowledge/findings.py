@@ -1,4 +1,4 @@
-"""Chip answers -> fragment units (steps 2, 4, 6, 7, 9 of docs/new-chips-knowledge.md). No models.
+"""Chip answers -> fragment units (steps 2, 4, 6, 7, 9 of notes/new-chips-knowledge.md). No models.
 
 Records are plain dicts (JSON in, JSON out). One record per response:
   highlights  [{id h1|i1, origin expert|implicit, chip, span, text, direction}]

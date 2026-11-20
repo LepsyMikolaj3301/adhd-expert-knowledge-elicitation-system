@@ -4,7 +4,7 @@ version: 4
 target: silver: Claude (Sonnet) via a Claude Code agent; bronze: local instruct model (qwen3.6:35b-a3b)
 use: synthetic expert answers with highlights, direction toggles and citation chips (chip fixtures, is_synthetic=true, expert_id SYN-*); never ingested to prod
 output: JSON (schema at the end)
-changes: v4 = v3 without Q4 (no what-if, no `q4`), plus `highlights` [{chip, text, direction}] and `⟦hN⟧` chips in the answers (docs/new-chips-knowledge.md). Only the chosen answer style is shown (`STYLE_RULE`), so the writer is never told about other styles or about A/B variants. `CHIP_HABIT` varies how often the clinician cites chips, so some sentences have none
+changes: v4 = v3 without Q4 (no what-if, no `q4`), plus `highlights` [{chip, text, direction}] and `⟦hN⟧` chips in the answers (notes/new-chips-knowledge.md). Only the chosen answer style is shown (`STYLE_RULE`), so the writer is never told about other styles or about A/B variants. `CHIP_HABIT` varies how often the clinician cites chips, so some sentences have none
 ---
 
 # System

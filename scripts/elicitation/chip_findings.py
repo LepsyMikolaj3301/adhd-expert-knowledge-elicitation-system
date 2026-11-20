@@ -1,4 +1,4 @@
-"""Chip answers -> fragment units (steps 2, 4, 6, 7, 9 of docs/new-chips-knowledge.md). No models.
+"""Chip answers -> fragment units (steps 2, 4, 6, 7, 9 of notes/new-chips-knowledge.md). No models.
 
 The logic the web application's worker uses lives in backend/app/knowledge/findings.py. This
 module re-exports it for the scripts (`import chip_findings as cf`) and adds what only they need:

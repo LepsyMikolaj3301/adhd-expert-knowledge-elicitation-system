@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Dumps the database to /var/backups/rag, keeping 7 days. Installed by setup-vm.sh into
 # /etc/cron.daily, which anacron also runs after a boot, so a VM that is switched off at night still
-# gets its backup the next time it is on. Restore: docs/azure-setup-guide.md.
+# gets its backup the next time it is on. Restore: notes/azure-setup-guide.md.
 set -euo pipefail
 
 BACKUPS=/var/backups/rag

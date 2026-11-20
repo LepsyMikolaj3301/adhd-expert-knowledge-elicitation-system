@@ -63,7 +63,7 @@ package KontekstElicytacji {
              * Maszyna wirtualna Azure (Standard_B2s, 4 GB, Ubuntu), docker compose: Caddy (TLS)
              * -> nginx (frontend) -> API, worker, PostgreSQL; obrazy z ghcr.io. Z internetu tylko
              * porty 80 i 443; SSH i wdrożenie przez Tailscale; codzienna kopia bazy. Szczegóły
-             * wdrożenia są poza modelem (docs/azure-setup-guide.md).
+             * wdrożenia są poza modelem (notes/azure-setup-guide.md).
              */
             @OdwolanieDoKodu { sciezka = "infra/azure/docker-compose.yml"; }
         }

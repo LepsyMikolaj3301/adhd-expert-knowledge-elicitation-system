@@ -6,7 +6,7 @@ points it at the database and gets `BaseRetriever`s and answer chains. It reads 
 writes.
 
 Built on `langchain-core` and [`expert-knowledge-core`](../expert-knowledge-core). How the
-knowledge is made and why it is cut this way: [docs/new-chips-knowledge.md](../../docs/new-chips-knowledge.md).
+knowledge is made and why it is cut this way: [notes/new-chips-knowledge.md](../../notes/new-chips-knowledge.md).
 
 ## Install
 

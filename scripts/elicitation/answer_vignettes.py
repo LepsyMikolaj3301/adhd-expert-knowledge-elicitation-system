@@ -1,4 +1,4 @@
-"""A human clinician answers the vignettes in the terminal: the gold tier (docs/fixtures.md).
+"""A human clinician answers the vignettes in the terminal: the gold tier (notes/fixtures.md).
 
 Usage: python scripts/elicitation/answer_vignettes.py --expert E01 --role "consultant psychiatrist,
            12 years adult ADHD" [--from silver] [--vignettes V001 V006] [--order shuffle|fixed]

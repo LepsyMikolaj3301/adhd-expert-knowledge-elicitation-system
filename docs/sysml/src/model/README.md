@@ -126,7 +126,7 @@ Model idzie za kodem. W `docs/` są nieaktualne opisy:
 - **Brak bramki między pytaniami.** Wszystkie zadane pytania są widoczne od razu
   (`_visible_questions` w `backend/app/assignments/service.py`). Pozostałość: `GATE` w
   `backend/app/vignettes/questions.py`.
-- **Inne stany przepływu** niż w `docs/backend-workflow.md`. Kod: `proofreading → proofread_check →
+- **Inne stany przepływu** niż w `notes/backend-workflow.md`. Kod: `proofreading → proofread_check →
   peer_review → processing → ingesting`. Dokumentacja: `processing → expert_check → building_units → …`.
 
 ## Historia

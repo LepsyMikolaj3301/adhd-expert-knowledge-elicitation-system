@@ -1,4 +1,4 @@
-"""Expert answers -> retrievable units (docs/expert-knowledge.md). No model calls.
+"""Expert answers -> retrievable units (notes/expert-knowledge.md). No model calls.
 
 A unit is one point of a clinician's answer, kept verbatim, plus the context it needs to stand
 alone: a header from the session metadata and the vignette sentence each quote comes from.

@@ -26,7 +26,7 @@ production (`/api/v1/...`). Start the backend from `backend/` with `uvicorn app.
 (or the "Backend: FastAPI" launch config). Set `VITE_API_PROXY_TARGET` to point the proxy somewhere else.
 
 Call the API through `api` from `src/api/client.ts`. Its types are generated from `openapi.json`: after
-changing the API, see "Running it" in [docs/backend-workflow.md](../docs/backend-workflow.md).
+changing the API, see "Running it" in [notes/backend-workflow.md](../notes/backend-workflow.md).
 Path alias: `@` -> `src/`.
 
 IDE: [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar), disable Vetur.

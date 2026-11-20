@@ -1,4 +1,4 @@
-"""Step 3 of docs/new-chips-knowledge.md: a local model files the sentences that carry no chip.
+"""Step 3 of notes/new-chips-knowledge.md: a local model files the sentences that carry no chip.
 
 Usage:
     python scripts/elicitation/classify_sentence_targets.py --tier silver --model qwen3.5:9b

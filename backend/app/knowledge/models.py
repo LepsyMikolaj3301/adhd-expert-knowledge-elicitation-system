@@ -25,11 +25,11 @@ class KnowledgeUnit(Base):
     """A reviewable unit of an expert's text. Retrieval must only ever read `ingested` units.
 
     A unit is a "fragment unit" (everything the expert said about one citation) or the "case unit"
-    (everything about the text as a whole): docs/new-chips-knowledge.md.
+    (everything about the text as a whole): notes/new-chips-knowledge.md.
     """
 
     # TODO(unit-structure): review whether this is the right way to cut units. Open questions are
-    # listed in docs/new-chips-knowledge.md, "To review: the unit structure".
+    # listed in notes/new-chips-knowledge.md, "To review: the unit structure".
 
     __tablename__ = "knowledge_units"
     __table_args__ = (UniqueConstraint("assignment_id", "review_round", "ordinal"),)

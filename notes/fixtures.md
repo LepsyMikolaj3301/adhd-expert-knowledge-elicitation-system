@@ -28,7 +28,7 @@ Nothing below is in git: vignette texts and expert answers (synthetic or real) s
 them out of band. The one exception is the silver chips data the tests need, which is synthetic and
 committed as small copies: `tests/fixtures/silver_chips/` (the chip documents, vignettes and platform
 seed) and `tests/fixtures/retrieval_silver/` (the frozen units, vectors and labels for the retrieval
-regression; see `docs/backend-workflow.md`, Tests). No test reads `data/`.
+regression; see `notes/backend-workflow.md`, Tests). No test reads `data/`.
 
 ```
 data/fixtures/                      (gitignored; synthetic/bronze is rebuilt from tests/sample_inputs)

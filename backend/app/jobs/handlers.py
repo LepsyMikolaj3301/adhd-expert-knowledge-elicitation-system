@@ -39,7 +39,7 @@ def unit_content_hash(embed_text: str, embed_text_combined: str) -> str:
 
 async def process(db: AsyncSession, assignment: Assignment, prepared: Any = None) -> None:
     """Cuts the answers the admin approved into units (steps 6 and 7 of
-    docs/new-chips-knowledge.md), from their lines as the author linked them. The units are
+    notes/new-chips-knowledge.md), from their lines as the author linked them. The units are
     approved with their answers; nobody reads them before ingestion."""
     submission = await db.get(Submission, assignment.id)
     round_ = await proofread_service.get_round(db, assignment.id, assignment.review_round)

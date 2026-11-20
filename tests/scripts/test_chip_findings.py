@@ -1,4 +1,4 @@
-"""Tests for chip_findings.py, built on the worked example of docs/new-chips-knowledge.md.
+"""Tests for chip_findings.py, built on the worked example of notes/new-chips-knowledge.md.
 
 The scripts/elicitation folder is on pytest's pythonpath (pyproject.toml).
 """

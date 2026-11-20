@@ -1,4 +1,4 @@
-"""Retrieval over chip units, built on the B1 evaluation blocks (docs/new-chips-knowledge.md).
+"""Retrieval over chip units, built on the B1 evaluation blocks (notes/new-chips-knowledge.md).
 
 Reuses Searcher (dense + BM25, RRF), the metrics and the claim/label machinery of
 expert_retrieval.py, so chips and B1 are scored on the same questions and the same claims:

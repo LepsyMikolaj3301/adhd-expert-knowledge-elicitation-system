@@ -3,7 +3,7 @@ services:
     image: ollama/ollama:latest
     ports:
       # This machine only. The Azure VM comes in through `tailscale serve`, which forwards the tailnet
-      # port here (docs/azure-setup-guide.md, step 5); containers use the compose network.
+      # port here (notes/azure-setup-guide.md, step 5); containers use the compose network.
       - "127.0.0.1:11434:11434"
     volumes:
       # Host path for models (bind mount). Falls back to the named volume if unset.
