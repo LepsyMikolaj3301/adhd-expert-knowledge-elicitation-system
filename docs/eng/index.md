@@ -5,7 +5,7 @@ diataxis: index
 
 # Documentation
 
-Language: **English** · [Polski](pl/index.md)
+Language: **English** · [Polski](../pl/index.md)
 
 The documentation of the expert knowledge platform: a web app and API that collect expert answers to case vignettes, have them proofread and peer-reviewed, and turn the approved ones into searchable knowledge units. The pages are grouped by type.
 

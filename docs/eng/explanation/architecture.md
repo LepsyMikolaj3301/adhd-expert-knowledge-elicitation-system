@@ -5,7 +5,7 @@ diataxis: explanation
 
 # About the architecture
 
-Language: **English** · [Polski](../pl/explanation/architecture.md)
+Language: **English** · [Polski](../../pl/explanation/architecture.md)
 
 The system is a web platform that collects written answers from experts to case vignettes,
 has the answers proofread and peer-reviewed, and turns the approved ones into searchable

@@ -5,7 +5,7 @@ diataxis: index
 
 # Dokumentacja
 
-Język: **Polski** · [English](../index.md)
+Język: **Polski** · [English](../eng/index.md)
 
 Dokumentacja platformy wiedzy eksperckiej: aplikacji webowej i API, które zbierają odpowiedzi ekspertów na winiety przypadków, poddają je korekcie i recenzji koleżeńskiej, a zatwierdzone zamieniają w przeszukiwalne jednostki wiedzy. Strony są pogrupowane według typu.
 

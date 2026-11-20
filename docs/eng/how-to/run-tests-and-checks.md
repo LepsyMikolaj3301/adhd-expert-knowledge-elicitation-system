@@ -5,7 +5,7 @@ diataxis: how-to
 
 # How to run tests and checks
 
-Language: **English** · [Polski](../pl/how-to/run-tests-and-checks.md)
+Language: **English** · [Polski](../../pl/how-to/run-tests-and-checks.md)
 
 Use this when you want to run the backend tests, the frontend tests, the linters or the type checks, with or without a database.
 

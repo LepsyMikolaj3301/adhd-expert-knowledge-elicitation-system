@@ -5,7 +5,7 @@ diataxis: how-to
 
 # Jak uruchomić testy i sprawdzenia
 
-Język: **Polski** · [English](../../how-to/run-tests-and-checks.md)
+Język: **Polski** · [English](../../eng/how-to/run-tests-and-checks.md)
 
 Skorzystaj z tej strony, gdy chcesz uruchomić testy backendu, testy frontendu, lintery lub sprawdzenia typów, z bazą danych albo bez niej.
 

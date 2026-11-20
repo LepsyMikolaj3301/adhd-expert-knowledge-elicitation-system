@@ -5,7 +5,7 @@ diataxis: explanation
 
 # O architekturze
 
-Język: **Polski** · [English](../../explanation/architecture.md)
+Język: **Polski** · [English](../../eng/explanation/architecture.md)
 
 System to platforma webowa, która zbiera pisemne odpowiedzi ekspertów na winiety przypadków,
 poddaje te odpowiedzi korekcie i recenzji koleżeńskiej, a zatwierdzone zamienia w przeszukiwalne

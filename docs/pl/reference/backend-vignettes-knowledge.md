@@ -5,7 +5,7 @@ diataxis: reference
 
 # Moduły backendu `app.vignettes` i `app.knowledge`
 
-Język: **Polski** · [English](../../reference/backend-vignettes-knowledge.md)
+Język: **Polski** · [English](../../eng/reference/backend-vignettes-knowledge.md)
 
 `app.vignettes` zawiera teksty winiet pisane przez administratorów, ich wersje i stały zestaw pytań oraz obsługuje endpointy administratora pod `/api/v1/vignettes` i `/api/v1/vignette-versions`. `app.knowledge` dzieli zatwierdzone odpowiedzi na jednostki wiedzy, tworzy ich embeddingi, zapisuje je w schemacie `chips` i obsługuje endpointy administratora pod `/api/v1/knowledge-units`. Oba routery są zamontowane w `backend/app/main.py` pod prefiksem `/api/v1`; każdy poniższy endpoint wymaga użytkownika-administratora (`AdminUser`).
 
