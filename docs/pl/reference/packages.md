@@ -48,6 +48,8 @@ Czyste funkcje operujące na zwykłych słownikach (`records.Record`); bez model
 | `case_label(meta) -> str` | Etykieta złożona z rodzajnika, populacji i ujęcia, na przykład `an adult's journal entry`. |
 | `header(meta, unit) -> str` | Wiersz nagłówka jednostki: klinicysta z opcjonalną rolą, etykieta przypadku, `case-level points` lub `fragment marked: <direction>` oraz ocena ogólna, połączone przez ` · `. |
 | `merge_groups(units_by_id, unit_ids) -> list[list[str]]` | Grupuje identyfikatory jednostek, które mają wspólny identyfikator zdania, przechodnio; grupy i ich elementy zachowują kolejność pierwszego wystąpienia. |
+| `pick_voices(directions, limit=GROUP_VOICES) -> list[int]` | Pozycje klinicystów cytowanych w notatce grupowej: najlepszy, potem najlepszy z każdego innego kierunku, potem najlepsi z reszty. |
+| `pack_group_block(voices, agreement, limit=GROUP_VOICES) -> str` | Notatka grupy: wiersz przypadku, słowa pacjenta, wiersz zgodności, potem do trzech ponumerowanych klinicystów (`Clinician 1 (marked: toward; overall 3/5):`) z ich zdaniami dosłownie. Klinicyści są numerowani, nigdy nazywani. |
 | `pack_block(rec, unit_ids) -> str` | Tekst notatki: wiersz `Teaching case <vignette_id>: ...`, wiersz `Patient's words:` ze znacznikami kierunku (gdy jednostki mają zaznaczenia), następnie `Clinician's own words:` i wiersze `by_question`, każde zdanie jeden raz. |
 
 | Stała | Wartość | Znaczenie |
@@ -57,6 +59,22 @@ Czyste funkcje operujące na zwykłych słownikach (`records.Record`); bez model
 | `MIN_SENTENCE_WORDS` | `4` | Krótsze zdania łączą się z sąsiadem. |
 | `RENDER_WORDS` | `8` | Słowa zachowywane przez `short_quote`. |
 | `CASE` | `"case"` | Reeksportowana z `records`. |
+
+### Moduł `agreement`
+
+Czyste funkcje na zaznaczeniach jednej wersji winiety; nic tu nie czyta bazy ani modelu.
+
+| Nazwa | Opis |
+|---|---|
+| `Mark(id, expert, span, direction)` | Zaznaczenie jednego eksperta. |
+| `Agreement(span, k, n, counts, label)` | `k` ekspertów zaznaczyło fragment, `n` odpowiedziało na tekst, `counts` per kierunek (`toward`, `away`, `neutral`, `unclear`, `mixed`), `label` to `single`, `split`, `agreed` albo `leaning`. |
+| `group_marks(marks, threshold=IOU_THRESHOLD)` | Grupuje zaznaczenia, których zakresy pokrywają się z IoU co najmniej równym progowi (0,5), przechodnio. |
+| `expert_directions(group) -> dict` | Kierunek każdego eksperta; `mixed`, gdy jego zaznaczenia w grupie sobie przeczą; brak kierunku czyta się jako `unclear`. |
+| `summarise(group, n_answered) -> Agreement` | `single` dla jednego eksperta, `split`, gdy występują i `toward`, i `away`, `agreed`, gdy co najmniej `AGREED_SHARE` (0,75) czyta fragment w jednym niemieszanym kierunku, w przeciwnym razie `leaning`. |
+| `agreement_groups(marks, n_answered, threshold)` | Każda grupa z podsumowaniem, w kolejności tekstu i niezależnie od kolejności `marks`. |
+| `render_agreement(a) -> str` | `Agreement: 3 of 4 clinicians who answered this text cited it; 2 toward, 1 away (split).` Liczby pochodzą stąd, nigdy z modelu. |
+| `agreement_claims(answer, counts) -> list[Claim]` | Każde „k of n” w odpowiedzi sprawdzone względem liczb notatek (`counts[i]` dla `[E{i+1}]`); zdanie cytujące notatki sprawdza się względem nich, zdanie bez cytatu względem wszystkich. |
+| `IOU_THRESHOLD`, `RULE_VERSION`, `AGREED_SHARE` | 0,5, 1, 0,75. |
 
 ### Moduł `records`
 
@@ -81,6 +99,7 @@ Rekord findings zapisany w `chips.elicitation_sessions.document`. Rekordy to zwy
 | `NOT_IN_SOURCES` | `"NOT_IN_SOURCES"`: odpowiedź, gdy notatki nie odpowiadają na pytanie. |
 | `EXPERT_SYSTEM_PROMPT` | Prompt systemowy dla pytania klinicysty; prosi o 3 do 6 zdań i cytaty notatek, takie jak `[E2]`. |
 | `PATIENT_SYSTEM_PROMPT` | Prompt systemowy dla tekstu pacjenta; prosi o 4 do 7 zdań i zabrania stawiania diagnoz. |
+| `AGREEMENT_RULE`, `with_agreement_rule(prompt)` | Jeden dodatkowy punkt dla notatek grupowych: przepisz liczby z wiersza `Agreement:` dokładnie, nie licz sam, rozbieżne odczytania podaj z numerami notatek. Nie należy do zewaluowanych promptów. |
 | `format_notes(texts) -> str` | Bloki `[E1] text` oddzielone pustym wierszem. |
 | `build_expert_prompt(question, texts) -> str` | `Question: ...`, gdy `texts` jest puste; w przeciwnym razie blok `Notes:` a po nim pytanie. |
 | `build_patient_prompt(patient_text, question, texts) -> str` | Blok `Notes:` (`(none)`, gdy `texts` jest puste), cytowany tekst pacjenta, a następnie pytanie. |
@@ -143,6 +162,7 @@ Oba retrievery dziedziczą po `BaseRetriever` z LangChain, implementują synchro
 
 | Pole | Typ | Domyślnie | Opis |
 |---|---|---|---|
+| `group_fragments` | `bool` | `False` | Fragmenty zaznaczone przez kilku klinicystów (`chips.fragment_groups`) stają się jedną notatką z wierszem zgodności, na miejscu najlepszego trafienia. Ignorowane, gdy filtr wskazuje ekspertów. Wyłączone, dopóki ewaluacja generacji tego nie zmierzy. |
 | `downweight_duplicate_cases` | `bool` | `True` | Jednostki case, które są niemal duplikatem lepiej ocenionej jednostki case, przesuwają się na koniec. |
 
 Zachowanie: puste zapytanie zwraca `[]`. Gdy `search` ma wartość inną niż `"dense"`, zapytanie jest zamieniane na wektor BM25; jeśli po tokenizacji nie zostaje żaden termin, `hybrid` przechodzi na `dense`, a `bm25` zwraca `[]`. Przy `search="bm25"` model embeddingów nie jest wywoływany. Wyszukiwanie jednostek, reguła niemal-duplikatów, zapytanie o rekordy sesji i `build_documents` wykonują się w tej kolejności, a zwracanych jest pierwszych `k` notatek.
@@ -185,8 +205,8 @@ Gdy retriever nie zwraca dokumentów, odpowiedzią jest `NOT_IN_SOURCES`, `notes
 
 | Nazwa | Opis |
 |---|---|
-| `expert_prompt()` | `ChatPromptTemplate` z promptem systemowym eksperta z pakietu core i zmiennymi `notes` i `question`. |
-| `patient_prompt()` | `ChatPromptTemplate` z promptem systemowym pacjenta z pakietu core i zmiennymi `notes`, `patient_text` i `question`. |
+| `expert_prompt(grouped=False)` | `ChatPromptTemplate` z promptem systemowym eksperta z pakietu core (z regułą zgodności, gdy `grouped`) i zmiennymi `notes` i `question`. Łańcuchy przekazują `retriever.group_fragments`. |
+| `patient_prompt(grouped=False)` | `ChatPromptTemplate` z promptem systemowym pacjenta z pakietu core (z regułą zgodności, gdy `grouped`) i zmiennymi `notes`, `patient_text` i `question`. |
 | `format_notes(docs) -> str` | `core.prompts.format_notes` zastosowane do `page_content` dokumentów. |
 | `default_embeddings(base_url="http://localhost:11434", **kwargs)` | Zwraca `langchain_ollama.OllamaEmbeddings(model="bge-m3", base_url=base_url, **kwargs)`. Import następuje wewnątrz funkcji, więc dodatek `ollama` jest potrzebny dopiero przy jej wywołaniu. |
 
@@ -196,7 +216,9 @@ Te moduły nie wchodzą do `__all__`, ale definiują reguły wyszukiwania.
 
 | Nazwa | Opis |
 |---|---|
-| `documents.build_documents(hits, records, *, merge=True) -> list[Document]` | Jeden `Document` na notatkę, uporządkowany według pozycji jej najlepszej jednostki. `page_content` to `pack_block` grupy. Sesja, której rekordu brakuje, który nie jest czytelny albo któremu brakuje jednostki, daje jeden `Document` na jednostkę z `embed_text` jako treścią i zalogowane ostrzeżenie. |
+| `sql.groups_of(schema, highlight_ids)`, `sql.group_units(schema, group_ids, filter)` | Grupa każdego zaznaczenia z jej liczbami oraz wszystkie jednostki grup. |
+| `ranking.Grouping`, `ranking.make_grouping(group_rows, unit_rows)` | Zaznaczenie do grupy, grupa do `Agreement`, grupa do jednostek członków. |
+| `documents.build_documents(hits, records, *, merge=True, grouping=None) -> list[Document]` | Jeden `Document` na notatkę, uporządkowany według pozycji jej najlepszej jednostki. `page_content` to `pack_block` grupy. Sesja, której rekordu brakuje, który nie jest czytelny albo któremu brakuje jednostki, daje jeden `Document` na jednostkę z `embed_text` jako treścią i zalogowane ostrzeżenie. |
 | `documents.SOURCE` | `"expert"`; wartość `metadata["source"]`. |
 | `documents.local_id(hit)` | Identyfikator jednostki wewnątrz rekordu: identyfikator bez prefiksu `<session_id>-<vignette_id>-`; zgłasza `ValueError`, gdy prefiksu brakuje. |
 | `ranking.UnitHit` | Zamrożony dataclass: `id`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `kind`, `highlight_id`, `direction`, `embed_text`, `score`, `vector` (`np.ndarray \| None`, ustawiany tylko dla jednostek case). `UnitHit.from_row(row, score=None)` buduje go z wiersza. |

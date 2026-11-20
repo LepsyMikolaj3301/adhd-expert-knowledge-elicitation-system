@@ -61,7 +61,7 @@ The stack runs without Ollama and LanguageTool: the backend reaches them on the 
 - Postgres starts with `shared_buffers=128MB`, `max_connections=30`, `work_mem=8MB`.
 - The shared `logging` anchor (json-file, `max-size` 10m, `max-file` 3) applies to all seven services: `caddy`, `frontend` and `postgres` set it directly, `rag-backend`, `worker`, `migrate` and `cli` inherit it from `x-backend`.
 - Volumes: `postgres-data`, `caddy-data` (the TLS certificate), `caddy-config`.
-- The one-shot commands of `cli` are `create-admin` and `import-vignettes`; the compose file comments show `docker compose --profile tools run --rm cli create-admin --email ... --name ...` and `... cli import-vignettes --dir /import/vignettes --whatifs /import/chip_whatifs.json --admin-email ...`. The commands themselves are listed in [Backend core API](backend-core-api.md).
+- The one-shot commands of `cli` are `create-admin`, `import-vignettes` and `recompute-agreement`; the compose file comments show `docker compose --profile tools run --rm cli create-admin --email ... --name ...` and `... cli import-vignettes --dir /import/vignettes --whatifs /import/chip_whatifs.json --admin-email ...`. The commands themselves are listed in [Backend core API](backend-core-api.md).
 
 Environment of the backend-image services (`x-backend`):
 
@@ -167,6 +167,8 @@ The revisions form one chain from `0001` (`down_revision = None`) to `0009`.
 | 0007 | `0007_patient_summary.py` | Adds `vignette_versions.patient_summary` (text, default empty) |
 | 0008 | `0008_unit_removal.py` | Allows unit status `removed` and job kind `refit`; makes `jobs.assignment_id` nullable |
 | 0009 | `0009_drop_synthetic.py` | Drops `users.is_synthetic` with its check constraint and `is_synthetic` from `chips.experts`, `chips.elicitation_sessions`, `chips.finding_units` |
+| 0010 | `0010_drop_i3.py` | Drops `knowledge_units.embed_text_combined` and `chips.finding_units.embed_text_combined`, `embedding_combined`, `sparse_combined` (the removed I3 text); the downgrade adds the columns back empty |
+| 0011 | `0011_fragment_agreement.py` | Adds `chips.fragment_groups`, `chips.fragment_group_members` (derived: experts who marked the same passage) and `chips.finding_units.embedding_model` (existing rows get `bge-m3`); the downgrade deletes nothing |
 
 `alembic upgrade head` is the `command` of the `migrate` service in both compose files.
 

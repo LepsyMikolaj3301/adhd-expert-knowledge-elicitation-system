@@ -292,6 +292,7 @@ The module docstring gives the invocation `python -m app.cli <command>`. The opt
 | `create-admin` | `--email`, `--name` | Validates the email with `EmailStr` (the same rule as login, so reserved domains such as `.local` are refused), prompts for the password with `getpass`, checks that it has 12 to 1024 characters, creates a user with role `admin` and that password, and prints `Created admin <pseudonym>`. A duplicate email prints the message of the `email_taken` error. |
 | `export-openapi` | `--out PATH` | Writes `create_app().openapi()` to `PATH` as JSON with 2-space indent and sorted keys, ending in a newline. |
 | `import-vignettes` | `--dir DIR`, `--whatifs FILE`, `--admin-email EMAIL` | Reads the what-if texts from `FILE`, finds the user by lowercased email and requires an active admin (`not_an_admin`, 422, otherwise), calls `app.vignettes.importing.import_vignettes` and commits. Prints the created codes and, when present, the skipped codes. The docstring states that `DIR` holds `V*.json` files loaded as drafts, that `FILE` maps codes to texts (`{"V001": "..."}`), that the import is all or nothing and that existing codes are skipped. |
+| `recompute-agreement` | none | Takes `BM25_LOCK`, rebuilds `chips.fragment_groups` for every vignette version that has highlights (`agreement.recompute_all`), commits and prints `<n> groups`. Ingestion and removal keep the groups up to date; this fills in data that was ingested before migration 0011. |
 
 ## Sources in code
 

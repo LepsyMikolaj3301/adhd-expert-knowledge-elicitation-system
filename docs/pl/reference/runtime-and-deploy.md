@@ -61,7 +61,7 @@ Stos działa bez Ollamy i LanguageTool: backend łączy się z nimi na maszynie 
 - Postgres startuje z `shared_buffers=128MB`, `max_connections=30`, `work_mem=8MB`.
 - Wspólna kotwica `logging` (json-file, `max-size` 10m, `max-file` 3) obejmuje siedem usług: `caddy`, `frontend` i `postgres` ustawiają ją bezpośrednio, a `rag-backend`, `worker`, `migrate` i `cli` dziedziczą ją z `x-backend`.
 - Wolumeny: `postgres-data`, `caddy-data` (certyfikat TLS), `caddy-config`.
-- Jednorazowe polecenia `cli` to `create-admin` i `import-vignettes`; komentarze w pliku compose pokazują `docker compose --profile tools run --rm cli create-admin --email ... --name ...` oraz `... cli import-vignettes --dir /import/vignettes --whatifs /import/chip_whatifs.json --admin-email ...`. Same polecenia są wypisane w [Backend core API](backend-core-api.md).
+- Jednorazowe polecenia `cli` to `create-admin`, `import-vignettes` i `recompute-agreement`; komentarze w pliku compose pokazują `docker compose --profile tools run --rm cli create-admin --email ... --name ...` oraz `... cli import-vignettes --dir /import/vignettes --whatifs /import/chip_whatifs.json --admin-email ...`. Same polecenia są wypisane w [Backend core API](backend-core-api.md).
 
 Środowisko usług z obrazem backendu (`x-backend`):
 
@@ -167,6 +167,8 @@ Rewizje tworzą jeden łańcuch od `0001` (`down_revision = None`) do `0009`.
 | 0007 | `0007_patient_summary.py` | Dodaje `vignette_versions.patient_summary` (tekst, domyślnie pusty) |
 | 0008 | `0008_unit_removal.py` | Dopuszcza status jednostki `removed` i rodzaj zadania `refit`; ustawia `jobs.assignment_id` jako nullowalne |
 | 0009 | `0009_drop_synthetic.py` | Usuwa `users.is_synthetic` wraz z jego ograniczeniem check oraz `is_synthetic` z `chips.experts`, `chips.elicitation_sessions`, `chips.finding_units` |
+| 0010 | `0010_drop_i3.py` | Usuwa `knowledge_units.embed_text_combined` oraz `chips.finding_units.embed_text_combined`, `embedding_combined`, `sparse_combined` (usunięty tekst I3); downgrade dodaje kolumny z powrotem puste |
+| 0011 | `0011_fragment_agreement.py` | Dodaje `chips.fragment_groups`, `chips.fragment_group_members` (dane pochodne: eksperci, którzy zaznaczyli ten sam fragment) i `chips.finding_units.embedding_model` (istniejące wiersze dostają `bge-m3`); downgrade niczego nie usuwa |
 
 `alembic upgrade head` to `command` usługi `migrate` w obu plikach compose.
 

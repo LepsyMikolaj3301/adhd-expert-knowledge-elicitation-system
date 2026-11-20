@@ -48,6 +48,8 @@ Pure functions over plain dicts (`records.Record`); no models and no database.
 | `case_label(meta) -> str` | Article, population and framing label, for example `an adult's journal entry`. |
 | `header(meta, unit) -> str` | Header line of a unit: clinician with optional role, case label, `case-level points` or `fragment marked: <direction>`, and the overall rating, joined with ` · `. |
 | `merge_groups(units_by_id, unit_ids) -> list[list[str]]` | Groups unit ids that share a sentence id, transitively; groups and members keep the order of first appearance. |
+| `pick_voices(directions, limit=GROUP_VOICES) -> list[int]` | Positions of the clinicians a grouped note quotes: the best, then the best of every other direction, then the best of the rest. |
+| `pack_group_block(voices, agreement, limit=GROUP_VOICES) -> str` | The note for a group: case line, patient's words, the agreement line, then up to three numbered clinicians (`Clinician 1 (marked: toward; overall 3/5):`) with their sentences verbatim. Clinicians are numbered, never named. |
 | `pack_block(rec, unit_ids) -> str` | The note text: a `Teaching case <vignette_id>: ...` line, a `Patient's words:` line with direction marks (when the units have highlights), then `Clinician's own words:` followed by the `by_question` lines, each sentence once. |
 
 | Constant | Value | Meaning |
@@ -57,6 +59,22 @@ Pure functions over plain dicts (`records.Record`); no models and no database.
 | `MIN_SENTENCE_WORDS` | `4` | Shorter sentences join a neighbour. |
 | `RENDER_WORDS` | `8` | Words kept by `short_quote`. |
 | `CASE` | `"case"` | Re-exported from `records`. |
+
+### Module `agreement`
+
+Pure functions over the highlights of one version of a vignette; nothing here reads a database or a model.
+
+| Name | Description |
+|---|---|
+| `Mark(id, expert, span, direction)` | One expert's highlight. |
+| `Agreement(span, k, n, counts, label)` | `k` experts marked the passage, `n` answered the text, `counts` per direction (`toward`, `away`, `neutral`, `unclear`, `mixed`), `label` one of `single`, `split`, `agreed`, `leaning`. |
+| `group_marks(marks, threshold=IOU_THRESHOLD)` | Groups marks whose spans overlap with IoU at least the threshold (0.5), transitively. |
+| `expert_directions(group) -> dict` | Each expert's direction; `mixed` when their highlights in the group disagree; no direction reads as `unclear`. |
+| `summarise(group, n_answered) -> Agreement` | `single` for one expert, `split` when `toward` and `away` both occur, `agreed` when at least `AGREED_SHARE` (0.75) read it in one non-mixed direction, otherwise `leaning`. |
+| `agreement_groups(marks, n_answered, threshold)` | Every group with its summary, in text order and independent of the order of `marks`. |
+| `render_agreement(a) -> str` | `Agreement: 3 of 4 clinicians who answered this text cited it; 2 toward, 1 away (split).` The numbers come from here, never from a model. |
+| `agreement_claims(answer, counts) -> list[Claim]` | Every "k of n" in an answer, checked against the counts of the notes (`counts[i]` for `[E{i+1}]`); a sentence that cites notes is checked against those, one that cites none against all. |
+| `IOU_THRESHOLD`, `RULE_VERSION`, `AGREED_SHARE` | 0.5, 1, 0.75. |
 
 ### Module `records`
 
@@ -81,6 +99,7 @@ The findings record stored in `chips.elicitation_sessions.document`. Records are
 | `NOT_IN_SOURCES` | `"NOT_IN_SOURCES"`: the reply when the notes do not answer. |
 | `EXPERT_SYSTEM_PROMPT` | System prompt for a clinician's question; asks for 3 to 6 sentences and note citations such as `[E2]`. |
 | `PATIENT_SYSTEM_PROMPT` | System prompt for a patient's text; asks for 4 to 7 sentences and forbids diagnosing. |
+| `AGREEMENT_RULE`, `with_agreement_rule(prompt)` | One extra bullet for grouped notes: copy the `Agreement:` numbers exactly, never count, give differing readings with their note numbers. Not part of the evaluated prompts. |
 | `format_notes(texts) -> str` | `[E1] text` blocks separated by a blank line. |
 | `build_expert_prompt(question, texts) -> str` | `Question: ...` when `texts` is empty; otherwise a `Notes:` block followed by the question. |
 | `build_patient_prompt(patient_text, question, texts) -> str` | `Notes:` block (`(none)` when `texts` is empty), the quoted patient text, then the question. |
@@ -143,6 +162,7 @@ Both retrievers subclass LangChain `BaseRetriever`, implement sync and async ret
 
 | Field | Type | Default | Description |
 |---|---|---|---|
+| `group_fragments` | `bool` | `False` | Fragments that several clinicians marked (`chips.fragment_groups`) become one note with an agreement line, in the place of the best hit. Ignored when the filter names experts. Off until the generation evaluation has measured it. |
 | `downweight_duplicate_cases` | `bool` | `True` | Case units near-duplicate to a better-ranked case unit move to the end. |
 
 Behaviour: a blank query returns `[]`. With `search` other than `"dense"` the query is turned into a BM25 vector; if no term survives tokenising, `hybrid` falls back to `dense` and `bm25` returns `[]`. With `search="bm25"` the embedding model is not called. The unit search, the near-duplicate rule, a query for the sessions' records and `build_documents` run in that order, and the first `k` notes are returned.
@@ -185,8 +205,8 @@ When the retriever returns no documents, the answer is `NOT_IN_SOURCES`, `notes`
 
 | Name | Description |
 |---|---|
-| `expert_prompt()` | `ChatPromptTemplate` with the core expert system prompt and variables `notes` and `question`. |
-| `patient_prompt()` | `ChatPromptTemplate` with the core patient system prompt and variables `notes`, `patient_text` and `question`. |
+| `expert_prompt(grouped=False)` | `ChatPromptTemplate` with the core expert system prompt (plus the agreement rule when `grouped`) and variables `notes` and `question`. The chains pass `retriever.group_fragments`. |
+| `patient_prompt(grouped=False)` | `ChatPromptTemplate` with the core patient system prompt (plus the agreement rule when `grouped`) and variables `notes`, `patient_text` and `question`. |
 | `format_notes(docs) -> str` | `core.prompts.format_notes` over the `page_content` of the documents. |
 | `default_embeddings(base_url="http://localhost:11434", **kwargs)` | Returns `langchain_ollama.OllamaEmbeddings(model="bge-m3", base_url=base_url, **kwargs)`. The import happens inside the function, so the `ollama` extra is needed only when it is called. |
 
@@ -196,7 +216,9 @@ These modules are not in `__all__` but define the retrieval rules.
 
 | Name | Description |
 |---|---|
-| `documents.build_documents(hits, records, *, merge=True) -> list[Document]` | One `Document` per note, ordered by the rank of its best unit. `page_content` is `pack_block` of the group. A session whose record is missing, not readable, or lacks a unit gives one `Document` per unit with `embed_text` as content and a logged warning. |
+| `sql.groups_of(schema, highlight_ids)`, `sql.group_units(schema, group_ids, filter)` | The group of each highlight with its counts, and every unit of the groups. |
+| `ranking.Grouping`, `ranking.make_grouping(group_rows, unit_rows)` | Highlight to group, group to `Agreement`, group to member units. |
+| `documents.build_documents(hits, records, *, merge=True, grouping=None) -> list[Document]` | One `Document` per note, ordered by the rank of its best unit. `page_content` is `pack_block` of the group. A session whose record is missing, not readable, or lacks a unit gives one `Document` per unit with `embed_text` as content and a logged warning. |
 | `documents.SOURCE` | `"expert"`; value of `metadata["source"]`. |
 | `documents.local_id(hit)` | Unit id inside the record: the id minus the prefix `<session_id>-<vignette_id>-`; raises `ValueError` when the prefix is absent. |
 | `ranking.UnitHit` | Frozen dataclass: `id`, `session_id`, `expert_id`, `vignette_id`, `vignette_version`, `kind`, `highlight_id`, `direction`, `embed_text`, `score`, `vector` (`np.ndarray \| None`, set for case units only). `UnitHit.from_row(row, score=None)` builds it from a row. |

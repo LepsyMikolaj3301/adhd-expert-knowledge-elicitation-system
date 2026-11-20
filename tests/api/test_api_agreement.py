@@ -164,3 +164,22 @@ async def test_the_admins_search_says_how_many_clinicians_marked_the_passage(mod
     # every fragment unit belongs to a group, here and only here: there is no case unit
     assert [h["unit"]["kind"] for h in found["hits"]] == ["fragment"] * len(found["hits"])
     assert all(h["agreement"] is not None for h in found["hits"])
+
+
+async def test_a_second_expert_marking_the_same_passage_raises_k_and_n(models):
+    admin = await admin_api()
+    first, second = await expert_api("e1@example.com"), await expert_api("e2@example.com")
+    version = await published_version(admin)
+    one, two = await assign(admin, version, first, second)
+    cue = spans()[0]
+
+    async def ingest(expert, assignment_id):
+        await answer_and_submit(expert, assignment_id, payload("toward"))
+        await to_review(expert, assignment_id)
+        await decide_all(admin, assignment_id)
+        await run_jobs()
+
+    await ingest(first, one)
+    assert (await groups())[cue] == (1, 1, 1, 0, 0, 0, 0, "single")
+    await ingest(second, two)
+    assert (await groups())[cue] == (2, 2, 2, 0, 0, 0, 0, "agreed")
