@@ -68,7 +68,8 @@ CREATE TABLE IF NOT EXISTS finding_units (
     population text NOT NULL, track text NOT NULL, framing text NOT NULL,
     segmenter jsonb NOT NULL,                  -- code version, classifier model + prompt version
     embed_text text NOT NULL,                  -- I1
-    embedding vector(1024) NOT NULL, sparse sparsevec(1048576)
+    embedding vector(1024) NOT NULL, sparse sparsevec(1048576),
+    embedding_model text                       -- the model `embedding` was made with (config/indexing.yaml)
 );
 
 CREATE TABLE IF NOT EXISTS finding_unit_sentences (
@@ -92,3 +93,28 @@ CREATE TABLE IF NOT EXISTS review_events (
     payload jsonb NOT NULL,
     at timestamptz NOT NULL
 );
+
+-- Where experts agree (derived: recomputed per vignette version by app.knowledge.agreement, rules in
+-- expert_knowledge_core.agreement). A group is the highlights of different experts that overlap
+-- by IoU >= 0.5, chained. Source of truth stays `highlights`; nothing here is ever edited by hand.
+CREATE TABLE IF NOT EXISTS fragment_groups (
+    id bigserial PRIMARY KEY,
+    vignette_id text NOT NULL, vignette_version integer NOT NULL,
+    span int4range NOT NULL,                   -- union of the members' spans
+    n_answered integer NOT NULL,               -- experts with units for this version of the text
+    n_attending integer NOT NULL,              -- experts who marked the passage (each once)
+    n_toward integer NOT NULL, n_away integer NOT NULL, n_neutral integer NOT NULL,
+    n_unclear integer NOT NULL, n_mixed integer NOT NULL,   -- experts per direction; mixed = self-contradicting
+    label text NOT NULL,                       -- single | split | agreed | leaning
+    rule_version integer NOT NULL,
+    computed_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS fragment_groups_vignette_idx ON fragment_groups (vignette_id, vignette_version);
+
+CREATE TABLE IF NOT EXISTS fragment_group_members (
+    group_id bigint NOT NULL REFERENCES fragment_groups ON DELETE CASCADE,
+    highlight_id text NOT NULL REFERENCES highlights ON DELETE CASCADE,
+    expert_id text NOT NULL,
+    PRIMARY KEY (group_id, highlight_id)
+);
+CREATE INDEX IF NOT EXISTS fragment_group_members_highlight_idx ON fragment_group_members (highlight_id);

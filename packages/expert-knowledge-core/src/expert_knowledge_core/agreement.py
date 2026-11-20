@@ -104,6 +104,18 @@ def summarise(group: Sequence[Mark], n_answered: int) -> Agreement:
     return Agreement(span=span, k=k, n=max(n_answered, k), counts=dict(counts), label=label)
 
 
+def agreement_groups(
+    marks: Sequence[Mark], n_answered: int, threshold: float = IOU_THRESHOLD
+) -> list[tuple[list[Mark], Agreement]]:
+    """Every group of one vignette version with its summary, in text order. The marks are sorted
+    first, so the same marks give the same groups whatever order they were read in."""
+    ordered = sorted(marks, key=lambda m: (m.span, m.expert, m.id))
+    groups = group_marks(ordered, threshold)
+    return sorted(
+        ((g, summarise(g, n_answered)) for g in groups), key=lambda x: (x[1].span, x[0][0].id)
+    )
+
+
 def render_agreement(a: Agreement) -> str:
     """The line a note carries. The numbers come from here, never from the model."""
     parts = [f"{a.counts[d]} {d}" for d in (*DIRECTIONS, "mixed") if a.counts.get(d)]

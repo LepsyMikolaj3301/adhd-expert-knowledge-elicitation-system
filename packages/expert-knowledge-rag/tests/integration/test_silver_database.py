@@ -83,6 +83,29 @@ def test_the_schema_holds_the_whole_snapshot(silver, silver_store):
     assert row["fitted"] == row["units"]  # BM25 was fitted for I1
 
 
+def test_the_seeded_snapshot_has_agreement_groups_that_add_up(silver_store):
+    """Two experts answered each silver vignette, so a group is 1 or 2 of 2."""
+    (rows,) = silver_store.run(
+        [
+            (
+                sql.SQL(
+                    "SELECT g.n_answered, g.n_attending, g.n_toward + g.n_away + g.n_neutral"
+                    " + g.n_unclear + g.n_mixed AS read, count(m.highlight_id) AS members"
+                    " FROM {g} g JOIN {m} m ON m.group_id = g.id GROUP BY g.id"
+                ).format(
+                    g=sql.Identifier(silver_store.schema, "fragment_groups"),
+                    m=sql.Identifier(silver_store.schema, "fragment_group_members"),
+                ),
+                {},
+            )
+        ]
+    )
+    assert rows
+    for row in rows:
+        assert row["n_answered"] == 2 and 1 <= row["n_attending"] <= 2
+        assert row["read"] == row["n_attending"] <= row["members"]
+
+
 # --- search modes ------------------------------------------------------------------------------
 
 

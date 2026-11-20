@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.assignments.models import Assignment
 from app.indexing import bm25, load_indexing_config
 from app.jobs.errors import NoFindings, NoUnits, UnitsNotEmbeddable
-from app.knowledge import embedding
+from app.knowledge import agreement, embedding
 from app.knowledge.findings import CASE
 from app.knowledge.models import AnswerFindings, KnowledgeUnit, UnitStatus
 from app.settings import settings
@@ -282,15 +282,18 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
         )  # fmt: skip
 
     segmenter = json.dumps(d.segmenter)
+    model = load_indexing_config(
+        settings.project_root / "config" / "indexing.yaml"
+    ).embeddings.model
     for unit, i1 in zip(d.units, d.vectors["i1"], strict=True):
         unit_id = pid(unit["id"])
         await db.execute(
             text(
                 "INSERT INTO chips.finding_units (id, session_id, expert_id, vignette_id, "
                 "vignette_version, kind, highlight_id, direction, population, track, framing, "
-                "segmenter, embed_text, embedding) VALUES (:id, :sid, :expert, :vid, :ver, "
-                ":kind, :hid, :direction, :pop, :track, :framing, CAST(:seg AS jsonb), :i1text, "
-                "CAST(CAST(:i1 AS text) AS vector))"
+                "segmenter, embed_text, embedding, embedding_model) VALUES (:id, :sid, :expert, "
+                ":vid, :ver, :kind, :hid, :direction, :pop, :track, :framing, CAST(:seg AS jsonb), "
+                ":i1text, CAST(CAST(:i1 AS text) AS vector), :model)"
             ),
             {
                 "id": unit_id, "sid": d.session_id, "expert": d.expert_id, "vid": v["code"],
@@ -298,7 +301,7 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
                 "hid": pid(unit["highlight"]) if unit["highlight"] else None,
                 "direction": unit["direction"], "pop": v["population"], "track": d.track,
                 "framing": v["framing"], "seg": segmenter,
-                "i1text": unit["i1"], "i1": _vec(i1),
+                "i1text": unit["i1"], "i1": _vec(i1), "model": model,
             },
         )  # fmt: skip
         for order, sentence in enumerate(unit["sentences"]):
@@ -326,6 +329,7 @@ async def write(db: AsyncSession, d: Ingestion) -> None:
                 for kind, payload, at in d.events
             ],
         )  # fmt: skip
+    await agreement.recompute(db, v["code"], v["version"])
     await refresh_sparse(db)
 
 

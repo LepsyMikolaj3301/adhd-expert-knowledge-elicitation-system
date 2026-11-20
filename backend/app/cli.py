@@ -5,6 +5,9 @@ python -m app.cli export-openapi --out ../frontend/openapi.json
 python -m app.cli import-vignettes --dir DIR --whatifs FILE --admin-email a@example.com
     Loads the V*.json files in DIR as drafts, with the what-ifs from FILE ({"V001": "..."}).
     All or nothing; codes that already exist are skipped. Drafts still have to be published.
+python -m app.cli recompute-agreement
+    Rebuilds the groups of experts who marked the same passage (chips.fragment_groups) for every
+    vignette version. Ingestion and removal keep them up to date; this fills in older data.
 """
 
 import argparse
@@ -15,11 +18,13 @@ import sys
 from pathlib import Path
 
 from pydantic import EmailStr, TypeAdapter, ValidationError
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.auth.schemas import MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH
 from app.core.db import session_factory
 from app.core.errors import DomainError, invalid
+from app.knowledge.agreement import recompute_all
+from app.knowledge.ingest import BM25_LOCK
 from app.main import create_app
 from app.users.models import Role, User
 from app.users.service import create_user
@@ -44,6 +49,15 @@ async def _import_vignettes(directory: Path, whatifs_file: Path, email: str) -> 
         result = await import_vignettes(db, directory, whatifs, admin)
         await db.commit()
         return result
+
+
+async def _recompute_agreement() -> int:
+    async with session_factory()() as db:
+        # The lock of ingestion and removal: nobody changes the highlights while we count them.
+        await db.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": BM25_LOCK})
+        groups = await recompute_all(db)
+        await db.commit()
+        return groups
 
 
 def openapi_json() -> str:
@@ -101,6 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     importing.add_argument("--dir", type=Path, required=True)
     importing.add_argument("--whatifs", type=Path, required=True)
     importing.add_argument("--admin-email", required=True)
+    commands.add_parser("recompute-agreement")
     args = parser.parse_args(argv)
 
     if args.command == "export-openapi":
@@ -108,6 +123,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "import-vignettes":
         return _run_import(args)
+    if args.command == "recompute-agreement":
+        print(f"{asyncio.run(_recompute_agreement())} groups")
+        return 0
     return _run_create_admin(args)
 
 

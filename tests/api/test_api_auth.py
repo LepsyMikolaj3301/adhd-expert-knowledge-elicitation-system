@@ -167,9 +167,7 @@ async def test_checking_an_invite_says_whether_it_can_still_set_a_password():
     await guest.fails("POST", "/auth/check-invite", 400, "invalid_invite", json={"token": first})
     await guest.ok("POST", "/auth/check-invite", 204, json={"token": second})
     await guest.ok("POST", "/auth/accept-invite", json={"token": second, "password": PASSWORD})
-    await Api().fails(
-        "POST", "/auth/check-invite", 400, "invalid_invite", json={"token": second}
-    )
+    await Api().fails("POST", "/auth/check-invite", 400, "invalid_invite", json={"token": second})
 
 
 async def test_checking_an_expired_or_deactivated_invite_fails():

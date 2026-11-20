@@ -1,5 +1,6 @@
 from expert_knowledge_core.agreement import (
     Mark,
+    agreement_groups,
     expert_directions,
     group_marks,
     iou,
@@ -74,8 +75,7 @@ def test_three_of_four_agree_and_one_dissents_is_split():
     assert (summary.k, summary.n, summary.label) == (3, 4, "split")
     assert summary.counts == {"toward": 2, "away": 1}
     assert render_agreement(summary) == (
-        "Agreement: 3 of 4 clinicians who answered this text cited it; "
-        "2 toward, 1 away (split)."
+        "Agreement: 3 of 4 clinicians who answered this text cited it; 2 toward, 1 away (split)."
     )
 
 
@@ -108,3 +108,17 @@ def test_the_span_is_the_union_and_a_lone_expert_reads_in_the_singular():
     assert render_agreement(one) == (
         "Agreement: 1 of 1 clinician who answered this text cited it; 1 toward (single)."
     )
+
+
+def test_the_groups_do_not_depend_on_the_order_the_marks_come_in():
+    marks = [
+        mark("c", "e3", 50, 60),
+        mark("a", "e1", 0, 10),
+        mark("d", "e1", 50, 60, "away"),
+        mark("b", "e2", 0, 10),
+    ]
+    forward = agreement_groups(marks, 3)
+    assert [[m.id for m in g] for g, _ in forward] == [["a", "b"], ["d", "c"]]
+    backward = agreement_groups(marks[::-1], 3)
+    assert [a for _, a in forward] == [a for _, a in backward]
+    assert [a.span for _, a in forward] == [(0, 10), (50, 60)]

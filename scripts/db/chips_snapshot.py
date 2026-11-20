@@ -193,9 +193,50 @@ def seed(conn: Any, schema: str, snapshot: Path = SNAPSHOT, crowd: int = 0) -> d
             (unit, cue_id[key], role),
         )
     refit_sparse(conn, Bm25Config(), bm25)
+    fit_agreement(conn)
     return {
         name: len(t[name]) for name in ("sessions", "units", "cue_keys", "highlights", "sentences")
     }
+
+
+def fit_agreement(conn: Any) -> int:
+    """Fills fragment_groups from the highlights in the schema, with the code the application
+    uses (expert_knowledge_core.agreement). Returns the number of groups."""
+    from expert_knowledge_core.agreement import RULE_VERSION, Mark, agreement_groups
+
+    rows = conn.execute(
+        "SELECT h.id, s.expert_id, lower(h.span), upper(h.span), h.direction, "
+        "h.vignette_id, h.vignette_version FROM highlights h "
+        "JOIN elicitation_sessions s ON s.id = h.session_id WHERE h.origin = 'expert'"
+    ).fetchall()
+    answered = dict(
+        ((v, ver), n)
+        for v, ver, n in conn.execute(
+            "SELECT vignette_id, vignette_version, count(DISTINCT expert_id) FROM finding_units "
+            "GROUP BY 1, 2"
+        ).fetchall()
+    )
+    by_version: dict[tuple[str, int], list[Any]] = {}
+    for hid, expert, a, b, direction, vid, ver in rows:
+        by_version.setdefault((vid, ver), []).append(Mark(hid, expert, (a, b), direction))
+    written = 0
+    for (vid, ver), marks in by_version.items():
+        for members, a in agreement_groups(marks, answered.get((vid, ver), 0)):
+            group_id = conn.execute(
+                "INSERT INTO fragment_groups (vignette_id, vignette_version, span, n_answered, "
+                "n_attending, n_toward, n_away, n_neutral, n_unclear, n_mixed, label, rule_version) "
+                "VALUES (%s, %s, int4range(%s, %s), %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                (vid, ver, a.span[0], a.span[1], a.n, a.k, a.counts.get("toward", 0),
+                 a.counts.get("away", 0), a.counts.get("neutral", 0), a.counts.get("unclear", 0),
+                 a.counts.get("mixed", 0), a.label, RULE_VERSION),
+            ).fetchone()[0]  # fmt: skip
+            for m in members:
+                conn.execute(
+                    "INSERT INTO fragment_group_members VALUES (%s, %s, %s)",
+                    (group_id, m.id, m.expert),
+                )
+            written += 1
+    return written
 
 
 def refit_sparse(conn: Any, cfg: Any, bm25: Any) -> None:

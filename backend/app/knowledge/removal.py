@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.assignments.models import Assignment
 from app.audit.service import record_event
 from app.jobs.models import Job, JobKind, JobStatus
+from app.knowledge import agreement
 from app.knowledge.findings import CASE
 from app.knowledge.ingest import BM25_LOCK
 from app.knowledge.models import KnowledgeUnit, UnitStatus
@@ -99,6 +100,10 @@ async def remove_units(db: AsyncSession, units: list[KnowledgeUnit], actor_id: U
         ),
         {"ids": sorted(experts)},
     )
+
+    # The counts of who agreed must not include an expert who was just withdrawn.
+    for code, version_number in sorted(cases):
+        await agreement.recompute(db, code, version_number)
 
     for unit in units:
         unit.status = UnitStatus.REMOVED

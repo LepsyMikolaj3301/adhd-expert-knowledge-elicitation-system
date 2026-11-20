@@ -95,7 +95,7 @@ async def clean_database(migrated_database: str):
         await session.execute(
             text(
                 "TRUNCATE chips.experts, chips.vignettes, chips.elicitation_sessions, "
-                "chips.cue_keys CASCADE"
+                "chips.cue_keys, chips.fragment_groups CASCADE"
             )
         )
         await session.commit()
