@@ -299,7 +299,7 @@ def report(run_dir: Path) -> None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", default="silver", choices=["bronze", "silver", "gold"])
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic"])
     ap.add_argument("--run-dir", type=Path, default=RUNS / datetime.now().strftime("%Y%m%d-%H%M"))
     ap.add_argument("--model", default="qwen3.5:9b")
     ap.add_argument("--representation", help="experiment label; default: `selected` in latest.json")

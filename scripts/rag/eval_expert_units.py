@@ -232,7 +232,7 @@ def distortion(units, keys, claims, covers) -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver", "gold"])
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic"])
     ap.add_argument("--inbox", type=Path, default=ROOT / "data/inbox")
     ap.add_argument("--out", type=Path, default=ROOT / "data/eval/expert_units")
     ap.add_argument("--experiments", nargs="+", default=DEFAULT_EXPERIMENTS)

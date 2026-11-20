@@ -116,7 +116,7 @@ def make_keys(unit: ExpertUnit, vignette: str, by_id, gen, retries: int, seed: i
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--tier", required=True, choices=["bronze", "silver", "gold"])
-    ap.add_argument("--source", default="synthetic", choices=["synthetic", "reddit", "chips"])
+    ap.add_argument("--source", default="synthetic", choices=["synthetic", "chips"])
     ap.add_argument("--fixtures", type=Path, default=ROOT / "data/fixtures")
     ap.add_argument("--out", type=Path, default=ROOT / "data/expert_units")
     ap.add_argument("--cache", type=Path, default=ROOT / "data/cache")
