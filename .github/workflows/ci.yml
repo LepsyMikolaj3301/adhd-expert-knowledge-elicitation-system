@@ -18,7 +18,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      # Not the root's default groups: they pull docling, torch and the notebooks.
+      # Not the root's default groups: they pull the notebooks and the script dependencies.
       - run: uv sync --frozen --no-default-groups --all-packages --group dev
       - run: uv run --no-sync ruff check backend
       - run: uv run --no-sync ruff format --check backend

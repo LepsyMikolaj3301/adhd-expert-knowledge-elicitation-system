@@ -7,7 +7,7 @@ diataxis: reference
 
 Language: **English** · [Polski](../../pl/reference/runtime-and-deploy.md)
 
-This page maps the files that run the stack: the local compose file and the Azure VM compose file, the Dockerfiles, the backend package metadata, the database setup and migrations, the prompt loader and prompt files, and the scripts outside `scripts/corpus/chunking`.
+This page maps the files that run the stack: the local compose file and the Azure VM compose file, the Dockerfiles, the backend package metadata, the database setup and migrations, the prompt loader and prompt files, and the scripts under `scripts/`.
 
 ## Local stack: `docker-compose.yml`
 
@@ -17,25 +17,23 @@ This page maps the files that run the stack: the local compose file and the Azur
 |---|---|---|---|---|
 | `ollama` | none | `ollama/ollama:latest` | `127.0.0.1:11434` | LLM server; models volume is `${OLLAMA_DATA_PATH:-ollama-data}`; GPU reservation (`driver: nvidia`, `count: all`) is active in the file |
 | `languagetool` | none | `erikvl87/languagetool:6.8` | `127.0.0.1:8010` | Grammar checker; `Java_Xms` 512m, `Java_Xmx` 1g |
-| `postgres` | none | `pgvector/pgvector:pg16` | `5432` | Database; mounts `backend/db/init.sql` into `docker-entrypoint-initdb.d`; healthcheck `pg_isready` |
-| `minio` | none | `cgr.dev/chainguard/minio` pinned by digest | `${MINIO_API_HOST_PORT:-9000}`, `${MINIO_CONSOLE_HOST_PORT:-9001}` | S3-compatible storage; healthcheck `mc ready local` |
-| `minio-init` | none | `cgr.dev/chainguard/minio-client:latest-dev` pinned by digest | none | One-shot: runs `backend/db/minio/init-bucket.sh`; `restart: "no"` |
+| `postgres` | none | `pgvector/pgvector:pg16` | `5432` | Database; data in the `postgres-data` volume; healthcheck `pg_isready` |
 | `dev` | none | build `.devcontainer/Dockerfile` | none | Dev workspace, `command: sleep infinity`, repo mounted at `/workspace`, GPU reservation, `PYTHONPATH=/workspace/backend` |
 | `pgadmin` | `tools` | `dpage/pgadmin4:latest` | `${PGADMIN_HOST_PORT:-5050}` -> 80 | Postgres web UI; server mode off, master password off |
 | `migrate` | `app` | build `backend/Dockerfile` | none | One-shot `alembic upgrade head`; waits for healthy `postgres` |
-| `rag-backend` | `app` | build `backend/Dockerfile` | `8000` | API; waits for `postgres` healthy, `migrate` and `minio-init` completed, `ollama` started |
+| `rag-backend` | `app` | build `backend/Dockerfile` | `8000` | API; waits for `postgres` healthy, `migrate` completed, `ollama` started |
 | `worker` | `app` | build `backend/Dockerfile` | none | `python -m app.jobs.worker`; mounts `./prompts` at `/workspace/prompts` and `./config` at `/workspace/config`, both read-only; waits for `postgres`, `migrate`, `ollama`, `languagetool` |
 | `frontend` | `app` | build `./frontend`, target `dev` | `5173` | Vite dev server; `VITE_API_PROXY_TARGET=http://rag-backend:8000`; `node_modules` in a named volume |
 | `playwright` | `browser` | `mcr.microsoft.com/playwright/mcp:latest` | none (`expose: 8931`) | Headless browser for Playwright MCP; command `--host 0.0.0.0 --port 8931 --allowed-hosts *` |
 | `frontend-preview` | `preview` | build `./frontend` with `infra/frontend.Dockerfile` | `8080` | Production nginx image; `PORT=8080`, `API_UPSTREAM_URL=http://rag-backend:8000`, `API_HOST=rag-backend` |
 
-Named volumes: `frontend-node-modules`, `ollama-data`, `postgres-data`, `pgadmin-data`, `minio-data`, `uv-cache`, `hf-cache`, `claude-config`.
+Named volumes: `frontend-node-modules`, `ollama-data`, `postgres-data`, `pgadmin-data`, `uv-cache`, `hf-cache`, `claude-config`.
 
 ### Start commands
 
 | Command | Starts |
 |---|---|
-| `docker compose up -d` | `ollama`, `languagetool`, `postgres`, `minio`, `minio-init`, `dev` |
+| `docker compose up -d` | `ollama`, `languagetool`, `postgres`, `dev` |
 | `docker compose --profile app up` | adds `migrate`, `rag-backend`, `worker`, `frontend` |
 | `docker compose --profile tools up -d pgadmin` | adds `pgadmin` |
 | `docker compose --profile app --profile browser up -d` | adds `playwright` |
@@ -122,26 +120,13 @@ For the step sequence, see [How to deploy to the Azure VM](../how-to/deploy-to-a
 | File | Content |
 |---|---|
 | `backend/pyproject.toml` | Package `rag-backend` 0.1.0, `requires-python >=3.12`, `[tool.uv] package = false`; dependencies `fastapi>=0.115`, `uvicorn[standard]>=0.32`, `asyncpg>=0.30`, `pgvector>=0.3`, `pydantic-settings>=2.6`, `httpx>=0.27`, `numpy>=2.0`, `sqlalchemy[asyncio]>=2.0`, `alembic>=1.14`, `argon2-cffi>=23.1`, `email-validator>=2.2`, `pyyaml>=6.0`, `wordfreq>=3.1`, `expert-knowledge-core`, `expert-knowledge-rag` (both `workspace = true`) |
-| `pyproject.toml` | Virtual workspace `rag-workspace` 0.0.0; members `backend` and `packages/*`; `default-groups = ["dev", "notebooks", "scripts"]`; groups `dev` (pytest, pre-commit, ruff, ty, pytest-asyncio, pytest-cov), `notebooks` (ipykernel, ipywidgets, jupyterlab), `scripts` (beautifulsoup4, boto3, docling, tokenizers, lxml, prompt-toolkit, pyyaml, langchain-ollama), `experiments` (empty); ruff `line-length = 100`, rules `E, F, I, UP, B, ASYNC, SIM`; pytest `testpaths`, `pythonpath`, `asyncio_mode = "auto"` and the markers `integration`, `regression`, `scale` |
+| `pyproject.toml` | Virtual workspace `rag-workspace` 0.0.0; members `backend` and `packages/*`; `default-groups = ["dev", "notebooks", "scripts"]`; groups `dev` (pytest, pre-commit, ruff, ty, pytest-asyncio, pytest-cov), `notebooks` (ipykernel, ipywidgets, jupyterlab), `scripts` (prompt-toolkit, pyyaml, langchain-ollama), `experiments` (empty); ruff `line-length = 100`, rules `E, F, I, UP, B, ASYNC, SIM`; pytest `testpaths`, `pythonpath`, `asyncio_mode = "auto"` and the markers `integration`, `regression`, `scale` |
 
 See [How to run tests and checks](../how-to/run-tests-and-checks.md) for the test commands.
 
 ## Database setup
 
-### `backend/db/init.sql`
-
-Idempotent DDL, applied by Postgres on the first start of a data volume and by `scripts/db/init_db.py` on an existing database.
-
-| Object | Definition |
-|---|---|
-| extension | `vector` |
-| `public.documents` | `id` uuid, `origin` (`manifest` or `user_upload`), `source_id`, `title`, `s3_bucket`, `s3_key`, `filename`, `content_type`, `size_bytes`, `sha256`, `source_url`, `retrieved_at`, `release_or_version`, `metadata` jsonb, `status` (`uploaded`, `parsing`, `parsed`, `indexed`, `failed`), `status_detail`, `uploaded_by`, timestamps; `UNIQUE (s3_bucket, s3_key)`; indexes on `sha256` and `source_id` |
-| `public.chunks` | `id` text, `document_id` (cascade delete), `chunk_index`, `text`, `contextual_text`, `heading_path`, `section_ids`, `block_types`, `pages`, `n_tokens`, `metadata`, `embedding vector(1024)`, `embedding_model`, `chunked_key`, `chunked_sha256`, `index_config`, `created_at`; `UNIQUE (document_id, chunk_index)`; HNSW index `vector_cosine_ops` on `embedding` |
-| `chunks.sparse` | `sparsevec(1048576)`, BM25 term weights; no index (exact scan) |
-
-### `backend/db/minio/init-bucket.sh`
-
-Requires `MINIO_URL`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`. Creates the bucket with `mc mb --ignore-existing`, adds the app user and attaches the `readwrite` policy.
+The `postgres` service mounts no SQL file; the tables come from the Alembic migrations below, and migration 0003 creates the `vector` extension.
 
 ### Alembic
 
@@ -150,11 +135,11 @@ Requires `MINIO_URL`, `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `S3_BUCKET`, `S3
 | `backend/alembic.ini` | `script_location = %(here)s/migrations`; `file_template = %%(rev)s_%%(slug)s`; logging to stderr |
 | `backend/migrations/env.py` | Creates schema `app` if missing; autogenerate covers schema `app` only (`include_name`); version table stored in schema `app`; URL from the `sqlalchemy.url` option or `settings.database_url`, converted by `to_async_url` |
 
-Schema `chips` and the tables in `public` are not autogenerated; schema `chips` is created by migration 0003 with plain SQL.
+Schema `chips` is not autogenerated; schema `chips` is created by migration 0003 with plain SQL.
 
 ### Migrations
 
-The revisions form one chain from `0001` (`down_revision = None`) to `0009`.
+The revisions form one chain from `0001` (`down_revision = None`) to `0011`.
 
 | Revision | File | Change |
 |---|---|---|
@@ -199,20 +184,10 @@ The revisions form one chain from `0001` (`down_revision = None`) to `0009`.
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | `rag`, `rag`, `rag` | `postgres` and the `DATABASE_URL` built for `dev`, `migrate`, `rag-backend`, `worker` |
 | `OLLAMA_DATA_PATH` | unset (named volume `ollama-data`) | `ollama` models mount |
 | `OLLAMA_LOAD_TIMEOUT`, `OLLAMA_KEEP_ALIVE` | `5m`, `5m` | `ollama` environment |
-| `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` | `minioadmin`, `minioadmin` | `minio`, `minio-init` |
-| `MINIO_API_HOST_PORT`, `MINIO_CONSOLE_HOST_PORT` | `9000`, `9001` | `minio` ports |
-| `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | `documents`, `rag-app`, `rag-app-secret` | `minio-init`, `dev`, `rag-backend` |
-| `S3_REGION` | `us-east-1` | `dev`, `rag-backend` |
-| `S3_ENDPOINT_URL` | `http://minio:9000` in compose; `http://localhost:9000` in `.env.example` | `dev`, `rag-backend` |
 | `PGADMIN_HOST_PORT`, `PGADMIN_EMAIL`, `PGADMIN_PASSWORD` | `5050`, `admin@local.dev`, dev value in the file | `pgadmin` |
 | `VITE_API_PROXY_TARGET` | `http://rag-backend:8000` in compose | `dev`, `frontend` |
-| `CONTACT_EMAIL`, `ICD_CLIENT_ID`, `ICD_CLIENT_SECRET` | empty | `scripts/corpus/fetch_sources.py` |
 
-The `dev` and `app`-profile backend services read `.env` through `env_file`; `DATABASE_URL`, `OLLAMA_BASE_URL`, `LANGUAGETOOL_URL` and the S3 endpoint are overridden in the compose file with in-network host names.
-
-### Corpus storage settings (`scripts/corpus/storage.py`)
-
-`S3Settings` reads `S3_ENDPOINT_URL` (default `http://localhost:9000`; empty targets AWS S3), `S3_ACCESS_KEY_ID` (`rag-app`), `S3_SECRET_ACCESS_KEY` (`rag-app-secret`), `S3_REGION` (`us-east-1`) and `S3_BUCKET` (`documents`).
+The `dev`, `rag-backend` and `worker` services read `.env` through `env_file`; `DATABASE_URL`, `OLLAMA_BASE_URL` and `LANGUAGETOOL_URL` are overridden in the compose file with in-network host names (`rag-backend` overrides the first two).
 
 ## Prompt loader: `backend/app/prompts.py`
 
@@ -249,33 +224,16 @@ The backend loads two prompts: `Expert_sentence_targets.v1` (`backend/app/knowle
 | Expert unit retrieval | `Expert_unit_keys.v1.md`, `Expert_unit_queries.v1.md`, `Expert_unit_pooling.v1.md` (`expert_unit_keys`, `expert_unit_queries`, `expert_unit_pooling`) | local model; Claude; Claude |
 | Sentence classification | `Expert_sentence_targets.v1.md` (`expert_sentence_targets`) | local instruct model, JSON mode |
 | Answer enhancement | `Answer_enhance.v1.md`, `Answer_enhance.v2.md` (`answer_enhance`), `Enhance_fidelity_judge.v1.md` (`enhance_fidelity_judge`) | local instruct model; local instruct model; Claude |
-| Corpus and reference text | `Reddit_post_screen.v1.md` (`reddit_post_screen`), `Gold_reference_claims.v1.md` (`gold_reference_claims`) | local instruct model; Claude |
 
 ## Scripts
 
 Run from the repository root (`scripts/README.md`). Scripts inside one folder import each other by module name.
 
-### `scripts/corpus/` (apart from `chunking/`)
-
-| File | Purpose |
-|---|---|
-| `fetch_sources.py` | Downloads the sources of `config/sources.yaml` into `data/raw/<id>/` with a `meta.json` per source |
-| `upload_raw_documents.py` | Uploads the files under `data/raw/` to the S3 bucket (objects whose remote sha256 matches are skipped unless `--force`) and upserts a `documents` row for each file described by a `meta.json` |
-| `parse_raw_documents.py` | Reads the `raw/<source_id>/` objects of the S3 bucket and writes `parsed/<source_id>/<stem>.json` and `<stem>.md` for each file described by a `meta.json`; HTML, JATS XML and PDF go through Docling, ICD-API JSON is parsed without it |
-| `chunk_parsed_documents.py` | Chunks parsed documents into `chunked/` JSON and Markdown using `config/chunking.yaml` |
-| `index_chunks.py` | Embeds chunks with the model of the indexing config into `chunks` and refits the BM25 sparse vectors |
-| `purge_sources.py` | Removes sources from Postgres and S3 (`raw/`, `parsed/`, `chunked/`); `--dry-run` |
-| `sources.py` | Typed model of `config/sources.yaml` |
-| `storage.py` | `S3Settings` and a cached `get_s3_client()` |
-
-The pipeline order is fetch, upload, parse, chunk, index (`scripts/README.md`).
-
 ### `scripts/db/`
 
 | File | Purpose |
 |---|---|
-| `init_db.py` | Applies `backend/db/init.sql` to `settings.database_url` |
-| `psql.sh` | `psql` in the `postgres` container (or through `DATABASE_URL` when `docker` is absent); `overview` prints extensions, table sizes, indexes, documents by status, chunk counts per embedding model and sample chunks; other arguments go to `psql` |
+| `psql.sh` | `psql` in the `postgres` container (or through `DATABASE_URL` when `docker` is absent); `overview` prints extensions, table sizes and estimated rows, and the indexes of schema `public`; other arguments go to `psql` |
 | `chips_backup.py` | Backs up, checks, restores and empties the tables of schema `chips` through binary COPY |
 | `chips_schema.sql` | Tables of the chips test with a `{schema}` placeholder |
 | `chips_snapshot.py` | `freeze` and `check` of a silver chip snapshot in `tests/fixtures/retrieval_silver/` |
@@ -287,13 +245,8 @@ The pipeline order is fetch, upload, parse, chunk, index (`scripts/README.md`).
 
 | File | Purpose |
 |---|---|
-| `ask.py` | Answers one question with retrieval over `chunks` |
-| `eval_retrieval.py` | Scores retrieval against the bronze QA dataset |
-| `eval_generation.py` | Generates answers with several Ollama models and scores them |
-| `judge_generations.py` | LLM-as-judge scoring of a generation run |
-| `report_eval.py` | Summarises a run as Markdown |
-| `compare_runs.py` | Compares evaluation runs as one Markdown file |
-| `rag_common.py` | Helpers shared by `ask.py`, the `eval_*.py` scripts, `judge_generations.py` and `report_eval.py` (the module docstring) |
+| `judge_generations.py` | LLM-as-judge scoring of an expert generation run (`eval_expert_generation.py`, `eval_chip_generation.py`) |
+| `rag_common.py` | Helpers shared by the expert-notes scripts: query embedder and BM25 settings of `config/indexing.yaml`, `OllamaChat`, `write_json`, the clinician judge rubric and its parsers |
 | `eval_expert_units.py` | Compares ways to index expert answers, in memory |
 | `expert_retrieval.py` | Building blocks shared by `eval_expert_units.py` and `eval_expert_generation.py` |
 | `expert_metrics.py` | Retrieval metrics, numpy only |
@@ -311,21 +264,13 @@ The pipeline order is fetch, upload, parse, chunk, index (`scripts/README.md`).
 | File | Purpose |
 |---|---|
 | `make_fixtures.py` | Builds synthetic ElicitationDocuments and reference claims |
-| `fetch_reddit_pool.py` | Downloads an r/ADHD post dump as the pool for `make_fixtures.py --source reddit` |
-| `reddit_posts.py` | Example-only helper: r/ADHD posts as vignette texts |
-| `screen_reddit_posts.py` | Labels cleaned posts with a local model and shortlists them |
 | `llm_clients.py` | Text-generation sources behind one interface: `OllamaGenerator`, `FileGenerator`, `InboxGenerator`, `CachedGenerator` |
 | `prompt_loader.py` | Re-exports the loader of `backend/app/prompts.py` |
 | `leak_terms.py` | Words a vignette must not contain (`LEAK_TERMS`) |
 | `export_schema.py` | Writes the ElicitationDocument JSON Schema to `data/schemas/elicitation_document.schema.json` |
 | `elicitation_schema.py` | Session schema handed over by the web platform (`ElicitationDocument`, `ReferenceClaim`) |
-| `elicitation_lifecycle.py` | Record status rules (`DocumentStatus`) |
 | `elicitation_units.py` | Turns expert answers into retrievable units, no model calls |
-| `answer_vignettes.py` | A clinician answers the vignettes in the terminal (gold tier) |
-| `chip_answers.py` | Rules behind `notebooks/answer_vignettes.ipynb`: citations, chips, lock-in, document |
-| `make_gold_claims.py` | Reference claims for gold answers, written by a Claude agent through the inbox |
 | `make_unit_keys.py` | Retrieval keys for expert units with a local model |
-| `migrate_q4_whatif.py` | One-off, idempotent: Q4 fixtures from schema 1.0 to 1.1 |
 | `chips_schema.py` | Chip documents: highlights, direction toggles, `⟦hN⟧` chips |
 | `make_chip_fixtures.py` | Chip fixtures: shared vignettes, then expert answers |
 | `classify_sentence_targets.py` | Step 3 of the chips pipeline: a local model files sentences without a chip |
@@ -351,8 +296,6 @@ The pipeline order is fetch, upload, parse, chunk, index (`scripts/README.md`).
 - `backend/migrations/versions/0007_patient_summary.py` - patient summary column
 - `backend/migrations/versions/0008_unit_removal.py` - removed status, refit kind
 - `backend/migrations/versions/0009_drop_synthetic.py` - synthetic flag removal
-- `backend/db/init.sql` - documents and chunks DDL
-- `backend/db/minio/init-bucket.sh` - bucket and app user creation
 - `backend/app/settings.py` - Settings keys and defaults
 - `backend/app/prompts.py` - prompt loader
 - `backend/app/knowledge/classifier.py:20,42` - classifier prompt constant and use
@@ -372,61 +315,40 @@ The pipeline order is fetch, upload, parse, chunk, index (`scripts/README.md`).
 - `infra/ts-serve.sh` - Tailscale serve for Ollama and LanguageTool
 - `prompts/Answer_enhance.v2.md` - front-matter id, version and target (the other prompt files follow the same layout)
 - `scripts/README.md` - run rules and folder map
-- `scripts/corpus/chunk_parsed_documents.py:1-17` - module docstring
-- `scripts/corpus/fetch_sources.py:1-12` - module docstring
-- `scripts/corpus/index_chunks.py:1-15` - module docstring
-- `scripts/corpus/parse_raw_documents.py:1-15` - module docstring
-- `scripts/corpus/purge_sources.py:1-8` - module docstring
-- `scripts/corpus/sources.py:1` - module docstring
-- `scripts/corpus/storage.py:10-30` - S3 settings and client
-- `scripts/corpus/upload_raw_documents.py:1-14` - module docstring
 - `scripts/db/chips_backup.py:1` - module docstring
 - `scripts/db/chips_schema.sql:1-7` - header comment
 - `scripts/db/chips_snapshot.py:1-8` - module docstring
 - `scripts/db/explore_chips.sql:1-6` - header comment
-- `scripts/db/init_db.py` - applies init.sql
 - `scripts/db/load_chips_pg.py:1-8` - module docstring
 - `scripts/db/psql.sh:1-39` - psql wrapper and overview
 - `scripts/db/seed_silver_reviews.py:1-2` - module docstring
-- `scripts/elicitation/answer_vignettes.py:1-9` - module docstring
 - `scripts/elicitation/build_chip_units.py:1-6` - module docstring
-- `scripts/elicitation/chip_answers.py:1-6` - module docstring
 - `scripts/elicitation/chip_findings.py:1-6` - module docstring
 - `scripts/elicitation/chips_schema.py:1-6` - module docstring
 - `scripts/elicitation/classify_sentence_targets.py:1-6` - module docstring
-- `scripts/elicitation/elicitation_lifecycle.py:1-6` - module docstring
 - `scripts/elicitation/elicitation_schema.py:1-6` - module docstring
 - `scripts/elicitation/elicitation_units.py:1-6` - module docstring
 - `scripts/elicitation/eval_enhance.py:1-8` - module docstring
 - `scripts/elicitation/export_scale_answers.py:1-6` - module docstring
 - `scripts/elicitation/export_schema.py:1-6` - module docstring
-- `scripts/elicitation/fetch_reddit_pool.py:1-6` - module docstring
 - `scripts/elicitation/leak_terms.py:1-6` - module docstring
 - `scripts/elicitation/llm_clients.py:1-6` - module docstring
 - `scripts/elicitation/make_chip_fixtures.py:1-6` - module docstring
 - `scripts/elicitation/make_fixtures.py:1-8` - module docstring
-- `scripts/elicitation/make_gold_claims.py:1-6` - module docstring
 - `scripts/elicitation/make_scale_fixtures.py:1-12` - module docstring
 - `scripts/elicitation/make_unit_keys.py:1-6` - module docstring
-- `scripts/elicitation/migrate_q4_whatif.py:1-6` - module docstring
 - `scripts/elicitation/prompt_loader.py:1-5` - re-export
-- `scripts/elicitation/reddit_posts.py:1-6` - module docstring
-- `scripts/elicitation/screen_reddit_posts.py:1-6` - module docstring
-- `scripts/rag/ask.py:1` - module docstring
 - `scripts/rag/chat_expert.py:1` - module docstring
 - `scripts/rag/chip_retrieval.py:1` - module docstring
-- `scripts/rag/compare_runs.py:1` - module docstring
 - `scripts/rag/eval_chip_generation.py:1` - module docstring
 - `scripts/rag/eval_chip_units.py:1` - module docstring
 - `scripts/rag/eval_expert_generation.py:1` - module docstring
 - `scripts/rag/eval_expert_units.py:1` - module docstring
-- `scripts/rag/eval_generation.py:1` - module docstring
-- `scripts/rag/eval_retrieval.py:1` - module docstring
 - `scripts/rag/eval_scale_retrieval.py:1-8` - module docstring
 - `scripts/rag/eval_style_diversity.py:1-6` - module docstring
 - `scripts/rag/expert_metrics.py:1` - module docstring
 - `scripts/rag/expert_retrieval.py:1` - module docstring
-- `scripts/rag/judge_generations.py:1` - module docstring
-- `scripts/rag/rag_common.py:1` - module docstring
-- `scripts/rag/report_eval.py:1` - module docstring
+- `scripts/rag/judge_generations.py:1-25` - module docstring
+- `scripts/rag/rag_common.py:1-8,25-45,90-100` - module docstring, helpers, judge rubric
+- `config/indexing.yaml` - embedder and BM25 settings read by rag_common
 - `scripts/rag/try_expert_rag.py:1-6` - module docstring

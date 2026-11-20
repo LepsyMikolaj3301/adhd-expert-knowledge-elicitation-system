@@ -11,7 +11,7 @@ Dokumentacja platformy wiedzy eksperckiej: aplikacji webowej i API, które zbier
 
 ## Tutoriale
 
-- [Uruchomienie stosu lokalnie](tutorials/run-the-stack-locally.md) - uruchom bazę danych, magazyn obiektów, API i aplikację webową przez Docker Compose, wykonaj pierwsze żądanie API, utwórz konto administratora i zaloguj się.
+- [Uruchomienie stosu lokalnie](tutorials/run-the-stack-locally.md) - uruchom bazę danych, API i aplikację webową przez Docker Compose, wykonaj pierwsze żądanie API, utwórz konto administratora i zaloguj się.
 
 ## Przewodniki how-to
 
@@ -26,7 +26,6 @@ Dokumentacja platformy wiedzy eksperckiej: aplikacji webowej i API, które zbier
 - [Winiety i wiedza w backendzie](reference/backend-vignettes-knowledge.md) - endpointy administratora dla wersji winiet i zestawu pytań oraz dla jednostek wiedzy, wraz z regułami walidacji.
 - [Indeksowanie i korekta w backendzie](reference/backend-indexing-proofread.md) - konfiguracja indeksowania i embedder oraz kroki korekty, powiązań i edycji ze zgłoszeniem odpowiedzi.
 - [Pakiety expert-knowledge-core i expert-knowledge-rag](reference/packages.md) - wektory rzadkie BM25, pakowanie notatek, stałe wyszukiwania oraz retrievery i łańcuchy tylko do odczytu nad schematem `chips`.
-- [Chunking i konfiguracja korpusu](reference/chunking.md) - semantyczny chunker skryptów korpusu i klucze `config/chunking.yaml`, `config/indexing.yaml` i `config/sources.yaml`.
 - [Powłoka aplikacji frontendu](reference/frontend-app.md) - start, trasy, guard tras, obsługa sesji, klient API, store'y, widoki, stałe oraz konfiguracja Vite, Vitest i ESLint.
 - [Komponenty frontendu i helpery odpowiadania](reference/frontend-components.md) - komponenty Vue z ich props i zdarzeniami oraz moduły TypeScript za ekranami odpowiadania i recenzji.
 - [Środowisko uruchomieniowe i wdrożenie](reference/runtime-and-deploy.md) - lokalny plik compose i plik compose VM Azure, Dockerfile, konfiguracja bazy danych i migracje, pliki promptów oraz skrypty.
@@ -35,7 +34,7 @@ Dokumentacja platformy wiedzy eksperckiej: aplikacji webowej i API, które zbier
 
 - [O architekturze](explanation/architecture.md) - system na trzech poziomach (kontekst, kontenery, komponenty) i wartości, które muszą być zgodne między częściami.
 - [O cyklu życia przydziału](explanation/assignment-lifecycle.md) - jak maszyna stanów, kolejka zadań w Postgresie i recenzja zamykana przez administratora prowadzą przydział od przydzielenia do ingestu.
-- [O wyszukiwaniu i indeksowaniu](explanation/retrieval-and-indexing.md) - dlaczego chunki literatury i spostrzeżenia ekspertów to dwa magazyny, które dzielą jedną implementację BM25 i jeden embedder.
+- [O wyszukiwaniu i indeksowaniu](explanation/retrieval-and-indexing.md) - dlaczego spostrzeżenia ekspertów są przechowywane z wektorem gęstym i rzadkim BM25 oraz dlaczego pakiet core i pakiet wyszukiwania tylko do odczytu są osobne.
 
 ## Źródła w kodzie
 

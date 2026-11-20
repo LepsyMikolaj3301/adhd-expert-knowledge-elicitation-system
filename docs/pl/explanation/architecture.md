@@ -93,12 +93,8 @@ Lokalny stos z `docker-compose.yml` różni się od diagramu w tych miejscach:
   `/api` do `rag-backend:8000`; usługa `frontend-preview` (profil `preview`) uruchamia
   produkcyjny obraz nginx na porcie 8080.
 - `ollama` i `languagetool` są usługami compose, a nie zewnętrzną maszyną.
-- Plik compose uruchamia też MinIO (bucket i użytkownika aplikacji tworzy `minio-init`), pgAdmin
-  (profil `tools`), przeglądarkę Playwright MCP (profil `browser`) i przestrzeń roboczą `dev`.
-  Kod backendu w `backend/app` nie ma klienta S3; klient S3 jest w `scripts/corpus/storage.py`,
-  więc MinIO należy do skryptów korpusu, a nie do diagramu platformy webowej.
-- Postgres przy pierwszym starcie wykonuje `backend/db/init.sql`, który tworzy tabele
-  `public.documents` i `public.chunks` dla korpusu literatury. Stos VM nie montuje tego pliku.
+- Plik compose uruchamia też pgAdmin (profil `tools`), przeglądarkę Playwright MCP (profil
+  `browser`) i przestrzeń roboczą `dev`.
 
 ## Komponenty: backend
 
@@ -292,7 +288,6 @@ odpowiadania i recenzji), prosi o hasło nad stroną. Katalog komponentów znajd
 - [Winiety i wiedza w backendzie](../reference/backend-vignettes-knowledge.md)
 - [Indeksowanie i korekta w backendzie](../reference/backend-indexing-proofread.md)
 - [Pakiety](../reference/packages.md)
-- [Chunking](../reference/chunking.md)
 - [Aplikacja frontendu](../reference/frontend-app.md)
 - [Komponenty frontendu](../reference/frontend-components.md)
 - [Środowisko uruchomieniowe i wdrożenie](../reference/runtime-and-deploy.md)
@@ -342,12 +337,10 @@ odpowiadania i recenzji), prosi o hasło nad stroną. Katalog komponentów znajd
 - `backend/app/ollama.py` - klient czatu Ollama
 - `backend/app/embeddings.py` - klient embeddingów Ollama
 - `backend/migrations/env.py` - Alembic zarządza tylko schematem app
-- `backend/db/init.sql` - tabele public tworzone przez lokalny kontener Postgres
 - `config/indexing.yaml` - model embeddingów, wymiary, parametry BM25
 - `packages/expert-knowledge-core/src/expert_knowledge_core/retrieval.py` - stałe modelu embeddingów i wymiarów
 - `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py` - rozmiar przestrzeni haszy
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/store.py` - store tylko do odczytu, schemat chips, sprawdzenie szerokości
-- `scripts/corpus/storage.py` - klient S3 używany przez skrypty korpusu
 - `frontend/src/main.ts` - start aplikacji
 - `frontend/src/router/index.ts` - trasy, leniwe ładowanie, wywołanie guard
 - `frontend/src/router/guard.ts` - sprawdzanie metadanych tras

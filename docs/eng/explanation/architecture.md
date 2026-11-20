@@ -91,13 +91,8 @@ The local stack in `docker-compose.yml` differs from the diagram in these places
   `rag-backend:8000`; the `frontend-preview` service (profile `preview`) runs the production
   nginx image on port 8080.
 - `ollama` and `languagetool` are compose services, not an external machine.
-- The compose file also starts MinIO (bucket and app user created by `minio-init`), pgAdmin
-  (profile `tools`), a Playwright MCP browser (profile `browser`) and a `dev` workspace. The
-  backend code under `backend/app` has no S3 client; the S3 client is in
-  `scripts/corpus/storage.py`, so MinIO belongs to the corpus scripts and not to the web
-  platform diagram.
-- Postgres runs `backend/db/init.sql` at first start, which creates the `public.documents` and
-  `public.chunks` tables for the literature corpus. The VM stack does not mount that file.
+- The compose file also starts pgAdmin (profile `tools`), a Playwright MCP browser (profile
+  `browser`) and a `dev` workspace.
 
 ## Components: backend
 
@@ -288,7 +283,6 @@ and review pages), asks for the password over the page. The component catalogue 
 - [Backend vignettes and knowledge](../reference/backend-vignettes-knowledge.md)
 - [Backend indexing and proofread](../reference/backend-indexing-proofread.md)
 - [Packages](../reference/packages.md)
-- [Chunking](../reference/chunking.md)
 - [Frontend app](../reference/frontend-app.md)
 - [Frontend components](../reference/frontend-components.md)
 - [Runtime and deploy](../reference/runtime-and-deploy.md)
@@ -338,12 +332,10 @@ and review pages), asks for the password over the page. The component catalogue 
 - `backend/app/ollama.py` - Ollama chat client
 - `backend/app/embeddings.py` - Ollama embedding client
 - `backend/migrations/env.py` - Alembic manages only schema app
-- `backend/db/init.sql` - public tables created by the local Postgres container
 - `config/indexing.yaml` - embedding model, dimensions, BM25 parameters
 - `packages/expert-knowledge-core/src/expert_knowledge_core/retrieval.py` - embedding model and dimensions constants
 - `packages/expert-knowledge-core/src/expert_knowledge_core/bm25.py` - hash space size
 - `packages/expert-knowledge-rag/src/expert_knowledge_rag/store.py` - read-only store, schema chips, width check
-- `scripts/corpus/storage.py` - S3 client used by the corpus scripts
 - `frontend/src/main.ts` - app bootstrap
 - `frontend/src/router/index.ts` - routes, lazy loading, guard call
 - `frontend/src/router/guard.ts` - route metadata checks
