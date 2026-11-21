@@ -4,8 +4,9 @@
 Usage: python scripts/rag/eval_scale_retrieval.py --run-dir data/eval/scale_retrieval/<name> \
            [--schema chips_scale] [--ns 1 2 5 10 15 20] [--ks 4 8] [--order 1 2 21 22 ...] [--limit N]
 
-Needs the scale fixture (scripts/elicitation/make_scale_fixtures.py: stages seed, vignettes, answers,
-build). The pool at n is the first n experts (SYN-001, SYN-002 ... by number) of the schema, or of
+Ingests the filled vignettes of tests/fixtures/scale_answers (scripts/db/chips_fixture.py: units,
+bge-m3 vectors, BM25) into --schema, replacing it, then evaluates; needs Postgres and Ollama with
+bge-m3. The pool at n is the first n experts (SYN-001, SYN-002 ... by number) of the schema, or of
 --order (expert numbers: `--order 1 2 21 22 ... 32 3 4 ...` puts the experts of other models before the qwen
 ones, so equal-size pools can be compared), selected with ExpertFilter(experts=...): dense ranking is exactly that of an n-expert corpus, BM25 statistics
 stay those of all experts. Experts 1-2 are the silver ones whose claims label the 40 questions.
@@ -19,7 +20,9 @@ Question sets (every question is embedded once, so the latency is the database's
   fixed     per vignette, three questions limited to that vignette (the several-experts case):
             expert coverage (distinct experts in the top k / min(k, experts that answered it)) and
             crowding@k (share of notes that repeat a fragment already in the list), with the
-            near-duplicate down-weighting on and off
+            near-duplicate down-weighting on and off, and with the agreement grouping of fragments on and
+            off (the groups are recomputed for the pool at every n: a note then counts for every
+            clinician of the pool who marked the passage)
 
 A "problem" is the first n where, against n=2: crowding@4 on anchor vignettes reaches 0.5, vignette
 precision of `labelled` or `topic` falls by 0.15, or original-label recall falls by a quarter.
@@ -34,6 +37,7 @@ import statistics
 import sys
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -45,12 +49,9 @@ from expert_knowledge_rag import (
     ExpertFilter,
     ExpertKnowledgeStore,
     ExpertQuestionRetriever,
-    default_embeddings,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-SNAPSHOT = ROOT / "tests" / "fixtures" / "retrieval_silver" / "queries.json"
-FIXTURES = ROOT / "data" / "fixtures_chips_scale" / "synthetic" / "silver"
 ANCHORS = ["V001", "V004", "V006", "V012"]
 FIXED = [
     "Which passages of this teaching case did the clinicians read as pointing toward or away from ADHD-related traits, and why?",
@@ -59,21 +60,6 @@ FIXED = [
 ]
 UNIT_KEY = re.compile(r"DOC-SYN-(\d{4}).*?(V\d{3})-(h\d+|case)$")
 MODALS = re.compile(r"\b(would|could|may|might|can|will|is likely|are likely)\b")
-
-
-class CachedQueries(Embeddings):
-    """Embeds each query text once, so repeated searches measure only the database."""
-
-    def __init__(self, inner: Embeddings) -> None:
-        self.inner, self.cache = inner, {}
-
-    def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        return self.inner.embed_documents(texts)
-
-    def embed_query(self, text: str) -> list[float]:
-        if text not in self.cache:
-            self.cache[text] = self.inner.embed_query(text)
-        return self.cache[text]
 
 
 # --- the data --------------------------------------------------------------------------------
@@ -120,21 +106,24 @@ def topic_question(design: dict, framing: str) -> list[tuple[str, str]]:
     return out
 
 
-def build_questions(args: argparse.Namespace, facts: dict) -> list[dict]:
-    snap = json.loads(SNAPSHOT.read_text())
-    covers = {c: units for c, units in snap["covers"].items()}
+def build_questions(
+    queries: dict, vignettes: dict[str, Any], limit: int | None = None
+) -> list[dict]:
+    """The three sets, from an ingested corpus's `queries` (labelled questions, claim -> unit ids of
+    the same schema) and the vignettes (id -> Vignette)."""
+    covers = queries["covers"]
     qs: list[dict] = []
-    for i, q in enumerate(snap["questions"], 1):
-        keys = {
-            c: [UNIT_KEY.search(u).groups() for u in covers.get(c, []) if UNIT_KEY.search(u)]
-            for c in q["claim_ids"]
-        }
+    for i, q in enumerate(queries["questions"], 1):
         qs.append(
             {"id": f"L{i:02d}", "set": "labelled", "question": q["question"], "targets": q["vignettes"],
-             "claims": {c: [facts["key_of"].get(k) for k in ks] for c, ks in keys.items()}}
+             "claims": {c: list(covers.get(c, [])) for c in q["claim_ids"]}}
         )  # fmt: skip
-    for path in sorted((FIXTURES / "vignettes").glob("V*.json")):
-        v = json.loads(path.read_text())
+    for vid in sorted(vignettes):
+        v = {
+            "id": vid,
+            "design": vignettes[vid].design.model_dump(),
+            "framing": vignettes[vid].framing,
+        }
         for n, (trait, text) in enumerate(topic_question(v["design"], v["framing"]), 1):
             qs.append(
                 {
@@ -148,7 +137,7 @@ def build_questions(args: argparse.Namespace, facts: dict) -> list[dict]:
         for n, text in enumerate(FIXED, 1):
             qs.append({"id": f"F-{v['id']}-{n}", "set": "fixed", "question": text, "targets": [v["id"]],
                        "vignette": v["id"], "anchor": v["id"] in ANCHORS})  # fmt: skip
-    return qs[: args.limit] if args.limit else qs
+    return qs[:limit] if limit else qs
 
 
 # --- metrics ---------------------------------------------------------------------------------
@@ -161,16 +150,53 @@ def fragments(doc: Any) -> set[str]:
 
 def crowding(docs: list) -> float:
     """Share of notes (after the first) that repeat a fragment an earlier note already has."""
+    return sum(crowding_split(docs).values()) / len(docs) if docs else 0.0
+
+
+def is_case_note(doc: Any) -> bool:
+    return "fragment" not in doc.metadata.get("kinds", [])
+
+
+def crowding_split(docs: list) -> dict[str, int]:
+    """The repeated notes of `crowding`, told apart by what they are: a case note (the whole
+    vignette) or one with fragments."""
+    seen: set[str] = set()
+    repeats = {"case": 0, "fragment": 0}
+    for d in docs:
+        frags = fragments(d)
+        if frags & seen:
+            repeats["case" if is_case_note(d) else "fragment"] += 1
+        seen |= frags
+    return repeats
+
+
+def passage_keys(doc: Any, group_of: dict[str, int]) -> set[str]:
+    """What a note is about, by agreement group (the clinicians' overlapping highlights are one
+    passage even when their words differ): its fragment units' groups, or the vignette for a case."""
+    keys = {f"g{group_of[u]}" for u in doc.metadata["unit_ids"] if u in group_of}
+    return keys or {f"case:{doc.metadata['vignette_id']}"}
+
+
+def passage_crowding(docs: list, group_of: dict[str, int]) -> float:
+    """Like `crowding`, but a repeat is a note about a passage (agreement group) already in the list."""
     seen: set[str] = set()
     repeats = 0
     for d in docs:
-        frags = fragments(d)
-        repeats += bool(frags & seen)
-        seen |= frags
+        keys = passage_keys(d, group_of)
+        repeats += bool(keys & seen)
+        seen |= keys
     return repeats / len(docs) if docs else 0.0
 
 
-def measure(q: dict, docs: list, k: int, pool: list[str], facts: dict, anchors: set[str]) -> dict:
+def measure(
+    q: dict,
+    docs: list,
+    k: int,
+    pool: list[str],
+    facts: dict,
+    anchors: set[str],
+    group_of: dict[str, int] | None = None,
+) -> dict:
     vignettes = [d.metadata["vignette_id"] for d in docs]
     row = {
         "vignettes": vignettes,
@@ -181,6 +207,16 @@ def measure(q: dict, docs: list, k: int, pool: list[str], facts: dict, anchors: 
         "anchor_share": round(sum(v in anchors for v in vignettes) / len(docs), 3) if docs else 0.0,
     }  # fmt: skip
     if q["set"] == "fixed":
+        split = crowding_split(docs)
+        row["crowding_fragment"] = round(split["fragment"] / len(docs), 3) if docs else 0.0
+        row["crowding_case"] = round(split["case"] / len(docs), 3) if docs else 0.0
+        row["case_share"] = round(sum(map(is_case_note, docs)) / len(docs), 3) if docs else 0.0
+        # what grouping the case notes of a vignette into one would free (a what-if: not implemented)
+        case_vignettes = [d.metadata["vignette_id"] for d in docs if is_case_note(d)]
+        row["case_freed"] = len(case_vignettes) - len(set(case_vignettes))
+        row["clinicians_counted"] = len({e for d in docs for e in d.metadata.get("expert_ids", [d.metadata["expert_id"]])})
+        if group_of:
+            row["crowding_passage"] = round(passage_crowding(docs, group_of), 3)
         available = len([e for e in facts["by_vignette"][q["vignette"]] if e in pool])
         row["expert_coverage"] = round(len(set(row["experts"])) / max(1, min(k, available)), 3)
         row["available_experts"] = available
@@ -224,17 +260,22 @@ def evaluate(
     ks: list[int],
     order: list[int] | None = None,
     log: bool = False,
+    grouping: Callable[[list[str]], dict[str, int]] | None = None,
 ) -> list[dict]:
-    """Every question at every (n, k), with the near-duplicate down-weighting on (and off, for `fixed`)."""
+    """Every question at every (n, k), with the near-duplicate down-weighting on (and off, for `fixed`).
+
+    `grouping(pool)` recomputes the agreement groups of the schema for the pool's experts and returns
+    each highlight's group; with it the `fixed` questions also run with `group_fragments` on."""
     anchors = set(ANCHORS)
     results: list[dict] = []
     for n in ns:
         pool = pool_at(facts["experts"], n, order)
         in_pool = {v for v, es in facts["by_vignette"].items() if set(es) & set(pool)}
+        group_of = grouping(pool) if grouping else {}
         for k in ks:
-            for dw in (True, False):
+            for dw, grp in [(True, False), (False, False), *([(True, True), (False, True)] if grouping else [])]:
                 for q in questions:
-                    if q["set"] != "fixed" and not dw:
+                    if q["set"] != "fixed" and (not dw or grp):
                         continue
                     targets = [t for t in q["targets"] if t in in_pool]
                     if not targets:
@@ -249,11 +290,13 @@ def evaluate(
                         k=k,
                         filter=flt,
                         downweight_duplicate_cases=dw,
+                        group_fragments=grp,
+                        groups_match_filter=True,
                     )
                     t0 = time.monotonic()
                     docs = retriever.invoke(q["question"])
                     ms = (time.monotonic() - t0) * 1000
-                    row = measure({**q, "targets": targets}, docs, k, pool, facts, anchors)
+                    row = measure({**q, "targets": targets}, docs, k, pool, facts, anchors, group_of)
                     results.append(
                         {
                             "id": q["id"],
@@ -261,6 +304,7 @@ def evaluate(
                             "n": n,
                             "k": k,
                             "downweight": dw,
+                            "group": grp,
                             "ms": round(ms, 1),
                             **row,
                         }
@@ -277,53 +321,32 @@ def summary(schema: str, facts: dict, questions: list[dict], order, results: lis
 
 
 def run(args: argparse.Namespace) -> dict:
+    sys.path.insert(0, str(ROOT / "scripts" / "db"))
+    import chips_fixture
+
     dsn = os.environ["DATABASE_URL"]
+    answers = chips_fixture.load(args.fixture)
+    embeddings = chips_fixture.IndexEmbeddings()
+    corpus = chips_fixture.ingest(answers, embeddings, patients=False)
+    with chips_fixture.seeded_schema(dsn, args.schema, corpus, keep=True):
+        print(f"seeded {args.schema} from {args.fixture}", flush=True)
     facts = pool_facts(dsn, args.schema)
     if len(facts["experts"]) < max(args.ns):
         sys.exit(f"{args.schema} has {len(facts['experts'])} experts, --ns asks for {max(args.ns)}")
     if args.order and len(args.order) < max(args.ns):
         sys.exit(f"--order lists {len(args.order)} experts, --ns asks for {max(args.ns)}")
     store = ExpertKnowledgeStore(dsn, schema=args.schema)
-    embeddings = CachedQueries(
-        default_embeddings(base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"))
-    )
-    questions = build_questions(args, facts)
+    questions = build_questions(corpus.queries, answers.vignettes, args.limit)
     for q in questions:
         embeddings.embed_query(q["question"])  # embedded first; the loops below touch only Postgres
-    results = evaluate(store, embeddings, facts, questions, args.ns, args.ks, args.order, log=True)
-    return summary(args.schema, facts, questions, args.order, results)
-
-
-def freeze_queries(args: argparse.Namespace) -> None:
-    """The built questions and their bge-m3 vectors next to a snapshot, so a test can run the
-    evaluation on a schema seeded from that snapshot without Ollama (tests/integration)."""
-    import numpy as np
-
-    sys.path.insert(0, str(ROOT / "scripts" / "db"))
-    import chips_snapshot
-
-    out: Path = args.freeze_queries
-    facts = pool_facts(os.environ["DATABASE_URL"], args.schema)
-    questions = build_questions(args, facts)
-    texts = list(dict.fromkeys(q["question"] for q in questions))
-    embedder = default_embeddings(
-        base_url=os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-    )
-    vectors = np.array([embedder.embed_query(t) for t in texts], dtype=np.float32)
-    (out / "scale_queries.json").write_text(
-        json.dumps(
-            {
-                "snapshot_sha": chips_snapshot.snapshot_digest(out),
-                "schema": args.schema,
-                "texts": texts,
-                "questions": questions,
-            },
-            indent=1,
+    grouping = lambda pool: chips_fixture.set_agreement_pool(dsn, args.schema, pool)  # noqa: E731
+    try:
+        results = evaluate(
+            store, embeddings, facts, questions, args.ns, args.ks, args.order, log=True, grouping=grouping
         )
-        + "\n"
-    )
-    np.savez_compressed(out / "scale_queries.npz", queries=vectors)
-    print(f"froze {len(questions)} questions ({len(texts)} texts) into {out}")
+    finally:
+        chips_fixture.set_agreement_pool(dsn, args.schema, None)  # back to everyone's groups
+    return summary(args.schema, facts, questions, args.order, results)
 
 
 # --- report ----------------------------------------------------------------------------------
@@ -351,19 +374,43 @@ def order_note(order: list[int] | None) -> str:
     )
 
 
+def _fixed(anchor: bool | None, dw: bool, grp: bool):
+    """Rows of the `fixed` questions: on anchor vignettes (None: either), with the down-weighting
+    and the grouping as given."""
+    return lambda r: (
+        r["set"] == "fixed"
+        and (anchor is None or (r["id"].split("-")[1] in ANCHORS) == anchor)
+        and r["downweight"] == dw
+        and r.get("group", False) == grp
+    )
+
+
 CURVE_RULES = {  # name -> (rows, field, the first n against base that counts as a problem)
-    "crowding_anchor": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS and r["downweight"],
-                        "crowding", lambda b, v: v >= 0.5),
-    "crowding_anchor_off": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS and not r["downweight"],
-                            "crowding", None),
-    "crowding_other": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] not in ANCHORS and r["downweight"],
-                       "crowding", None),
-    "coverage_anchor": (lambda r: r["set"] == "fixed" and r["id"].split("-")[1] in ANCHORS and r["downweight"],
-                        "expert_coverage", None),
+    "crowding_anchor": (_fixed(True, True, False), "crowding", lambda b, v: v >= 0.5),
+    "crowding_anchor_off": (_fixed(True, False, False), "crowding", None),
+    "crowding_other": (_fixed(False, True, False), "crowding", None),
+    "coverage_anchor": (_fixed(True, True, False), "expert_coverage", None),
     "precision_labelled": (lambda r: r["set"] == "labelled", "vignette_precision", lambda b, v: b - v >= 0.15),
     "recall_labelled": (lambda r: r["set"] == "labelled", "claim_recall",
                         lambda b, v: b > 0 and (b - v) / b >= 0.25),
     "precision_topic": (lambda r: r["set"] == "topic", "vignette_precision", lambda b, v: b - v >= 0.15),
+    # the grouping of fragments (groups recomputed for the pool), with the down-weighting on and off
+    "crowding_anchor_grouped": (_fixed(True, True, True), "crowding", lambda b, v: v >= 0.5),
+    "crowding_anchor_grouped_nodw": (_fixed(True, False, True), "crowding", None),
+    "crowding_other_grouped": (_fixed(False, True, True), "crowding", None),
+    "coverage_anchor_grouped": (_fixed(True, True, True), "expert_coverage", None),
+    "clinicians_anchor": (_fixed(True, True, False), "clinicians_counted", None),
+    "clinicians_anchor_grouped": (_fixed(True, True, True), "clinicians_counted", None),
+    # what the crowding is made of (anchors, down-weighting on), and by agreement group
+    "crowding_fragment_anchor": (_fixed(True, True, False), "crowding_fragment", None),
+    "crowding_case_anchor": (_fixed(True, True, False), "crowding_case", None),
+    "crowding_case_anchor_nodw": (_fixed(True, False, False), "crowding_case", None),
+    "crowding_case_anchor_grouped": (_fixed(True, True, True), "crowding_case", None),
+    "case_freed_anchor": (_fixed(True, True, False), "case_freed", None),
+    "case_freed_anchor_grouped": (_fixed(True, True, True), "case_freed", None),
+    "case_share_anchor": (_fixed(True, True, False), "case_share", None),
+    "crowding_passage_anchor": (_fixed(True, True, False), "crowding_passage", None),
+    "crowding_passage_anchor_grouped": (_fixed(True, True, True), "crowding_passage", None),
 }  # fmt: skip
 
 
@@ -409,8 +456,10 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
                 cells.append(f"{m if m is not None else '-'} ({len(sub)})")
             out.append(f"| {n} | " + " | ".join(cells) + " |")
 
-    on = [r for r in anchor_rows if r["downweight"]]
-    off = [r for r in anchor_rows if not r["downweight"]]
+    on = [r for r in anchor_rows if r["downweight"] and not r.get("group")]
+    off = [r for r in anchor_rows if not r["downweight"] and not r.get("group")]
+    grouped = [r for r in anchor_rows if r["downweight"] and r.get("group")]
+    grouped_off = [r for r in anchor_rows if not r["downweight"] and r.get("group")]
     block(
         "Crowding@k, anchor vignettes, per-vignette questions (down-weighting on; items in brackets)",
         on,
@@ -419,9 +468,23 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
     block("Crowding@k, anchor vignettes, down-weighting OFF", off, "crowding")
     block(
         "Crowding@k, other vignettes, down-weighting on",
-        [r for r in other_rows if r["downweight"]],
+        [r for r in other_rows if r["downweight"] and not r.get("group")],
         "crowding",
     )
+    if grouped:
+        block("Crowding@k, anchor vignettes, fragments GROUPED (down-weighting on)", grouped, "crowding")
+        block("Crowding@k, anchor vignettes, fragments GROUPED, down-weighting OFF", grouped_off, "crowding")
+        block("Crowding@k, other vignettes, fragments GROUPED", [r for r in other_rows if r["downweight"] and r.get("group")], "crowding")
+        block("Expert coverage, anchors, GROUPED", grouped, "expert_coverage")
+        block("Clinicians whose words the top k carries, anchors, plain", on, "clinicians_counted")
+        block("Clinicians whose words the top k carries, anchors, GROUPED", grouped, "clinicians_counted")
+        block("Passage crowding (by agreement group), anchors, plain", on, "crowding_passage")
+        block("Passage crowding (by agreement group), anchors, GROUPED", grouped, "crowding_passage")
+    block("Crowding from repeated fragments, anchors, plain", on, "crowding_fragment")
+    block("Crowding from repeated case notes, anchors, plain (down-weighting on)", on, "crowding_case")
+    block("Crowding from repeated case notes, anchors, plain, down-weighting OFF", off, "crowding_case")
+    block("Share of the top k that is case notes, anchors, plain", on, "case_share")
+    block("Places freed in the top k if the case notes of a vignette were ONE note (what-if), anchors, plain", on, "case_freed")
     block(
         "Expert coverage, anchor vignettes (distinct experts in top k / min(k, experts that answered it))",
         on,
@@ -495,12 +558,8 @@ def report(data: dict, ns: list[int], ks: list[int], path: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--run-dir", type=Path)
-    ap.add_argument(
-        "--freeze-queries", type=Path, metavar="SNAPSHOT_DIR",
-        help="write the built questions and their vectors next to this snapshot (for the scale "
-        "regression test) instead of running the evaluation; --schema must be seeded from it",
-    )  # fmt: skip
-    ap.add_argument("--schema", default="chips_scale")
+    ap.add_argument("--schema", default="chips_scale", help="seeded (replaced) from --fixture")
+    ap.add_argument("--fixture", type=Path, default=ROOT / "tests" / "fixtures" / "scale_answers")
     ap.add_argument("--ns", type=int, nargs="+", default=[1, 2, 5, 10, 15, 20])
     ap.add_argument("--ks", type=int, nargs="+", default=[4, 8])
     ap.add_argument(
@@ -508,9 +567,6 @@ def main() -> None:
     )
     ap.add_argument("--limit", type=int, help="only the first N questions (smoke test)")
     args = ap.parse_args()
-    if args.freeze_queries:
-        freeze_queries(args)
-        return
     if not args.run_dir:
         ap.error("--run-dir is required")
     args.run_dir.mkdir(parents=True, exist_ok=True)
