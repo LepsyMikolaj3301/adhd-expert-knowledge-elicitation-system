@@ -287,26 +287,6 @@ package WymaganiaElicytacji {
             @OdwolanieDoKodu { sciezka = "backend/app/jobs/queue.py"; }
         }
 
-        requirement <'WYM-N-08'> bezpieczneMigracje : WymaganieSystemowe {
-            doc /*
-             * Migracja przed uruchomieniem nowego kodu (usługa `migrate` w compose; API i worker startują
-             * po jej sukcesie); każda zgodna z działającym wydaniem (najpierw dodaj, usuń później).
-             */
-            @Zaimplementowane;
-            @OdwolanieDoKodu { sciezka = "infra/azure/deploy.sh"; }
-        }
-
-        requirement <'WYM-N-09'> tanieHostowanie : WymaganieSystemowe {
-            doc /*
-             * Jedna mała maszyna wirtualna (Azure Standard_B2s, 4 GB) z limitami pamięci kontenerów;
-             * modele (GPU) na komputerze właściciela; maszynę można wyłączać (płaci się wtedy tylko
-             * za dysk i adres IP).
-             */
-            @Propozycja;
-            @OdwolanieDoKodu { sciezka = "infra/azure/docker-compose.yml"; }
-            attribute pamiecVmGB : Integer = 4;
-        }
-
         requirement <'WYM-N-10'> usuwanieDanychRodo : WymaganieSystemowe {
             doc /* Usunięcie danych na dwóch poziomach: jedna jednostka; całe zgłoszenie lub ekspert z odpowiedziami. */
             @Planowane;
@@ -401,18 +381,6 @@ package WymaganiaElicytacji {
             attribute przechowywanie : DurationValue = 7 [d];
         }
 
-        requirement <'WYM-N-20'> ograniczonaEkspozycjaSieci : WymaganieSystemowe {
-            doc /*
-             * Z internetu dostępne są tylko porty 80 i 443 (TLS, certyfikat Let's Encrypt); Postgres
-             * nie jest publikowany; Ollama i LanguageTool słuchają na 127.0.0.1 i są osiągalne tylko
-             * przez sieć Tailscale; SSH do VM i wdrożenie idą przez Tailscale.
-             */
-            @Zaimplementowane;
-            @OdwolanieDoKodu { sciezka = "infra/azure/Caddyfile"; }
-            frame prywatnoscEksperta;
-            frame ochronaDanychPacjenta;
-        }
-
         requirement <'WYM-N-21'> anonimowaWinieta : WymaganieSystemowe {
             doc /*
              * Tekst winiety (wypowiedzi pacjenta) nie zawiera danych pozwalających zidentyfikować
@@ -474,10 +442,7 @@ package WymaganiaElicytacji {
         satisfy niezmienneZgloszenie by kontekstKliniki.hosting.system.db;
         satisfy udostepnienieBazyWiedzy by kontekstKliniki.hosting.bazaWiedzy;
         satisfy modeleLokalne by kontekstKliniki.lokalnyLlm;
-        satisfy bezpieczneMigracje by kontekstKliniki.hosting;
-        satisfy tanieHostowanie by kontekstKliniki.hosting;
         satisfy kontrolaZdrowiaUslug by kontekstKliniki.hosting;
         satisfy kopieZapasoweBazy by kontekstKliniki.hosting;
-        satisfy ograniczonaEkspozycjaSieci by kontekstKliniki.hosting;
     }
 }

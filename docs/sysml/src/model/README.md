@@ -114,10 +114,10 @@ Najważniejsze decyzje w modelu:
 - `Compute.REQUIRE_COMPUTE`: bez wartości, bo zależy od środowiska (produkcja true, dev i testy false).
 - Bez `satisfy`: `WYM-N-11 dostepnosc` (0,99), `WYM-N-13 jakoscWyszukiwania` (progi z testu regresji),
   `WYM-N-15`.
-- `WYM-N-01 modeleLokalne`, `WYM-N-09 tanieHostowanie`, `WYM-N-21 anonimowaWinieta` (@Propozycja): potwierdzić.
+- `WYM-N-01 modeleLokalne`, `WYM-N-21 anonimowaWinieta` (@Propozycja): potwierdzić.
 - `WYM-N-10 usuwanieDanychRodo` (@Planowane): element spełniający po implementacji.
 - `RagKliniki` i część procesu `wykorzystanieWKlinice` (@Propozycja): to nie jest część systemu.
-- Numery `WYM-F-20` i `WYM-N-14` są wolne (usunięte wymagania); numerów nie przesuwano.
+- Numery `WYM-F-20`, `WYM-N-08`, `WYM-N-09`, `WYM-N-14` i `WYM-N-20` są wolne (usunięte wymagania); numerów nie przesuwano.
 
 ## Rozbieżności kod ↔ dokumentacja
 
