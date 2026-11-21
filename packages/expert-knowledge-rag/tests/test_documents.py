@@ -153,3 +153,14 @@ def test_a_group_whose_best_record_cannot_be_read_falls_back_to_the_plain_note(r
     docs = build_documents(hits, {"S1": record}, grouping=grouping_of(*hits))
     [note] = docs
     assert "group_id" not in note.metadata and note.page_content == "I1 of h3"
+
+
+def test_the_other_hits_of_a_group_take_no_places_in_the_top_k():
+    """k counts notes: four hits on one passage are one place, the rest of the overfetch follows."""
+    sessions = ["S1", "S2", "S3", "S4"]
+    records = {s: example_record(s, f"X{n}") for n, s in enumerate(sessions)}
+    group = [hit("h3", 0.9 - n / 100, session=s) for n, s in enumerate(sessions)]
+    others = [hit("h1", 0.5, session="S1"), hit("case", 0.4, session="S2")]
+    docs = build_documents([*group, *others], records, grouping=grouping_of(*group, k=4, n=4))
+    assert [d.metadata.get("group_id") for d in docs] == [7, None, None]
+    assert len(docs[:2]) == 2 and docs[0].metadata["unit_ids"] == [g.id for g in group]

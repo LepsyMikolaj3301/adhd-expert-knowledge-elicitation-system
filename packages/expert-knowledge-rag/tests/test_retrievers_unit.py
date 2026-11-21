@@ -186,3 +186,32 @@ async def test_async_patient_matches_sync():
         "My hands tremble a lot."
     )
     assert [d.metadata["unit_ids"] for d in sync] == [d.metadata["unit_ids"] for d in other]
+
+
+# --- grouping with a filter on experts ---------------------------------------------------------
+
+
+def group_row(highlight: str) -> dict:
+    return {
+        "highlight_id": highlight, "group_id": 7, "span_start": 0, "span_end": 10, "n_answered": 2,
+        "n_attending": 1, "n_toward": 1, "n_away": 0, "n_neutral": 0, "n_unclear": 0,
+        "n_mixed": 0, "label": "single",
+    }  # fmt: skip
+
+
+def test_grouping_is_ignored_when_the_filter_names_experts():
+    flt = ExpertFilter(experts=["X1"])
+    store = ScriptedStore([[unit_row("h3")]], [SESSIONS])
+    docs = question(store, k=2, group_fragments=True, filter=flt).invoke("sleep and attention")
+    assert len(store.asked) == 2 and "group_id" not in docs[0].metadata
+
+
+def test_grouping_with_experts_is_allowed_when_the_groups_were_made_for_them():
+    flt = ExpertFilter(experts=["X1"])
+    store = ScriptedStore(
+        [[unit_row("h3")]], [[group_row("S1-V001-h3")]], [[]], [SESSIONS]
+    )
+    docs = question(
+        store, k=2, group_fragments=True, groups_match_filter=True, filter=flt
+    ).invoke("sleep and attention")
+    assert docs[0].metadata["group_id"] == 7

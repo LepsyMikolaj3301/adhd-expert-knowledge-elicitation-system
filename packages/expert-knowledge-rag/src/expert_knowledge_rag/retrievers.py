@@ -53,6 +53,9 @@ class _ExpertRetriever(BaseRetriever):
     # it; ignored when the filter names experts, since the counts would then cover more people
     # than the note shows.
     group_fragments: bool = False
+    # For evaluations: the stored groups were computed for exactly the experts of the filter, so
+    # their counts do not cover more people than the notes show and grouping may be used with it.
+    groups_match_filter: bool = False
     # Matches config/indexing.yaml `sparse`: the query must be tokenised as the stored vectors were.
     bm25: Bm25Config = Field(default_factory=Bm25Config)
     fusion_depth: int = FUSION_DEPTH
@@ -94,7 +97,7 @@ class _ExpertRetriever(BaseRetriever):
     def _wants_groups(self, hits: list[UnitHit]) -> bool:
         return (
             self.group_fragments
-            and self.filter.experts is None
+            and (self.filter.experts is None or self.groups_match_filter)
             and any(h.kind == "fragment" and h.highlight_id for h in hits)
         )
 
