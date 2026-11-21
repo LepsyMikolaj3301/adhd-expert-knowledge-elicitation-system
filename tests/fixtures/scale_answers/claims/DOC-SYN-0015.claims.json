@@ -1,0 +1,497 @@
+[
+  {
+    "claim_text": "The discrepancy between the planned two hours and the actual 'most of the evening' suggests potential time estimation issues, but the self-monitoring phrase 'I told myself' indicates intact metacognition.",
+    "condition": "high_cognitive_load",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_estimation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The explicit dismissal of the shopping incident as irrelevant ('nothing to do with anything') demonstrates the writer's ability to filter distractions and prioritize, which points away from pervasive inattention.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "which has nothing to do with anything but my legs hurt",
+    "trait": "metacognition",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The mention of sleeping badly since moving flats two months ago provides a clear external context for cognitive slippage, suggesting that poor sleep is a primary confounder rather than a neurodevelopmental trait.",
+    "condition": "recent_move",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "sleep_deprivation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The delay in opening the document to do dishes and bins first may reflect a stress response or a preference for tangible tasks over abstract ones, which is a common coping mechanism rather than a specific attentional deficit.",
+    "condition": "stress",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "task_avoidance",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "To determine if the features are meaningful, one needs a baseline of the writer's time estimation accuracy on calm days and whether this pattern is chronic or a one-off event related to the recent move and stress.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "baseline_functioning",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the time loss as ADHD and overlook the significant context of poor sleep and high cognitive demand, while also potentially misinterpreting the writer's self-awareness as a lack of insight.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The writer explicitly notes catching themselves comparing apps instead of working, indicating a lapse in task focus.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I caught myself comparing invoicing apps instead of typing in figures",
+    "trait": "distractibility",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The writer uses a timer and limits sessions to 40 minutes to prevent reorganizing folders, suggesting a need for external structure and potential impulsivity when unstructured.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "anything longer and I was reorganising my desktop folders",
+    "trait": "impulsivity",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The writer demonstrates strong organizational skills by noting that a key client pays by bank transfer with references, which simplifies the task.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Hollis, my biggest client, pays by bank transfer and every payment has a reference",
+    "trait": "organization",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The writer's low activity levels on some evenings may be attributed to grief over a parent's death rather than ADHD.",
+    "condition": "grief",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "some evenings I just sat there with the spreadsheet open and did very little",
+    "trait": "executive_dysfunction",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The distraction with comparing apps could be ordinary boredom or procrastination with a tedious task, not necessarily a neurodevelopmental trait.",
+    "condition": "boredom",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I caught myself comparing invoicing apps instead of typing in figures",
+    "trait": "procrastination",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "It is unclear if the low activity levels are chronic or a new symptom resulting from recent grief.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "chronicity",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The writer has a functional coping strategy (timer) that mitigates the difficulty, suggesting the issue is manageable and not pervasive.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "compensation",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The writer describes a specific instance of task abandonment where he went to find a table but returned with a mug and no table, which could indicate attentional drift but is also consistent with avoidance or fatigue.",
+    "condition": "deadline_pressure",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "sustained_attention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer successfully submitted a method section on time and corrected supervisor feedback the same evening, demonstrating intact planning and time management that argues against severe executive dysfunction.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did send the method section on time last week, so at least one person at the university has proof I exist",
+    "trait": "planning",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer frames his academic struggles as a calculation of time vs. work ('mostly arithmetic'), indicating metacognitive awareness of the constraints rather than a lack of awareness typical of untreated ADHD.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I would call this a tragedy but it is mostly arithmetic",
+    "trait": "metacognition",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The pattern of getting distracted by food or drink (mug, toastie) while trying to complete academic or household tasks is highly consistent with anxiety-driven avoidance or fatigue, given the mention of being 'quite nervous' about an upcoming exam.",
+    "condition": "academic_exams",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I have had four coffees today. I know. The stats exam is on Thursday as well and I am quite nervous about it.",
+    "trait": "anxiety",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "To distinguish ADHD from ordinary stress or procrastination, a sample of the writer's behavior on a day without immediate deadline pressure is needed to see if the disorganization is chronic.",
+    "condition": "no_deadline",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over-interpret the specific instances of distraction (mug, toastie) as diagnostic of ADHD, while under-interpreting the evidence of competence (meeting deadlines) and the contextual role of anxiety.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+    "trait": "interpretation_bias",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The use of a master sheet and green folder indicates high organizational skills, pointing away from ADHD.",
+    "condition": "high organizational skills",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "each labelled by room and numbered on a master sheet I keep in the green folder",
+    "trait": "disorganization",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Completing tasks a week early suggests good time management, pointing away from ADHD.",
+    "condition": "good time management",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The solicitor says the paperwork is on schedule, and the council tax and utility changes were sent off on Monday, a week earlier than I needed",
+    "trait": "time_blindness",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Worry and sleep disruption are consistent with general anxiety or stress, not specific to ADHD.",
+    "condition": "situational stress",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I confess I woke at four this morning thinking about it",
+    "trait": "anxiety",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "A baseline of usual organizational habits is needed to determine if the current behavior is trait-like or situational.",
+    "condition": "baseline comparison needed",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "executive_function",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Less experienced clinicians may overlook the strong organizational markers and focus on emotional content like worry.",
+    "condition": "inexperience",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The writer proactively arranged IT support on Monday for a Thursday task, indicating planning ability.",
+    "condition": "planning",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The logins worked, because I asked IT on Monday and they sorted it the same day.",
+    "trait": "executive_function",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The calendar error is attributed to an external factor (local file) rather than internal inattention.",
+    "condition": "external_attribution",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me",
+    "trait": "inattention",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The time discrepancy in proofing (1 hour allowed vs 3 hours taken) is a common performance slip rather than a specific ADHD trait.",
+    "condition": "performance_slip",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look.",
+    "trait": "time_management",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Rumination about a colleague's message may indicate anxiety rather than ADHD.",
+    "condition": "anxiety",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Priya in design also copied me on a message that I keep going over in my head",
+    "trait": "rumination",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer externalizes blame for job overruns to the physical environment ('That's the house, not me'), demonstrating insight into situational variables rather than a global cognitive deficit.",
+    "condition": "externalization_of_blame",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "That's the house, not me.",
+    "trait": "insight",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The writer links their ability to complete tasks accurately to the predictability of the job ('I can do it when I know the job'), suggesting that their performance is dependent on low environmental ambiguity, which is a common trait in high-competence professionals but not specific to ADHD.",
+    "condition": "task_complexity",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I can do it when I know the job.",
+    "trait": "predictability_dependence",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The specific failure mode of starting an invoice and stopping after writing only the customer's address indicates a potential difficulty with task initiation or sustained attention, but in this context, it is heavily confounded by reported exhaustion.",
+    "condition": "fatigue",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "One of them I did start, got as far as the customer's address.",
+    "trait": "task_initiation",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The writer's delay in processing invoices is likely attributable to physical exhaustion ('shattered') and increased workload since spring, rather than a stable neurodevelopmental trait, as the text explicitly links the behavior to a period of high stress and fatigue.",
+    "condition": "workload_increase",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I'm on site by seven most days and not home till gone seven, and by then I'm shattered.",
+    "trait": "fatigue",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Assessment is limited by the lack of information regarding whether these executive function difficulties persist in low-stress or rested states, as the current behavior is contextualized by a recent increase in business volume and physical exhaustion.",
+    "condition": "recent_workload_change",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": "Business has got busier since spring",
+    "trait": "context_dependence",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The recent start date of the job makes the reported difficulties likely situational rather than trait-based.",
+    "condition": "recent_job_start",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Three weeks ago I started my first job",
+    "trait": "contextual_stress",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The delay in sending the spreadsheet is a potential sign of executive dysfunction, but the passive nature ('sat open') is non-specific.",
+    "condition": "task_initiation_delay",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it",
+    "trait": "executive_dysfunction",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Forgetting the purpose of entering a room twice is a common memory lapse and does not establish a pattern.",
+    "condition": "low_frequency",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Twice I've walked into the stock room and forgotten what I went in for",
+    "trait": "working_memory",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The use of a planner that is helping suggests the writer has effective organizational strategies, which argues against severe ADHD.",
+    "condition": "effective_coping",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the planner I bought last week has helped with remembering meetings",
+    "trait": "organization",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The symptoms are better explained by the novelty and stress of a new job than by a neurodevelopmental condition.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Three weeks ago I started my first job",
+    "trait": "adjustment_stress",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "A history of similar difficulties in other settings or before the job is needed to establish a chronic pattern.",
+    "condition": "multi_setting_history",
+    "direction": "raises",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "chronicity",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Clinicians may over-interpret the specific task delays as ADHD while under-interpret the context of a new job.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "Three weeks ago I started my first job",
+    "trait": "clinical_bias",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The shift from fluid balance to restocking gloves and remembering the chart later indicates task switching and time loss, which is a marker of executive function strain.",
+    "condition": "during a 12-hour shift",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+    "trait": "inattention",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Writing the task on the hand and the uncertainty about the list location suggests reliance on external cues, potentially indicating disorganization.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "wrote it on my hand because the list is in my locker. or my coat",
+    "trait": "disorganization",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The explicit mention of fatigue and typing difficulties suggests that the observed errors or disorganization may be state-dependent rather than trait-based.",
+    "condition": "after twelve hours",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Typing this on my phone with useless thumbs after twelve hours so excuse the typos",
+    "trait": "fatigue",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Successfully completing a critical handover with nothing missed suggests intact working memory and prioritization capabilities under pressure.",
+    "condition": "during a critical clinical event",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Mon was quiet apart from bed 14 who coded at 3, we got him back, handover done by 7 with nothing missed",
+    "trait": "working_memory",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The disorganization and task switching could be explained by exhaustion or a chaotic environment rather than a stable cognitive trait.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+    "trait": "fatigue",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Information about whether the disorganization is consistent across rested and fatigued states is needed to distinguish state from trait.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the forgotten chart as a symptom of ADHD while under-weighing the writer's ability to recover and complete the task.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "remembered the chart at 5",
+    "trait": "inattention",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The writer's self-description of never telling a short version suggests potential verbosity or hyperfocus, but is likely social context-dependent.",
+    "condition": "casual_email",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "you know I never tell a short version",
+    "trait": "verbosity",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The fact that the trip was planned for a week indicates competent executive function and planning, arguing against ADHD-related deficits.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "which I had planned for a week",
+    "trait": "planning",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The companion's behavior of mentioning his catch often is not relevant to the writer's trait profile.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Dennis caught three roach and mentioned it often",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The writer's report of talking the whole way back, attributed to the companion, suggests potential verbal disinhibition, but is hedged by the writer's lack of memory.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says",
+    "trait": "verbal_disinhibition",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The verbosity and talking may be explained by the writer's personality or the social context of sharing a happy memory, rather than a clinical trait.",
+    "condition": "social_context",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "you know I never tell a short version",
+    "trait": "personality",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The uncertainty about the number of photos is likely casual estimation or fatigue, not a cognitive deficit.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "There are eleven, or twelve, I'd have to count",
+    "trait": "memory",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Assessment of these traits requires samples of communication in high-stakes contexts to determine if the verbosity and self-corrections are persistent and impairing.",
+    "condition": "professional_context",
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Less experienced clinicians might over-interpret the length of the text and self-description as strong evidence of ADHD, ignoring the context of a casual email and evidence of good planning.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "you know I never tell a short version",
+    "trait": "adhd",
+    "vignette_id": "V012"
+  }
+]

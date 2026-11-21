@@ -1,0 +1,416 @@
+[
+  {
+    "claim_text": "The sentence about spending most of the evening on the commentary section suggests difficulty with time management and task completion, which could point toward ADHD-related traits.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The detailed account of preparing the numbers for the report indicates organizational skills that would not typically be associated with ADHD.",
+    "condition": "... or null",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The mention of sleeping poorly since moving to a new flat might reflect ordinary adjustment or something else such as anxiety.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The sentence about doing dishes and bins before opening the document suggests task-switching that could align with ADHD traits.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Carrying shopping up four flights feels like a neutral detail unrelated to ADHD traits.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "the lift in our building was out so I carried the shopping up four floors",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The difficulty with time management and task completion might also indicate low mood or anxiety rather than ADHD traits.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The poor sleep might result from anxiety or stress unrelated to attention difficulties.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The sentence about doing dishes and bins first might reflect ordinary procrastination that many people experience rather than a specific trait.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "To better understand whether these features are meaningful, more context about typical patterns of behavior across different settings over time is needed.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the mention of poor sleep as a direct indicator of ADHD-related traits without considering that it could also reflect anxiety, stress, or ordinary adjustment to new living conditions.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A less experienced clinician might underplay the organizational skills demonstrated in preparing the report and see only challenges rather than the full picture.",
+    "condition": "... or null",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "\"I have had four coffees today. I know.\" shows self-awareness and potential frustration, common with executive dysfunction.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": "adhd-related_traits",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "\"Block one happened. Then I went to the kitchen\" feels like an ordinary interruption in work.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "\"I have had four coffees today. I know.\" could reflect anxiety or poor sleep just as well as ADHD-related traits.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "\"The writer should describe how she usually manages time and tasks in other settings\".",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "\"A less experienced clinician might over-interpret 'I have had four coffees today. I know.' as clear evidence of ADHD-related traits without considering other possibilities.\"",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Two days were spent using an outdated file",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "so for two days I was working from the old shared version",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "A message is kept going over in one's head",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Priya in design also copied me on a message that I keep going over in my head",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "A newsletter went out with the wrong date for an event",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The newsletter went out on Tuesday with the wrong date for the webinar",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "A time estimate was exceeded by a significant amount of time",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The fragment about sitting in the passenger seat suggests comfort with routine and a sense of identity tied to driving, which might point away from ADHD traits.",
+    "condition": "... or null",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The mention of talking throughout the journey without remembering much of it could indicate impulsivity or difficulty focusing, pointing toward ADHD-related traits.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The fragment about talking the whole way back could equally reflect general talkativeness, enthusiasm for the event, or even anxiety.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "It would be helpful to understand if these are lifelong patterns or recent developments.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The writer describes how noise affects his schedule and mood.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I start the 5:10 shift at the depot so I get maybe four hours.",
+    "trait": null,
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The writer's issue is framed around noise sensitivity and external factors.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I start the 5:10 shift at the depot so I get maybe four hours.",
+    "trait": null,
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "Understanding whether these difficulties are lifelong and pervasive is crucial.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The sentence about the time estimate suggests impulsivity or difficulty with time management.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd said it would take an hour, maybe less",
+    "trait": null,
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The mention of external factors affecting the work does not necessarily point toward any specific trait.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "because someone left the load job on, which isn't anyone's fault really",
+    "trait": null,
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The completion of smoke tests on schedule indicates organizational skills.",
+    "condition": "... or null",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The smoke tests I finished on Monday as planned",
+    "trait": null,
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The mention of external factors affecting work could equally reflect low mood or anxiety.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "because someone left the load job on, which isn't anyone's fault really",
+    "trait": null,
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "Understanding typical work patterns and personal stressors would provide valuable context.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The sentence about buying the TV is notable for its speed and context, suggesting impulsivity.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Bought a 55 inch tv with the staff discount",
+    "trait": null,
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The mention of rent is notable for its regularity, contrasting other spending.",
+    "condition": "... or null",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Rent went out on the 1st like always, standing order",
+    "trait": null,
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The trainers purchase could reflect ordinary browsing habits.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "then two pairs of trainers that same evening because the site had free returns.",
+    "trait": null,
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "There's a gap between awareness of the problem and concrete steps to address it.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The text mentions a history of being labeled as daydreaming",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "\"Daydreaming again\" written in the margin of nearly every report",
+    "trait": null,
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The text mentions being able to clear tasks efficiently when motivated.",
+    "condition": "... or null",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the whole thing, because the skip was booked for ten and I was done by nine",
+    "trait": null,
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The text mentions task-avoidance.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I found it again this morning, made tea first, then did the post, then ended up reading Dad's old bus tickets instead",
+    "trait": null,
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The text mentions looking out of a window during an assembly.",
+    "condition": "... or null",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "she remembered me looking out of the window through the whole of a harvest assembly",
+    "trait": null,
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The text suggests more information is needed about daily life and functioning.",
+    "condition": "... or null",
+    "direction": "raises",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The text suggests a generalised low mood which could explain some of the other fragments.",
+    "condition": "low_mood",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Mood has been low since the winter and I nearly stayed in.",
+    "trait": null,
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "Running out of compost could reflect poor planning or impulsivity associated with ADHD.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "Ran out of compost halfway through the second bed.",
+    "trait": null,
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "It could also simply reflect a lack of foresight or organisation.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "It would be helpful to know more about the person's history of these difficulties and whether they have been present since childhood.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret running out of compost as evidence of ADHD-related impulsivity or poor planning.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Ran out of compost halfway through the second bed.",
+    "trait": null,
+    "vignette_id": "V024"
+  }
+]

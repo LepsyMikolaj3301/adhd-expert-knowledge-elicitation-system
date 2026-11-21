@@ -24,7 +24,6 @@ from expert_knowledge_rag import ExpertKnowledgeStore
 
 REPO = Path(__file__).resolve().parents[4]
 SCHEMA_SQL = REPO / "scripts" / "db" / "chips_schema.sql"
-SNAPSHOT = REPO / "tests" / "fixtures" / "retrieval_silver"
 sys.path.insert(0, str(REPO / "scripts" / "db"))
 EMB = DeterministicFakeEmbedding(size=1024)
 VID = "V001"
@@ -145,37 +144,38 @@ def embeddings() -> DeterministicFakeEmbedding:
     return EMB
 
 
-# --- the frozen silver snapshot: 198 real units with bge-m3 vectors (scripts/db/chips_snapshot.py) -
+# --- the silver answers: SYN-001 and SYN-002 of tests/fixtures/scale_answers, ingested here ------
+# Built, embedded with bge-m3 (Ollama, config/indexing.yaml) and seeded by scripts/db/chips_fixture.py:
+# 28 sessions, 198 units. Needs Ollama with bge-m3 as well as Postgres; without it these skip.
 
 
 @pytest.fixture(scope="session")
-def silver(dsn: str):
-    """(tables, vectors, queries) of tests/fixtures/retrieval_silver."""
-    if not (SNAPSHOT / "tables.json").exists():
-        pytest.skip(
-            "no tests/fixtures/retrieval_silver: python scripts/db/chips_snapshot.py freeze"
-        )
-    import chips_snapshot
+def embedder():
+    """bge-m3 as the application embeds; each text once per session."""
+    import chips_fixture
 
-    return chips_snapshot.load_snapshot(SNAPSHOT)
+    try:
+        emb = chips_fixture.IndexEmbeddings()
+        emb.embed_query("ping")
+    except Exception as error:
+        pytest.skip(f"no embedding model (Ollama with bge-m3): {error}")
+    return emb
+
+
+@pytest.fixture(scope="session")
+def silver(dsn: str, embedder):
+    """(tables, vectors, queries) of the silver answers."""
+    import chips_fixture
+
+    return chips_fixture.ingest(chips_fixture.load(experts=chips_fixture.SILVER_EXPERTS), embedder)
 
 
 @pytest.fixture(scope="session")
 def silver_schema(dsn: str, silver):
-    import chips_snapshot
+    import chips_fixture
 
-    name = f"chips_silver_{uuid.uuid4().hex[:8]}"
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        try:
-            conn.execute("BEGIN")
-            chips_snapshot.seed(conn, name, SNAPSHOT)
-            conn.execute("COMMIT")
-        except Exception:
-            conn.execute("ROLLBACK")
-            raise
-    yield name
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(name)))
+    with chips_fixture.seeded_schema(dsn, f"chips_silver_{uuid.uuid4().hex[:8]}", silver) as name:
+        yield name
 
 
 @pytest.fixture(scope="session")
@@ -183,36 +183,18 @@ def silver_store(dsn: str, silver_schema: str) -> ExpertKnowledgeStore:
     return ExpertKnowledgeStore(dsn, schema=silver_schema)
 
 
-@pytest.fixture(scope="session")
-def frozen(silver):
-    """The real query embeddings of the snapshot; any other text raises instead of calling a model."""
-    import chips_snapshot
-
-    _, vectors, queries = silver
-    return chips_snapshot.FrozenEmbeddings(queries, vectors)
-
-
-# --- the snapshot with many experts per vignette (synthetic copies, see chips_snapshot.crowded) --
+# --- the silver answers with many experts per vignette (synthetic copies, chips_fixture.crowded) --
 
 CROWD = 4  # copies of each of the two experts: ten answers to every vignette
 
 
 @pytest.fixture(scope="session")
 def crowd_schema(dsn: str, silver):
-    import chips_snapshot
+    import chips_fixture
 
     name = f"chips_crowd_{uuid.uuid4().hex[:8]}"
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        try:
-            conn.execute("BEGIN")
-            chips_snapshot.seed(conn, name, SNAPSHOT, crowd=CROWD)
-            conn.execute("COMMIT")
-        except Exception:
-            conn.execute("ROLLBACK")
-            raise
-    yield name
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(name)))
+    with chips_fixture.seeded_schema(dsn, name, silver, crowd=CROWD) as name:
+        yield name
 
 
 @pytest.fixture(scope="session")

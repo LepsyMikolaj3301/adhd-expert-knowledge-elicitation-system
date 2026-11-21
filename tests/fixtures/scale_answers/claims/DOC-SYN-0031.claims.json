@@ -1,0 +1,452 @@
+[
+  {
+    "claim_text": "The discrepancy between planned and actual time for the commentary suggests difficulty with time estimation.",
+    "condition": "high_stress",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Prioritizing household chores before work indicates a specific executive function pattern rather than general avoidance.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "executive_function",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Noting a minor, unrelated task at the end is a common memory lapse for low-importance items.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Need to remember to ask Dan about the fridge shelf",
+    "trait": "working_memory",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The poor sleep is directly attributed to the recent relocation and environmental noise.",
+    "condition": "recent_move",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "sleep_quality",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The physical strain from carrying shopping is a neutral physiological event unrelated to cognitive traits.",
+    "condition": "physical_exertion",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "the lift in our building was out so I carried the shopping up four floors",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A sample from a low-stress day is required to determine if time distortion is a stable trait or a reaction to pressure.",
+    "condition": "low_stress",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Junior clinicians may over-interpret time distortion as a core deficit when it is likely caused by deadline pressure.",
+    "condition": "high_stress",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The writer's self-awareness and structured narrative suggest intact metacognition, which is less typical of unmanaged ADHD.",
+    "condition": "self_monitoring",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I would call this a tragedy but it is mostly arithmetic.",
+    "trait": "executive_function",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Producing a significant amount of text in one session demonstrates the capacity for sustained focus under specific conditions.",
+    "condition": "sustained_focus",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "On Monday I wrote 600 of those words in one go at the library",
+    "trait": "attention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Losing track of a specific task due to a physical interruption indicates a potential vulnerability in attentional control.",
+    "condition": "distraction",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "came back ten minutes later with a clean mug and no table",
+    "trait": "attention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The distraction incident is non-specific and could be caused by ordinary fatigue or hunger.",
+    "condition": "fatigue",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "came back ten minutes later with a clean mug and no table",
+    "trait": "attention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Assessment requires knowledge of whether these symptoms occur in multiple settings to rule out situational factors.",
+    "condition": "pervasiveness",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "diagnostic_criteria",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Experienced clinicians recognize that self-awareness and successful deadline management are strong indicators of functional executive control.",
+    "condition": "follow_through",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "I fixed them the same evening",
+    "trait": "executive_function",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer attributes the calendar issue to external factors like Dana saving it locally and lack of communication.",
+    "condition": "handover error",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me",
+    "trait": "externalization",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer abruptly shifts to an unrelated personal anecdote about a sister's boiler manual.",
+    "condition": "narrative structure",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Anyway, my sister has the same problem with her boiler manual",
+    "trait": "tangentiality",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer underestimated the time required for proofing, leading to rushed work.",
+    "condition": "proofing task",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": "time_management",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer repeatedly thinks about a colleague's comment regarding ownership.",
+    "condition": "colleague feedback",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "keep going over in my head, the one about 'ownership'",
+    "trait": "rumination",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The tangential story about the sister could be a stress response or a social bid rather than a cognitive symptom.",
+    "condition": "stress response",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "my sister has the same problem with her boiler manual",
+    "trait": "tangentiality",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Assessment requires a sample of writing produced during a calm period to establish baseline structure.",
+    "condition": "baseline comparison",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "assessment_method",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The narrator identifies their tendency to be verbose as a known characteristic.",
+    "condition": "self-reported trait",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "and you know I never tell a short version",
+    "trait": "impulsivity_or_talkativeness",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The narrator reports talking extensively but having poor memory of the content.",
+    "condition": "retrospective report",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "memory_or_attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The narrator demonstrates the ability to plan an event in advance.",
+    "condition": "past behavior",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week",
+    "trait": "organization",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The lack of memory for the conversation may be due to low engagement rather than a clinical deficit.",
+    "condition": "alternative explanation",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Consistency of the talkativeness across settings is required to assess significance.",
+    "condition": "assessment need",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": "and you know I never tell a short version",
+    "trait": "impulsivity_or_talkativeness",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The writer tracks passport numbers and booking deadlines, indicating strong executive function.",
+    "condition": "planning",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Dani, I still need your passport number for the Porto train, I'll book it as soon as you send it.",
+    "trait": "executive_function",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The use of a shared sheet for expenses shows proactive financial organization.",
+    "condition": "financial_management",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I made a shared sheet with a column per person.",
+    "trait": "organization",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The text reflects a deliberate decision-making process with shortlisted options.",
+    "condition": "accommodation_booking",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I have two shortlisted and will send links tonight.",
+    "trait": "decision_making",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The single unsorted item regarding laundry is likely a normal logistical gap rather than a symptom of ADHD.",
+    "condition": "logistics",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "Laundry is the one thing I haven't sorted.",
+    "trait": "follow_through",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The text shows a mix of failed planning and successful execution, suggesting inconsistent executive function.",
+    "condition": "inconsistent",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Plans I made this week: Monday mechanisms, Tuesday spectroscopy, Wednesday past papers. Did none of it.",
+    "trait": "executive_function",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "The writer demonstrates the ability to complete complex tasks efficiently when motivated.",
+    "condition": "efficient",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Handed in the lab report on Friday, a day early. Finished the graphs in one sitting.",
+    "trait": "task_completion",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "The distraction from a broken link is a common human error that does not necessarily indicate ADHD.",
+    "condition": "common_error",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Then one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11.",
+    "trait": "distraction",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "It is necessary to determine if these patterns occur in non-stressful, non-academic settings.",
+    "condition": "unknown",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "context_dependence",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Junior clinicians might misinterpret a single distraction incident as a sign of inattention.",
+    "condition": "misinterpretation",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Then one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11.",
+    "trait": "inattention",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "The systematic logging of noise over three weeks indicates strong executive function and organization, pointing away from ADHD.",
+    "condition": "systematic_logging",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I logged it. Every night on my phone for three weeks, time and what it was.",
+    "trait": "executive_function",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The writer explicitly attributes their irritability to external noise and sleep loss, providing a clear non-neurodevelopmental explanation.",
+    "condition": "attributed_to_noise",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I'm short with everyone by Wednesday and that's the noise, not me.",
+    "trait": "emotional_regulation",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The symptoms are better explained by chronic sleep restriction due to the neighbor's noise than by an underlying ADHD trait.",
+    "condition": "early_shift",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I start the 5:10 shift at the depot so I get maybe four hours.",
+    "trait": "sleep_deprivation",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The text lacks information about the writer's baseline functioning in a controlled environment to distinguish stress from disorder.",
+    "condition": "missing_data",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "baseline_functioning",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "Experienced clinicians should avoid misinterpreting stress-induced irritability as intrinsic emotional dysregulation.",
+    "condition": "stress_response",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "I'm short with everyone by Wednesday and that's the noise, not me.",
+    "trait": "emotional_dysregulation",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The delay is attributed to a specific external technical issue, not a lack of planning.",
+    "condition": "external_interference",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the export from the test tool came out with the Android column merged into iOS",
+    "trait": "executive_function",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The writer adjusts the output content based on the audience's experience level.",
+    "condition": "accommodation",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I kept the bug list short because Daniel will be reading it, being new",
+    "trait": "social_cognition",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The narrative structure includes self-correction which is common in stressed but organized communication.",
+    "condition": "narrative_reset",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Anyway.",
+    "trait": "inhibitory_control",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "Assessment of executive function requires checking if this is a recurring pattern or a single incident.",
+    "condition": "pattern_recognition",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "executive_function",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "Experienced clinicians recognize that precise progress tracking (2/3 done, specific items left) indicates good organization.",
+    "condition": "accurate_monitoring",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "The draft is about two thirds done. Still to write: the risks part and the charts.",
+    "trait": "working_memory",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "Buying a TV on a lunch break indicates a lack of pause in decision-making.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Bought a 55 inch tv with the staff discount",
+    "trait": "impulsivity",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Measuring after ordering is a specific example of an executive function error.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I measured after ordering, obviously",
+    "trait": "inattention",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Switching the train pass to monthly demonstrates intact planning and follow-through.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I've switched my train pass to monthly so that's covered",
+    "trait": "organization",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Adhering to a food list shows good inhibitory control and routine.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I made a food list and only bought what was on it this week",
+    "trait": "inhibitory_control",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Feeling flat since winter could be a separate mood issue explaining the behavior.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I've been a bit flat since winter",
+    "trait": "mood",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Consistency of the spending pattern over time is needed to determine if it is a trait or a state.",
+    "condition": "chronicity",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "impulsivity",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Experienced clinicians will weigh the strong organizational evidence against the single impulsive act.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_judgment",
+    "vignette_id": "V022"
+  }
+]

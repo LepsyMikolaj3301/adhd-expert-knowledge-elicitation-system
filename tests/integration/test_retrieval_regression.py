@@ -1,7 +1,9 @@
-"""Retrieval-quality regression on the frozen silver snapshot, without and with an oracle.
+"""Retrieval-quality regression on the answers of SYN-001 and SYN-002, without and with an oracle.
 
-The real retrievers (expert_knowledge_rag) run against the seeded schema with the frozen bge-m3
-query vectors, and are scored with the offline evaluations' metrics (scripts/rag/expert_metrics.py):
+The answers of tests/fixtures/scale_answers are ingested at test time (units, bge-m3 vectors, BM25:
+tests/integration/conftest.py), the real retrievers (expert_knowledge_rag) run against that schema
+with the questions embedded by the same model, and are scored with the offline evaluations' metrics
+(scripts/rag/expert_metrics.py):
 recall@k, hit@k, MRR, nDCG, token-budget recall, and the ceiling (the best recall any 4 units could
 reach). Relevance is claim based; a claim is held by the units listed in queries.json `covers`.
 
@@ -9,7 +11,10 @@ reach). Relevance is claim based; a claim is held by the units listed in queries
   oracle (a)  the ceiling: what the labels allow at best, so recall can be read as a share of it
   oracle (b)  the filter: retrieval restricted to the vignettes the relevant claims come from
 
-Baselines live in tests/fixtures/retrieval_silver/baseline.json. After an intended change:
+Two kinds of checks: floors (absolute, a little under today's values, so a bad rebaseline cannot
+hide a collapse) and the baseline (tests/fixtures/retrieval_regression/baseline.json: nothing fell
+by more than TOLERANCE). The baseline names the fixture digest and the embedding model it was
+measured with; another fixture or model fails until it is rebaselined. After an intended change:
     UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s
 Every run prints the table, and writes data/eval/regression/<time>.json where data/eval exists.
 """
@@ -28,11 +33,11 @@ from expert_knowledge_rag import ExpertFilter, ExpertQuestionRetriever, PatientT
 pytestmark = [pytest.mark.integration, pytest.mark.regression]
 
 ROOT = Path(__file__).resolve().parents[2]
-BASELINE = ROOT / "tests" / "fixtures" / "retrieval_silver" / "baseline.json"
+BASELINE = ROOT / "tests" / "fixtures" / "retrieval_regression" / "baseline.json"
 REPORTS = ROOT / "data" / "eval" / "regression"
 UPDATE = bool(os.environ.get("UPDATE_RETRIEVAL_BASELINE"))
 
-TOLERANCE = 0.02  # frozen vectors and a deterministic BM25: drift should be 0; this absorbs ties
+TOLERANCE = 0.02  # same model, deterministic BM25: drift ~0; absorbs ties and GPU/CPU noise
 HEADLINE = ("recall@4", "hit@4", "mrr", "ndcg@10", "recall@500t", "recall@4/ceiling")
 LABELS = ("claim_ids", "pooled_ids")  # the original labels, and the pooled (completed) ones
 ALL = ExpertFilter()
@@ -42,9 +47,9 @@ def items(docs) -> list[Item]:
     return [Item(d.metadata["unit_ids"], d.page_content, [d.page_content]) for d in docs]
 
 
-def question_retriever(store, frozen, *, oracle: list[str] | None = None, **options):
+def question_retriever(store, embedder, *, oracle: list[str] | None = None, **options):
     flt = ExpertFilter(vignettes=oracle) if oracle else ALL
-    return ExpertQuestionRetriever(store=store, embeddings=frozen, filter=flt, k=10, **options)
+    return ExpertQuestionRetriever(store=store, embeddings=embedder, filter=flt, k=10, **options)
 
 
 # name -> (retriever options, uses the oracle filter, merges notes)
@@ -59,7 +64,7 @@ QUESTION_SETTINGS = {
 
 
 @pytest.fixture(scope="module")
-def runs(silver, silver_store, frozen):
+def runs(silver, silver_store, embedder):
     """Per setting: the ranked items of every question (and patient text)."""
     queries = silver[2]
     out: dict[str, list[tuple[dict, list[Item]]]] = {}
@@ -69,7 +74,7 @@ def runs(silver, silver_store, frozen):
                 q,
                 items(
                     question_retriever(
-                        silver_store, frozen, oracle=q["vignettes"] if oracle else None, **options
+                        silver_store, embedder, oracle=q["vignettes"] if oracle else None, **options
                     ).invoke(q["question"])
                 ),
             )
@@ -78,7 +83,7 @@ def runs(silver, silver_store, frozen):
     patient = []
     for p in queries["patients"]:
         flt = ExpertFilter(exclude_vignettes=p["exclude"])
-        retriever = PatientTextRetriever(store=silver_store, embeddings=frozen, filter=flt, k=10)
+        retriever = PatientTextRetriever(store=silver_store, embeddings=embedder, filter=flt, k=10)
         patient.append((p, items(retriever.invoke(p["text"]))))
     out["patient/cues"] = patient
     return out
@@ -114,10 +119,14 @@ def label_ceilings(silver):
     return out
 
 
+def measured_on(fixture_digest, embedder) -> dict:
+    return {"fixture": fixture_digest, "embedding_model": embedder.model}
+
+
 @pytest.fixture(scope="module", autouse=True)
-def report(scored, label_ceilings):
+def report(scored, label_ceilings, fixture_digest, embedder):
     yield
-    print("\n\nretrieval regression, silver snapshot (mean over queries)")
+    print("\n\nretrieval regression, SYN-001 and SYN-002 (mean over queries)")
     print(f"{'setting':<42}{'labels':<11}" + "".join(f"{m:>17}" for m in HEADLINE))
     for name, by_labels in scored.items():
         for labels, row in by_labels.items():
@@ -130,23 +139,31 @@ def report(scored, label_ceilings):
             json.dumps({"scores": scored, "ceilings": label_ceilings}, indent=1, sort_keys=True)
         )
     if UPDATE:
-        BASELINE.write_text(
-            json.dumps({"scores": scored, "ceilings": label_ceilings}, indent=1, sort_keys=True)
-            + "\n"
-        )
+        BASELINE.parent.mkdir(parents=True, exist_ok=True)
+        data = {"scores": scored, "ceilings": label_ceilings}
+        data |= measured_on(fixture_digest, embedder)
+        BASELINE.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n")
         print(f"baseline written to {BASELINE}")
 
 
 @pytest.fixture(scope="module")
-def baseline():
+def baseline(fixture_digest, embedder):
     if UPDATE:
         return None
     if not BASELINE.exists():
         pytest.fail("no baseline: UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s")
-    return json.loads(BASELINE.read_text())
+    base = json.loads(BASELINE.read_text())
+    now = measured_on(fixture_digest, embedder)
+    then = {key: base.get(key) for key in now}
+    if now != then:
+        pytest.fail(
+            f"the baseline was measured on {then}, this run is {now}: "
+            "UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s"
+        )
+    return base
 
 
-# --- no oracle: nothing got worse than the frozen baseline -------------------------------------
+# --- no oracle: nothing got worse than the baseline -------------------------------------------
 
 
 @pytest.mark.parametrize("setting", [*QUESTION_SETTINGS, "patient/cues"])
@@ -157,25 +174,36 @@ def test_no_headline_metric_fell_below_its_baseline(setting, labels, scored, bas
     if labels not in scored[setting]:
         pytest.skip("patient texts have one label set")
     now, then = scored[setting][labels], baseline["scores"][setting][labels]
-    assert now["queries"] == then["queries"], "the labels changed: refreeze and rebaseline"
+    assert now["queries"] == then["queries"], "the labels changed: rebaseline"
     fell = {m: (then[m], now[m]) for m in HEADLINE if now[m] < then[m] - TOLERANCE}
     assert not fell, f"{setting} [{labels}] (baseline, now): {fell}"
 
 
-def test_a_sane_retriever_finds_the_pooled_claims(scored):
+# The configuration the backend searches with, pooled labels. Measured (bge-m3, 2026-11-21): hit@4
+# 0.925, MRR 0.797, nDCG@10 0.613, recall@4 0.381. A floor sits about 0.05 under each: two of the 40
+# questions may lose their hit, more is a collapse, whatever the baseline says.
+FLOORS = {"hit@4": 0.875, "mrr": 0.75, "ndcg@10": 0.56, "recall@4": 0.33}
+
+
+@pytest.mark.parametrize("metric", FLOORS)
+def test_the_backend_retriever_stays_above_its_floor(metric, scored):
     """Absolute floors, independent of the baseline, so a bad rebaseline cannot hide a collapse."""
     row = scored["question/hybrid/no-merge"]["pooled_ids"]
-    assert row["hit@4"] >= 0.8 and row["mrr"] >= 0.5 and row["ndcg@10"] >= 0.4, row
+    assert row[metric] >= FLOORS[metric], row
+
+
+def test_patient_texts_find_something(scored):
     # patient texts search the cue keys and their labels are weak (offline: recall@4 about 0.004)
     assert scored["patient/cues"]["claim_ids"]["hit@4"] >= 0.1, scored["patient/cues"]
 
 
-def test_hybrid_beats_the_weaker_single_search(scored):
+@pytest.mark.parametrize("metric", ["ndcg@10", "recall@4", "hit@4"])
+def test_hybrid_is_at_least_as_good_as_the_better_single_search(metric, scored):
     pooled = {
-        m: scored[f"question/{m}/no-merge"]["pooled_ids"]["ndcg@10"]
+        m: scored[f"question/{m}/no-merge"]["pooled_ids"][metric]
         for m in ("hybrid", "dense", "bm25")
     }
-    assert pooled["hybrid"] >= min(pooled["dense"], pooled["bm25"]), pooled
+    assert pooled["hybrid"] >= max(pooled["dense"], pooled["bm25"]), pooled
 
 
 # --- oracle (a): the ceiling -------------------------------------------------------------------

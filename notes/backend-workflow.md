@@ -291,8 +291,8 @@ frontend.
 | `tests/scripts/` | The scripts the silver data came from (chip findings, fixture builders, judgments) | nothing |
 | `tests/*.py` | Classifier, links, proofreading, findings, state machine, retrieval metrics | nothing |
 | `tests/api/` | The API end to end, one real database per test run (all marked `integration`) | Postgres |
-| `tests/integration/` | Retrieval-quality regression on the frozen silver snapshot (marked `integration`, `regression`) | Postgres |
-| `packages/*/tests/` | The two packages; `integration/` runs the retrievers on a V001 example and on the silver snapshot | Postgres for `integration/` |
+| `tests/integration/` | Retrieval-quality regression and ingestion end to end on `tests/fixtures/scale_answers`, ingested at test time (marked `integration`, `regression`, `scale`) | Postgres, Ollama (bge-m3) |
+| `packages/*/tests/` | The two packages; `integration/` runs the retrievers on a V001 example and on the silver answers | Postgres for `integration/`, Ollama for the silver answers |
 
 ```bash
 uv run pytest -m "not integration"                      # fast, no database (about 20 s)
@@ -307,26 +307,39 @@ frontend **91% statements, 82% branches** (`npm run test:cov`). Two specs depend
 `answerView.spec` "follows what is typed…" and `intro.spec` "goes on to the case…" fail when the
 machine is busy, which is why `test:cov` uses two workers.
 
-**The silver snapshot** (`tests/fixtures/retrieval_silver/`, committed, about 2 MB) is the silver
-units with their real bge-m3 vectors, the 40 questions with their original and pooled labels, and the
-bge-m3 vector of every text the tests send as a query, so no test calls a model. Rebuild it after the
-units or the questions change (needs `data/` and Ollama with bge-m3):
+**The filled vignettes** (`tests/fixtures/scale_answers/`, committed, about 3 MB) are what exists
+before ingestion and nothing derived from it: the chip documents of 32 synthetic experts after
+proofreading, their claims, the classifier's sentence links (made at proofread, before the review),
+the role lines, and 40 questions with original and pooled claim labels (claims of SYN-001 and
+SYN-002). `scripts/db/chips_fixture.py` builds the units from them with the application's code,
+embeds them with bge-m3 (Ollama, `config/indexing.yaml`) and seeds a throwaway schema, so the
+integration tests run ingestion and search the way the application does; no vectors are stored.
+The tests need Postgres and Ollama, and run locally only (CI runs `-m "not integration"`); with
+`-m regression` a missing service fails the run instead of skipping it. Rewrite the fixture after the
+scale answers are rebuilt (`make_scale_fixtures.py --stage build --proofread` does it, or):
 
 ```bash
-uv run python scripts/db/chips_snapshot.py freeze     # rewrites tables.json, vectors.npz, queries.json
-uv run python scripts/db/chips_snapshot.py check      # consistent?
-UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s   # accept the new scores as the baseline
+uv run python scripts/db/chips_fixture.py export     # from data/fixtures_chips_scale_proofread + labels
+uv run python scripts/db/chips_fixture.py check      # every answer builds, every label names a claim
+UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m "regression and not scale" -s   # new baseline
+UPDATE_SCALE_BASELINE=1 uv run pytest -m scale -s
 ```
 
-`tests/integration/test_retrieval_regression.py` runs the package's retrievers on it and scores them
-with `scripts/rag/expert_metrics.py` (recall@k, hit@k, MRR, nDCG, token-budget recall, the ceiling).
-Without an oracle it runs the retrievers as the application does; with one it reads the labels'
-ceiling (the best any four units could reach) and restricts the search to the vignettes the labelled
-claims come from. A metric falling more than 0.02 below `baseline.json` fails the run.
+`tests/integration/test_retrieval_regression.py` ingests the answers of SYN-001 and SYN-002, runs the
+package's retrievers on them and scores them with `scripts/rag/expert_metrics.py` (recall@k, hit@k,
+MRR, nDCG, token-budget recall, the ceiling). Without an oracle it runs the retrievers as the
+application does; with one it reads the labels' ceiling (the best any four units could reach) and
+restricts the search to the vignettes the labelled claims come from. Absolute floors sit about 0.05
+under today's values of the backend's configuration; a metric falling more than 0.02 below
+`tests/fixtures/retrieval_regression/baseline.json` fails, and so does a baseline measured on another
+fixture digest or embedding model. `tests/integration/test_ingest_e2e.py` checks the indexing side:
+every built row is in the schema with its vector and BM25, a unit's own text finds it, a highlighted
+passage finds its cue key, every labelled claim is held by a unit (a strict `xfail` records that
+patient-text ranking lets the context bonus outweigh an exact match).
 
 **Many experts on one vignette.** The silver data has only two experts per vignette, and their
 answers are alike but not near-duplicates (cosine 0.70-0.90), so it cannot show a top k that fills
-with one vignette's answers. `chips_snapshot.crowded` adds synthetic copies of every expert (same
+with one vignette's answers. `chips_fixture.crowded` adds synthetic copies of every expert (same
 words, vectors moved a little), and `packages/expert-knowledge-rag/tests/integration/
 test_crowded_vignette.py` runs the retrievers on that: down-weighting stops a repeated whole-case
 answer from taking the places, but the same fragment said by many experts still does (a strict

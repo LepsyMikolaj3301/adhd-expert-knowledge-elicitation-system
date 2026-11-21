@@ -43,6 +43,10 @@ src = [".", "backend", "packages/expert-knowledge-core/src", "packages/expert-kn
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+# imports follow the sys.path setup, and the HTML strings are long
+"notebooks/*.ipynb" = ["E402", "E501"]
+
 [tool.ty.environment]
 python-version = "3.12"
 extra-paths = ["backend", "scripts/elicitation", "scripts/rag"]
@@ -54,8 +58,8 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "integration: needs the Postgres of DATABASE_URL (pgvector); skipped when unreachable",
-    "regression: retrieval-quality floors over tests/fixtures/retrieval_silver (needs Postgres)",
-    "scale: retrieval curves over the local 32-expert scale snapshot under data/ (needs Postgres; slower)",
+    "regression: retrieval quality on tests/fixtures/scale_answers ingested at test time (needs Postgres and Ollama with bge-m3; fails, not skips, without them when selected with -m)",
+    "scale: retrieval curves with all 32 experts of tests/fixtures/scale_answers (needs Postgres and Ollama; about 2 min)",
 ]
 
 # Fast run without a database, with coverage:

@@ -1,0 +1,308 @@
+[
+  {
+    "claim_text": "The fragment that suggests ADHD-related traits is the description of delayed task initiation and time management difficulties",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "attention_and_time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The fragment that points away from ADHD is the evidence of structured deadline management",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch",
+    "trait": "organisational_skills",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The multitasking demand could be explained by ordinary workload pressures",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Priya asked me to check her reserve figures too, and that took the whole afternoon",
+    "trait": "task_overload",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "More information on sleep quality and mood would be needed to interpret the procrastination as ADHD-related",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "sleep_and_mood",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over‑interpret the procrastination as ADHD and under‑recognise the organised approach shown elsewhere",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_interpretation_bias",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The repeated caffeine consumption and the fragmented planning suggest ADHD traits.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I have had four coffees today",
+    "trait": "caffeine_use",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The large single‑session writing effort is an ordinary demonstration of focus.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "On Monday I wrote 600 of those words in one go at the library",
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The plan of 50‑minute blocks could be a normal time‑management technique.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I made a plan of two blocks of 50 minutes with my phone in my bag",
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over‑attribute the caffeine and fragmented planning to ADHD.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I have had four coffees today",
+    "trait": "caffeine_use",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Expressions of persistent worry about the garage and the boiler point toward ADHD-related traits",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I am a little worried about the garage, because there is forty years of tools and paint in it and I have not yet decided what the new house has room for",
+    "trait": "intrusive_rumination",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The organised listing of boxes and the pre‑arranged removal service suggest a structured approach",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The books are finished: twelve boxes, each labelled by room and numbered on a master sheet I keep in the green folder",
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The nocturnal preoccupation could also reflect anxiety",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I also keep wondering whether the new boiler will pass inspection before we complete, and I confess I woke at four this morning thinking about it",
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Further written samples from a calm day are needed to assess clinical significance",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over‑interpret nocturnal worry as anxiety or depression",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The writer worked from an outdated calendar because it was stored locally and nobody informed them, indicating possible inattentiveness or organisational lapse.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version.",
+    "trait": "inattentiveness",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The newsletter was sent with an incorrect webinar date, suggesting a failure to verify critical details.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The newsletter went out on Tuesday with the wrong date for the webinar.",
+    "trait": "inattentiveness",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer allowed an hour for proof‑checking but it took nearly three, indicating possible difficulty in sticking to planned timeframes.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look",
+    "trait": "executive_dysfunction",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Additional information needed includes a history of similar problems across settings.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Underestimation of job duration signals a possible ADHD-related time perception deficit.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "A job I quote at about two days ends up three",
+    "trait": "time_perception",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Repeated postponement of invoice processing indicates difficulty with task initiation and completion.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I keep saying I'll sit down with them after tea",
+    "trait": "task_initiation",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "A backlog of unpaid invoices reflects challenges in sustained attention and organisational skills.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Right now there are six sitting in a folder, the oldest about five weeks",
+    "trait": "organisation",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Incomplete task of starting a customer visit suggests impaired goal maintenance.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I did start, got as far as the customer's address",
+    "trait": "goal_maintenance",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Underestimation of job duration could also be explained by situational workload increases.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "A job I quote at about two days ends up three",
+    "trait": null,
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Delayed action on a clear task despite knowledge of what to do",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Last Tuesday my manager asked me to send a supplier a corrected spreadsheet, and I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it",
+    "trait": "inattention",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Repeated incidental forgetfulness of purpose when entering a room",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Twice I've walked into the stock room and forgotten what I went in for, which I know is small",
+    "trait": "inattention",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Demonstrates a structured routine and punctuality",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I was early every day and finished my induction modules by the Friday, which I was pleased about",
+    "trait": "organisation",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The narrator spent an hour chasing saline stock, indicating task‑shifting.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Tue the pharmcy delivery came late so I spent an hour chasing saline stock",
+    "trait": "task_shifting",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The narrator restocked glove boxes after attempting a fluid balance, suggesting difficulty maintaining focus.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Went to do the fluid balance on bed 9 and ended up restocking glove boxes",
+    "trait": "difficulty_focus",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The handover was completed on time, indicating organisational competence.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "handover done by 7 with nothing missed",
+    "trait": "organisational_skill",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "An inexperienced clinician might over‑interpret task‑shifting as ADHD.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The planning of the trip suggests organisational skill rather than ADHD",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The episode of catching a perch and then a two‑hour lull may indicate a brief loss of sustained attention",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I caught a perch first and then nothing for two hours",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The account of speaking the whole way home but not recalling it again hints at memory lapses that can accompany ADHD",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The quick resolution of a fishing problem by buying worms shows flexible problem‑solving, not typical of ADHD",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it",
+    "trait": null,
+    "vignette_id": "V012"
+  }
+]

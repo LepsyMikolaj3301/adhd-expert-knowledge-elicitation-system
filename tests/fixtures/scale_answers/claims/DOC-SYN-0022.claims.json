@@ -1,0 +1,326 @@
+[
+  {
+    "claim_text": "The writer demonstrates organised preparation in the first highlight, indicating routine rather than ADHD.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch",
+    "trait": "organization",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The abrupt shift to a secondary task that consumes an entire afternoon in the second highlight suggests distractibility typical of ADHD.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "and then Priya asked me to check her reserve figures too, and that took the whole afternoon",
+    "trait": "distractibility",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The failure to stick to a self‑set time limit in the fourth highlight indicates poor time management, a core ADHD trait.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The second highlight could also reflect low mood or general procrastination, but the narrative’s abruptness leans toward attentional lapses.",
+    "condition": "low_mood",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "and then Priya asked me to check her reserve figures too, and that took the whole afternoon",
+    "trait": "distractibility",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A repeated sample on a calmer day is required to distinguish situational stress from persistent ADHD behaviour.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The abrupt shift from a task to an unrelated task and failure to return indicates attentional lapses characteristic of ADHD.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Repeated task switching and incomplete follow‑through reflect impulsivity and executive dysfunction linked to ADHD.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins.",
+    "trait": "impulsivity",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Similar lapses could also arise from mood dips, sleep deprivation, or academic stress.",
+    "condition": "low_mood_or_sleep_deprivation",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Repeated observations across days, collateral reports, and ruling out other causes are needed before labeling these behaviours as ADHD.",
+    "condition": "need_additional_history",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "An inexperienced clinician might over‑interpret task switching as ADHD while overlooking evidence of structured planning.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The calendar was a local file and the writer worked from an old version for two days",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version",
+    "trait": "inattention",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer allowed an hour to proof but it took three hours, indicating time misjudgement",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look",
+    "trait": "impulsivity",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The same lapses could be due to stress or poor sleep rather than ADHD",
+    "condition": "stress",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version",
+    "trait": "inattention",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Need a calm‑day written account and structured interview to confirm ADHD",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "diagnostic_assessment",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over‑interpret the lapses as ADHD and under‑appreciate the role change context",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "diagnostic_bias",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer’s pre‑planned departure shows organised behaviour that counters ADHD impulsivity",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week",
+    "trait": "organization",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The two‑hour lull after catching a perch indicates potential loss of sustained attention",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I caught a perch first and then nothing for two hours",
+    "trait": "attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The pause could be due to low mood or sleep deprivation rather than ADHD alone",
+    "condition": "low_mood_or_sleep_deprivation",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I caught a perch first and then nothing for two hours",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "A single anecdote lacks context across settings to determine ADHD relevance",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The author’s organised booking of travel demonstrates structured planning.",
+    "condition": "none",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I booked the Lisbon return for the four of us on Tuesday, 214 euros each with one cabin bag.",
+    "trait": "planning",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The unfinished laundry indicates possible difficulty with task initiation.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Laundry is the one thing I haven't sorted.",
+    "trait": "task_initiation",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The preference for immediate payment could reflect anxiety about future obligations.",
+    "condition": "none",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "Please add what you pay the same day, I'd rather not rebuild it from receipts in May.",
+    "trait": "anxiety",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "Lack of temporal detail about laundry status limits diagnostic clarity.",
+    "condition": "none",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": "Laundry is the one thing I haven't sorted.",
+    "trait": "information_gap",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "Organised travel planning may be misinterpreted as ADHD by less experienced clinicians.",
+    "condition": "none",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I booked the Lisbon return for the four of us on Tuesday, 214 euros each with one cabin bag.",
+    "trait": "misinterpretation",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "The pattern of setting intentions yet failing to execute suggests a core ADHD trait of inattention or executive dysfunction.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Plans I made this week: Monday mechanisms, Tuesday spectroscopy, Wednesday past papers. Did none of it. Same list as in January.",
+    "trait": "inattention",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Early completion of the lab report could be an instance of hyperfocus rather than typical ADHD behaviour.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Handed in the lab report on Friday, a day early. Finished the graphs in one sitting.",
+    "trait": "hyperfocus",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Organised preparation before class indicates a structured routine that counters the ADHD narrative.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "This morning I took the early bus and had a desk in the library by 8:40, wrote all the topic headings on a fresh page before I even took my coat off.",
+    "trait": "organization",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Difficulty with task initiation and completion is a second key symptom of ADHD.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Also Marek's hoodie is still in my room and I keep not dealing with it.",
+    "trait": "task_initiation",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Persistent bass noise indicates chronic sleep disruption.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Bass through my ceiling most nights from about 11 until 2, sometimes later.",
+    "trait": "sleep_disruption",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "Self‑monitoring of noise shows organized behaviour.",
+    "condition": "ADHD",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I logged it. Every night on my phone for three weeks, time and what it was.",
+    "trait": "self_monitoring",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "Irritability toward others suggests ADHD‑related affective dysregulation.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'm short with everyone by Wednesday and that's the noise, not me.",
+    "trait": "irritability",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "Sleep loss could be due to occupational shift work rather than ADHD.",
+    "condition": "shift_work",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I start the 5:10 shift at the depot so I get maybe four hours.",
+    "trait": "sleep_loss",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "Need broader functional history to differentiate ADHD from situational stress.",
+    "condition": "ADHD",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "functional_history",
+    "vignette_id": "V020"
+  },
+  {
+    "claim_text": "The delayed deadline indicates time‑management difficulty characteristic of ADHD",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I know it was meant to go out Tuesday and it's now Thursday afternoon",
+    "trait": "time_management",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The lack of clear ownership of the load job suggests executive dysfunction",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the staging server was slow because someone left the load job on, which isn't anyone's fault really, although we never wrote down who owns that job, I think Piotr set it up, or it was before him, I should ask",
+    "trait": "executive_function",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The deliberate shortening of the bug list shows organised communication, countering impulsivity",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I kept the bug list short because Daniel will be reading it, being new, and I'd rather he not think we're drowning",
+    "trait": "organisation",
+    "vignette_id": "V021"
+  }
+]

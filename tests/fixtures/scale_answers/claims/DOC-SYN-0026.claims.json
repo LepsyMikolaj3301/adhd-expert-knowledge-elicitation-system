@@ -1,0 +1,740 @@
+[
+  {
+    "claim_text": "told myself two hours for the commentary section and it has now been most of the evening",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "difficulty_sustaining_attention",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "the street is louder than the old one and the bed is a different bed",
+    "condition": "none",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the street is louder than the old one and the bed is a different bed",
+    "trait": "environmental_factors",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "has nothing to do with anything but my legs hurt",
+    "condition": "none",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "which has nothing to do with anything but my legs hurt",
+    "trait": "physical_discomfort",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "could reflect anxiety or perfectionism",
+    "condition": "none",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": "anxiety_perfectionism",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "could reflect poor sleep or physical discomfort",
+    "condition": "none",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": "poor_sleep_physical_discomfort",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "what other tasks are difficult to start or complete?",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "task_difficulties",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "any history of similar difficulties?",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "history_of_difficulties",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "might over-interpret as clear evidence of ADHD without considering other explanations",
+    "condition": "none",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "overinterpretation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "might under-interpret as irrelevant, missing the potential impact of environmental changes on sleep",
+    "condition": "none",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "underinterpretation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "opening file to find table and returning without it suggests difficulty sustaining attention",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "having four coffees could indicate self-medicating for low energy or focus",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I have had four coffees today",
+    "trait": "hyperactivity",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "sending method section on time shows ability to meet deadlines",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did send the method section on time last week",
+    "trait": "organization",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "making a plan with specific time blocks shows organizational skills",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag",
+    "trait": "organization",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "completing first block of work as planned shows ability to follow through",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Block one happened",
+    "trait": "task_completion",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "difficulty finding table could be due to anxiety or poor focus, not just adhd",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "four coffees could be due to stress or poor sleep, not just adhd",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I have had four coffees today",
+    "trait": "hyperactivity",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "asking about frequency of similar episodes would clarify if this is a pattern",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "asking about other tasks would help differentiate adhd from task-specific difficulties",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "asking about sleep patterns could explain fatigue and coffee consumption",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "asking about anxiety levels could help differentiate adhd from anxiety",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "less experienced clinician may overinterpret difficulty finding table as clear adhd trait",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "less experienced clinician may underinterpret sending method section on time as just being organized",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "I did send the method section on time last week",
+    "trait": "organization",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "working from the old shared version for two days without checking its location",
+    "condition": "disorganisation",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "so for two days I was working from the old shared version",
+    "trait": "adhd",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "last two pages of the newsletter got a quick look",
+    "condition": "impulsivity",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the last two pages got a quick look",
+    "trait": "adhd",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "time estimate for checking proofs was off by a factor of 3",
+    "condition": "time blindness",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": "adhd",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "keeper going over in head the message about 'ownership'",
+    "condition": "rumination",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I keep going over in my head, the one about 'ownership'",
+    "trait": "adhd",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "logins worked as IT sorted them the same day",
+    "condition": "organisation",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The logins worked, because I asked IT on Monday and they sorted it the same day",
+    "trait": "adhd",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "working from old shared version could reflect poor communication",
+    "condition": "poor communication",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "so for two days I was working from the old shared version",
+    "trait": "communication",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "rushed proofing could reflect time pressure or stress",
+    "condition": "time pressure",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "the last two pages got a quick look",
+    "trait": "stress",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "ask why did you not check the calendar's location sooner",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "ask how do you usually handle time estimates",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "less experienced clinician may over-interpret ruminating on 'ownership' message",
+    "condition": "over-interpretation",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I keep going over in my head, the one about 'ownership'",
+    "trait": "rumination",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "less experienced clinician may under-interpret logins sorted promptly as evidence of organisation",
+    "condition": "under-interpretation",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "The logins worked, because I asked IT on Monday and they sorted it the same day",
+    "trait": "organisation",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "talked the whole way back, didn't remember",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "talked the whole way back",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back",
+    "trait": "talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "left at 5, planned a week ago",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week",
+    "trait": "planning",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "drove because knee sore",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Dennis drove because my knee was sore",
+    "trait": "knee",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "sorted maggots issue",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it",
+    "trait": "sorting",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "I'd have to count",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd have to count",
+    "trait": "forgetting",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "talked the whole way back, didn't remember",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "talked the whole way back",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back",
+    "trait": "talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "I'd have to count",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I'd have to count",
+    "trait": "forgetting",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "do you find it hard to follow through on tasks, or get easily bored or distracted?",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "talked the whole way back, didn't remember",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "talked the whole way back",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I talked the whole way back",
+    "trait": "talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "drove because knee sore",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "Dennis drove because my knee was sore",
+    "trait": "knee",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "sorted maggots issue",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it",
+    "trait": "sorting",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "the clicky thing suggests difficulty with word retrieval",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the clicky thing",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "writing the time on my hand as well suggests compensatory strategies for forgetfulness",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "writing the time on my hand as well",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "the clicky thing could reflect low mood or anxiety",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "the clicky thing",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "ask about frequency and impact of these issues",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "less experienced clinician might over-interpret the clicky thing as clear sign of ADHD",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "the clicky thing",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "the washing basket is overflowing again, I know, I know shows forgetfulness",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The washing basket is overflowing again, I know, I know",
+    "trait": "forgetfulness",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "the nap ran over and I only noticed when he started yelling from the cot shows inattention",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the nap ran over and I only noticed when he started yelling from the cot",
+    "trait": "inattention",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "Started it three weeks ago during naps, which is the only time I get is a sign of structured time management",
+    "condition": "organisation",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Started it three weeks ago during naps, which is the only time I get",
+    "trait": "structured time management",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "Joints came out tighter than I expected shows attention to detail",
+    "condition": "organisation",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Joints came out tighter than I expected",
+    "trait": "attention to detail",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "Will redo that shows follow-through",
+    "condition": "organisation",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Will redo that",
+    "trait": "follow-through",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "the washing basket is overflowing again, I know, I know could reflect low mood or anxiety",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "The washing basket is overflowing again, I know, I know",
+    "trait": "low_mood_or_anxiety",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "the nap ran over and I only noticed when he started yelling from the cot could reflect low mood or anxiety",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "the nap ran over and I only noticed when he started yelling from the cot",
+    "trait": "low_mood_or_anxiety",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "Tired today though, he's been up around 3 every night this week, teething I think is a general explanation",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Tired today though, he's been up around 3 every night this week, teething I think",
+    "trait": "fatigue",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "ask about other settings, longer term hx, impact on daily life",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "assessment",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "likely over-interpret the washing basket is overflowing again, I know, I know as definitively ADHD-related",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "The washing basket is overflowing again, I know, I know",
+    "trait": "forgetfulness",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "i'll book it as soon as you send it shows impulsive action",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'll book it as soon as you send it",
+    "trait": "impulsivity",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "tell me by Sunday which you prefer shows sudden deadline",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "tell me by Sunday which you prefer",
+    "trait": "time_management",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "laundry is the one thing i haven't sorted shows uncompleted task",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Laundry is the one thing I haven't sorted",
+    "trait": "task_completion",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "i'll settle up on the flight home shows planned action",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I'll settle up on the flight home",
+    "trait": "planning",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "no rush on that one really shows relaxed attitude",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "No rush on that one really",
+    "trait": "time_pressure",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "please add what you pay the same day shows organised habit",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Please add what you pay the same day",
+    "trait": "organisation",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "could reflect anxiety or avoidance, not just impulsivity",
+    "condition": "anxiety",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I'll book it as soon as you send it",
+    "trait": "impulsivity",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "could be procrastination or indecision",
+    "condition": "procrastination",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "tell me by Sunday which you prefer",
+    "trait": "time_management",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "ask about any hx of distractibility or impulsivity in other settings",
+    "condition": "adhd",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "adhd",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "might over-interpret as definitive signs of ADHD",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I'll book it as soon as you send it",
+    "trait": "impulsivity",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "might under-interpret as mere politeness",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "I'll settle up on the flight home",
+    "trait": "planning",
+    "vignette_id": "V018"
+  },
+  {
+    "claim_text": "Finished the graphs in one sitting",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Finished the graphs in one sitting",
+    "trait": "focus",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11",
+    "trait": "focus",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Tomorrow: mechanisms 9-12, spectroscopy 1-3, past paper 4-6",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Tomorrow: mechanisms 9-12, spectroscopy 1-3, past paper 4-6",
+    "trait": "organisation",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Slept 7 hours, ate properly, laundry done",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Slept 7 hours, ate properly, laundry done",
+    "trait": "organisation",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "Every time I see the mechanism sheet my stomach drops",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Every time I see the mechanism sheet my stomach drops",
+    "trait": "anxiety",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "stomach drop at sheet could be anxiety",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Every time I see the mechanism sheet my stomach drops",
+    "trait": "anxiety",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "distraction could be low mood",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11",
+    "trait": "focus",
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "How often this happens, in other settings",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V019"
+  },
+  {
+    "claim_text": "stomach drop as adhd-related, but it's also typical of exam anxiety",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "Every time I see the mechanism sheet my stomach drops",
+    "trait": "anxiety",
+    "vignette_id": "V019"
+  }
+]

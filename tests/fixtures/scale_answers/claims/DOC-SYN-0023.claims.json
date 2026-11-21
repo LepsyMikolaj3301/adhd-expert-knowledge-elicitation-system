@@ -1,0 +1,398 @@
+[
+  {
+    "claim_text": "The writer procrastinated opening the report until nine, indicating possible time‑management difficulties.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "procrastination",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The writer reports poor sleep since moving, which is an ordinary explanation for fatigue.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Late opening of the document could be due to low mood or anxiety rather than ADHD.",
+    "condition": "low_mood_or_anxiety",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A less experienced clinician might interpret the writer’s late start as evidence of ADHD procrastination.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "the cake was the awkward bit",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the cake was the awkward bit",
+    "trait": "impulsivity",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "booked the restaurant on monday for saturday at seven",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "booked the restaurant on monday for saturday at seven",
+    "trait": "planning",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "the cake was the awkward bit could be frustration over a poorly chosen cake",
+    "condition": "low mood",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "the cake was the awkward bit",
+    "trait": "impulsivity",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "novice might over‑interpret the cake comment as impulsivity",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "the cake was the awkward bit",
+    "trait": "impulsivity",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "The writer shows a structured habit by easily organising invoices.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "First job was getting the invoices into one folder, and that was easy because Hollis, my biggest client, pays by bank transfer and every payment has a reference (bless them).",
+    "trait": "organization",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Software receipts taking ages suggests processing delay.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The software receipts took ages.",
+    "trait": "attention",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Forgetting two subscriptions indicates memory lapse.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "There are eleven subscriptions, I counted, and two I had forgotten I even had.",
+    "trait": "memory",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Distracted app comparison and impulsive purchase reflect inattentiveness.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Around the third evening I caught myself comparing invoicing apps instead of typing in figures, and I bought a year of one, which is not a deduction I planned for.",
+    "trait": "impulsivity",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Use of a timer for short bursts shows difficulty sustaining focus.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "What worked was forty minutes after lunch with the radio off and a timer on my phone, anything longer and I was reorganising my desktop folders.",
+    "trait": "focus",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The writer shows frequent distraction during tasks",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer demonstrates some planning ability",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I made a plan of two blocks of 50 minutes with my phone in my bag",
+    "trait": "executive_function",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The interrupted task could be due to normal environmental factors",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "More data on sleep and mood are needed to interpret the pattern",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "quick proofing suggests inattentiveness",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the last two pages got a quick look",
+    "trait": "inattentiveness",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "repetitive rumination may indicate ADHD‑related hyper‑focus or anxiety",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I keep going over in my head",
+    "trait": "rumination",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "discrepancy in self‑report could be social desirability or mood",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I said fine, which was not true",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "miscommunication about file location is a common organisational slip, not ADHD",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "need a calm‑day diary, sleep logs, mood rating, and a structured interview to rule out mood or anxiety disorders",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "a novice might read the quick proofing and rumination as definitive ADHD signs, ignoring ordinary explanations",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Planning the trip a week in advance indicates a structured approach to activity scheduling.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week",
+    "trait": "organisation",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Long periods of inactivity after a catch may suggest difficulty sustaining focus.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I caught a perch first and then nothing for two hours",
+    "trait": "attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Repetition of a detail could be a compensatory strategy for memory lapses.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Dennis caught three roach and mentioned it often",
+    "trait": "memory",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Forgetting the conversation indicates possible inattention.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The inactivity period might simply reflect boredom rather than attentional deficit.",
+    "condition": "boredom",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I caught a perch first and then nothing for two hours",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Repetition could be a social habit, not a memory issue.",
+    "condition": "social_habit",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Dennis caught three roach and mentioned it often",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The forgetfulness might be normal in a relaxed setting.",
+    "condition": "relaxed_setting",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Novices may over‑interpret structured planning as ADHD evidence.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Novices may under‑recognise conversational forgetting as attentional issue.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The user shows impulsive spending after a payday.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Got paid on the 28th and by the 30th most of it was gone!!",
+    "trait": "impulsivity",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The user made rapid, unplanned purchases during a lunch break.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Bought a 55 inch tv with the staff discount, it was 40% off and I just ordered it on my lunch break, then two pairs of trainers that same evening because the site had free returns.",
+    "trait": "inattention",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The user’s flat mood may explain inattention to finances.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I've been a bit flat since winter, it was a really bad one, so maybe that's part of why I wasn't thinking about the balance.",
+    "trait": "low_mood",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The user is aware of remaining budget but still overspent.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Checked the app this morning and I have 112 until the 27th.",
+    "trait": null,
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The user is delaying decisions about returns, possibly due to procrastination.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Day 12 of the 14 day return window now. Will decide tomorrow, or Friday.",
+    "trait": "procrastination",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The writer reports that teachers frequently noted \"Daydreaming again\" in their reports.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I was the one who got \"Daydreaming again\" written in the margin of nearly every report",
+    "trait": "inattention",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The writer describes shifting attention to unrelated material after starting a task.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I found it again this morning, made tea first, then did the post, then ended up reading Dad's old bus tickets instead.",
+    "trait": "distraction",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The delayed opening of the report folder could be explained by low mood rather than ADHD.",
+    "condition": "low_mood",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "The report folder is different, it has sat on the hall table since October and I keep meaning to open it.",
+    "trait": "procrastination",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "Low mood explains the writer’s hesitation to leave home.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Mood has been low since the winter and I nearly stayed in",
+    "trait": "low_mood",
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "The writer’s garden work shows organised planning rather than impulsivity.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Dug over the two back beds. The soil was still wet from Thursday but it came apart fine",
+    "trait": "executive_function",
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "Additional data needed include sleep quality and cross‑setting behaviour.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "An inexperienced clinician may misread organised tasks as evidence of strong executive function.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V024"
+  }
+]

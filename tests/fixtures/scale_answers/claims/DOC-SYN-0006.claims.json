@@ -1,0 +1,434 @@
+[
+  {
+    "claim_text": "The statement 'I told myself two hours... most of the evening' suggests potential time blindness, but is more likely planning fallacy or fatigue.",
+    "condition": "high_stress_week",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The delay in starting work is attributed to chores, indicating intact volition and logical sequencing rather than executive dysfunction.",
+    "condition": "null",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "initiation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Poor sleep since moving is a significant confounder that mimics ADHD symptoms like inattention and working memory issues.",
+    "condition": "poor_sleep_environmental_change",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "attention",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A control text from a calm, low-stakes context is needed to differentiate trait-based deficits from state-based fatigue.",
+    "condition": "null",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "baseline_functioning",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Less experienced clinicians may misinterpret the time slip as a deficit and overlook the explicit self-justification and confounding life events.",
+    "condition": "null",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "interpretation_bias",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The behavior of screenshotting twice due to distrust indicates anxiety-driven hyper-vigilance rather than inattention, suggesting high executive function for verification.",
+    "condition": "anxiety",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I screenshotted it twice, because I trust nothing",
+    "trait": "hyper_vigilance",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Comparing apps instead of typing figures represents task avoidance via a related non-productive activity, which is a specific ADHD marker involving poor impulse control on task switching.",
+    "condition": "adhd_related",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Around the third evening I caught myself comparing invoicing apps instead of typing in figures",
+    "trait": "task_avoidance",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Sitting with the spreadsheet open and doing very little is ambiguous and could be grief-related fatigue or executive dysfunction, distinguished by the phrasing suggesting passivity.",
+    "condition": "grief_or_edf",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "some evenings I just sat there with the spreadsheet open and did very little",
+    "trait": "passivity",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The accountant finding an external typo rather than a cognitive error argues against a pervasive attentional deficit in the financial domain.",
+    "condition": "non_cognitive_error",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "My accountant friend checked the totals and found one wrong VAT figure",
+    "trait": "external_verification",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Reorganizing desktop folders when the primary task is aversive is a classic ADHD workaround pattern or fidgeting loop.",
+    "condition": "adhd_related",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "anything longer and I was reorganising my desktop folders",
+    "trait": "procrastination_loop",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The passive inactivity is most likely low mood or grief given the recent death, distinguished by whether it occurs in non-aversive tasks.",
+    "condition": "grief",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "some evenings I just sat there with the spreadsheet open and did very little",
+    "trait": "low_mood",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Need to determine if the patterns are specific to high-stakes deadlines or pervasive across daily life to assess meaningfulness.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Less experienced clinicians might over-interpret the avoidance behaviors as definitive ADHD while ignoring the strong organizing and verification behaviors.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The episode of cleaning a mug instead of finding a table suggests a momentary loss of task focus, but the writer's immediate awareness and recovery indicate intact metacognition.",
+    "condition": "single_incident_under_stress",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.",
+    "trait": "attentional_lapse",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The implementation of a specific 50-minute work block with phone isolation demonstrates high levels of planning and self-regulation, which argues against severe executive dysfunction.",
+    "condition": "active_strategy_use",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag.",
+    "trait": "planning_ability",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Successfully submitting the method section on time and incorporating feedback demonstrates the ability to sustain attention and manage deadlines effectively.",
+    "condition": "academic_success",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did send the method section on time last week, so at least one person at the university has proof I exist.",
+    "trait": "task_completion",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The symptoms of distraction and time loss are likely attributable to high anxiety and caffeine overuse associated with the upcoming exam, rather than a neurodevelopmental trait.",
+    "condition": "high_stress_period",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "The stats exam is on Thursday as well and I am quite nervous about it.",
+    "trait": "anxiety_mimicry",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Experienced clinicians should avoid over-interpreting minor attentional lapses as diagnostic of ADHD when the text also contains evidence of successful planning and task completion.",
+    "condition": "mixed_evidence",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The use of a 'master sheet' and 'green folder' indicates high organization rather than disorganization, which points away from ADHD traits in this context.",
+    "condition": "high_organization",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "twelve boxes, each labelled by room and numbered on a master sheet I keep in the green folder",
+    "trait": "executive_function",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The satisfaction with using fewer boxes than budgeted suggests effective resource management and closure, which is atypical for ADHD-related inefficiency.",
+    "condition": "efficient_completion",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I was pleased to find that two boxes of mugs and plates were enough, which is fewer than I had budgeted for",
+    "trait": "planning",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Proactively sending administrative paperwork a week early indicates strong forward-planning and low procrastination.",
+    "condition": "proactive_handling",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The solicitor says the paperwork is on schedule, and the council tax and utility changes were sent off on Monday",
+    "trait": "time_management",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Waking at 4 AM to think about the boiler suggests cognitive intrusiveness, which could be anxiety or ADHD-related rumination, but is weak evidence without a pattern.",
+    "condition": "sleep_disruption",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I confess I woke at four this morning thinking about it",
+    "trait": "intrusive_thoughts",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The 4 AM waking is more likely indicative of situational anxiety or sleep disturbance than a core ADHD trait, given the otherwise organized nature of the text.",
+    "condition": "situational_stress",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I confess I woke at four this morning thinking about it",
+    "trait": "anxiety",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "A single high-stakes task like moving house forces organization, so a baseline sample from a low-stakes context is needed to assess trait-level executive function.",
+    "condition": "high_stakes_task",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "baseline_assessment",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The text's coherent structure and lack of digressions suggest a controlled narrative, which is a key differentiator from the meandering style often seen in ADHD writing.",
+    "condition": "structured_writing",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "narrative_coherence",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The discrepancy between planned time (1 hour) and actual time (3 hours) suggests executive dysfunction in time estimation.",
+    "condition": "work_stress",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": "time_blindness",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The repeated mental focus on the 'ownership' message indicates potential rumination or cognitive perseveration.",
+    "condition": "social_anxiety",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the one about 'ownership', but that's another email",
+    "trait": "rumination",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The apology for the length of the email suggests high self-monitoring and social awareness, which can co-occur with ADHD but also indicates anxiety.",
+    "condition": "high_functioning",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I'm sorry this ran so long.",
+    "trait": "social_anxiety",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The time estimation error could be attributed to stress or fatigue rather than a core ADHD trait.",
+    "condition": "fatigue",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": "stress_response",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "A baseline comparison of her usual time estimation accuracy is needed to determine if this is a trait or a state-dependent error.",
+    "condition": "unknown",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "baseline_variance",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer attributes errors to environmental factors rather than internal cognitive deficits.",
+    "condition": "external_attribution",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "That's the house, not me.",
+    "trait": "executive_function",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The writer demonstrates competence when conditions are favorable, suggesting intact core abilities.",
+    "condition": "situational_success",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I can do it when I know the job.",
+    "trait": "planning",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Delayed invoicing is described with a habitual routine ('usually Sunday'), suggesting a compensatory strategy rather than a failure to initiate.",
+    "condition": "procrastination",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Invoices wait. I'll do them soon, usually Sunday.",
+    "trait": "organization",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Starting a task and stopping at the first step (address) is a specific behavioral marker of initiation difficulty or task avoidance.",
+    "condition": "incomplete_task",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "One of them I did start, got as far as the customer's address.",
+    "trait": "task_initiation",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The writer's state of being 'shattered' provides a plausible alternative explanation for the administrative delays.",
+    "condition": "high_workload",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "by then I'm shattered",
+    "trait": "fatigue",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "The context of being three weeks into a first job is the dominant variable explaining the reported errors.",
+    "condition": "new_job",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Three weeks ago I started my first job",
+    "trait": "contextual_confound",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The failure to send a known task is a marker of executive dysfunction but is also consistent with ordinary procrastination.",
+    "condition": "single_instance",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it",
+    "trait": "executive_dysfunction",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Forgetting the purpose of entering a room is a common state-dependent lapse in attention or working memory.",
+    "condition": "low_stakes",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Twice I've walked into the stock room and forgotten what I went in for",
+    "trait": "attentional_lapse",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The use of a planner indicates intact metacognition and successful compensatory strategies.",
+    "condition": "effective",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the planner I bought last week has helped with remembering meetings",
+    "trait": "compensatory_strategy",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The reported symptoms are highly likely explained by ordinary stress, anxiety, or the novelty of the job rather than a neurodevelopmental disorder.",
+    "condition": "anxiety_vs_adhd",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": "differential_diagnosis",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "History of similar behaviors in previous, stable environments is required to distinguish situational stress from chronic traits.",
+    "condition": "prior_history",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "chronicity",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over-interpret specific behavioral examples as ADHD evidence while ignoring the strong contextual confound of the new job.",
+    "condition": "inexperience",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Planning the trip a week in advance indicates intact executive function and contradicts ADHD-related initiation or planning deficits.",
+    "condition": "planning",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "which I had planned for a week",
+    "trait": "executive_function",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The self-reported talkativeness is second-hand and qualified by memory loss, making it weak evidence for verbal hyperactivity.",
+    "condition": "memory_lapse",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "verbal_impulsivity",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The uncertainty about the number of photos (11 or 12) with a self-correction offer to count suggests normal minor memory variance rather than a core inattention deficit.",
+    "condition": "memory_accuracy",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "There are eleven, or twelve, I'd have to count",
+    "trait": "attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The physical symptom of a sore knee may explain reduced engagement or attention during the fishing activity, confounding any interpretation of inattention.",
+    "condition": "physical_pain",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Dennis drove because my knee was sore",
+    "trait": "attention",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The lack of information on whether the planning was automatic or aided by external tools limits the assessment of executive function.",
+    "condition": "planning_strategy",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "executive_function",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Clinicians might misinterpret the second-hand report of talking as a sign of impulsivity, failing to account for the source reliability and the writer's own memory discount.",
+    "condition": "source_reliability",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I talked the whole way back, Dennis says",
+    "trait": "impulsivity",
+    "vignette_id": "V012"
+  }
+]

@@ -1,0 +1,731 @@
+[
+  {
+    "claim_text": "She's aware of the time she's spending and it's more than she planned",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_awareness",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She's been busy",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She's on top of things at home",
+    "condition": "ordinary",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Need to remember to ask Dan about the fridge shelf",
+    "trait": "organisation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She's aware of the time she's spending and it's more than she planned",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_awareness",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She's been busy or having other things on her mind",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She's sleeping badly since the move",
+    "condition": "ordinary",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "sleep",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She did the dishes and the bins first",
+    "condition": "ordinary",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "organisation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She usually works",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She's been sleeping in general",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Her work and home life",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The time on the commentary section is a clear sign of ADHD",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_awareness",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The fridge shelf is a sign of being on top of things",
+    "condition": "ordinary",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Need to remember to ask Dan about the fridge shelf",
+    "trait": "organisation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The sleeping badly is more about the move",
+    "condition": "ordinary",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "sleep",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "She goes to find a table and ends up with a clean mug and no table, which points toward ADHD-related traits.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "She made a plan with two blocks of 50 minutes, which points away from ADHD.",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag.",
+    "trait": "focus",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "She goes to ask about the bins and comes back with a toastie, which points toward ADHD-related traits.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins.",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "She followed through on her supervisor's comments, which points away from ADHD.",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "My supervisor wrote back with three comments, all fair, and I fixed them the same evening.",
+    "trait": "follow-through",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The bit where she gets distracted and ends up with a clean mug could also reflect anxiety or low mood.",
+    "condition": "anxiety or low mood",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The bit about the four coffees could also reflect anxiety or poor sleep.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I have had four coffees today.",
+    "trait": "anxiety or poor sleep",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The bit where she goes to ask about the bins and comes back with a toastie could also reflect just being a bit disorganised or having a lot on her mind.",
+    "condition": "disorganisation or busy mind",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins.",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Has she always struggled with focus and distraction, or is this a new thing?",
+    "condition": "adhd",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "history",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Are these issues affecting other areas of her life, like work or relationships?",
+    "condition": "adhd",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "impact",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Does she have any other symptoms that might be related, like restlessness or impulsivity?",
+    "condition": "adhd",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "other symptoms",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the bit about the four coffees as a sign of ADHD.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I have had four coffees today.",
+    "trait": "anxiety or poor sleep",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "They might also under-interpret the bit where she goes to ask about the bins and comes back with a toastie.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins.",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "She doesn't say she forgot, she says nobody told her",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "nobody told me",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The newsletter went out on Tuesday with the wrong date",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The newsletter went out on Tuesday with the wrong date",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The logins worked, because I asked IT on Monday and they sorted it the same day",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The logins worked, because I asked IT on Monday and they sorted it the same day.",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The bit where she mentions a message about 'ownership'",
+    "condition": "anxiety",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "a message that I keep going over in my head, the one about 'ownership'",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "How she usually organises her work",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Anything else going on in her life",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Over-interpret the bit about the message about 'ownership'",
+    "condition": "anxiety",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "a message that I keep going over in my head, the one about 'ownership'",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Under-interpret the bit where she says the logins worked",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "The logins worked, because I asked IT on Monday and they sorted it the same day.",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "He doesn't say he forgot, he says he doesn't remember",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The bit about the maggots shows he can plan ahead when he needs to",
+    "condition": "adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The maggots Dennis brought were the wrong kind for roach",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The bit where he says he talked the whole way back could equally reflect anxiety",
+    "condition": "anxiety",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The sentence about the washing could equally reflect poor sleep",
+    "condition": "poor_sleep",
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "Dennis says, though I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "I would want to know more about how he usually plans and remembers things",
+    "condition": "adhd",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the bit where he says he talked the whole way back as a sign of ADHD",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I talked the whole way back",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "They might also under-interpret the sentence about the washing, and not see it as a sign of something else",
+    "condition": "poor_sleep",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "Dennis says, though I don't remember much of it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "She stood at the kitchen counter looking at the school bags and did not start on them for a while.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "After that I stood at the kitchen counter looking at the school bags and did not start on them for a while.",
+    "trait": "adhd",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "She is not sure what she was waiting for.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I am not sure what I was waiting for.",
+    "trait": "adhd",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "She stood at the kitchen counter looking at the school bags and did not start on them for a while.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "After that I stood at the kitchen counter looking at the school bags and did not start on them for a while.",
+    "trait": "anxiety",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "She is not sure what she was waiting for.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I am not sure what I was waiting for.",
+    "trait": "anxiety",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "She would like to see more about how she manages other tasks and routines.",
+    "condition": null,
+    "direction": null,
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "She starts the med reconciliation, leaves it, and starts again from the top.",
+    "condition": "inattentive",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "started the med reconciliation for bed 12, 14 pages, got halfway and went to do something else. Came back an hour later and started again from the top",
+    "trait": "adhd",
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "She walks into a side room and doesn't know why she's there, even though the task was on her list.",
+    "condition": "inattentive",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Also walked into the side room for the repeat potassium and stood there not knowing why I was in there. It was on my written list, list was in my pocket.",
+    "trait": "adhd",
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "She describes her rota as nights, one day off, a long day, then nights again.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Rota. Nights, one day off, a long day, then nights again.",
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "She complains that two of her gaps got swapped and nobody told her.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Who builds this. Two of my gaps got swapped and nobody told me, found out from the board.",
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "The med reconciliation could equally reflect poor sleep or anxiety.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "The side room could also reflect fatigue or just having a lot on her mind.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "It would help to know how long this has been going on.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "It would help to know if this is affecting other areas of her life.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the rota and gaps being swapped as signs of ADHD.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "A less experienced clinician might under-interpret the med reconciliation and side room as just descriptions of a busy day.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "She moved her dentist check-up successfully.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did ring the dentist on Monday to move my check-up and that went fine, I got there ten minutes early and read a magazine.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She mixed up the dates for her hairdresser appointment.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "The hairdresser I did miss, because I'd put it in the kitchen calendar for the 14th and it was the 12th, I think, or perhaps the other way round.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She started writing the time on her hand as a reminder.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I've started writing the time on my hand as well, which my daughter thinks is funny.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She had difficulty finding the word 'stapler'.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I wanted to say stapler and said \"the clicky thing\"",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She is sleeping badly and has hot flushes.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I'm sleeping badly and the hot flushes are back around three in the morning",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "Story time ran exactly on schedule.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Story time on Saturday ran exactly on schedule, forty children, nobody cried.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She moved her dentist check-up successfully, which could reflect good organisational skills.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I did ring the dentist on Monday to move my check-up and that went fine, I got there ten minutes early and read a magazine.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She mixed up the dates for her hairdresser appointment, which could reflect ordinary forgetfulness.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "The hairdresser I did miss, because I'd put it in the kitchen calendar for the 14th and it was the 12th, I think, or perhaps the other way round.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "She had difficulty finding the word 'stapler', which could also reflect fatigue or stress.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I wanted to say stapler and said \"the clicky thing\"",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "Her history of these issues would be important to know.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "How these traits affect her daily functioning would be important to know.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the mixed-up dates for the hairdresser appointment as a sign of ADHD.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "The hairdresser I did miss, because I'd put it in the kitchen calendar for the 14th and it was the 12th, I think, or perhaps the other way round.",
+    "trait": null,
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "A less experienced clinician might under-interpret the difficulty finding the word 'stapler' as just a silly mistake.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I wanted to say stapler and said \"the clicky thing\"",
+    "trait": "adhd",
+    "vignette_id": "V016"
+  },
+  {
+    "claim_text": "The bit about starting the project three weeks ago is neutral.",
+    "condition": "neutral",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Started it three weeks ago during naps, which is the only time I get.",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The sentence about the washing is neutral.",
+    "condition": "neutral",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "The washing basket is overflowing again, I know, I know.",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The part about the joints points away from ADHD traits.",
+    "condition": "against_adhd",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Joints came out tighter than I expected.",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The bit about being tired is neutral.",
+    "condition": "neutral",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Tired today though, he's been up around 3 every night this week, teething I think,",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The sentence about redoing the oil coat points toward ADHD traits.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Will redo that.",
+    "trait": "adhd",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The last sentence points toward ADHD traits.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Also I saw a video of a little wall-mounted spice rack and now I want to make that next, maybe even before the shelves, not sure.",
+    "trait": "adhd",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The sentence about the washing could equally reflect just being busy.",
+    "condition": "neutral",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "The washing basket is overflowing again, I know, I know.",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The bit about being tired could equally reflect poor sleep due to the baby.",
+    "condition": "neutral",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Tired today though, he's been up around 3 every night this week, teething I think,",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The sentence about redoing the oil coat could also reflect perfectionism or anxiety.",
+    "condition": "perfectionism",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Will redo that.",
+    "trait": "perfectionism",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "The last sentence could equally reflect just a new interest.",
+    "condition": "neutral",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Also I saw a video of a little wall-mounted spice rack and now I want to make that next, maybe even before the shelves, not sure.",
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "I'd want to see more about her daily life and how she manages tasks.",
+    "condition": "additional_info",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the sentence about redoing the oil coat.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Will redo that.",
+    "trait": "adhd",
+    "vignette_id": "V017"
+  },
+  {
+    "claim_text": "A less experienced clinician might under-interpret the last sentence.",
+    "condition": "adhd",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Also I saw a video of a little wall-mounted spice rack and now I want to make that next, maybe even before the shelves, not sure.",
+    "trait": "adhd",
+    "vignette_id": "V017"
+  }
+]

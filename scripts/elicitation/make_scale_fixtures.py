@@ -17,12 +17,14 @@ Usage:
         # and Ollama; resumable per (document, vignette)
     python scripts/elicitation/make_scale_fixtures.py --stage build [--proofread] [--classifier qwen3.5:9b]
         # classify the sentences, build and embed the units, load them into Postgres: the raw answers
-        # into the schema chips_scale_raw, with --proofread the proofread ones into chips_scale
+        # into the schema chips_scale_raw, with --proofread the proofread ones into chips_scale; with
+        # --proofread it also rewrites the test fixture tests/fixtures/scale_answers (answers + labels)
 
 Everything lives under the gitignored data/: fixtures in data/fixtures_chips_scale/synthetic/silver
 (proofread: data/fixtures_chips_scale_proofread), units in data/expert_units_chips_scale/synthetic/
 silver/<tag> (proofread: data/expert_units_chips_scale_proofread), rows in the Postgres schemas
-`chips_scale` and `chips_scale_raw`. Nothing here touches tests/fixtures, the schemas `chips` and `chips_silver`, or the
+`chips_scale` and `chips_scale_raw`. Only `build --proofread` writes to tests/fixtures (scale_answers); nothing here
+touches the schemas `chips` and `chips_silver`, or the
 files of make_chip_fixtures.py (its functions are imported).
 
 Who answers what: V001, V004, V006, V012 ("anchors") are answered by all 20 experts; each of the other
@@ -696,39 +698,32 @@ def proofread_stage(args: argparse.Namespace) -> int:
 
 
 def seed_schema(args: argparse.Namespace, classifier: str, dsn: str) -> None:
-    """Freeze the built units into a scratch snapshot under data/ and seed `args.schema` from it.
+    """Write the answers with the classifier's labels as a fixture and ingest it into `args.schema`.
 
-    Same route as the silver schema: one session per (document, vignette) with a findings record,
-    which is what the retrievers read their patient words from. load_chips_pg stores the raw
-    document instead, so retrieval would run without them.
+    With --proofread the fixture is the test fixture tests/fixtures/scale_answers (its 40 labelled
+    questions are kept); the raw answers go to a scratch folder next to the units. The schema is
+    seeded by scripts/db/chips_fixture.py, as the tests do it: units, bge-m3 vectors, BM25, one
+    session per (document, vignette) with a findings record.
     """
     sys.path.insert(0, str(ROOT / "scripts" / "db"))
-    sys.path.insert(0, str(ROOT / "scripts" / "rag"))
-    import chip_retrieval
-    import chips_snapshot
+    import chips_fixture
     import classify_sentence_targets
-    import psycopg
-    from psycopg import sql
 
-    snapshot = args.units.parent / f"{args.units.name}_snapshot"
-    chips_snapshot.SNAPSHOT = snapshot  # freeze writes here, not into tests/fixtures
-    classify_sentence_targets.UNITS = args.units
-    chip_retrieval.load_chip_fixture = partial(chip_retrieval.load_chip_fixture, fixtures=args.out)
-    if code := chips_snapshot.freeze(argparse.Namespace(tier=TIER, classifier=classifier)):
-        raise SystemExit(code)
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        # The drop is in the transaction too: a failed seed leaves the old schema as it was.
-        conn.execute("BEGIN")
-        try:
-            conn.execute(
-                sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(args.schema))
-            )
-            counts = chips_snapshot.seed(conn, args.schema, snapshot)
-            conn.execute("COMMIT")
-        except Exception:
-            conn.execute("ROLLBACK")
-            raise
-    print(f"seeded {args.schema}: {counts}")
+    labels = args.units / TIER / classify_sentence_targets.model_tag(classifier) / "labels"
+    out = (
+        chips_fixture.FIXTURE
+        if args.proofread
+        else args.units.parent / f"{args.units.name}_fixture"
+    )
+    out.mkdir(parents=True, exist_ok=True)
+    questions = json.loads((chips_fixture.FIXTURE / "questions.json").read_text())["questions"]
+    chips_fixture.export(args.out / "synthetic" / TIER, labels, out, questions)
+    corpus = chips_fixture.ingest(
+        chips_fixture.load(out), chips_fixture.IndexEmbeddings(), patients=False
+    )
+    with chips_fixture.seeded_schema(dsn, args.schema, corpus, keep=True):
+        pass
+    print(f"wrote {out}; seeded {args.schema}: {len(corpus.tables['units'])} units")
 
 
 def build_stage(args: argparse.Namespace) -> int:

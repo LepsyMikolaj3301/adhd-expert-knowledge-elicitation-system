@@ -43,17 +43,18 @@ Skorzystaj z tej strony, gdy chcesz uruchomić testy backendu, testy frontendu, 
    Źródło bazy danych zależy od katalogu z testami:
 
    - `tests/api` (każdy test w tym katalogu jest oznaczony `integration` przez `tests/api/conftest.py:38-42`). Testy łączą się z serwerem z `DATABASE_URL`, który przy nieustawionej zmiennej ma wartość domyślną `postgresql://rag:rag@localhost:5432/rag` (`backend/app/settings.py:8`). Każde uruchomienie tworzy własną bazę `rag_<pid>_test`, stosuje migracje Alembic i na końcu usuwa bazę (`tests/api/conftest.py:1-6`, `31-33`, `75-84`). Aby użyć własnej bazy, ustaw `TEST_DATABASE_URL`; jej nazwa musi kończyć się na `_test`, w przeciwnym razie uruchomienie zatrzymuje się z komunikatem "refusing to run against a non-test database" (`tests/api/conftest.py:30-35`).
-   - `tests/integration` (regresja wyszukiwania). Fixture wymaga ustawionego `DATABASE_URL` oraz Postgresa, który odpowiada na `SELECT '[1,2]'::vector`; w przeciwnym razie testy są pomijane (`tests/integration/conftest.py:27-37`). W kontenerze dev zmienna wskazuje Postgresa z compose (`docker-compose.yml:121`). Na hoście wyeksportuj ją, na przykład z wartością z `.env.example:9`.
-   - `packages/expert-knowledge-rag/tests/integration` wymaga `DATABASE_URL` i pliku `scripts/db/chips_schema.sql`; bez nich testy są pomijane (`packages/expert-knowledge-rag/tests/integration/conftest.py:120-127`).
+   - `tests/integration` (regresja wyszukiwania). Testy w trakcie uruchomienia wykonują ingestię wypełnionych winiet z `tests/fixtures/scale_answers`, więc wymagają `DATABASE_URL` z Postgresem, który odpowiada na `SELECT '[1,2]'::vector`, oraz Ollamy z `bge-m3` (`tests/integration/conftest.py:31-52`). Bez nich testy są pomijane, chyba że uruchomienie wybiera je przez `-m regression` albo `-m scale`: wtedy kończą się błędem (`tests/integration/conftest.py:24-28`). W kontenerze dev zmienna wskazuje Postgresa z compose (`docker-compose.yml:121`). Na hoście wyeksportuj ją, na przykład z wartością z `.env.example:9`.
+   - `packages/expert-knowledge-rag/tests/integration` wymaga `DATABASE_URL` i pliku `scripts/db/chips_schema.sql`; testy na odpowiedziach silver wymagają też Ollamy z `bge-m3`. Bez nich testy są pomijane (`packages/expert-knowledge-rag/tests/integration/conftest.py:108-118`, `152-162`).
 
-4. Wybierz testy jakości wyszukiwania za pomocą ich znaczników (`pyproject.toml:62-66`).
+4. Wybierz testy jakości wyszukiwania za pomocą ich znaczników (`pyproject.toml:59-63`). Działają tylko lokalnie; CI uruchamia `-m "not integration"`.
 
    ```bash
    uv run pytest -m regression
    ```
 
-   - Testy `regression` z `tests/integration/test_retrieval_regression.py` czytają zamrożony snapshot w `tests/fixtures/retrieval_silver`. Testy są pomijane, gdy brakuje w nim `tables.json`; komunikat o pominięciu podaje `python scripts/db/chips_snapshot.py freeze` (`tests/integration/conftest.py:40-45`).
-   - Testy `scale` (`tests/integration/test_scale_regression.py:26`) czytają snapshot 32 ekspertów w `data/` albo pod ścieżką z `SCALE_SNAPSHOT`. Ten katalog jest tylko lokalny. Gdy brakuje jego plików, testy są pomijane, a komunikat podaje polecenia, które go tworzą (`tests/integration/conftest.py:80-105`). Wyłącz je opcją `-m "not scale"`.
+   - `tests/fixtures/scale_answers` zawiera tylko to, co istnieje przed ingestią: dokumenty chips 32 ekspertów po korekcie, ich twierdzenia (claims), powiązania zdań nadane przez klasyfikator, opisy ról i 40 pytań oznaczonych twierdzeniami SYN-001 i SYN-002 (`scripts/db/chips_fixture.py:1-21`). Wektory nie są przechowywane.
+   - Testy `regression` z `tests/integration/test_retrieval_regression.py` i `tests/integration/test_ingest_e2e.py` wykonują ingestię odpowiedzi SYN-001 i SYN-002 (198 jednostek) do tymczasowego schematu; około 30 s. Regresja wyszukiwania sprawdza progi bezwzględne i wynik bazowy w `tests/fixtures/retrieval_regression/baseline.json`, który podaje skrót fixture i model embeddingów; inny skrót lub model kończy się błędem, dopóki nie zapiszesz nowego wyniku bazowego przez `UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s`.
+   - Testy `scale` (`tests/integration/test_scale_regression.py:35`) wykonują ingestię wszystkich 32 ekspertów (1830 jednostek); około 2 minut. Nowy wynik bazowy zapisuje `UPDATE_SCALE_BASELINE=1 uv run pytest -m scale -s`. Testy `scale` mają też znacznik `regression`; wyłącz je opcją `-m "regression and not scale"`.
 
 5. Sprawdź styl i typy backendu.
 

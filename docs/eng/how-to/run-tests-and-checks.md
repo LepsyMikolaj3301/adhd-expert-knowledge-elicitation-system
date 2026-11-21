@@ -43,17 +43,18 @@ Use this when you want to run the backend tests, the frontend tests, the linters
    Where the database comes from depends on the test folder:
 
    - `tests/api` (every test there is marked `integration` by `tests/api/conftest.py:38-42`). The tests connect to the server in `DATABASE_URL`, which defaults to `postgresql://rag:rag@localhost:5432/rag` when the variable is unset (`backend/app/settings.py:8`). Each run creates its own database `rag_<pid>_test`, applies the Alembic migrations and drops the database at the end (`tests/api/conftest.py:1-6`, `31-33`, `75-84`). To use a database of your own, set `TEST_DATABASE_URL`; its name has to end in `_test`, otherwise the run stops with "refusing to run against a non-test database" (`tests/api/conftest.py:30-35`).
-   - `tests/integration` (retrieval regression). The fixture needs `DATABASE_URL` to be set and Postgres to answer `SELECT '[1,2]'::vector`; otherwise the tests are skipped (`tests/integration/conftest.py:27-37`). Inside the dev container the variable is set to the compose Postgres (`docker-compose.yml:121`). On the host, export it, for example the value in `.env.example:9`.
-   - `packages/expert-knowledge-rag/tests/integration` needs `DATABASE_URL` and the file `scripts/db/chips_schema.sql`; without them the tests are skipped (`packages/expert-knowledge-rag/tests/integration/conftest.py:120-127`).
+   - `tests/integration` (retrieval regression). The tests ingest the filled vignettes of `tests/fixtures/scale_answers` at test time, so they need `DATABASE_URL` with Postgres that answers `SELECT '[1,2]'::vector`, and Ollama with `bge-m3` (`tests/integration/conftest.py:31-52`). Without them the tests are skipped, unless the run selects them with `-m regression` or `-m scale`: then they fail (`tests/integration/conftest.py:24-28`). Inside the dev container the variable is set to the compose Postgres (`docker-compose.yml:121`). On the host, export it, for example the value in `.env.example:9`.
+   - `packages/expert-knowledge-rag/tests/integration` needs `DATABASE_URL` and the file `scripts/db/chips_schema.sql`; the tests on the silver answers also need Ollama with `bge-m3`. Without them the tests are skipped (`packages/expert-knowledge-rag/tests/integration/conftest.py:108-118`, `152-162`).
 
-4. Select the retrieval-quality tests with their markers (`pyproject.toml:62-66`).
+4. Select the retrieval-quality tests with their markers (`pyproject.toml:59-63`). They run locally only; CI runs `-m "not integration"`.
 
    ```bash
    uv run pytest -m regression
    ```
 
-   - The `regression` tests of `tests/integration/test_retrieval_regression.py` read the frozen snapshot in `tests/fixtures/retrieval_silver`. The tests are skipped when `tables.json` is missing from it; the skip message names `python scripts/db/chips_snapshot.py freeze` (`tests/integration/conftest.py:40-45`).
-   - The `scale` tests (`tests/integration/test_scale_regression.py:26`) read a 32-expert snapshot under `data/`, or under the path in `SCALE_SNAPSHOT`. That folder is local only. When its files are missing, the tests are skipped with the commands that create it (`tests/integration/conftest.py:80-105`). Exclude them with `-m "not scale"`.
+   - `tests/fixtures/scale_answers` holds only what exists before ingestion: the chip documents of 32 experts after proofreading, their claims, the classifier's sentence links, the role lines and 40 questions labelled with claims of SYN-001 and SYN-002 (`scripts/db/chips_fixture.py:1-21`). No vectors are stored.
+   - The `regression` tests of `tests/integration/test_retrieval_regression.py` and `tests/integration/test_ingest_e2e.py` ingest the answers of SYN-001 and SYN-002 (198 units) into a throwaway schema; about 30 s. The retrieval regression checks absolute floors and a baseline in `tests/fixtures/retrieval_regression/baseline.json`, which names the fixture digest and the embedding model; another digest or model fails until you rebaseline with `UPDATE_RETRIEVAL_BASELINE=1 uv run pytest -m regression -s`.
+   - The `scale` tests (`tests/integration/test_scale_regression.py:35`) ingest all 32 experts (1830 units); about 2 minutes. Rebaseline with `UPDATE_SCALE_BASELINE=1 uv run pytest -m scale -s`. The `scale` tests are also marked `regression`; exclude them with `-m "regression and not scale"`.
 
 5. Check the style and the types of the backend.
 

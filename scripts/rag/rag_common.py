@@ -1,5 +1,5 @@
 """Shared helpers of the expert-notes RAG scripts (eval_expert_*.py, eval_chip_*.py, chat_expert.py,
-judge_generations.py, chips_snapshot.py).
+judge_generations.py, chips_fixture.py).
 
 The query embedder and BM25 settings of config/indexing.yaml, generation with an Ollama chat model
 and the clinician judge rubric. Not a backend module on purpose: the scripts import it as

@@ -236,7 +236,7 @@ Run from the repository root (`scripts/README.md`). Scripts inside one folder im
 | `psql.sh` | `psql` in the `postgres` container (or through `DATABASE_URL` when `docker` is absent); `overview` prints extensions, table sizes and estimated rows, and the indexes of schema `public`; other arguments go to `psql` |
 | `chips_backup.py` | Backs up, checks, restores and empties the tables of schema `chips` through binary COPY |
 | `chips_schema.sql` | Tables of the chips test with a `{schema}` placeholder |
-| `chips_snapshot.py` | `freeze` and `check` of a silver chip snapshot in `tests/fixtures/retrieval_silver/` |
+| `chips_fixture.py` | `export`, `check` and `seed` of the filled vignettes in `tests/fixtures/scale_answers/`; builds, embeds and seeds them for the integration tests |
 | `explore_chips.sql` | Read-only SELECT tour of schema `chips` and the `app` tables that feed it |
 | `load_chips_pg.py` | Loads built chip units into a schema (default `chips_eval`) |
 | `seed_silver_reviews.py` | Development data: silver answers submitted by two experts and peer-reviewed by two more |
@@ -317,7 +317,7 @@ Run from the repository root (`scripts/README.md`). Scripts inside one folder im
 - `scripts/README.md` - run rules and folder map
 - `scripts/db/chips_backup.py:1` - module docstring
 - `scripts/db/chips_schema.sql:1-7` - header comment
-- `scripts/db/chips_snapshot.py:1-8` - module docstring
+- `scripts/db/chips_fixture.py:1-21` - module docstring
 - `scripts/db/explore_chips.sql:1-6` - header comment
 - `scripts/db/load_chips_pg.py:1-8` - module docstring
 - `scripts/db/psql.sh:1-39` - psql wrapper and overview

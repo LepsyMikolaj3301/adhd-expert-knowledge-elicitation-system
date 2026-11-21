@@ -1,0 +1,68 @@
+{
+ "model": "qwen3.5:9b",
+ "prompt": "Expert_sentence_targets.v1",
+ "responses": {
+  "V001": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ],
+    "Q3.2": [
+     "case"
+    ]
+   }
+  },
+  "V004": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ]
+   }
+  },
+  "V006": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ],
+    "Q3.2": [
+     "case"
+    ]
+   }
+  },
+  "V012": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ]
+   }
+  },
+  "V016": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ]
+   }
+  },
+  "V017": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ]
+   }
+  },
+  "V018": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ]
+   }
+  },
+  "V019": {
+   "labels": {
+    "Q3.1": [
+     "case"
+    ]
+   }
+  }
+ }
+}

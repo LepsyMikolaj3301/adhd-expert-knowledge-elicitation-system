@@ -1,0 +1,993 @@
+{
+  "created_at": "2026-01-13T09:00:00Z",
+  "expert_id": "SYN-009",
+  "responses": [
+    {
+      "answers": {
+        "Q1": "Looking at the structure, this is a very coherent narrative.\nThe writer lists tasks, explains delays with concrete reasons (shopping, Priya's request), and tracks time accurately.\n⟦h1⟧ shows poor time estimation, which is common in ADHD, but here it's framed as a failed intention rather than a lack of awareness.\nThe fact that they *noticed* the discrepancy and are actively correcting it (planning to read through in the morning) suggests intact metacognition.\n⟦h2⟧ is a classic 'executive function' red flag in isolation—doing chores before the main task—but in context, it reads as a coping mechanism or a need for a transition ritual, not a failure of initiation.\nThe phrasing 'because I did...' implies a deliberate choice, not an automatic drift.\n⟦h3⟧ provides a strong environmental confound; sleep deprivation mimics attention deficits.\n⟦h4⟧ is trivial but shows the writer is keeping a mental log of minor obligations, which is actually organized behavior.\nThere is no evidence of losing the thread, forgetting why they started, or losing items.\nThe text is linear and self-correcting.",
+        "Q2": "The time management issue in ⟦h1⟧ is heavily confounded by the context.\nThe writer mentions carrying shopping up four floors (physical fatigue) and a deadline tomorrow.\nThis looks like ordinary task saturation or fatigue rather than a neurological deficit.\nThe 'dishes and bins first' in ⟦h2⟧ could be anxiety-driven (doing small tasks to reduce stress) or simply a habit of clearing physical clutter before mental work.\nThe sleep issue in ⟦h3⟧ is explicitly linked to a recent move and noise, which is a situational cause.\nIf this were ADHD, I'd expect to see a pattern of this happening across different settings and despite high motivation; here, the motivation is high (deadline) but the output is delayed by external/physical factors.\nThe 'thumbs up' from Marcus in the morning shows they *did* manage to send a complex pack, suggesting the capacity is there when the task is defined and the environment is calm.",
+        "Q3": "I'd want to know if the 'two hours' estimate is typical for this person or an outlier.\nDoes this person usually underestimate time for similar reports?\nI'd also look at the 'sleeping badly' comment—how long has this lasted?\nIf it's chronic, it explains the fatigue.\nI'd ask if the 'fridge shelf' thing is a recurring type of minor omission or a one-off.\nI don't need a full history, just a sense of whether this 'disorganization' is new (post-move, high workload) or baseline.\nThe text is too clean and linear for me to see the typical 'scattered' narrative style of someone with significant ADHD traits.",
+        "Q5": "A less experienced clinician might latch onto ⟦h2⟧ ('did dish first') as a sign of poor prioritization or executive dysfunction.\nOr they might see ⟦h1⟧ and conclude 'time blindness.' They might miss that the writer is actually highly functional: they pulled data, created a template, helped a colleague, and sent a complex pack before work.\nThe 'failure' is just that the commentary is late, which is a very common human error under stress.\nAn over-interpretation would be seeing a disorder; an under-interpretation might be dismissing the genuine strain on the writer's sleep and energy, which is a valid clinical concern in itself, just not necessarily ADHD."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "unclear",
+          "span": [
+            457,
+            547
+          ],
+          "text": "I told myself two hours for the commentary section and it has now been most of the evening"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            549,
+            627
+          ],
+          "text": "I only opened the document at nine because I did the dishes and the bins first"
+        },
+        {
+          "chip": 3,
+          "direction": "neutral",
+          "span": [
+            629,
+            685
+          ],
+          "text": "Still sleeping badly since we moved flats two months ago"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            999,
+            1049
+          ],
+          "text": "Need to remember to ask Dan about the fridge shelf"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            210,
+            301
+          ],
+          "text": "and then Priya asked me to check her reserve figures too, and that took the whole afternoon"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 1,
+      "started_at": "2026-01-13T09:01:00Z",
+      "submitted_at": "2026-01-13T09:18:00Z",
+      "vignette_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "vignette_id": "V001",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ is the classic 'task initiation failure' or attentional drift; the object (table) is specific, the time loss is short, but the outcome is zero progress.\nThe 'clean mug' detail suggests the distraction was physical/social, not just mental wandering.\n⟦h2⟧ mirrors ⟦h1⟧ exactly: goal (bins) -> distraction (kitchen) -> outcome (toastie/no bins).\nThe repetition of this specific pattern (initiate -> drift -> consume) is the strongest marker here.\n⟦h3⟧ shows good executive function: pre-planning, externalizing constraints (phone away), time-boxing.\nThis is a compensatory strategy, which argues against a complete lack of organization.\n⟦h4⟧ is just self-deprecating humor about academic stress, not a functional deficit.",
+        "Q2": "⟦h1⟧ and ⟦h2⟧ could easily reflect fatigue or low motivation (anhedonia).\nIf she is tired, she seeks the easy dopamine of coffee or toast.\nThe distinction is: does she *know* she is drifting?\nShe does ('I went to...').\nDoes she *want* to? Probably not.\nAnxiety about the stats exam (mentioned later) could also cause avoidance of the difficult writing task, leading to 'productive procrastination' (cleaning, eating).\nThe key differentiator is the *frequency* and *unintentionally*.\nHere it feels unintentional and immediate, which leans slightly toward attentional regulation issues, but anxiety is a very strong confounder.",
+        "Q3": "Need to know if this is a one-off bad week or a chronic pattern.\nAsk: 'Does this happen when the stakes are lower?' and 'How often do you lose track of time like this in casual settings?' Also, sleep hygiene is mentioned ('empty kitchen'), so need to rule out severe sleep deprivation as the primary cause.\nA sample of a 'good day' where she gets things done would help contrast the executive function capacity.",
+        "Q5": "Less experienced clinicians might over-interpret the 'lost time' and 'distraction' as core ADHD symptoms without noticing the strong planning behavior in ⟦h3⟧.\nThey might miss that the anxiety about the exam is driving the avoidance.\nConversely, they might under-interpret the significance of the repeated, identical failure modes (⟦h1⟧ and ⟦h2⟧) and dismiss it as just being 'busy' or 'stressed', missing the specific attentional drift pattern."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            292,
+            431
+          ],
+          "text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table."
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            838,
+            963
+          ],
+          "text": "Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins."
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            745,
+            817
+          ],
+          "text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag."
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            544,
+            652
+          ],
+          "text": "I did send the method section on time last week, so at least one person at the university has proof I exist."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-13T09:19:00Z",
+      "submitted_at": "2026-01-13T09:32:00Z",
+      "vignette_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "vignette_id": "V004",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "This reads like a functional breakdown under stress, not a trait description.\n⟦h1⟧ is actually a strong signal of intact metacognition; she caught the discrepancy between her social mask ('fine') and the reality immediately and corrected it in writing.\nThat's the opposite of the typical 'blind spot' in executive dysfunction.\n⟦h2⟧ is the only fragment that looks like an executive function error (working from stale data), but the text explicitly attributes it to a systemic failure ('nobody told me', 'local file'), which is a very ordinary workplace mistake.\n⟦h3⟧ is a classic digression.\nShe jumps to a sister's boiler manual, then cuts it off with 'sorry'.\nThis suggests a stream-of-consciousness style or anxiety-driven association, but it's a single instance.\n⟦h4⟧ shows poor time estimation, which is common in ADHD, but also common in anyone overwhelmed by a workload spike.\n⟦h5⟧ is the strongest 'toward' marker.\nRuminating on a colleague's comment about 'ownership' is a classic anxiety/ADHD overlap symptom (intrusive thoughts, difficulty filtering feedback).\nHowever, the text is structured as an apology and a post-mortem, which requires high-level organization to write.\nThe structure is coherent, causal, and self-correcting.\nI read this as a high-functioning person having a bad week, not a presentation of ADHD.",
+        "Q2": "⟦h5⟧ (ruminating on 'ownership') looks a lot like anxiety or imposter syndrome.\nIf she has a history of low self-esteem, this is likely mood-related, not attentional.\n⟦h4⟧ (time estimation) could be simple fatigue or burnout.\nIf she hasn't slept well or is overwhelmed by the new team structure, underestimating task time is a stress response, not a trait.\n⟦h3⟧ (digression) could just be a conversational habit.\nMany people use anecdotes to soften a report.\nThe distinguishing factor is frequency and setting.\nDoes she do this in every email?\nOr just when she's feeling guilty about the webinar date?\nIf it's guilt-driven, it's emotional regulation, not executive function.",
+        "Q3": "I need to know if this is a one-off event or a pattern.\nI would ask for a sample of her writing from a low-stress period to see if the structure holds up.\nI'd also want to know if she has a history of similar 'missed handover' errors in previous roles.\nThe 'ownership' comment is key; I'd want to ask directly if she feels personally blamed or if she's interpreting a standard professional boundary as a personal rejection.\nThat tells me if the core issue is anxiety or attention.",
+        "Q5": "A less experienced clinician might latch onto ⟦h3⟧ as evidence of 'disorganization' or 'racing thoughts' and ⟦h4⟧ as 'time blindness'.\nThey might miss ⟦h1⟧, which is actually a strength (self-monitoring).\nThey might also over-weight ⟦h5⟧ as a primary symptom of ADHD without considering that it's a very common reaction to workplace conflict, especially for people with anxiety or high conscientiousness.\nThey might forget that the writer is an occupational therapist (or similar professional role implied by the context) who is likely skilled at self-reporting, making the 'fine, which was not true' admission significant rather than a slip."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            7,
+            74
+          ],
+          "text": "you asked how the handover went and I said fine, which was not true"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            389,
+            446
+          ],
+          "text": "so for two days I was working from the old shared version"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            484,
+            545
+          ],
+          "text": "Anyway, my sister has the same problem with her boiler manual"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            711,
+            775
+          ],
+          "text": "I'd allowed an hour to check the proofs and it took nearer three"
+        },
+        {
+          "chip": 5,
+          "direction": "toward",
+          "span": [
+            851,
+            894
+          ],
+          "text": "a message that I keep going over in my head"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-13T09:33:00Z",
+      "submitted_at": "2026-01-13T09:53:00Z",
+      "vignette_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "vignette_id": "V006",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "Honestly, the strongest signal here is the structure, which is actually quite solid.\n⟦h1⟧ is a big one; planning a trip a week in advance is the opposite of the last-minute scramble I usually see.\nIt suggests executive function is intact for long-term tasks. ⟦h2⟧ is just... life.\nAn older person in a new role (passenger) feeling out of place is normal, not necessarily a trait. ⟦h3⟧ is tricky.\nIt could be him being annoying, or it could be a detail that stuck because it was irritating.\nI don't have enough context to say if 'mentioned it often' is a distortion or a fact.\n⟦h4⟧ is the most interesting bit.\nTalking the whole way back and not remembering it is a classic 'hyperfocus' or 'flow' state, or just high energy.\nBut it's a single event. And ⟦h5⟧?\n'Eleven or twelve' is just how people count photos in a folder.\nIt's not a failure to remember, it's a lack of precise record-keeping, which is normal for a casual trip.\nOverall, the text reads like a coherent, linear narrative from someone who is capable of planning and reflecting, which points away from severe ADHD, but that one bit about the drive home is a flag I'd note.",
+        "Q2": "The 'talking' in ⟦h4⟧ could easily reflect anxiety or excitement.\nIf he is a retiree who does not get out much, a trip is a huge event.\nLow mood can make people over-talk to fill silence, or under-talk to avoid engagement.\nPoor sleep would make the 'not remembering' bit more likely, but it would also likely show up as fatigue or irritability, which is not present here.\nOrdinary procrastination is ruled out by ⟦h1⟧; he did not put it off.\nTo distinguish, I would need to know if this 'talking' happens in every car ride or just big ones.\nIf it happens in every ride, it is a trait.\nIf it happens just on this trip, it is a reaction to the event.",
+        "Q3": "I need the 'before' picture.\nDoes he plan other things a week ahead?\nDoes he forget appointments regularly?\nThe text is a snapshot of a successful, planned activity.\nI'd want to know about his daily home routine: does he lose keys, forget meals, or leave the stove on?\nThat's where the functional impairment shows up.\nAlso, what is his baseline?\nIs he usually quiet?\nIf he's usually quiet, then the 'talking' is a deviation.\nIf he's usually chatty, it's baseline.\nI'd also want to ask Dennis directly, if possible, about the 'mentioned it often' bit. Was it repetitive? Was it intrusive?\nOr just normal conversation?",
+        "Q5": "A junior might latch onto ⟦h4⟧ and see 'inattention' or 'hyperactivity' right there.\nThey might miss that the rest of the text is very organized.\nOr they might see ⟦h5⟧ and think 'poor working memory' when it's just a casual estimate.\nThey might also overlook that the writer is an older adult; the 'odd feeling' in the passenger seat is a role change, not necessarily a cognitive deficit.\nThey might over-pathologize normal aging or normal personality quirks."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            154,
+            178
+          ],
+          "text": "I had planned for a week"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            268,
+            358
+          ],
+          "text": "after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat"
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            547,
+            595
+          ],
+          "text": "Dennis caught three roach and mentioned it often"
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            893,
+            969
+          ],
+          "text": "I talked the whole way back, Dennis says, though I don't remember much of it"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            1021,
+            1067
+          ],
+          "text": "There are eleven, or twelve, I'd have to count"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-13T09:54:00Z",
+      "submitted_at": "2026-01-13T10:12:00Z",
+      "vignette_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "vignette_id": "V012",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ indicates high stress rather than dysfunction; the repetition 'Not once' shows awareness but also avoidance.\n⟦h2⟧ is strong evidence against a global executive function deficit; finishing a task 'in one sitting' and submitting early suggests capacity for focus and completion exists.\n⟦h3⟧ is the only fragment with a slight 'toward' flavor: the task switching (link -> copy -> phone) and the time slip (8:40 to 11) look like attentional drift, but it's a single episode.\n⟦h4⟧ is likely emotional avoidance (grief/breakup), not executive neglect.\n⟦h5⟧ rules out sleep deprivation or basic self-care collapse as primary drivers.",
+        "Q2": "⟦h1⟧ could be academic anxiety or burnout.\n⟦h3⟧ could be boredom or low interest in the subject.\n⟦h4⟧ is clearly emotional regulation or grief.\nTo distinguish ADHD, I'd need to see if this pattern (high focus on preferred tasks, low focus on unpreferred) is chronic and cross-situational, not just this week.",
+        "Q3": "Need a history of this pattern.\nIs the 'not opening notes' typical, or is this a panic week 9 days out?\nAlso, does the same 'drift' happen in work or home routines, or is this specific to academic pressure?\nA calm day sample would help see if the structure is intact when stakes are lower.",
+        "Q5": "Less experienced clinicians might latch onto ⟦h3⟧ (time loss) and ⟦h1⟧ (procrastination) and miss ⟦h2⟧ (high achievement/focus).\nThey might diagnose ADHD based on the 'distraction' while ignoring the ability to sustain focus for hours on a project.\nThe 'away' evidence is stronger here."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            9,
+            77
+          ],
+          "text": "Organic exam is in 9 days and I have not opened the notes. Not once."
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            226,
+            310
+          ],
+          "text": "Handed in the lab report on Friday, a day early. Finished the graphs in one sitting."
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            512,
+            625
+          ],
+          "text": "one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11."
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            721,
+            787
+          ],
+          "text": "Marek's hoodie is still in my room and I keep not dealing with it."
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            858,
+            900
+          ],
+          "text": "Slept 7 hours, ate properly, laundry done."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-13T10:13:00Z",
+      "submitted_at": "2026-01-13T10:24:00Z",
+      "vignette_hash": "883428c5ef2260af0c4064d0f538801134ebcae3d261c73468839c1cb035a217",
+      "vignette_id": "V019",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "Most of this reads as a logical response to an environmental stressor, not a trait.\n⟦h1⟧ shows the writer understands the mechanical link between the noise and their fatigue; this is cause-and-effect, not executive dysfunction.\n⟦h2⟧ is actually a strong indicator of good organization; keeping a consistent log for three weeks is the opposite of the disorganization often seen in ADHD.\n⟦h3⟧ is explicit self-monitoring: the writer attributes the irritability to the noise (\"that's the noise, not me\"), which suggests intact insight and emotional regulation, or at least the ability to contextualize their reactions.\n⟦h4⟧ is a pragmatic, albeit failed, coping strategy.\nIt shows problem-solving behavior, not impulsivity.\n⟦h5⟧ is the only slightly ambiguous piece; the uncertainty about the recorder protocol could hint at a momentary lapse in attention or detail, but it is more likely just confusion about a new administrative process.\nIt's too weak to be evidence of a trait.",
+        "Q2": "The irritability and fatigue in ⟦h1⟧ and ⟦h3⟧ are classic signs of sleep deprivation and chronic stress.\nThe \"short with everyone\" is a functional impairment due to lack of sleep, not a neurodevelopmental trait.\nThe organization in ⟦h2⟧ distinguishes this from ADHD; an ADHD writer might struggle to maintain the log or forget to send it.\nHere, the action was completed as requested.\nThe confusion in ⟦h5⟧ could be anxiety about the process or simple unfamiliarity with the council's procedure, rather than inattention.",
+        "Q3": "I'd want to know if this level of organization (keeping the log) is typical for the writer.\nDoes this happen in other areas of life?\nIs the irritability present when they are well-rested and not dealing with noise?\nI'd also ask if they have a history of similar issues in different environments.\nRight now, this looks like a person dealing with a very specific, solvable (or at least manageable) external problem.",
+        "Q5": "A junior clinician might latch onto the \"short with everyone\" and the confusion about the recorder as signs of impulsivity and inattention.\nThey might miss the very strong evidence of executive function in the logging behavior.\nThey might also over-read the sleep deprivation as a primary symptom rather than a secondary consequence of the noise."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            143,
+            205
+          ],
+          "text": "I start the 5:10 shift at the depot so I get maybe four hours."
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            277,
+            352
+          ],
+          "text": "I logged it. Every night on my phone for three weeks, time and what it was."
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            206,
+            272
+          ],
+          "text": "I'm short with everyone by Wednesday and that's the noise, not me."
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            692,
+            744
+          ],
+          "text": "Bought earplugs. They help a bit. Not with the bass."
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            830,
+            908
+          ],
+          "text": "I'm not sure if I was meant to switch it on myself, I think it was already on."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 1,
+      "started_at": "2026-01-13T10:25:00Z",
+      "submitted_at": "2026-01-13T10:41:00Z",
+      "vignette_hash": "a63efc080c831974c2a3b0d8d4f1ff9f5866a2c2c8a834b83e73eb7fc2176df1",
+      "vignette_id": "V020",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "Honestly, this reads like a standard status update from a mid-level dev, not a clinical sample.\n⟦h1⟧ is just being late; everyone is late sometimes, and the apology is standard professional courtesy, not a sign of disorganization.\nThe real signal here is actually the opposite of what you might fear.\nLook at ⟦h2⟧: she anticipated the workload based on data availability (\"regression numbers were already in the sheet\"). That's planning.\nThen ⟦h3⟧ shows immediate problem-solving: the export failed, so she reran the set.\nThat's executive function working, not failing.\n⟦h4⟧ is a bit of a digression, sure, but it's contextualizing the delay, and she even covers her colleague (\"isn't anyone's fault\").\nThat's social awareness and team management, which are often impaired in ADHD.\nAnd ⟦h5⟧ is the strongest point against ADHD: she consciously edited the output for a specific audience (Daniel) to manage his perception.\nThat requires working memory, empathy, and strategic thinking.\nThe structure is messy—lots of \"and then\"s—but it's a narrative of troubleshooting, not a narrative of losing track.\nIt's messy because it's a stream of consciousness about technical blockers, not because she can't hold a thought.",
+        "Q2": "Could be stress or just a bad week.\nThe \"staging server\" issue and the \"merged column\" are external frustrations.\nIf she were anxious, she might apologize more profusely or express guilt, but here she’s factual.\nIt could be poor sleep making her write in a run-on style, but the content is logical.\nIt doesn’t look like low mood because she’s actively solving problems and managing a team member’s experience. Ordinary procrastination?\nNo, she finished the smoke tests \"as planned\" on Monday.\nThe delay was due to technical debt, not avoidance.",
+        "Q3": "I’d want to see how she handles this when things *don’t* go wrong.\nDoes she miss deadlines when the path is clear?\nThis text shows her struggling with a complex, multi-step technical failure.\nThat’s not an ADHD marker; that’s a job.\nI’d also want to know if this \"messy\" email style is her normal register or if it’s a one-off under pressure.\nIf she writes like this every day, it’s just her voice.\nIf it’s rare, it might be fatigue.\nBut I wouldn’t chase ADHD from this.\nI’d ask if she has a system for the \"load job\" ownership issue she mentioned, because that’s a process gap, not necessarily a cognitive one.",
+        "Q5": "A junior clinician might see the run-on sentences, the apology, and the digression about the server and think, \"Oh, disorganized, inattentive, impulsive writing.\"\nThey might miss that she actually managed the situation: she identified the cause, fixed what she could, identified what she couldn't, and planned the next step (sending by EOD).\nThey might also miss the social calibration in ⟦h5⟧.\nAn experienced clinician sees the function: the goal was achieved (tests run, bug fixed), the delay was justified by external factors, and the communication was tailored to the recipient.\nThe \"messiness\" is just the texture of a busy professional explaining a technical blocker."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            10,
+            113
+          ],
+          "text": "sorry the project update is late, I know it was meant to go out Tuesday and it's now Thursday afternoon"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            115,
+            215
+          ],
+          "text": "I'd said it would take an hour, maybe less, because the regression numbers were already in the sheet"
+        },
+        {
+          "chip": 3,
+          "direction": "neutral",
+          "span": [
+            226,
+            332
+          ],
+          "text": "the export from the test tool came out with the Android column merged into iOS, so I reran the nightly set"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            338,
+            437
+          ],
+          "text": "the staging server was slow because someone left the load job on, which isn't anyone's fault really"
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            713,
+            827
+          ],
+          "text": "I kept the bug list short because Daniel will be reading it, being new, and I'd rather he not think we're drowning"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 1,
+      "started_at": "2026-01-13T10:42:00Z",
+      "submitted_at": "2026-01-13T11:01:00Z",
+      "vignette_hash": "86fdcba50d634598e067b944bd4fb0e62105fab68718dfd75a6016c87c5459e4",
+      "vignette_id": "V021",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ and ⟦h2⟧ show an impulsive sequence where action occurs before checking.\nThe word \"just\" minimizes the gap between these actions, while \"obviously\" represents self-aware irony that does not fix the pattern.\n⟦h3⟧ and ⟦h4⟧ are strong executive function markers demonstrating planning and constraint-following.\n⟦h5⟧ provides context but is not a trait itself.\nThe key reading here is the mix of impulse and correction, rather than just the spending.",
+        "Q2": "⟦h5⟧ low mood explains reduced inhibition and lack of future-thinking.\nPost-winter fatigue could look like impulsivity.\nThe \"free returns\" comment in ⟦h1⟧ context suggests a specific cognitive strategy (risk mitigation via reversibility) rather than pure impulsivity.\nDistinguishing requires knowing if this is the baseline or a recent change.",
+        "Q3": "Need to know if the list-making (⟦h4⟧) is new or habitual.\nIs the \"flatness\" (⟦h5⟧) constant or seasonal?\nHave they tried to plan before and failed, or is this the first time they had the tools (discount, returns) to act?",
+        "Q5": "Junior might latch onto the TV/trainer purchase as ADHD impulsivity and miss the compensatory strategies (⟦h3⟧, ⟦h4⟧).\nOr they might see the list-making and assume the person is fully organised, missing the reactive nature of the spending.\nIt's a balance of deficit and compensation."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            153,
+            186
+          ],
+          "text": "just ordered it on my lunch break"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            689,
+            726
+          ],
+          "text": "I measured after ordering, obviously."
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            727,
+            765
+          ],
+          "text": "I've switched my train pass to monthly"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            791,
+            838
+          ],
+          "text": "made a food list and only bought what was on it"
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            494,
+            527
+          ],
+          "text": "I've been a bit flat since winter"
+        }
+      ],
+      "insufficient_information": true,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": null,
+      "started_at": "2026-01-13T11:02:00Z",
+      "submitted_at": "2026-01-13T11:10:00Z",
+      "vignette_hash": "1c06635804a0ee86705245950b299cbd6e15fd9988975033974bea14d299502a",
+      "vignette_id": "V022",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "The strongest signal here is the historical context.\n⟦h1⟧ and the mention of 'Daydreaming again' in margins point toward a long-standing pattern of inattention or distractibility in a structured environment (school).\nThe writer explicitly connects this to their own history in ⟦h2⟧, suggesting a lifelong trait rather than a recent change.\nThis is classic 'toward' evidence because it links current function to past feedback from authority figures.\nHowever, ⟦h3⟧ is a strong counter-point.\nClearing the 'whole thing' in one hour, with a specific deadline (skip at 10), shows the capacity for high-functioning, goal-directed organization.\nThis suggests that when motivation is high or the task is concrete and time-bound, the writer is very capable.\nThis points 'away' from a global executive dysfunction.\nThe remaining fragments are 'unclear' because they are heavily confounded by grief.\n⟦h4⟧ and ⟦h5⟧ describe avoidance of an emotional task (the report folder) and drift into sentimental items (bus tickets).\nWhile this looks like procrastination or distraction, the context of dad's death makes it indistinguishable from normal grieving or avoidance of painful stimuli.\nThe wording 'ended up' suggests a passive drift, but without knowing their baseline for this specific type of task, it's not diagnostic.",
+        "Q2": "Most of the 'toward' signals are actually 'unclear' because of the grief.\n⟦h4⟧ and ⟦h5⟧ could easily be low mood or avoidance processing.\nGrief often manifests as an inability to start tasks that carry emotional weight.\nThe 'daydreaming' in school (⟦h1⟧) could have been anxiety or boredom, not necessarily ADHD.\nThe key distinction is the garage task (⟦h3⟧).\nIf the writer struggles with the report folder but nails the garage, it suggests the barrier is emotional (grief/avoidance) rather than cognitive (ADHD).\nIf they struggle with both, it points more toward ADHD.\nRight now, the grief explains the inaction on the folder better than ADHD does.",
+        "Q3": "I need to know if the 'daydreaming' in school was accompanied by other markers like losing things, disorganization in daily life, or difficulty sustaining attention in non-school settings.\nI also need to know if the writer has ever tried the 'report folder' task on a neutral day and failed due to executive dysfunction, or if it is purely an emotional block.\nA sample of their current work/home routine would help see if the 'garage efficiency' is typical or a one-off burst of energy.\nDid they struggle to *start* the garage, or just to *finish* the folder?\nThe distinction between initiation failure and avoidance is key.",
+        "Q5": "A less experienced clinician might latch onto the 'daydreaming' and 'procrastination' (⟦h1⟧, ⟦h4⟧) and diagnose ADHD, ignoring the strong organizational capacity shown in ⟦h3⟧.\nThey might miss that the garage task proves the executive function is intact when the stakes are clear.\nConversely, they might dismiss the text entirely because the writer is high-functioning in some areas, missing the potential for inattentive ADHD that manifests specifically in low-stakes or emotionally charged tasks.\nThe risk is over-pathologizing grief as a disorder."
+      },
+      "expert_id": "SYN-009",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            193,
+            240
+          ],
+          "text": "Mrs Pryce handing back spelling tests face down"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            334,
+            383
+          ],
+          "text": "I used to think that was just what teachers wrote"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            801,
+            855
+          ],
+          "text": "I did clear the garage on the Tuesday, the whole thing"
+        },
+        {
+          "chip": 4,
+          "direction": "unclear",
+          "span": [
+            1011,
+            1036
+          ],
+          "text": "I keep meaning to open it"
+        },
+        {
+          "chip": 5,
+          "direction": "unclear",
+          "span": [
+            1109,
+            1155
+          ],
+          "text": "ended up reading Dad's old bus tickets instead"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-13T11:11:00Z",
+      "submitted_at": "2026-01-13T11:31:00Z",
+      "vignette_hash": "f22a16d9fec13b1fab02db33bfe1ffd395d549eb80e58499b454d85b6396b4b6",
+      "vignette_id": "V023",
+      "vignette_version": 1
+    }
+  ],
+  "schema_version": "1.1-chips",
+  "session_id": "DOC-SYN-0009",
+  "vignettes": [
+    {
+      "content_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Poor sleep after a recent move to a louder flat could explain tiredness and slower starts.",
+            "quote": "Still sleeping badly since we moved flats two months ago"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I told myself two hours for the commentary section and it has now been most of the evening",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I only opened the document at nine because I did the dishes and the bins first",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a quarterly report due on Friday (traits: task_initiation: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V001",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch, and then Priya asked me to check her reserve figures too, and that took the whole afternoon, and the lift in our building was out so I carried the shopping up four floors, which has nothing to do with anything but my legs hurt. Anyway the report. I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first. Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed, so I was up at five anyway and sent the chart pack to Marcus before work, and he replied with a thumbs up by eight. That part went well. The commentary I think I can finish by eleven, maybe midnight, then read through it once in the morning. Need to remember to ask Dan about the fridge shelf.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "High caffeine intake can cause restlessness and scattered focus.",
+            "quote": "I have had four coffees today"
+          },
+          {
+            "alternative_explanation": "Exam anxiety could explain difficulty concentrating on writing.",
+            "quote": "I am quite nervous about it"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+            "strength": "moderate",
+            "trait": "working_memory"
+          },
+          {
+            "quote": "went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+            "strength": "weak",
+            "trait": "distractibility"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a thesis chapter that is not getting written (traits: distractibility: moderate; working_memory: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V004",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Chapter three is at 1,100 words. It goes to my supervisor on the 20th and today is the 11th. I would call this a tragedy but it is mostly arithmetic.\n\nOn Monday I wrote 600 of those words in one go at the library, because the kitchen at home was empty and nobody was cooking. That went fine. On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.\n\nI have had four coffees today. I know. The stats exam is on Thursday as well and I am quite nervous about it.\n\nI did send the method section on time last week, so at least one person at the university has proof I exist. My supervisor wrote back with three comments, all fair, and I fixed them the same evening.\n\nToday I made a plan of two blocks of 50 minutes with my phone in my bag. Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins. Block two is after dinner.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Ruminating about a conflict with a colleague, which could explain distraction and the rushed proofing.",
+            "quote": "a message that I keep going over in my head"
+          },
+          {
+            "alternative_explanation": "An ordinary process failure: the colleague saved the calendar locally and did not mention it.",
+            "quote": "she'd saved it as a local file and nobody told me"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Telling goal-loss digression that eventually resolves from anxious rumination that circles one worry, in free adult text (textual markers, not diagnostic criteria).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "Anyway, my sister has the same problem with her boiler manual",
+            "strength": "moderate",
+            "trait": "discourse_tangentiality"
+          },
+          {
+            "quote": "I'd allowed an hour to check the proofs and it took nearer three",
+            "strength": "weak",
+            "trait": "time_estimation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "explaining why last week's project handover went wrong (traits: discourse_tangentiality: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V006",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hi Jo, you asked how the handover went and I said fine, which was not true. Here is what happened. Dana moved to the events team on Friday, so on Thursday I was meant to take over her campaign calendar and the supplier logins. The logins worked, because I asked IT on Monday and they sorted it the same day. The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version. That's the ordinary reason, really. Anyway, my sister has the same problem with her boiler manual, it's a PDF on a laptop she has since sold, and her whole building spent a weekend... sorry. The newsletter went out on Tuesday with the wrong date for the webinar. I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look. Priya in design also copied me on a message that I keep going over in my head, the one about 'ownership', but that's another email. So it was a local file, a wrong date and rushed proofing. I'm sorry this ran so long.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "The writer is naturally talkative and enjoys telling stories at length.",
+            "quote": "you know I never tell a short version"
+          },
+          {
+            "alternative_explanation": "Talkativeness is an ordinary personality trait of someone who enjoys storytelling.",
+            "quote": "I talked the whole way back"
+          }
+        ],
+        "is_control": true,
+        "knowledge_target": "Hard negative: long, digressive but organised storytelling that must not be read as attentional (style versus trait).",
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "telling a neighbour about a fishing trip last summer (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V012",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hello Frank, you asked how the fishing trip went, so here it is, and you know I never tell a short version. We left Harlow at five on the Saturday, which I had planned for a week, and we reached the lake by quarter to seven. Dennis drove because my knee was sore, and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat. Anyway. We hired the little boat from the man at the jetty, the same man as last year, and he remembered my name, which pleased me. I caught a perch first and then nothing for two hours. Dennis caught three roach and mentioned it often. Margaret made the sandwiches, ham and mustard, and they lasted until about noon. The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it. Around three the wind got up and we came in early. The roads were clear and we were home by six. I talked the whole way back, Dennis says, though I don't remember much of it. Come round Thursday and I'll show you the photos. There are eleven, or twelve, I'd have to count.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "883428c5ef2260af0c4064d0f538801134ebcae3d261c73468839c1cb035a217",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "strong exam anxiety",
+            "quote": "I'm scared of the paper"
+          },
+          {
+            "alternative_explanation": "exam anxiety",
+            "quote": "Every time I see the mechanism sheet my stomach drops"
+          },
+          {
+            "alternative_explanation": "recent break-up",
+            "quote": "Marek's hoodie is still in my room and I keep not dealing with it"
+          },
+          {
+            "alternative_explanation": "recent break-up",
+            "quote": "normal to not focus the month after a break-up"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "wrote all the topic headings on a fresh page before I even took my coat off",
+            "strength": "moderate",
+            "trait": "task_initiation: starts a task immediately on arrival"
+          },
+          {
+            "quote": "then checked my phone, and it was 11",
+            "strength": "moderate",
+            "trait": "distractibility: drifted from the task to something else"
+          },
+          {
+            "quote": "one link on the reading list was broken so I went looking for another copy",
+            "strength": "weak",
+            "trait": "distractibility: small detour from the planned task"
+          }
+        ],
+        "population": "adult",
+        "purpose": "not starting exam revision (traits: task_initiation: strong; distractibility: moderate)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V019",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Tuesday. Organic exam is in 9 days and I have not opened the notes. Not once.\n\nPlans I made this week: Monday mechanisms, Tuesday spectroscopy, Wednesday past papers. Did none of it. Same list as in January.\n\nWhat did happen. Handed in the lab report on Friday, a day early. Finished the graphs in one sitting. Went to the 9am lecture and sat at the front. This morning I took the early bus and had a desk in the library by 8:40, wrote all the topic headings on a fresh page before I even took my coat off. Then one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11.\n\nHonestly I'm scared of the paper. Every time I see the mechanism sheet my stomach drops. Also Marek's hoodie is still in my room and I keep not dealing with it. Ewa says it's normal to not focus the month after a break-up. Maybe.\n\nSlept 7 hours, ate properly, laundry done. So no real excuse.\n\nTomorrow: mechanisms 9-12, spectroscopy 1-3, past paper 4-6.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "a63efc080c831974c2a3b0d8d4f1ff9f5866a2c2c8a834b83e73eb7fc2176df1",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Irritability and poor sleep are caused by the nightly noise and an early shift start.",
+            "quote": "I get maybe four hours. I'm short with everyone by Wednesday and that's the noise, not me."
+          }
+        ],
+        "is_control": true,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "a noisy neighbour and the council (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V020",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Flat 14 above me. Third month now. Here is what I have so far.\n\n1. Bass through my ceiling most nights from about 11 until 2, sometimes later. I start the 5:10 shift at the depot so I get maybe four hours. I'm short with everyone by Wednesday and that's the noise, not me.\n\n2. I logged it. Every night on my phone for three weeks, time and what it was. Sent the log to the council noise team on the 3rd like they asked.\n\n3. They said someone would visit within ten working days. Nobody came. Rang on day eleven and was told the officer was off sick.\n\n4. Knocked on his door twice. First time he apologised and it was quiet for two nights. Second time he didn't answer, music still going.\n\n5. Bought earplugs. They help a bit. Not with the bass.\n\nThe officer did finally come Thursday and left a recorder in my bedroom for a week. I'm not sure if I was meant to switch it on myself, I think it was already on. Anyway that week it was quiet, of course it was. Anyone else had this with their council?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "86fdcba50d634598e067b944bd4fb0e62105fab68718dfd75a6016c87c5459e4",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Anxiety about being judged by a new manager, which could explain the careful framing and the extra rechecking behind the delay.",
+            "quote": "I kept the bug list short because Daniel will be reading it, being new, and I'd rather he not think we're drowning"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Telling digression that resolves from anxious over-explaining in a work email (textual markers, not diagnostic criteria).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I'd said it would take an hour, maybe less, because the regression numbers were already in the sheet",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "which isn't anyone's fault really, although we never wrote down who owns that job, I think Piotr set it up, or it was before him, I should ask",
+            "strength": "moderate",
+            "trait": "discourse_tangentiality"
+          }
+        ],
+        "population": "adult",
+        "purpose": "an overdue project update for the team (traits: discourse_tangentiality: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V021",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hi Marta, sorry the project update is late, I know it was meant to go out Tuesday and it's now Thursday afternoon. I'd said it would take an hour, maybe less, because the regression numbers were already in the sheet, but then the export from the test tool came out with the Android column merged into iOS, so I reran the nightly set, and the staging server was slow because someone left the load job on, which isn't anyone's fault really, although we never wrote down who owns that job, I think Piotr set it up, or it was before him, I should ask. Anyway. The smoke tests I finished on Monday as planned, 212 run, 211 passed, one skipped on purpose. The login bug retest worked first time with Wednesday's patch. I kept the bug list short because Daniel will be reading it, being new, and I'd rather he not think we're drowning. The draft is about two thirds done. Still to write: the risks part and the charts. I'll send it by end of day. Can you check whether Daniel wants the old template or something different?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "1c06635804a0ee86705245950b299cbd6e15fd9988975033974bea14d299502a",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Low mood that started after a bad winter could explain the spending and inattention to the balance.",
+            "quote": "I've been a bit flat since winter, it was a really bad one"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Reading impulsive action and regret language in free text versus mood-driven spending.",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I just ordered it on my lunch break",
+            "strength": "moderate",
+            "trait": "quick_to_act"
+          },
+          {
+            "quote": "I measured after ordering, obviously",
+            "strength": "weak",
+            "trait": "quick_to_act"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a spending spree and the bank account afterwards (traits: quick_to_act: moderate; emotional_reactivity: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "forum_post",
+      "id": "V022",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "ok so this is embarrassing. Got paid on the 28th and by the 30th most of it was gone!! Bought a 55 inch tv with the staff discount, it was 40% off and I just ordered it on my lunch break, then two pairs of trainers that same evening because the site had free returns. One pair already went back so that's fine. Rent went out on the 1st like always, standing order, so the room is sorted at least. Checked the app this morning and I have 112 until the 27th. Not great but not a disaster either. I've been a bit flat since winter, it was a really bad one, so maybe that's part of why I wasn't thinking about the balance. The tv is still in the box because the stand is wider than my shelf?? I measured after ordering, obviously. I've switched my train pass to monthly so that's covered, and I made a food list and only bought what was on it this week. Day 12 of the 14 day return window now. Will decide tomorrow, or Friday. Anyone else done this on a payday?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "f22a16d9fec13b1fab02db33bfe1ffd395d549eb80e58499b454d85b6396b4b6",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "recent bereavement could explain why memories and low energy are surfacing",
+            "quote": "Dad died in September"
+          },
+          {
+            "alternative_explanation": "low mood after retiring could explain avoidance and drifting",
+            "quote": "some mornings I think it is just being retired with nothing to be at"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Weighing a retrospective account of childhood attention in an older adult's free text.",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "\"Daydreaming again\" written in the margin of nearly every report",
+            "strength": "moderate",
+            "trait": "distractibility"
+          },
+          {
+            "quote": "it has sat on the hall table since October and I keep meaning to open it",
+            "strength": "moderate",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "what school was like and why it comes back now (traits: distractibility: moderate, recalled from childhood; task_initiation: moderate)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "personal_journal",
+      "id": "V023",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "I finished at the end of June and it is November now, and the thing I did not expect is how much of my own school has come back. Not the teaching, my own school. St Anne's, the brown corridor, Mrs Pryce handing back spelling tests face down. I was the one who got \"Daydreaming again\" written in the margin of nearly every report, and I used to think that was just what teachers wrote. Now I'm not so sure it was only that. My sister rang on Sunday and I told her, and she remembered me looking out of the window through the whole of a harvest assembly, and she could even say which window. Dad died in September and I think that is part of why it all surfaces, the house is very quiet and I haven't been sleeping properly, and some mornings I think it is just being retired with nothing to be at. But I did clear the garage on the Tuesday, the whole thing, because the skip was booked for ten and I was done by nine. That was easy. The report folder is different, it has sat on the hall table since October and I keep meaning to open it. I found it again this morning, made tea first, then did the post, then ended up reading Dad's old bus tickets instead.",
+      "variant": null,
+      "version": 1
+    }
+  ]
+}

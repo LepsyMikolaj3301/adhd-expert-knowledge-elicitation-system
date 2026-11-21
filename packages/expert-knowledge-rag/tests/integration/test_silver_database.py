@@ -1,7 +1,8 @@
-"""The retrievers on the frozen silver snapshot: 28 sessions, 198 units, real bge-m3 vectors.
+"""The retrievers on the silver answers (SYN-001, SYN-002), ingested by the conftest: 28 sessions,
+198 units, real bge-m3 vectors.
 
-Unlike the V001 example of test_database.py, dense search here is meaningful (the query vectors are
-frozen into the snapshot, so no model runs) and the findings records are readable ones.
+Unlike the V001 example of test_database.py, dense search here is meaningful (units and questions
+are embedded with bge-m3 through Ollama) and the findings records are readable ones.
 """
 
 import asyncio
@@ -52,10 +53,10 @@ def hit_rate(retriever, questions, covers, k=8) -> float:
     return hits / len(questions)
 
 
-# --- the snapshot is what the tests think it is ------------------------------------------------
+# --- the schema is what the tests think it is ------------------------------------------------
 
 
-def test_the_schema_holds_the_whole_snapshot(silver, silver_store):
+def test_the_schema_holds_every_ingested_row(silver, silver_store):
     tables = silver[0]
     (rows,) = silver_store.run(
         [
@@ -83,7 +84,7 @@ def test_the_schema_holds_the_whole_snapshot(silver, silver_store):
     assert row["fitted"] == row["units"]  # BM25 was fitted for I1
 
 
-def test_the_seeded_snapshot_has_agreement_groups_that_add_up(silver_store):
+def test_the_seeded_answers_have_agreement_groups_that_add_up(silver_store):
     """Two experts answered each silver vignette, so a group is 1 or 2 of 2."""
     (rows,) = silver_store.run(
         [
@@ -109,17 +110,24 @@ def test_the_seeded_snapshot_has_agreement_groups_that_add_up(silver_store):
 # --- search modes ------------------------------------------------------------------------------
 
 
-def test_dense_search_finds_the_units_that_hold_the_claims(silver, silver_store, frozen, questions):
+def test_dense_search_finds_the_units_that_hold_the_claims(
+    silver, silver_store, embedder, questions
+):
     covers = silver[2]["covers"]
-    retriever = question(silver_store, frozen, search="dense", merge_shared=False)
+    retriever = question(silver_store, embedder, search="dense", merge_shared=False)
     assert hit_rate(retriever, questions, covers) >= 0.8
 
 
-def test_hybrid_search_is_at_least_as_good_as_either_side(silver, silver_store, frozen, questions):
+def test_hybrid_search_is_at_least_as_good_as_either_side(
+    silver, silver_store, embedder, questions
+):
     covers = silver[2]["covers"]
     rates = {
         mode: hit_rate(
-            question(silver_store, frozen, search=mode, merge_shared=False), questions, covers, k=4
+            question(silver_store, embedder, search=mode, merge_shared=False),
+            questions,
+            covers,
+            k=4,
         )
         for mode in ("hybrid", "dense", "bm25")
     }
@@ -127,13 +135,15 @@ def test_hybrid_search_is_at_least_as_good_as_either_side(silver, silver_store, 
     assert rates["hybrid"] >= 0.75, rates
 
 
-def test_a_hybrid_note_comes_from_the_dense_or_the_bm25_candidates(silver_store, frozen, questions):
+def test_a_hybrid_note_comes_from_the_dense_or_the_bm25_candidates(
+    silver_store, embedder, questions
+):
     # k * overfetch = 52 >= the fusion depth (50): the pools hybrid fuses are the same size here
     pools = {
-        mode: question(silver_store, frozen, search=mode, merge_shared=False, k=13)
+        mode: question(silver_store, embedder, search=mode, merge_shared=False, k=13)
         for mode in ("dense", "bm25")
     }
-    hybrid = question(silver_store, frozen, merge_shared=False, k=4)
+    hybrid = question(silver_store, embedder, merge_shared=False, k=4)
     for q in questions[:10]:
         candidates = {u for r in pools.values() for u in unit_ids(r.invoke(q["question"]))}
         assert set(unit_ids(hybrid.invoke(q["question"]))) <= candidates
@@ -146,25 +156,25 @@ def test_a_question_of_only_stopwords_falls_back_to_dense(silver_store):
     assert question(silver_store, FAKE, search="bm25").invoke("the of and to") == []
 
 
-def test_a_question_returns_notes(silver_store, frozen, questions):
-    docs = question(silver_store, frozen).invoke(questions[0]["question"])
+def test_a_question_returns_notes(silver_store, embedder, questions):
+    docs = question(silver_store, embedder).invoke(questions[0]["question"])
     assert docs and all(d.metadata["unit_ids"] for d in docs)
 
 
 # --- filters -----------------------------------------------------------------------------------
 
 
-def test_vignette_filters_keep_and_drop_exactly_those_vignettes(silver_store, frozen, questions):
+def test_vignette_filters_keep_and_drop_exactly_those_vignettes(silver_store, embedder, questions):
     only = question(
         silver_store,
-        frozen,
+        embedder,
         filter=ExpertFilter(vignettes=["V001", "V004"]),
         k=10,
     ).invoke(questions[0]["question"])
     assert only and {d.metadata["vignette_id"] for d in only} <= {"V001", "V004"}
     without = question(
         silver_store,
-        frozen,
+        embedder,
         filter=ExpertFilter(exclude_vignettes=["V001", "V004"]),
         k=10,
     ).invoke(questions[0]["question"])
@@ -172,7 +182,7 @@ def test_vignette_filters_keep_and_drop_exactly_those_vignettes(silver_store, fr
 
 
 def test_population_and_track_filters_agree_with_the_stored_rows(
-    silver, silver_store, frozen, questions
+    silver, silver_store, embedder, questions
 ):
     units = silver[0]["units"]
     for field, key in (("populations", "population"), ("tracks", "track")):
@@ -180,7 +190,7 @@ def test_population_and_track_filters_agree_with_the_stored_rows(
         wanted = {u["id"] for u in units if u[key] == value}
         docs = question(
             silver_store,
-            frozen,
+            embedder,
             filter=ExpertFilter(**{field: [value]}),
             k=10,
             merge_shared=False,
@@ -188,7 +198,7 @@ def test_population_and_track_filters_agree_with_the_stored_rows(
         assert docs and set(unit_ids(docs)) <= wanted
     absent = question(
         silver_store,
-        frozen,
+        embedder,
         filter=ExpertFilter(populations=["no such population"]),
     )
     assert absent.invoke(questions[0]["question"]) == []
@@ -198,7 +208,7 @@ def test_population_and_track_filters_agree_with_the_stored_rows(
 
 
 def test_units_sharing_a_sentence_become_one_note_only_when_merging(
-    silver, silver_store, frozen, questions, unit_rows
+    silver, silver_store, embedder, questions, unit_rows
 ):
     sentences = {}
     for unit, sentence, _ in silver[0]["unit_sentences"]:
@@ -207,7 +217,7 @@ def test_units_sharing_a_sentence_become_one_note_only_when_merging(
     merged = [
         d
         for q in questions[:10]
-        for d in question(silver_store, frozen, k=8).invoke(q["question"])
+        for d in question(silver_store, embedder, k=8).invoke(q["question"])
         if len(d.metadata["unit_ids"]) > 1
     ]
     assert merged, "no question gave a merged note"
@@ -217,15 +227,15 @@ def test_units_sharing_a_sentence_become_one_note_only_when_merging(
         assert len({unit_rows[u]["session_id"] for u in group}) == 1
         # every unit shares a sentence with another one of its note
         assert all(any(sentences[u] & sentences[v] for v in group if v != u) for u in group)
-    single = question(silver_store, frozen, k=8, merge_shared=False)
+    single = question(silver_store, embedder, k=8, merge_shared=False)
     assert all(len(d.metadata["unit_ids"]) == 1 for d in single.invoke(questions[0]["question"]))
 
 
 def test_the_findings_records_are_readable_so_notes_are_packed(
-    silver_store, frozen, questions, caplog
+    silver_store, embedder, questions, caplog
 ):
     with caplog.at_level(logging.WARNING):
-        docs = question(silver_store, frozen, k=8).invoke(questions[0]["question"])
+        docs = question(silver_store, embedder, k=8).invoke(questions[0]["question"])
     assert docs
     assert "no readable findings record" not in caplog.text
     assert any(d.metadata["patient_words"] for d in docs)  # the highlights' words, from the record
@@ -235,14 +245,14 @@ def test_the_findings_records_are_readable_so_notes_are_packed(
 
 
 def test_patient_text_finds_units_of_other_cases_and_never_the_excluded_ones(
-    silver_store, frozen, silver
+    silver_store, embedder, silver
 ):
     patients = silver[2]["patients"]
     answered = 0
     for p in patients:
         retriever = PatientTextRetriever(
             store=silver_store,
-            embeddings=frozen,
+            embeddings=embedder,
             filter=ExpertFilter(exclude_vignettes=p["exclude"]),
         )
         docs = retriever.invoke(p["text"])
@@ -251,10 +261,10 @@ def test_patient_text_finds_units_of_other_cases_and_never_the_excluded_ones(
     assert answered >= len(patients) - 1
 
 
-def test_patient_text_without_exclusions_may_return_its_own_case(silver_store, frozen, silver):
+def test_patient_text_without_exclusions_may_return_its_own_case(silver_store, embedder, silver):
     p = silver[2]["patients"][0]
     docs = PatientTextRetriever(
-        store=silver_store, embeddings=frozen, k=8, filter=ALL, merge_shared=False
+        store=silver_store, embeddings=embedder, k=8, filter=ALL, merge_shared=False
     ).invoke(p["text"])
     assert p["id"] in {d.metadata["vignette_id"] for d in docs}  # its own highlights match it best
 
@@ -262,8 +272,8 @@ def test_patient_text_without_exclusions_may_return_its_own_case(silver_store, f
 # --- plumbing ----------------------------------------------------------------------------------
 
 
-def test_sync_and_async_agree_on_the_silver_schema(silver_store, frozen, questions):
-    retriever = question(silver_store, frozen, k=4)
+def test_sync_and_async_agree_on_the_silver_schema(silver_store, embedder, questions):
+    retriever = question(silver_store, embedder, k=4)
     q = questions[3]["question"]
     sync, asynchronous = retriever.invoke(q), asyncio.run(retriever.ainvoke(q))
     assert [d.metadata["unit_ids"] for d in sync] == [d.metadata["unit_ids"] for d in asynchronous]
@@ -274,8 +284,3 @@ def test_the_silver_connection_is_read_only(silver_store):
     delete = sql.SQL("DELETE FROM {}").format(sql.Identifier(silver_store.schema, "cue_keys"))
     with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
         silver_store.run([(delete, {})])
-
-
-def test_a_text_that_was_not_frozen_is_an_error_not_a_model_call(silver_store, frozen):
-    with pytest.raises(KeyError, match="not frozen"):
-        question(silver_store, frozen).invoke("a question nobody froze")

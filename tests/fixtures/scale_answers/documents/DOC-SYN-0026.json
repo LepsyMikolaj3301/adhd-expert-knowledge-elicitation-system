@@ -1,0 +1,960 @@
+{
+  "created_at": "2026-01-30T09:00:00Z",
+  "expert_id": "SYN-026",
+  "responses": [
+    {
+      "answers": {
+        "Q1": "+ ⟦h1⟧ Two hours for the commentary section has now taken most of the evening.\n- ⟦h3⟧ The street is louder and the bed is a different bed.\n? ⟦h6⟧ This has nothing to do with anything but my legs hurt.",
+        "Q2": "⟦h1⟧ could reflect anxiety or perfectionism.\n⟦h6⟧ could reflect poor sleep or physical discomfort.",
+        "Q3": "Ask: what other tasks are difficult to start or complete?\nIs there any history of similar difficulties?",
+        "Q5": "A less experienced clinician might over-interpret ⟦h1⟧ as clear evidence of ADHD without considering other explanations.\nThey might under-interpret ⟦h3⟧ as irrelevant, missing the potential impact of environmental changes on sleep."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            457,
+            547
+          ],
+          "text": "I told myself two hours for the commentary section and it has now been most of the evening"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            629,
+            685
+          ],
+          "text": "Still sleeping badly since we moved flats two months ago"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            687,
+            755
+          ],
+          "text": "the street is louder than the old one and the bed is a different bed"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            549,
+            627
+          ],
+          "text": "I only opened the document at nine because I did the dishes and the bins first"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            999,
+            1049
+          ],
+          "text": "Need to remember to ask Dan about the fridge shelf"
+        },
+        {
+          "chip": 6,
+          "direction": "unclear",
+          "span": [
+            382,
+            436
+          ],
+          "text": "which has nothing to do with anything but my legs hurt"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-30T09:01:00Z",
+      "submitted_at": "2026-01-30T09:07:00Z",
+      "vignette_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "vignette_id": "V001",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h1⟧ I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.\n+ ⟦h2⟧ I have had four coffees today.\n- ⟦h3⟧ I did send the method section on time last week.\n- ⟦h4⟧ Today I made a plan of two blocks of 50 minutes with my phone in my bag.\n- ⟦h5⟧ Block one happened.\n+ ⟦h6⟧ Block two is after dinner.",
+        "Q2": "⟦h1⟧ could be anxiety or poor focus.\n⟦h2⟧ could be stress or poor sleep.",
+        "Q3": "Ask how often this happens, about other tasks like this, sleep patterns, and anxiety levels.",
+        "Q5": "A less experienced clinician may overinterpret ⟦h1⟧ as a clear ADHD trait and underinterpret ⟦h3⟧ as just being organised."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            303,
+            431
+          ],
+          "text": "I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table."
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            433,
+            463
+          ],
+          "text": "I have had four coffees today."
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            544,
+            591
+          ],
+          "text": "I did send the method section on time last week"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            745,
+            817
+          ],
+          "text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag."
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            818,
+            837
+          ],
+          "text": "Block one happened."
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            964,
+            990
+          ],
+          "text": "Block two is after dinner."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-30T09:08:00Z",
+      "submitted_at": "2026-01-30T09:15:00Z",
+      "vignette_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "vignette_id": "V004",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h1⟧ I was working from the old shared version for two days.\n+ ⟦h2⟧ The last two pages received a quick look.\n+ ⟦h6⟧ My time estimate for checking proofs was off by a factor of three; I had allowed an hour, but it took nearer three hours.\n- ⟦h3⟧ I keep going over in my head the one about 'ownership'.\n- ⟦h5⟧ The logins worked because I asked IT on Monday, and they sorted it the same day.\n? ⟦h4⟧ It is an ordinary problem with a manual that is a PDF on a laptop she has since sold.",
+        "Q2": "⟦h1⟧ could reflect poor communication or disorganisation.\n⟦h2⟧ could reflect time pressure or stress.",
+        "Q3": "Ask: why did you not check the calendar's location sooner?\nHow do you usually handle time estimates?",
+        "Q5": "A less experienced clinician may over-interpret ⟦h3⟧ as rumination and under-interpret ⟦h5⟧ as evidence of organisation."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            389,
+            446
+          ],
+          "text": "so for two days I was working from the old shared version"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            780,
+            815
+          ],
+          "text": "the last two pages got a quick look"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            866,
+            921
+          ],
+          "text": "I keep going over in my head, the one about 'ownership'"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            547,
+            588
+          ],
+          "text": "it's a PDF on a laptop she has since sold"
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            227,
+            306
+          ],
+          "text": "The logins worked, because I asked IT on Monday and they sorted it the same day"
+        },
+        {
+          "chip": 6,
+          "direction": "toward",
+          "span": [
+            711,
+            775
+          ],
+          "text": "I'd allowed an hour to check the proofs and it took nearer three"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-30T09:16:00Z",
+      "submitted_at": "2026-01-30T09:22:00Z",
+      "vignette_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "vignette_id": "V006",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h1⟧ talked the whole way back, but doesn't remember much of it\n+ ⟦h3⟧ talked the whole way back\n- ⟦h2⟧ left at 5, which they had planned for a week ago\n- ⟦h4⟧ drove because knee was sore\n- ⟦h5⟧ sorted maggots issue\n? ⟦h6⟧ 'I'd have to count'",
+        "Q2": "⟦h1⟧ or ⟦h3⟧ could be over-talking, anxiety, or just being chatty.\n⟦h6⟧ could be forgetful or just not bothered.",
+        "Q3": "Ask: 'Do you find it hard to follow through on tasks, or get easily bored or distracted?'",
+        "Q5": "A less experienced clinician might overinterpret ⟦h1⟧ or ⟦h3⟧ as definite ADHD traits, or underinterpret ⟦h4⟧ and ⟦h5⟧ as evidence against."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            893,
+            969
+          ],
+          "text": "I talked the whole way back, Dennis says, though I don't remember much of it"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            108,
+            178
+          ],
+          "text": "We left Harlow at five on the Saturday, which I had planned for a week"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            893,
+            920
+          ],
+          "text": "I talked the whole way back"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            225,
+            262
+          ],
+          "text": "Dennis drove because my knee was sore"
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            678,
+            794
+          ],
+          "text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it"
+        },
+        {
+          "chip": 6,
+          "direction": "neutral",
+          "span": [
+            1050,
+            1067
+          ],
+          "text": "I'd have to count"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-30T09:23:00Z",
+      "submitted_at": "2026-01-30T09:29:00Z",
+      "vignette_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "vignette_id": "V012",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h1⟧ the clicky thing",
+        "Q2": "⟦h1⟧ could reflect low mood or anxiety, not just ADHD.",
+        "Q3": "Ask how often this happens and what impact it has on daily life.",
+        "Q5": "A less experienced clinician might over-interpret ⟦h1⟧ as a clear sign of ADHD without considering other factors."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            759,
+            775
+          ],
+          "text": "the clicky thing"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            607,
+            677
+          ],
+          "text": "writing the time on my hand as well, which my daughter thinks is funny"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            725,
+            776
+          ],
+          "text": "I wanted to say stapler and said \"the clicky thing\""
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            991,
+            1067
+          ],
+          "text": "Story time on Saturday ran exactly on schedule, forty children, nobody cried"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            324,
+            446
+          ],
+          "text": "I did ring the dentist on Monday to move my check-up and that went fine, I got there ten minutes early and read a magazine"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            594,
+            677
+          ],
+          "text": "I've started writing the time on my hand as well, which my daughter thinks is funny"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-30T09:30:00Z",
+      "submitted_at": "2026-01-30T09:34:00Z",
+      "vignette_hash": "4335b91f6589cbeb818fe1980cd4fe1ce1a6e7505bb0fc7108e62df1bcb51d7f",
+      "vignette_id": "V016",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h2⟧, ⟦h3⟧, - ⟦h1⟧, ⟦h4⟧, ⟦h6⟧",
+        "Q2": "⟦h2⟧ and ⟦h3⟧ could reflect low mood or anxiety, while ⟦h5⟧ is a general explanation.",
+        "Q3": "Ask about other settings, longer-term effects, and impact on daily life.",
+        "Q5": "Likely over-interpret ⟦h2⟧ and ⟦h3⟧ as definitively ADHD-related."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            112,
+            180
+          ],
+          "text": "Started it three weeks ago during naps, which is the only time I get"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            359,
+            414
+          ],
+          "text": "The washing basket is overflowing again, I know, I know"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            285,
+            357
+          ],
+          "text": "the nap ran over and I only noticed when he started yelling from the cot"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            466,
+            505
+          ],
+          "text": "Joints came out tighter than I expected"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            721,
+            802
+          ],
+          "text": "Tired today though, he's been up around 3 every night this week, teething I think"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            852,
+            866
+          ],
+          "text": "Will redo that"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-30T09:35:00Z",
+      "submitted_at": "2026-01-30T09:39:00Z",
+      "vignette_hash": "7abc1ffd8936264f88730409ab429416370af91099f2b1e106e9dd5a60d2ad0e",
+      "vignette_id": "V017",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h1⟧ \"I'll book it as soon as you send it\" is cited as impulsive action.\n+ ⟦h3⟧ \"tell me by Sunday which you prefer\" is cited regarding a sudden deadline.\n+ ⟦h4⟧ \"Laundry is the one thing I haven't sorted\" is cited as an uncompleted task.\n- ⟦h2⟧ \"I'll settle up on the flight home\" is cited as planned action.\n- ⟦h5⟧ \"No rush on that one really\" is cited as a relaxed attitude.\n- ⟦h6⟧ \"Please add what you pay the same day\" is cited as an organised habit.",
+        "Q2": "⟦h1⟧ could reflect anxiety or avoidance, not just impulsivity; ⟦h3⟧ could be procrastination or indecision.",
+        "Q3": "Ask: Do any of these distractibility or impulsivity symptoms occur in other settings, such as work or hobbies?",
+        "Q5": "A less experienced clinician might over-interpret ⟦h1⟧ and ⟦h3⟧ as definitive signs of ADHD, ignoring other explanations; they might under-interpret ⟦h2⟧, ⟦h5⟧ and ⟦h6⟧ as mere politeness."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            192,
+            227
+          ],
+          "text": "I'll book it as soon as you send it"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            569,
+            602
+          ],
+          "text": "I'll settle up on the flight home"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            860,
+            894
+          ],
+          "text": "tell me by Sunday which you prefer"
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            925,
+            966
+          ],
+          "text": "Laundry is the one thing I haven't sorted"
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            896,
+            922
+          ],
+          "text": "No rush on that one really"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            483,
+            519
+          ],
+          "text": "Please add what you pay the same day"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-30T09:40:00Z",
+      "submitted_at": "2026-01-30T09:48:00Z",
+      "vignette_hash": "3e3a7cabdf4bda8b326b96f435792266901ba98171018ffef2400e2fe5de201a",
+      "vignette_id": "V018",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "+ ⟦h2⟧ One link on the reading list was broken, so I went looking for another copy, then checked my phone, and it was 11.\n- ⟦h1⟧ I finished the graphs in one sitting.\n- ⟦h4⟧ Tomorrow: mechanisms 9-12, spectroscopy 1-3, past paper 4-6.\n- ⟦h6⟧ I slept 7 hours, ate properly, and laundry was done.\n? ⟦h3⟧ Every time I see the mechanism sheet my stomach drops.\n⟦h5⟧ Honestly, I'm scared of the paper.",
+        "Q2": "⟦h3⟧ \"Every time I see the mechanism sheet my stomach drops\" could be anxiety.\n⟦h2⟧ \"one link on the reading list was broken, so I went looking for another copy, then checked my phone, and it was 11\" could be distraction.",
+        "Q3": "Ask how often this happens and in what other settings.",
+        "Q5": "A less experienced clinician might over-interpret ⟦h3⟧ stomach drop as age-related, but it's also typical of exam anxiety."
+      },
+      "expert_id": "SYN-026",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            275,
+            309
+          ],
+          "text": "Finished the graphs in one sitting"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            512,
+            624
+          ],
+          "text": "one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11"
+        },
+        {
+          "chip": 3,
+          "direction": "neutral",
+          "span": [
+            661,
+            714
+          ],
+          "text": "Every time I see the mechanism sheet my stomach drops"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            921,
+            980
+          ],
+          "text": "Tomorrow: mechanisms 9-12, spectroscopy 1-3, past paper 4-6"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            627,
+            659
+          ],
+          "text": "Honestly I'm scared of the paper"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            858,
+            899
+          ],
+          "text": "Slept 7 hours, ate properly, laundry done"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-30T09:49:00Z",
+      "submitted_at": "2026-01-30T09:57:00Z",
+      "vignette_hash": "883428c5ef2260af0c4064d0f538801134ebcae3d261c73468839c1cb035a217",
+      "vignette_id": "V019",
+      "vignette_version": 1
+    }
+  ],
+  "schema_version": "1.1-chips",
+  "session_id": "DOC-SYN-0026",
+  "vignettes": [
+    {
+      "content_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Poor sleep after a recent move to a louder flat could explain tiredness and slower starts.",
+            "quote": "Still sleeping badly since we moved flats two months ago"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I told myself two hours for the commentary section and it has now been most of the evening",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I only opened the document at nine because I did the dishes and the bins first",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a quarterly report due on Friday (traits: task_initiation: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V001",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch, and then Priya asked me to check her reserve figures too, and that took the whole afternoon, and the lift in our building was out so I carried the shopping up four floors, which has nothing to do with anything but my legs hurt. Anyway the report. I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first. Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed, so I was up at five anyway and sent the chart pack to Marcus before work, and he replied with a thumbs up by eight. That part went well. The commentary I think I can finish by eleven, maybe midnight, then read through it once in the morning. Need to remember to ask Dan about the fridge shelf.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "High caffeine intake can cause restlessness and scattered focus.",
+            "quote": "I have had four coffees today"
+          },
+          {
+            "alternative_explanation": "Exam anxiety could explain difficulty concentrating on writing.",
+            "quote": "I am quite nervous about it"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+            "strength": "moderate",
+            "trait": "working_memory"
+          },
+          {
+            "quote": "went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+            "strength": "weak",
+            "trait": "distractibility"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a thesis chapter that is not getting written (traits: distractibility: moderate; working_memory: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V004",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Chapter three is at 1,100 words. It goes to my supervisor on the 20th and today is the 11th. I would call this a tragedy but it is mostly arithmetic.\n\nOn Monday I wrote 600 of those words in one go at the library, because the kitchen at home was empty and nobody was cooking. That went fine. On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.\n\nI have had four coffees today. I know. The stats exam is on Thursday as well and I am quite nervous about it.\n\nI did send the method section on time last week, so at least one person at the university has proof I exist. My supervisor wrote back with three comments, all fair, and I fixed them the same evening.\n\nToday I made a plan of two blocks of 50 minutes with my phone in my bag. Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins. Block two is after dinner.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Ruminating about a conflict with a colleague, which could explain distraction and the rushed proofing.",
+            "quote": "a message that I keep going over in my head"
+          },
+          {
+            "alternative_explanation": "An ordinary process failure: the colleague saved the calendar locally and did not mention it.",
+            "quote": "she'd saved it as a local file and nobody told me"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Telling goal-loss digression that eventually resolves from anxious rumination that circles one worry, in free adult text (textual markers, not diagnostic criteria).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "Anyway, my sister has the same problem with her boiler manual",
+            "strength": "moderate",
+            "trait": "discourse_tangentiality"
+          },
+          {
+            "quote": "I'd allowed an hour to check the proofs and it took nearer three",
+            "strength": "weak",
+            "trait": "time_estimation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "explaining why last week's project handover went wrong (traits: discourse_tangentiality: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V006",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hi Jo, you asked how the handover went and I said fine, which was not true. Here is what happened. Dana moved to the events team on Friday, so on Thursday I was meant to take over her campaign calendar and the supplier logins. The logins worked, because I asked IT on Monday and they sorted it the same day. The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version. That's the ordinary reason, really. Anyway, my sister has the same problem with her boiler manual, it's a PDF on a laptop she has since sold, and her whole building spent a weekend... sorry. The newsletter went out on Tuesday with the wrong date for the webinar. I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look. Priya in design also copied me on a message that I keep going over in my head, the one about 'ownership', but that's another email. So it was a local file, a wrong date and rushed proofing. I'm sorry this ran so long.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "The writer is naturally talkative and enjoys telling stories at length.",
+            "quote": "you know I never tell a short version"
+          },
+          {
+            "alternative_explanation": "Talkativeness is an ordinary personality trait of someone who enjoys storytelling.",
+            "quote": "I talked the whole way back"
+          }
+        ],
+        "is_control": true,
+        "knowledge_target": "Hard negative: long, digressive but organised storytelling that must not be read as attentional (style versus trait).",
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "telling a neighbour about a fishing trip last summer (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V012",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hello Frank, you asked how the fishing trip went, so here it is, and you know I never tell a short version. We left Harlow at five on the Saturday, which I had planned for a week, and we reached the lake by quarter to seven. Dennis drove because my knee was sore, and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat. Anyway. We hired the little boat from the man at the jetty, the same man as last year, and he remembered my name, which pleased me. I caught a perch first and then nothing for two hours. Dennis caught three roach and mentioned it often. Margaret made the sandwiches, ham and mustard, and they lasted until about noon. The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it. Around three the wind got up and we came in early. The roads were clear and we were home by six. I talked the whole way back, Dennis says, though I don't remember much of it. Come round Thursday and I'll show you the photos. There are eleven, or twelve, I'd have to count.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "4335b91f6589cbeb818fe1980cd4fe1ce1a6e7505bb0fc7108e62df1bcb51d7f",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "perimenopause symptoms disturbing sleep and memory",
+            "quote": "the hot flushes are back around three in the morning"
+          },
+          {
+            "alternative_explanation": "worry about her mother's illness taking up her attention",
+            "quote": "Mum's scan is on the 29th"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "it was the 12th, I think, or perhaps the other way round",
+            "strength": "weak",
+            "trait": "working_memory"
+          },
+          {
+            "quote": "I've started writing the time on my hand as well",
+            "strength": "weak",
+            "trait": "working_memory"
+          }
+        ],
+        "population": "adult",
+        "purpose": "missed appointments and lost words lately (traits: working_memory: moderate; distractibility: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "email",
+      "id": "V016",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Dear Hannah, I'm sorry I've been so slow to answer, and sorry too about missing Thursday's coffee, which I know you had booked the table for. What happened is that I was at my mother's flat until nearly six helping her sort her tablets into the weekly box, and when I finally looked at the clock it was already twenty past. I did ring the dentist on Monday to move my check-up and that went fine, I got there ten minutes early and read a magazine. The hairdresser I did miss, because I'd put it in the kitchen calendar for the 14th and it was the 12th, I think, or perhaps the other way round. I've started writing the time on my hand as well, which my daughter thinks is funny. The words are odd too. At the desk on Tuesday I wanted to say stapler and said \"the clicky thing\", and the student just waited kindly. I'm sleeping badly and the hot flushes are back around three in the morning, so I'm blaming that mostly, and Mum's scan is on the 29th so I'm probably a bit preoccupied anyway. Story time on Saturday ran exactly on schedule, forty children, nobody cried. Are you free the week after next?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "7abc1ffd8936264f88730409ab429416370af91099f2b1e106e9dd5a60d2ad0e",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "A toddler waking at night explains tiredness and the streaky first coat of oil.",
+            "quote": "he's been up around 3 every night this week, teething I think"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I did all the sanding in one go on Tuesday, 80 grit then 120 then 180, about two and a half hours",
+            "strength": "moderate",
+            "trait": "sustained_attention_on_boring_tasks"
+          },
+          {
+            "quote": "now I want to make that next, maybe even before the shelves, not sure",
+            "strength": "weak",
+            "trait": "novelty_seeking"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a woodworking project while the washing piles up (traits: sustained_attention_on_boring_tasks: strong; novelty_seeking: moderate)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V017",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "So the hallway bookshelf is finally done (well, the frame is, the shelves are still just boards in the garage). Started it three weeks ago during naps, which is the only time I get. I did all the sanding in one go on Tuesday, 80 grit then 120 then 180, about two and a half hours, and the nap ran over and I only noticed when he started yelling from the cot. The washing basket is overflowing again, I know, I know. (Husband says it's fine, it's mostly his socks.)\n\nJoints came out tighter than I expected. Used pocket screws because I don't trust my hand chisel yet, and the clamps held fine overnight. Bought the oil finish on Friday, it was on the list and I got it on the weekly shop, so that went to plan at least.\n\nTired today though, he's been up around 3 every night this week, teething I think, so the first coat of oil went on a bit streaky. Will redo that. Also I saw a video of a little wall-mounted spice rack and now I want to make that next, maybe even before the shelves, not sure. Anyway does anyone know if you can sand between oil coats or do you wait for full cure?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "3e3a7cabdf4bda8b326b96f435792266901ba98171018ffef2400e2fe5de201a",
+      "design": {
+        "confounders": [],
+        "is_control": true,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "planning a week in Portugal with friends (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "email",
+      "id": "V018",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hi all, update on Portugal.\n\nFlights: I booked the Lisbon return for the four of us on Tuesday, 214 euros each with one cabin bag. Dani, I still need your passport number for the Porto train, I'll book it as soon as you send it.\n\nLisbon flat: booked in Alfama for 3 nights, 96 euros each. Free cancellation until 30 April, so we can still change it. The Porto place is open, I have two shortlisted and will send links tonight.\n\nMoney: I made a shared sheet with a column per person. Please add what you pay the same day, I'd rather not rebuild it from receipts in May. I'll settle up on the flight home.\n\nDays so far:\n- Mon: land around 11, drop bags, lunch at the Time Out market\n- Tue: Sintra, train from Rossio, 40 min, leave 9:00\n- Wed: free day, Ines wants the tile museum\n- Thu: train to Porto 14:10\n\nFriday is not decided. River cruise or just walking, tell me by Sunday which you prefer. No rush on that one really.\n\nLaundry is the one thing I haven't sorted. The Lisbon flat has a machine, Porto might not.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "883428c5ef2260af0c4064d0f538801134ebcae3d261c73468839c1cb035a217",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "strong exam anxiety",
+            "quote": "I'm scared of the paper"
+          },
+          {
+            "alternative_explanation": "exam anxiety",
+            "quote": "Every time I see the mechanism sheet my stomach drops"
+          },
+          {
+            "alternative_explanation": "recent break-up",
+            "quote": "Marek's hoodie is still in my room and I keep not dealing with it"
+          },
+          {
+            "alternative_explanation": "recent break-up",
+            "quote": "normal to not focus the month after a break-up"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "wrote all the topic headings on a fresh page before I even took my coat off",
+            "strength": "moderate",
+            "trait": "task_initiation: starts a task immediately on arrival"
+          },
+          {
+            "quote": "then checked my phone, and it was 11",
+            "strength": "moderate",
+            "trait": "distractibility: drifted from the task to something else"
+          },
+          {
+            "quote": "one link on the reading list was broken so I went looking for another copy",
+            "strength": "weak",
+            "trait": "distractibility: small detour from the planned task"
+          }
+        ],
+        "population": "adult",
+        "purpose": "not starting exam revision (traits: task_initiation: strong; distractibility: moderate)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V019",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Tuesday. Organic exam is in 9 days and I have not opened the notes. Not once.\n\nPlans I made this week: Monday mechanisms, Tuesday spectroscopy, Wednesday past papers. Did none of it. Same list as in January.\n\nWhat did happen. Handed in the lab report on Friday, a day early. Finished the graphs in one sitting. Went to the 9am lecture and sat at the front. This morning I took the early bus and had a desk in the library by 8:40, wrote all the topic headings on a fresh page before I even took my coat off. Then one link on the reading list was broken so I went looking for another copy, then checked my phone, and it was 11.\n\nHonestly I'm scared of the paper. Every time I see the mechanism sheet my stomach drops. Also Marek's hoodie is still in my room and I keep not dealing with it. Ewa says it's normal to not focus the month after a break-up. Maybe.\n\nSlept 7 hours, ate properly, laundry done. So no real excuse.\n\nTomorrow: mechanisms 9-12, spectroscopy 1-3, past paper 4-6.",
+      "variant": null,
+      "version": 1
+    }
+  ]
+}

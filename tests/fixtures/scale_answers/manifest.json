@@ -1,0 +1,13 @@
+{
+ "classifier": "qwen3.5:9b",
+ "counts": {
+  "documents": 32,
+  "questions": 40
+ },
+ "prompt": "Expert_sentence_targets.v1",
+ "sources": {
+  "documents": "data/fixtures_chips_scale_proofread/synthetic/silver",
+  "labels": "data/expert_units_chips_scale_proofread/synthetic/silver/qwen3.5-9b/labels"
+ },
+ "what": "filled vignettes before ingestion: chip documents after proofreading, their claims, the classifier's sentence links, the role lines; 40 questions labelled with claims of SYN-001/002"
+}

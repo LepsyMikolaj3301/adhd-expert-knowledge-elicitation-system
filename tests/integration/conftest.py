@@ -1,121 +1,103 @@
-"""Frozen snapshots seeded into throwaway schemas of the DATABASE_URL Postgres.
+"""The filled vignettes of tests/fixtures/scale_answers, ingested at test time into throwaway
+schemas.
 
-silver  tests/fixtures/retrieval_silver (in git): the retrieval regression
-scale   the 32-expert scale snapshot under data/ (local only): the scale regression
+silver  experts SYN-001 and SYN-002 (whose claims label the 40 questions): the retrieval regression
+scale   all 32 experts: the scale regression
 
-The query vectors are frozen, so nothing here calls a model. Skipped without Postgres/pgvector, or
-without the snapshot.
+Ingestion is the application's: units built from the answers and the stored classifier links,
+embedded with bge-m3 through Ollama (config/indexing.yaml), BM25 fitted in Postgres. Questions are
+embedded the same way. Nothing derived is stored, so these tests need Postgres with pgvector and
+Ollama with bge-m3. Without them the tests skip, except when the run asks for them (`-m regression`,
+`-m scale`): then a missing service is a failure, so a regression run cannot pass by not running.
 """
 
-import json
 import os
 import uuid
-from pathlib import Path
 
-import chips_snapshot
-import numpy as np
+import chips_fixture
 import psycopg
 import pytest
-from psycopg import sql
 
-from expert_knowledge_rag import ExpertKnowledgeStore
+EXPLICIT = ("regression", "scale")
 
-ROOT = Path(__file__).resolve().parents[2]
-SNAPSHOT = ROOT / "tests" / "fixtures" / "retrieval_silver"
+
+def unavailable(config: pytest.Config, reason: str):
+    """Skip, or fail when the run selected the regression markers."""
+    if any(m in (config.getoption("markexpr") or "") for m in EXPLICIT):
+        pytest.fail(f"{reason} (needed by -m {config.getoption('markexpr')})", pytrace=False)
+    pytest.skip(reason)
 
 
 @pytest.fixture(scope="session")
-def dsn() -> str:
+def dsn(pytestconfig) -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:
-        pytest.skip("needs DATABASE_URL (Postgres with pgvector)")
+        unavailable(pytestconfig, "needs DATABASE_URL (Postgres with pgvector)")
     try:
         with psycopg.connect(url, connect_timeout=5) as conn:
             conn.execute("SELECT '[1,2]'::vector").fetchone()
     except Exception as error:
-        pytest.skip(f"no usable Postgres: {error}")
+        unavailable(pytestconfig, f"no usable Postgres: {error}")
     return url
 
 
 @pytest.fixture(scope="session")
-def silver():
-    """(tables, vectors, queries) of tests/fixtures/retrieval_silver."""
-    if not (SNAPSHOT / "tables.json").exists():
-        pytest.skip("no snapshot: python scripts/db/chips_snapshot.py freeze")
-    return chips_snapshot.load_snapshot(SNAPSHOT)
+def embedder(pytestconfig) -> chips_fixture.IndexEmbeddings:
+    """bge-m3 as the application embeds; one per session, so every text is embedded once."""
+    try:
+        emb = chips_fixture.IndexEmbeddings()
+        emb.embed_query("ping")
+    except Exception as error:
+        unavailable(pytestconfig, f"no embedding model (Ollama with bge-m3): {error}")
+    return emb
 
 
-def seeded_schema(dsn: str, prefix: str, snapshot: Path):
-    """A throwaway schema seeded from `snapshot`; dropped afterwards (a generator for fixtures)."""
-    name = f"{prefix}_{uuid.uuid4().hex[:8]}"
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        try:
-            conn.execute("BEGIN")
-            chips_snapshot.seed(conn, name, snapshot)
-            conn.execute("COMMIT")
-        except Exception:
-            conn.execute("ROLLBACK")
-            raise
-    yield name
-    with psycopg.connect(dsn, autocommit=True) as conn:
-        conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(name)))
+@pytest.fixture(scope="session")
+def fixture_digest() -> str:
+    return chips_fixture.digest()
+
+
+def seeded(dsn: str, prefix: str, corpus: chips_fixture.Corpus):
+    with chips_fixture.seeded_schema(dsn, f"{prefix}_{uuid.uuid4().hex[:8]}", corpus) as name:
+        yield name
+
+
+# --- silver: two experts, the labelled questions ------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def silver(dsn, embedder) -> chips_fixture.Corpus:
+    """(tables, vectors, queries) of experts SYN-001 and SYN-002."""
+    return chips_fixture.ingest(chips_fixture.load(experts=chips_fixture.SILVER_EXPERTS), embedder)
 
 
 @pytest.fixture(scope="session")
 def silver_schema(dsn: str, silver):
-    yield from seeded_schema(dsn, "chips_reg", SNAPSHOT)
+    yield from seeded(dsn, "chips_reg", silver)
 
 
 @pytest.fixture(scope="session")
-def silver_store(dsn: str, silver_schema: str) -> ExpertKnowledgeStore:
+def silver_store(dsn: str, silver_schema: str):
+    from expert_knowledge_rag import ExpertKnowledgeStore
+
     return ExpertKnowledgeStore(dsn, schema=silver_schema)
 
 
-@pytest.fixture(scope="session")
-def frozen(silver):
-    _, vectors, queries = silver
-    return chips_snapshot.FrozenEmbeddings(queries, vectors)
-
-
-# --- the scale snapshot (32 experts): local only, data/ is not in git ----------------------------
-
-SCALE_SNAPSHOT = Path(
-    os.environ.get("SCALE_SNAPSHOT")
-    or ROOT / "data" / "expert_units_chips_scale_proofread" / "synthetic_snapshot"
-)
+# --- scale: all 32 experts ----------------------------------------------------------------------
 
 
 @pytest.fixture(scope="session")
-def scale_snapshot() -> dict:
-    """The questions frozen next to the scale snapshot (scale_queries.json) and their vectors."""
-    missing = [
-        f for f in ("tables.json", "vectors.npz", "scale_queries.json", "scale_queries.npz")
-        if not (SCALE_SNAPSHOT / f).exists()
-    ]  # fmt: skip
-    if missing:
-        pytest.skip(
-            f"no scale snapshot in {SCALE_SNAPSHOT} ({', '.join(missing)}): "
-            "python scripts/elicitation/make_scale_fixtures.py --stage build --proofread, then "
-            "python scripts/rag/eval_scale_retrieval.py --schema chips_scale --freeze-queries "
-            f"{SCALE_SNAPSHOT}"
-        )
-    frozen = json.loads((SCALE_SNAPSHOT / "scale_queries.json").read_text())
-    if frozen["snapshot_sha"] != chips_snapshot.snapshot_digest(SCALE_SNAPSHOT):
-        pytest.skip("the snapshot changed after its questions were frozen: rerun --freeze-queries")
-    return frozen
+def scale(dsn, embedder) -> chips_fixture.Corpus:
+    return chips_fixture.ingest(chips_fixture.load(), embedder, patients=False)
 
 
 @pytest.fixture(scope="session")
-def scale_schema(dsn: str, scale_snapshot):
-    yield from seeded_schema(dsn, "chips_scale", SCALE_SNAPSHOT)
+def scale_schema(dsn: str, scale):
+    yield from seeded(dsn, "chips_scale", scale)
 
 
 @pytest.fixture(scope="session")
-def scale_store(dsn: str, scale_schema: str) -> ExpertKnowledgeStore:
+def scale_store(dsn: str, scale_schema: str):
+    from expert_knowledge_rag import ExpertKnowledgeStore
+
     return ExpertKnowledgeStore(dsn, schema=scale_schema)
-
-
-@pytest.fixture(scope="session")
-def scale_frozen(scale_snapshot):
-    matrix = np.load(SCALE_SNAPSHOT / "scale_queries.npz")["queries"].astype(np.float32)
-    return chips_snapshot.FrozenEmbeddings.of(scale_snapshot["texts"], matrix)

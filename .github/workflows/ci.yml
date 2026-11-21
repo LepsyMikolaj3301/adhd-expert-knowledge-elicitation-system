@@ -25,7 +25,8 @@ jobs:
       - run: uv run --no-sync ty check backend
       # No database, model or network: everything that talks to Ollama is replaced in these tests.
       # What needs Postgres (marked `integration`: tests/api, tests/integration and the package
-      # integration tests) runs locally only, against the compose Postgres:
+      # integration tests) runs locally only, against the compose Postgres; the retrieval
+      # regression also needs Ollama with bge-m3 (it ingests tests/fixtures/scale_answers):
       #   uv run pytest -m integration
       - name: Unit tests
         run: >-

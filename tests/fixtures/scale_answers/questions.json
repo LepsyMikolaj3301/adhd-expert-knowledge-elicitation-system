@@ -1,0 +1,841 @@
+{
+ "questions": [
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#0",
+    "DOC-SYN-0002#1",
+    "DOC-SYN-0001#2",
+    "DOC-SYN-0002#2"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#0",
+    "DOC-SYN-0001#2",
+    "DOC-SYN-0001#3",
+    "DOC-SYN-0001#30",
+    "DOC-SYN-0001#37",
+    "DOC-SYN-0001#6",
+    "DOC-SYN-0001#7",
+    "DOC-SYN-0001#8",
+    "DOC-SYN-0001#9",
+    "DOC-SYN-0002#1",
+    "DOC-SYN-0002#2",
+    "DOC-SYN-0002#3",
+    "DOC-SYN-0002#5",
+    "DOC-SYN-0002#6",
+    "DOC-SYN-0002#69",
+    "DOC-SYN-0002#7",
+    "DOC-SYN-0002#70",
+    "DOC-SYN-0002#8"
+   ],
+   "question": "How much weight should a late start on a deadline task carry when the same writer clearly did other parts of the work well ahead of time?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#1",
+    "DOC-SYN-0002#0",
+    "DOC-SYN-0001#57",
+    "DOC-SYN-0002#54",
+    "DOC-SYN-0001#108"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#1",
+    "DOC-SYN-0001#108",
+    "DOC-SYN-0001#49",
+    "DOC-SYN-0001#54",
+    "DOC-SYN-0001#55",
+    "DOC-SYN-0001#56",
+    "DOC-SYN-0001#57",
+    "DOC-SYN-0001#58",
+    "DOC-SYN-0001#62",
+    "DOC-SYN-0001#63",
+    "DOC-SYN-0002#0",
+    "DOC-SYN-0002#50",
+    "DOC-SYN-0002#51",
+    "DOC-SYN-0002#53",
+    "DOC-SYN-0002#54",
+    "DOC-SYN-0002#55",
+    "DOC-SYN-0002#61"
+   ],
+   "question": "When someone's own time estimate for a job is exceeded, how do I separate a genuine estimation problem from an ordinary overrun?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#58",
+    "DOC-SYN-0002#55"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#107",
+    "DOC-SYN-0001#58",
+    "DOC-SYN-0001#86",
+    "DOC-SYN-0002#51",
+    "DOC-SYN-0002#53",
+    "DOC-SYN-0002#54",
+    "DOC-SYN-0002#55",
+    "DOC-SYN-0002#83"
+   ],
+   "question": "What does it tell me when a writer's estimate turned out accurate for work they know well?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#6",
+    "DOC-SYN-0002#5",
+    "DOC-SYN-0001#112",
+    "DOC-SYN-0002#112"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#112",
+    "DOC-SYN-0001#25",
+    "DOC-SYN-0001#6",
+    "DOC-SYN-0001#7",
+    "DOC-SYN-0001#8",
+    "DOC-SYN-0002#112",
+    "DOC-SYN-0002#122",
+    "DOC-SYN-0002#124",
+    "DOC-SYN-0002#125",
+    "DOC-SYN-0002#127",
+    "DOC-SYN-0002#5",
+    "DOC-SYN-0002#6",
+    "DOC-SYN-0002#68",
+    "DOC-SYN-0002#69",
+    "DOC-SYN-0002#70",
+    "DOC-SYN-0002#86"
+   ],
+   "question": "How can I check whether broken sleep is a better explanation than an attentional trait for delays in getting started?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#11",
+    "DOC-SYN-0001#14",
+    "DOC-SYN-0002#9",
+    "DOC-SYN-0002#11"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#104",
+    "DOC-SYN-0001#105",
+    "DOC-SYN-0001#11",
+    "DOC-SYN-0001#14",
+    "DOC-SYN-0001#17",
+    "DOC-SYN-0001#18",
+    "DOC-SYN-0001#46",
+    "DOC-SYN-0001#47",
+    "DOC-SYN-0001#68",
+    "DOC-SYN-0002#105",
+    "DOC-SYN-0002#11",
+    "DOC-SYN-0002#16",
+    "DOC-SYN-0002#17",
+    "DOC-SYN-0002#67",
+    "DOC-SYN-0002#9"
+   ],
+   "question": "A person with no real difficulties writes a very thorough logistical message; what should I take from the amount of arranging it shows?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#19",
+    "DOC-SYN-0002#12",
+    "DOC-SYN-0002#14",
+    "DOC-SYN-0001#15"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#15",
+    "DOC-SYN-0001#19",
+    "DOC-SYN-0001#65",
+    "DOC-SYN-0002#12",
+    "DOC-SYN-0002#14",
+    "DOC-SYN-0002#17",
+    "DOC-SYN-0002#63"
+   ],
+   "question": "Is a small line about buying something that may already be owned worth reading as a sign of not checking or forgetting?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#13",
+    "DOC-SYN-0002#10"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#13",
+    "DOC-SYN-0001#93",
+    "DOC-SYN-0002#10",
+    "DOC-SYN-0002#91",
+    "DOC-SYN-0002#99"
+   ],
+   "question": "What does a quick switch to a backup plan when the first option falls through suggest about organisation?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0002#15",
+    "DOC-SYN-0002#17"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#46",
+    "DOC-SYN-0002#105",
+    "DOC-SYN-0002#15",
+    "DOC-SYN-0002#16",
+    "DOC-SYN-0002#17",
+    "DOC-SYN-0002#98"
+   ],
+   "question": "Should informal features such as missing capitals or no greeting be counted as evidence in a short family message?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#20",
+    "DOC-SYN-0001#24",
+    "DOC-SYN-0002#23",
+    "DOC-SYN-0002#25",
+    "DOC-SYN-0001#26"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#20",
+    "DOC-SYN-0001#24",
+    "DOC-SYN-0001#25",
+    "DOC-SYN-0001#26",
+    "DOC-SYN-0001#74",
+    "DOC-SYN-0001#79",
+    "DOC-SYN-0002#20",
+    "DOC-SYN-0002#21",
+    "DOC-SYN-0002#23",
+    "DOC-SYN-0002#24",
+    "DOC-SYN-0002#25",
+    "DOC-SYN-0002#26",
+    "DOC-SYN-0002#27",
+    "DOC-SYN-0002#72"
+   ],
+   "question": "How do I read drifting onto side jobs during a dull task when the person has recently suffered a loss?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#23",
+    "DOC-SYN-0002#19",
+    "DOC-SYN-0001#31",
+    "DOC-SYN-0002#32",
+    "DOC-SYN-0001#67",
+    "DOC-SYN-0002#66"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#23",
+    "DOC-SYN-0001#25",
+    "DOC-SYN-0001#29",
+    "DOC-SYN-0001#31",
+    "DOC-SYN-0001#67",
+    "DOC-SYN-0002#19",
+    "DOC-SYN-0002#30",
+    "DOC-SYN-0002#32",
+    "DOC-SYN-0002#66"
+   ],
+   "question": "Do self-built routines such as timed work blocks or a planner count for or against attentional difficulty, and what can the text not say about them?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#27",
+    "DOC-SYN-0001#28",
+    "DOC-SYN-0002#28",
+    "DOC-SYN-0002#29"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#27",
+    "DOC-SYN-0001#28",
+    "DOC-SYN-0001#34",
+    "DOC-SYN-0001#36",
+    "DOC-SYN-0001#74",
+    "DOC-SYN-0001#79",
+    "DOC-SYN-0001#81",
+    "DOC-SYN-0001#82",
+    "DOC-SYN-0002#28",
+    "DOC-SYN-0002#29",
+    "DOC-SYN-0002#34",
+    "DOC-SYN-0002#35",
+    "DOC-SYN-0002#36"
+   ],
+   "question": "What does it mean when a short errand repeatedly ends somewhere unrelated and the original item is not completed?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#29",
+    "DOC-SYN-0002#30",
+    "DOC-SYN-0001#37"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#29",
+    "DOC-SYN-0001#35",
+    "DOC-SYN-0001#37",
+    "DOC-SYN-0002#19",
+    "DOC-SYN-0002#30",
+    "DOC-SYN-0002#35"
+   ],
+   "question": "If someone can concentrate for a long stretch in a suitable place, does that argue against an attention problem?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#30",
+    "DOC-SYN-0002#31",
+    "DOC-SYN-0001#37"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#29",
+    "DOC-SYN-0001#30",
+    "DOC-SYN-0001#37",
+    "DOC-SYN-0001#46",
+    "DOC-SYN-0001#8",
+    "DOC-SYN-0002#31"
+   ],
+   "question": "How should I interpret evidence that a person reliably delivers work when somebody external is waiting for it?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#33",
+    "DOC-SYN-0002#33",
+    "DOC-SYN-0001#36",
+    "DOC-SYN-0002#36"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#33",
+    "DOC-SYN-0001#36",
+    "DOC-SYN-0002#33",
+    "DOC-SYN-0002#35",
+    "DOC-SYN-0002#36"
+   ],
+   "question": "How do caffeine and pre-exam nerves change the way I read restlessness and wandering in a text?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#8",
+    "DOC-SYN-0002#7",
+    "DOC-SYN-0001#35",
+    "DOC-SYN-0002#35",
+    "DOC-SYN-0001#62",
+    "DOC-SYN-0002#60"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#25",
+    "DOC-SYN-0001#35",
+    "DOC-SYN-0001#46",
+    "DOC-SYN-0001#62",
+    "DOC-SYN-0001#8",
+    "DOC-SYN-0001#96",
+    "DOC-SYN-0002#105",
+    "DOC-SYN-0002#124",
+    "DOC-SYN-0002#125",
+    "DOC-SYN-0002#127",
+    "DOC-SYN-0002#16",
+    "DOC-SYN-0002#35",
+    "DOC-SYN-0002#50",
+    "DOC-SYN-0002#51",
+    "DOC-SYN-0002#6",
+    "DOC-SYN-0002#60",
+    "DOC-SYN-0002#7",
+    "DOC-SYN-0002#86"
+   ],
+   "question": "Which extra writing samples or background details should I ask for before a single entry can mean anything?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#53",
+    "DOC-SYN-0002#49",
+    "DOC-SYN-0001#48",
+    "DOC-SYN-0002#47"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#42",
+    "DOC-SYN-0001#45",
+    "DOC-SYN-0001#47",
+    "DOC-SYN-0001#48",
+    "DOC-SYN-0001#53",
+    "DOC-SYN-0002#40",
+    "DOC-SYN-0002#41",
+    "DOC-SYN-0002#42",
+    "DOC-SYN-0002#44",
+    "DOC-SYN-0002#47",
+    "DOC-SYN-0002#49",
+    "DOC-SYN-0002#67",
+    "DOC-SYN-0002#68"
+   ],
+   "question": "How do I tell worry that circles one theme from a wandering of attention away from the point?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#48",
+    "DOC-SYN-0002#47",
+    "DOC-SYN-0001#54",
+    "DOC-SYN-0001#56"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#48",
+    "DOC-SYN-0001#54",
+    "DOC-SYN-0001#55",
+    "DOC-SYN-0001#56",
+    "DOC-SYN-0002#47"
+   ],
+   "question": "A writer interrupts their own account with a tangent and then apologises; how much does this self-correction matter?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0002#45",
+    "DOC-SYN-0001#51",
+    "DOC-SYN-0002#52"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#51",
+    "DOC-SYN-0001#55",
+    "DOC-SYN-0002#45",
+    "DOC-SYN-0002#50",
+    "DOC-SYN-0002#51",
+    "DOC-SYN-0002#52",
+    "DOC-SYN-0002#54",
+    "DOC-SYN-0002#61"
+   ],
+   "question": "When a task goes wrong in a work handover, how do I decide whether the cause lies with the person or with circumstances?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#59",
+    "DOC-SYN-0002#57",
+    "DOC-SYN-0002#56",
+    "DOC-SYN-0001#61",
+    "DOC-SYN-0002#59"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#59",
+    "DOC-SYN-0001#60",
+    "DOC-SYN-0001#61",
+    "DOC-SYN-0001#62",
+    "DOC-SYN-0001#63",
+    "DOC-SYN-0002#56",
+    "DOC-SYN-0002#57",
+    "DOC-SYN-0002#59",
+    "DOC-SYN-0002#60"
+   ],
+   "question": "What should I make of paperwork that is repeatedly promised and still left undone, especially when there is a real cost?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#60",
+    "DOC-SYN-0002#58",
+    "DOC-SYN-0002#59"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#6",
+    "DOC-SYN-0001#60",
+    "DOC-SYN-0001#61",
+    "DOC-SYN-0001#62",
+    "DOC-SYN-0001#63",
+    "DOC-SYN-0002#5",
+    "DOC-SYN-0002#58",
+    "DOC-SYN-0002#59",
+    "DOC-SYN-0002#60",
+    "DOC-SYN-0002#69"
+   ],
+   "question": "How far can long working hours and tiredness account for postponed administrative tasks?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#69",
+    "DOC-SYN-0002#67",
+    "DOC-SYN-0001#68",
+    "DOC-SYN-0002#65"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#33",
+    "DOC-SYN-0001#47",
+    "DOC-SYN-0001#53",
+    "DOC-SYN-0001#54",
+    "DOC-SYN-0001#68",
+    "DOC-SYN-0001#69",
+    "DOC-SYN-0002#36",
+    "DOC-SYN-0002#49",
+    "DOC-SYN-0002#65",
+    "DOC-SYN-0002#67",
+    "DOC-SYN-0002#68"
+   ],
+   "question": "In a polite, apologetic message asking for help, how do I separate anxiety about asking from attentional problems?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#71",
+    "DOC-SYN-0002#68",
+    "DOC-SYN-0001#70",
+    "DOC-SYN-0002#69",
+    "DOC-SYN-0001#72"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#20",
+    "DOC-SYN-0001#25",
+    "DOC-SYN-0001#26",
+    "DOC-SYN-0001#62",
+    "DOC-SYN-0001#70",
+    "DOC-SYN-0001#71",
+    "DOC-SYN-0001#72",
+    "DOC-SYN-0002#50",
+    "DOC-SYN-0002#51",
+    "DOC-SYN-0002#68",
+    "DOC-SYN-0002#69",
+    "DOC-SYN-0002#70",
+    "DOC-SYN-0002#71",
+    "DOC-SYN-0002#85",
+    "DOC-SYN-0002#86",
+    "DOC-SYN-0002#87"
+   ],
+   "question": "How should a very recent big life change shape how I read lapses reported in a help-seeking message?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#65",
+    "DOC-SYN-0002#63"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#65",
+    "DOC-SYN-0001#71",
+    "DOC-SYN-0002#63"
+   ],
+   "question": "How much does walking into a room and forgetting why you went in count as evidence of memory problems?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#64",
+    "DOC-SYN-0002#62",
+    "DOC-SYN-0002#68",
+    "DOC-SYN-0001#70"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#116",
+    "DOC-SYN-0001#120",
+    "DOC-SYN-0001#122",
+    "DOC-SYN-0001#124",
+    "DOC-SYN-0001#64",
+    "DOC-SYN-0001#70",
+    "DOC-SYN-0002#116",
+    "DOC-SYN-0002#117",
+    "DOC-SYN-0002#122",
+    "DOC-SYN-0002#124",
+    "DOC-SYN-0002#125",
+    "DOC-SYN-0002#126",
+    "DOC-SYN-0002#127",
+    "DOC-SYN-0002#34",
+    "DOC-SYN-0002#62",
+    "DOC-SYN-0002#68",
+    "DOC-SYN-0002#69"
+   ],
+   "question": "What does a gap between knowing exactly what to do and actually doing it suggest, and what else could produce it?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#76",
+    "DOC-SYN-0001#82",
+    "DOC-SYN-0002#73",
+    "DOC-SYN-0002#79"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#74",
+    "DOC-SYN-0001#76",
+    "DOC-SYN-0001#81",
+    "DOC-SYN-0001#82",
+    "DOC-SYN-0002#73",
+    "DOC-SYN-0002#78",
+    "DOC-SYN-0002#79"
+   ],
+   "question": "Can flawless performance in an emergency rule out attentional lapses seen elsewhere in the same writer's day?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#77",
+    "DOC-SYN-0002#74",
+    "DOC-SYN-0002#77"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#23",
+    "DOC-SYN-0001#77",
+    "DOC-SYN-0001#81",
+    "DOC-SYN-0002#74",
+    "DOC-SYN-0002#77"
+   ],
+   "question": "What is the value of a note-to-self workaround for misplaced lists, and what could the habit mean?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0002#76",
+    "DOC-SYN-0001#78",
+    "DOC-SYN-0002#77"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#78",
+    "DOC-SYN-0002#15",
+    "DOC-SYN-0002#17",
+    "DOC-SYN-0002#76",
+    "DOC-SYN-0002#77"
+   ],
+   "question": "How do I handle typing errors and clipped style in a message written on a phone at the end of a long shift?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#83",
+    "DOC-SYN-0001#87",
+    "DOC-SYN-0002#80",
+    "DOC-SYN-0002#81",
+    "DOC-SYN-0002#85"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#83",
+    "DOC-SYN-0001#84",
+    "DOC-SYN-0001#87",
+    "DOC-SYN-0001#88",
+    "DOC-SYN-0001#89",
+    "DOC-SYN-0002#80",
+    "DOC-SYN-0002#81",
+    "DOC-SYN-0002#85",
+    "DOC-SYN-0002#86",
+    "DOC-SYN-0002#87"
+   ],
+   "question": "When someone acts sharply in anger, how do I decide between impulsivity as a trait and a short fuse from low mood?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#85",
+    "DOC-SYN-0002#84"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#85",
+    "DOC-SYN-0002#84"
+   ],
+   "question": "What does a writer's recognition of their own contribution to a conflict tell me?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#86",
+    "DOC-SYN-0002#83",
+    "DOC-SYN-0001#89",
+    "DOC-SYN-0002#87"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#10",
+    "DOC-SYN-0001#86",
+    "DOC-SYN-0001#88",
+    "DOC-SYN-0001#89",
+    "DOC-SYN-0002#83",
+    "DOC-SYN-0002#85",
+    "DOC-SYN-0002#86",
+    "DOC-SYN-0002#87"
+   ],
+   "question": "If the rest of the day shows precise, planned and finished work, how much should one emotional flare count?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#90",
+    "DOC-SYN-0002#88",
+    "DOC-SYN-0002#89",
+    "DOC-SYN-0001#97",
+    "DOC-SYN-0002#97"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#90",
+    "DOC-SYN-0001#91",
+    "DOC-SYN-0001#92",
+    "DOC-SYN-0001#96",
+    "DOC-SYN-0001#97",
+    "DOC-SYN-0002#88",
+    "DOC-SYN-0002#89",
+    "DOC-SYN-0002#94",
+    "DOC-SYN-0002#95",
+    "DOC-SYN-0002#96",
+    "DOC-SYN-0002#97"
+   ],
+   "question": "How much weight can retold family stories about someone's early years carry when the person does not recall them?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#94",
+    "DOC-SYN-0002#90",
+    "DOC-SYN-0001#95",
+    "DOC-SYN-0002#94"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#94",
+    "DOC-SYN-0001#95",
+    "DOC-SYN-0001#96",
+    "DOC-SYN-0001#97",
+    "DOC-SYN-0002#90",
+    "DOC-SYN-0002#94",
+    "DOC-SYN-0002#95",
+    "DOC-SYN-0002#96",
+    "DOC-SYN-0002#97"
+   ],
+   "question": "Why might repeated comments from schoolteachers be more useful than anecdotes, and what else could explain them?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#96",
+    "DOC-SYN-0002#96",
+    "DOC-SYN-0002#95"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#96",
+    "DOC-SYN-0002#114",
+    "DOC-SYN-0002#69",
+    "DOC-SYN-0002#70",
+    "DOC-SYN-0002#95",
+    "DOC-SYN-0002#96",
+    "DOC-SYN-0002#97"
+   ],
+   "question": "What childhood records or questions would help me settle whether difficulties began early?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0002#92",
+    "DOC-SYN-0001#93",
+    "DOC-SYN-0002#91"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#29",
+    "DOC-SYN-0001#30",
+    "DOC-SYN-0001#37",
+    "DOC-SYN-0001#7",
+    "DOC-SYN-0001#76",
+    "DOC-SYN-0001#82",
+    "DOC-SYN-0001#93",
+    "DOC-SYN-0002#124",
+    "DOC-SYN-0002#30",
+    "DOC-SYN-0002#69",
+    "DOC-SYN-0002#91",
+    "DOC-SYN-0002#92"
+   ],
+   "question": "How should I interpret a person who does well when expectations are clear or the task interests them?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#98",
+    "DOC-SYN-0002#98",
+    "DOC-SYN-0001#100",
+    "DOC-SYN-0002#100",
+    "DOC-SYN-0001#105",
+    "DOC-SYN-0002#106"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#100",
+    "DOC-SYN-0001#105",
+    "DOC-SYN-0001#43",
+    "DOC-SYN-0001#47",
+    "DOC-SYN-0001#48",
+    "DOC-SYN-0001#54",
+    "DOC-SYN-0001#56",
+    "DOC-SYN-0001#9",
+    "DOC-SYN-0001#98",
+    "DOC-SYN-0002#100",
+    "DOC-SYN-0002#106",
+    "DOC-SYN-0002#52",
+    "DOC-SYN-0002#98"
+   ],
+   "question": "Is a long, chatty and digressive written account a sign of disorganised thinking, or just a style?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#102",
+    "DOC-SYN-0001#103",
+    "DOC-SYN-0002#102",
+    "DOC-SYN-0002#104"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#102",
+    "DOC-SYN-0001#103",
+    "DOC-SYN-0001#105",
+    "DOC-SYN-0001#90",
+    "DOC-SYN-0002#102",
+    "DOC-SYN-0002#104",
+    "DOC-SYN-0002#106"
+   ],
+   "question": "How should I treat a secondhand report that someone talked non-stop and barely remembers it?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#109",
+    "DOC-SYN-0002#108",
+    "DOC-SYN-0002#117",
+    "DOC-SYN-0002#127",
+    "DOC-SYN-0001#124"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#109",
+    "DOC-SYN-0001#112",
+    "DOC-SYN-0001#114",
+    "DOC-SYN-0001#116",
+    "DOC-SYN-0001#120",
+    "DOC-SYN-0001#122",
+    "DOC-SYN-0001#124",
+    "DOC-SYN-0001#9",
+    "DOC-SYN-0002#108",
+    "DOC-SYN-0002#114",
+    "DOC-SYN-0002#116",
+    "DOC-SYN-0002#117",
+    "DOC-SYN-0002#122",
+    "DOC-SYN-0002#124",
+    "DOC-SYN-0002#125",
+    "DOC-SYN-0002#126",
+    "DOC-SYN-0002#127",
+    "DOC-SYN-0002#8"
+   ],
+   "question": "A brief, self-noticed stall before starting a chore in an otherwise orderly entry: is it worth following up?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#113",
+    "DOC-SYN-0002#113",
+    "DOC-SYN-0002#107",
+    "DOC-SYN-0001#115",
+    "DOC-SYN-0002#123"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#108",
+    "DOC-SYN-0001#113",
+    "DOC-SYN-0001#115",
+    "DOC-SYN-0002#107",
+    "DOC-SYN-0002#113",
+    "DOC-SYN-0002#115",
+    "DOC-SYN-0002#118",
+    "DOC-SYN-0002#123",
+    "DOC-SYN-0002#126"
+   ],
+   "question": "How do I read schedule overruns in the daily routine of a parent of small children?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#9",
+    "DOC-SYN-0002#8",
+    "DOC-SYN-0002#17",
+    "DOC-SYN-0001#47",
+    "DOC-SYN-0002#44"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#10",
+    "DOC-SYN-0001#47",
+    "DOC-SYN-0001#9",
+    "DOC-SYN-0002#126",
+    "DOC-SYN-0002#17",
+    "DOC-SYN-0002#25",
+    "DOC-SYN-0002#27",
+    "DOC-SYN-0002#44",
+    "DOC-SYN-0002#49",
+    "DOC-SYN-0002#71",
+    "DOC-SYN-0002#8",
+    "DOC-SYN-0002#80",
+    "DOC-SYN-0002#81",
+    "DOC-SYN-0002#85",
+    "DOC-SYN-0002#87"
+   ],
+   "question": "What are the typical ways a less experienced reader over-reads ordinary stress as an attention problem in a text that is mostly organised?"
+  },
+  {
+   "claim_ids": [
+    "DOC-SYN-0001#107",
+    "DOC-SYN-0002#110",
+    "DOC-SYN-0002#121",
+    "DOC-SYN-0001#119"
+   ],
+   "pooled_ids": [
+    "DOC-SYN-0001#107",
+    "DOC-SYN-0001#115",
+    "DOC-SYN-0001#119",
+    "DOC-SYN-0002#110",
+    "DOC-SYN-0002#115",
+    "DOC-SYN-0002#121",
+    "DOC-SYN-0002#79"
+   ],
+   "question": "If a day ended with everyone arriving on time despite delays, should punctuality count as evidence against difficulty?"
+  }
+ ]
+}

@@ -1,0 +1,990 @@
+{
+  "created_at": "2026-01-25T09:00:00Z",
+  "expert_id": "SYN-021",
+  "responses": [
+    {
+      "answers": {
+        "Q1": "⟦h1⟧⟦h5⟧: The narrative shows a pattern of delayed start and fragmented task initiation, suggesting difficulty maintaining focus on a single activity.\nThe self‑reported schedule for the commentary section appears overly optimistic and has already been exceeded, indicating possible time misjudgement.\nThe plan to finish later in the day and re‑read the next morning signals a tendency to rely on last‑minute completion.\n⟦h3⟧: The early completion of the loss ratios demonstrates good organisational habits, which counterbalances the above.\n⟦h2⟧: Poor sleep is noted but is framed as a situational factor, not as a persistent attentional problem.",
+        "Q2": "⟦h1⟧⟦h5⟧: These fragments could also be read as ordinary procrastination or a busy day rather than ADHD.\nThe lack of explicit distraction or impulsivity reduces the specificity.\nA distinguishing feature would be repeated failure to meet self‑set deadlines across contexts.\n⟦h2⟧: Sleep disruption is a common contributor to daytime inattentiveness; without evidence of chronic insomnia, it may not be a core ADHD trait.",
+        "Q3": "The text lacks a baseline of behaviour over multiple days, reports from other settings, and objective measures of time management.\nA structured interview or a validated rating scale completed on a calmer day would be needed before concluding ADHD‑related traits.",
+        "Q5": "A less experienced clinician might over‑read the delayed start as evidence of inattention or impulsivity, ignoring the clear organisational success shown in ⟦h3⟧.\nThey might also under‑recognise the impact of situational sleep loss (⟦h2⟧) on the reported difficulties."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            457,
+            627
+          ],
+          "text": "I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first"
+        },
+        {
+          "chip": 2,
+          "direction": "away",
+          "span": [
+            629,
+            783
+          ],
+          "text": "Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed, so I was up at five anyway"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            88,
+            208
+          ],
+          "text": "the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            307,
+            436
+          ],
+          "text": "the lift in our building was out so I carried the shopping up four floors, which has nothing to do with anything but my legs hurt"
+        },
+        {
+          "chip": 5,
+          "direction": "toward",
+          "span": [
+            909,
+            997
+          ],
+          "text": "I think I can finish by eleven, maybe midnight, then read through it once in the morning"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-25T09:01:00Z",
+      "submitted_at": "2026-01-25T09:13:00Z",
+      "vignette_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "vignette_id": "V001",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ ⟦h2⟧ ⟦h5⟧: The rapid, isolated bursts of productivity at the library and the short, goal‑oriented block structure suggest a pattern of hyperfocus and an impulse to act immediately on a task.\nThe repeated interruption by a kitchen visit and failure to find the table demonstrate difficulty sustaining attention and a tendency to shift focus.\nThe absence of a clear plan for the second block further indicates impulsivity and executive dysfunction.\nThese fragments collectively point toward ADHD‑related traits.",
+        "Q2": "⟦h2⟧⟦h5⟧: The kitchen trips could equally reflect mood‑related distractibility or normal domestic routine.\nWhat would distinguish ADHD is the specific failure to retrieve a previously identified table and the inability to resume the planned second block.\nA history of consistent sleep deprivation or anxiety would lean toward a non‑ADHD explanation, whereas repeated, unscheduled task switching without a clear emotional trigger supports ADHD.",
+        "Q3": "⟦h3⟧: The narrative lacks data on early childhood symptoms, persistence across settings, or a formal assessment.\nInformation about sleep quality, mood, and stressors, as well as a structured observation of task initiation and completion over time, would be required before treating these features as clinically meaningful.",
+        "Q5": "⟦h1⟧⟦h4⟧: A less experienced clinician might over‑interpret the block planning as evidence of executive strength, while under‑appreciating the frequent task switching and loss of focus highlighted in h2 and h5.\nThey may also misread the coffee intake as a coping strategy rather than a potential symptom of hyperactivity."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            151,
+            212
+          ],
+          "text": "On Monday I wrote 600 of those words in one go at the library"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            292,
+            430
+          ],
+          "text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table"
+        },
+        {
+          "chip": 3,
+          "direction": "neutral",
+          "span": [
+            433,
+            462
+          ],
+          "text": "I have had four coffees today"
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            745,
+            816
+          ],
+          "text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag"
+        },
+        {
+          "chip": 5,
+          "direction": "toward",
+          "span": [
+            818,
+            962
+          ],
+          "text": "Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-25T09:14:00Z",
+      "submitted_at": "2026-01-25T09:24:00Z",
+      "vignette_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "vignette_id": "V004",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h4⟧: The rushed proofing and the miss‑dated webinar suggest impulsivity and difficulty maintaining focus, key ADHD traits.\nThe admission of an hour allowance but actual three‑hour effort indicates a mismatch between planned and executed time, which is typical of inattentive ADHD.\nThe text also contains no evidence of structured scheduling or deliberate mitigation, reinforcing the ADHD inference.\n⟦h1⟧ describes routine organisational actions and communication gaps that are ordinary and do not raise ADHD concerns.\n⟦h2⟧ describes routine organisational actions and communication gaps that are ordinary and do not raise ADHD concerns.\n⟦h3⟧ describes routine organisational actions and communication gaps that are ordinary and do not raise ADHD concerns.",
+        "Q2": "⟦h2⟧: Asking IT and receiving a same‑day fix shows proactive problem‑solving and time management, which could be seen as organised rather than ADHD.\n⟦h3⟧: The calendar issue stems from a colleague's procedural choice, a situational factor that could equally be explained by a lack of clarity in hand‑over protocols, not by the writer's attentional style.\nThese fragments could be read as reflecting poor communication or situational stress rather than core ADHD symptoms.",
+        "Q3": "The vignette offers no baseline of the writer's typical performance, no data on how often similar errors occur, and no context about sleep, mood, or recent stressors.\nWithout a comparative sample or a structured interview, it is impossible to attribute the observed lapses specifically to ADHD.",
+        "Q5": "A less experienced clinician might focus on the rushed proofing (⟦h4⟧) and label it as ADHD, overlooking the communication breakdown (⟦h3⟧) that could explain the calendar error.\nThey might also underestimate the writer's organisational competence shown in ⟦h2⟧, thus over‑interpreting impulsivity while under‑recognising situational factors."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            155,
+            225
+          ],
+          "text": "I was meant to take over her campaign calendar and the supplier logins"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            227,
+            306
+          ],
+          "text": "The logins worked, because I asked IT on Monday and they sorted it the same day"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            308,
+            446
+          ],
+          "text": "The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version"
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            639,
+            815
+          ],
+          "text": "The newsletter went out on Tuesday with the wrong date for the webinar. I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-25T09:25:00Z",
+      "submitted_at": "2026-01-25T09:35:00Z",
+      "vignette_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "vignette_id": "V006",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧: The writer describes a pre‑planned departure, showing routine and forward planning, which is an organised habit.\n⟦h2⟧: A two‑hour gap between catching a perch and the next catch is typical of fishing variance, not an ADHD sign.\n⟦h3⟧: The admission of not recalling the conversation suggests selective memory lapses, a feature sometimes seen in ADHD.\n⟦h4⟧: The hesitation between eleven or twelve indicates a moment of indecision or uncertainty, which can reflect impulsivity or distractibility.",
+        "Q2": "⟦h1⟧ could also signal a busy schedule or a deliberate strategy rather than a deficit.\n⟦h2⟧ might be due to the natural unpredictability of fishing rather than inattention.\n⟦h3⟧ could stem from fatigue, sleep deprivation, or a normal conversational lapse.\n⟦h4⟧ might simply reflect a casual approach to counting or a momentary distraction unrelated to ADHD.",
+        "Q3": "I would need a repeat narrative from a calm day, a structured diary of daily activities, or an objective measure of sustained attention to confirm that the memory lapse and indecision are consistent and pervasive.",
+        "Q5": "A novice clinician might over‑read the memory comment as a clear ADHD sign, ignoring the context of a casual outing, and under‑recognise the organised planning as a protective factor."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            108,
+            178
+          ],
+          "text": "We left Harlow at five on the Saturday, which I had planned for a week"
+        },
+        {
+          "chip": 2,
+          "direction": "neutral",
+          "span": [
+            492,
+            545
+          ],
+          "text": "I caught a perch first and then nothing for two hours"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            893,
+            970
+          ],
+          "text": "I talked the whole way back, Dennis says, though I don't remember much of it."
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            1021,
+            1068
+          ],
+          "text": "There are eleven, or twelve, I'd have to count."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-25T09:36:00Z",
+      "submitted_at": "2026-01-25T09:46:00Z",
+      "vignette_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "vignette_id": "V012",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h2⟧: The discrepancy between the expected and actual time spent on shoes and coats indicates difficulty with time estimation, a core ADHD trait.\n⟦h4⟧: The repeated night wakings suggest sleep disruption, often secondary to ADHD.\n⟦h6⟧: Leaving 10 minutes late despite a planned departure time points to challenges with punctuality, another ADHD sign.",
+        "Q2": "⟦h2⟧: Overrunning time could also stem from general organisational habits or a busy schedule; a lack of urgency might explain it.\n⟦h3⟧: Uncertainty about what was being waited for could reflect anxiety or indecision rather than ADHD.\n⟦h4⟧: Night wakings might result from low mood, poor sleep hygiene, or environmental factors.\n⟦h6⟧: Late departure could be due to an unanticipated event or a simple miscalculation.",
+        "Q3": "Additional context about baseline sleep patterns, recent stressors, and a comparison day without disruptions would clarify whether these incidents are ADHD-related or situational.",
+        "Q5": "A less experienced clinician might over‑interpret the time overrun and lateness as evidence of ADHD, ignoring the possibility of a busy schedule or other life events.\nConversely, they might under‑recognise the significance of the sleep disruption, attributing it to normal infant behaviour without considering its impact on the parent’s functioning."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "neutral",
+          "span": [
+            9,
+            82
+          ],
+          "text": "The lunch boxes were packed yesterday evening, so that part cost nothing."
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            212,
+            286
+          ],
+          "text": "I had told myself shoes and coats would take five minutes. It took twenty."
+        },
+        {
+          "chip": 3,
+          "direction": "unclear",
+          "span": [
+            557,
+            594
+          ],
+          "text": "I am not sure what I was waiting for."
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            646,
+            687
+          ],
+          "text": "The baby was up three times in the night."
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            688,
+            742
+          ],
+          "text": "Oskar remembered his swimming kit without being asked."
+        },
+        {
+          "chip": 6,
+          "direction": "toward",
+          "span": [
+            784,
+            843
+          ],
+          "text": "We left the house at 8:25, ten minutes later than I wanted."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-25T09:47:00Z",
+      "submitted_at": "2026-01-25T09:55:00Z",
+      "vignette_hash": "3e8dabf137101193e3c8b334dde538c67e585449180f129e01302b614b066d89",
+      "vignette_id": "V013",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ ⟦h2⟧ ⟦h3⟧: The writer estimates task durations unrealistically and then overruns, a classic sign of time misjudgment linked to ADHD.\nThe pause before starting the school bags suggests task initiation difficulty.\nLeaving ten minutes late indicates difficulty meeting external deadlines, again pointing toward ADHD-related executive dysfunction.",
+        "Q2": "⟦h1⟧, ⟦h2⟧, and ⟦h3⟧: These fragments could also reflect poor sleep, acute stress, or a generally disorganised routine.\nDistinguishing ADHD from these would require evidence of chronicity across settings, a history of impulsive or inattentive symptoms, and a lack of situational explanation such as a recent change in schedule or a demanding event.",
+        "Q3": "⟦h1⟧ ⟦h2⟧ ⟦h3⟧: The vignette is a single snapshot of a busy morning.\nWe would need repeated observations over several days, reports from another observer, and a structured assessment of symptom persistence, functional impairment, and rule‑out of other causes before treating these features as ADHD.",
+        "Q5": "⟦h1⟧⟦h2⟧⟦h3⟧: A less experienced clinician might over‑read the time overruns as evidence of ADHD while ignoring the normal contextual factors (e.g., the child’s routine, the parent’s workload).\nThey might also under‑recognise the subtle task‑initiation delay in highlight 2, attributing it to simple distraction."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            212,
+            286
+          ],
+          "text": "I had told myself shoes and coats would take five minutes. It took twenty."
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            449,
+            594
+          ],
+          "text": "After that I stood at the kitchen counter looking at the school bags and did not start on them for a while. I am not sure what I was waiting for."
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            742,
+            801
+          ],
+          "text": "We left the house at 8:25, ten minutes later than I wanted."
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            802,
+            914
+          ],
+          "text": "The walk to school takes fifteen minutes and we reached the gate at 8:40. That was five minutes before the bell."
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            646,
+            700
+          ],
+          "text": "Oskar remembered his swimming kit without being asked."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-25T09:56:00Z",
+      "submitted_at": "2026-01-25T10:04:00Z",
+      "vignette_hash": "9f45efd800890e50fdb5fa24589c905dccf0db354921afd00b4821d5328090db",
+      "vignette_id": "V014",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧ ⟦h2⟧ ⟦h3⟧: The notes describe frequent task shifting and confusion about location, which are classic attentional lapses seen in ADHD.\n\"Started the med reconciliation for bed 12, 14 pages, got halfway and went to do something else\" and \"walked into the side room for the repeat potassium and stood there not knowing why I was in there\" illustrate these lapses.\nThe irregular rota pattern adds to the chronicity of disorganisation, reinforcing the ADHD hypothesis.\n\"Rota. Nights, one day off, a long day, then nights again. Who builds this.\"\nThe successful completion of blood chasing before 4am shows that the individual can maintain focus when motivated, a pattern often seen in ADHD rather than a global impairment.\n\"Went fine: bloods for bay 3 all chased before 4am.\"",
+        "Q2": "⟦h1⟧ ⟦h2⟧: These fragments could also reflect acute sleep deprivation or stress from the night shift, both of which can produce momentary distractibility.\nThe lack of explicit mention of mood or anxiety makes it hard to separate the two; a detailed mood rating or anxiety score would help distinguish ADHD‑related inattention from situational fatigue.",
+        "Q3": "⟦h4⟧: We would need a structured history of symptoms from childhood, evidence of impairment in at least two settings, and exclusion of other causes such as thyroid dysfunction or medication side‑effects.\nA diary of routine tasks over several weeks would clarify whether the lapses are pervasive or situational.",
+        "Q5": "⟦h1⟧ ⟦h2⟧ ⟦h3⟧: A less experienced clinician might over‑attribute the task interruptions to ADHD, missing the possible role of sleep loss.\nConversely, they might under‑recognise the significance of the rota irregularity, interpreting it as a benign organisational issue rather than a potential trigger for inattentive behaviour."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            390,
+            484
+          ],
+          "text": "started the med reconciliation for bed 12, 14 pages, got halfway and went to do something else"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            547,
+            644
+          ],
+          "text": "walked into the side room for the repeat potassium and stood there not knowing why I was in there"
+        },
+        {
+          "chip": 3,
+          "direction": "toward",
+          "span": [
+            697,
+            771
+          ],
+          "text": "Rota. Nights, one day off, a long day, then nights again. Who builds this."
+        },
+        {
+          "chip": 4,
+          "direction": "away",
+          "span": [
+            149,
+            199
+          ],
+          "text": "Went fine: bloods for bay 3 all chased before 4am."
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-25T10:05:00Z",
+      "submitted_at": "2026-01-25T10:14:00Z",
+      "vignette_hash": "df1babc91902cecdb68ad535599801e9c581020a8e8fd2d65260d0fb137b9a7e",
+      "vignette_id": "V015",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h2⟧⟦h4⟧: The references to missing appointments and mis‑dating calendar entries suggest difficulties with time awareness and memory, which are core ADHD indicators.\nThe admission of lateness after checking the clock supports this.\nConversely, the careful planning of a dentist visit and the on‑time story time show that the individual can organise when given structure, which argues against a pervasive deficit.",
+        "Q2": "⟦h1⟧, ⟦h3⟧, ⟦h5⟧, and ⟦h6⟧: The busy maternal role, the pre‑arranged dental appointment, the sleep problems and the successful on‑time event could all be explained by external demands, stress, or a temporary adjustment.\nDistinguishing ADHD would require evidence of similar lapses across multiple settings and over time, not just isolated incidents.",
+        "Q3": "⟦h2⟧⟦h4⟧: A second written account from a calm day, a structured schedule review, or a questionnaire score would clarify whether the time‑management issues are persistent.\nA symptom diary over several weeks would also help rule out situational factors.",
+        "Q5": "⟦h2⟧⟦h4⟧: A less experienced clinician might over‑interpret the single instances of lateness as ADHD, while under‑appreciating the evidence of planning and on‑time performance.\nThey might also miss the contextual clues (sleep issues, maternal duties) that temper the ADHD interpretation."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "away",
+          "span": [
+            164,
+            255
+          ],
+          "text": "I was at my mother's flat until nearly six helping her sort her tablets into the weekly box"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            261,
+            322
+          ],
+          "text": "when I finally looked at the clock it was already twenty past"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            324,
+            446
+          ],
+          "text": "I did ring the dentist on Monday to move my check-up and that went fine, I got there ten minutes early and read a magazine"
+        },
+        {
+          "chip": 4,
+          "direction": "toward",
+          "span": [
+            448,
+            592
+          ],
+          "text": "The hairdresser I did miss, because I'd put it in the kitchen calendar for the 14th and it was the 12th, I think, or perhaps the other way round"
+        },
+        {
+          "chip": 5,
+          "direction": "away",
+          "span": [
+            814,
+            917
+          ],
+          "text": "I'm sleeping badly and the hot flushes are back around three in the morning, so I'm blaming that mostly"
+        },
+        {
+          "chip": 6,
+          "direction": "away",
+          "span": [
+            991,
+            1067
+          ],
+          "text": "Story time on Saturday ran exactly on schedule, forty children, nobody cried"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 2,
+      "started_at": "2026-01-25T10:15:00Z",
+      "submitted_at": "2026-01-25T10:24:00Z",
+      "vignette_hash": "4335b91f6589cbeb818fe1980cd4fe1ce1a6e7505bb0fc7108e62df1bcb51d7f",
+      "vignette_id": "V016",
+      "vignette_version": 1
+    },
+    {
+      "answers": {
+        "Q1": "⟦h1⟧⟦h2⟧: The narrative shows a pattern of initiating a task only during brief, protected windows of time, then losing track of the schedule when interrupted.\nThis indicates poor time awareness and a tendency to fragment work, traits that align with ADHD.\nThe mention of a single productive nap slot suggests a limited window for focused activity, reinforcing the idea of executive dysfunction.\nThe detailed account of sanding stages and the subsequent loss of awareness of time further support a pattern of impulsive action without sustained monitoring, which is characteristic of ADHD-related executive deficits.",
+        "Q2": "⟦h3⟧: The frustration and tiredness described could also be explained by poor sleep due to the infant's night awakenings, a common cause of fatigue and reduced concentration.\nThe mention of teething as a potential cause for the child's nocturnal activity introduces a normal developmental stressor that could produce similar symptoms.\nDistinguishing between ADHD and sleep deprivation would require further inquiry into baseline sleep patterns, daytime functioning, and whether similar lapses occur outside the context of infant care.",
+        "Q3": "⟦h1⟧ ⟦h2⟧ ⟦h3⟧: The text lacks objective measures of executive function, such as structured time-use data or reports of difficulties across multiple settings.\nA repeat narrative written on a calmer day, or a brief structured interview probing sustained attention and task initiation, would clarify whether these behaviours are trait-like or situational.\nInformation about prior history of impulsivity, hyperactivity, or academic/work challenges would also help establish a broader pattern.",
+        "Q5": "⟦h1⟧⟦h2⟧: A less experienced clinician might over‑interpret the fragmented task completion as a hallmark of ADHD while under‑appreciating the role of infant‑related sleep disruption.\nThey may also miss the possibility that the described behaviours are simply good self‑management strategies within a constrained environment, such as planning during naps.\nConversely, they might over‑emphasise the ADHD narrative if they focus solely on the time‑management issues without considering the contextual factors highlighted in ⟦h3⟧."
+      },
+      "expert_id": "SYN-021",
+      "highlights": [
+        {
+          "chip": 1,
+          "direction": "toward",
+          "span": [
+            112,
+            180
+          ],
+          "text": "Started it three weeks ago during naps, which is the only time I get"
+        },
+        {
+          "chip": 2,
+          "direction": "toward",
+          "span": [
+            182,
+            357
+          ],
+          "text": "I did all the sanding in one go on Tuesday, 80 grit then 120 then 180, about two and a half hours, and the nap ran over and I only noticed when he started yelling from the cot"
+        },
+        {
+          "chip": 3,
+          "direction": "away",
+          "span": [
+            721,
+            850
+          ],
+          "text": "Tired today though, he's been up around 3 every night this week, teething I think, so the first coat of oil went on a bit streaky"
+        },
+        {
+          "chip": 4,
+          "direction": "neutral",
+          "span": [
+            873,
+            996
+          ],
+          "text": "I saw a video of a little wall-mounted spice rack and now I want to make that next, maybe even before the shelves, not sure"
+        },
+        {
+          "chip": 5,
+          "direction": "neutral",
+          "span": [
+            998,
+            1085
+          ],
+          "text": "Anyway does anyone know if you can sand between oil coats or do you wait for full cure?"
+        }
+      ],
+      "insufficient_information": false,
+      "locked_highlights": 0,
+      "q4": null,
+      "quoted_fragments": [],
+      "rating": 3,
+      "started_at": "2026-01-25T10:25:00Z",
+      "submitted_at": "2026-01-25T10:36:00Z",
+      "vignette_hash": "7abc1ffd8936264f88730409ab429416370af91099f2b1e106e9dd5a60d2ad0e",
+      "vignette_id": "V017",
+      "vignette_version": 1
+    }
+  ],
+  "schema_version": "1.1-chips",
+  "session_id": "DOC-SYN-0021",
+  "vignettes": [
+    {
+      "content_hash": "626d4a58ba7a89a9601449113ceacf616f05163747480f48850e4cee7d510f23",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Poor sleep after a recent move to a louder flat could explain tiredness and slower starts.",
+            "quote": "Still sleeping badly since we moved flats two months ago"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I told myself two hours for the commentary section and it has now been most of the evening",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I only opened the document at nine because I did the dishes and the bins first",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a quarterly report due on Friday (traits: task_initiation: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V001",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Thursday night and the quarterly report is due tomorrow at five, which is fine, because the numbers from claims came in on Tuesday and I had already pulled the loss ratios into the template by Wednesday lunch, and then Priya asked me to check her reserve figures too, and that took the whole afternoon, and the lift in our building was out so I carried the shopping up four floors, which has nothing to do with anything but my legs hurt. Anyway the report. I told myself two hours for the commentary section and it has now been most of the evening, I only opened the document at nine because I did the dishes and the bins first. Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed, so I was up at five anyway and sent the chart pack to Marcus before work, and he replied with a thumbs up by eight. That part went well. The commentary I think I can finish by eleven, maybe midnight, then read through it once in the morning. Need to remember to ask Dan about the fridge shelf.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "5c0b78b100b005291fbfdebc5f5853d0f56590cfab86bbd4a0951d05e9372ee6",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "High caffeine intake can cause restlessness and scattered focus.",
+            "quote": "I have had four coffees today"
+          },
+          {
+            "alternative_explanation": "Exam anxiety could explain difficulty concentrating on writing.",
+            "quote": "I am quite nervous about it"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+            "strength": "moderate",
+            "trait": "working_memory"
+          },
+          {
+            "quote": "went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+            "strength": "weak",
+            "trait": "distractibility"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a thesis chapter that is not getting written (traits: distractibility: moderate; working_memory: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V004",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Chapter three is at 1,100 words. It goes to my supervisor on the 20th and today is the 11th. I would call this a tragedy but it is mostly arithmetic.\n\nOn Monday I wrote 600 of those words in one go at the library, because the kitchen at home was empty and nobody was cooking. That went fine. On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table.\n\nI have had four coffees today. I know. The stats exam is on Thursday as well and I am quite nervous about it.\n\nI did send the method section on time last week, so at least one person at the university has proof I exist. My supervisor wrote back with three comments, all fair, and I fixed them the same evening.\n\nToday I made a plan of two blocks of 50 minutes with my phone in my bag. Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins. Block two is after dinner.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "81d720defd430834ce597efb747166a36f2e1a1586e242fbc775bb1688719636",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Ruminating about a conflict with a colleague, which could explain distraction and the rushed proofing.",
+            "quote": "a message that I keep going over in my head"
+          },
+          {
+            "alternative_explanation": "An ordinary process failure: the colleague saved the calendar locally and did not mention it.",
+            "quote": "she'd saved it as a local file and nobody told me"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": "Telling goal-loss digression that eventually resolves from anxious rumination that circles one worry, in free adult text (textual markers, not diagnostic criteria).",
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "Anyway, my sister has the same problem with her boiler manual",
+            "strength": "moderate",
+            "trait": "discourse_tangentiality"
+          },
+          {
+            "quote": "I'd allowed an hour to check the proofs and it took nearer three",
+            "strength": "weak",
+            "trait": "time_estimation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "explaining why last week's project handover went wrong (traits: discourse_tangentiality: moderate; time_estimation: weak)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V006",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hi Jo, you asked how the handover went and I said fine, which was not true. Here is what happened. Dana moved to the events team on Friday, so on Thursday I was meant to take over her campaign calendar and the supplier logins. The logins worked, because I asked IT on Monday and they sorted it the same day. The calendar did not, because she'd saved it as a local file and nobody told me, so for two days I was working from the old shared version. That's the ordinary reason, really. Anyway, my sister has the same problem with her boiler manual, it's a PDF on a laptop she has since sold, and her whole building spent a weekend... sorry. The newsletter went out on Tuesday with the wrong date for the webinar. I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look. Priya in design also copied me on a message that I keep going over in my head, the one about 'ownership', but that's another email. So it was a local file, a wrong date and rushed proofing. I'm sorry this ran so long.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "228cd3cca8351533abbe6ffefa74dadce37cceb3f5b5373f59d63cfdb2109402",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "The writer is naturally talkative and enjoys telling stories at length.",
+            "quote": "you know I never tell a short version"
+          },
+          {
+            "alternative_explanation": "Talkativeness is an ordinary personality trait of someone who enjoys storytelling.",
+            "quote": "I talked the whole way back"
+          }
+        ],
+        "is_control": true,
+        "knowledge_target": "Hard negative: long, digressive but organised storytelling that must not be read as attentional (style versus trait).",
+        "origin": "llm",
+        "planted_cues": [],
+        "population": "adult",
+        "purpose": "telling a neighbour about a fishing trip last summer (control: none: this person has no notable attention or organisation difficulties)",
+        "source_ref": null,
+        "track": "text_analysis"
+      },
+      "framing": "email",
+      "id": "V012",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Hello Frank, you asked how the fishing trip went, so here it is, and you know I never tell a short version. We left Harlow at five on the Saturday, which I had planned for a week, and we reached the lake by quarter to seven. Dennis drove because my knee was sore, and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat. Anyway. We hired the little boat from the man at the jetty, the same man as last year, and he remembered my name, which pleased me. I caught a perch first and then nothing for two hours. Dennis caught three roach and mentioned it often. Margaret made the sandwiches, ham and mustard, and they lasted until about noon. The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it. Around three the wind got up and we came in early. The roads were clear and we were home by six. I talked the whole way back, Dennis says, though I don't remember much of it. Come round Thursday and I'll show you the photos. There are eleven, or twelve, I'd have to count.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "3e8dabf137101193e3c8b334dde538c67e585449180f129e01302b614b066d89",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "A newborn waking the household several times a night explains tiredness and a slow, disorganised morning.",
+            "quote": "The baby was up three times in the night."
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I had told myself shoes and coats would take five minutes. It took twenty.",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I stood at the kitchen counter looking at the school bags and did not start on them for a while",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "getting the kids out of the door in the morning (traits: time_estimation: moderate; task_initiation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V013",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Tuesday. The lunch boxes were packed yesterday evening, so that part cost nothing. Oskar ate his porridge without any complaint. Lena wanted the blue cup and I gave her the blue cup. That was a calm ten minutes. I had told myself shoes and coats would take five minutes. It took twenty. Lena's left boot had gone missing. We found it under the radiator in the hall. Her coat zip also jammed halfway up, and I had to take it off her and start again. After that I stood at the kitchen counter looking at the school bags and did not start on them for a while. I am not sure what I was waiting for. Then I put the reading folders in and zipped them. The baby was up three times in the night. Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though. We left the house at 8:25, ten minutes later than I wanted. The walk to school takes fifteen minutes and we reached the gate at 8:40. That was five minutes before the bell. The teacher at the gate said hello to both of them. Back home I put the dishes in the machine and wiped the table.",
+      "variant": {
+        "arm": "A",
+        "change": null,
+        "pair_id": "S05"
+      },
+      "version": 1
+    },
+    {
+      "content_hash": "9f45efd800890e50fdb5fa24589c905dccf0db354921afd00b4821d5328090db",
+      "design": {
+        "confounders": [],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I had told myself shoes and coats would take five minutes. It took twenty.",
+            "strength": "moderate",
+            "trait": "time_estimation"
+          },
+          {
+            "quote": "I stood at the kitchen counter looking at the school bags and did not start on them for a while",
+            "strength": "weak",
+            "trait": "task_initiation"
+          }
+        ],
+        "population": "adult",
+        "purpose": "getting the kids out of the door in the morning (traits: time_estimation: moderate; task_initiation: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V014",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Tuesday. The lunch boxes were packed yesterday evening, so that part cost nothing. Oskar ate his porridge without any complaint. Lena wanted the blue cup and I gave her the blue cup. That was a calm ten minutes. I had told myself shoes and coats would take five minutes. It took twenty. Lena's left boot had gone missing. We found it under the radiator in the hall. Her coat zip also jammed halfway up, and I had to take it off her and start again. After that I stood at the kitchen counter looking at the school bags and did not start on them for a while. I am not sure what I was waiting for. Then I put the reading folders in and zipped them. Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though. We left the house at 8:25, ten minutes later than I wanted. The walk to school takes fifteen minutes and we reached the gate at 8:40. That was five minutes before the bell. The teacher at the gate said hello to both of them. Back home I put the dishes in the machine and wiped the table.",
+      "variant": {
+        "arm": "B",
+        "change": "The newborn and the broken nights are not mentioned.",
+        "pair_id": "S05"
+      },
+      "version": 1
+    },
+    {
+      "content_hash": "df1babc91902cecdb68ad535599801e9c581020a8e8fd2d65260d0fb137b9a7e",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "Three weeks of night shifts and very little sleep would explain lapses in memory and focus on long tedious forms.",
+            "quote": "Three weeks of nights now, so I'm sleeping maybe four hours in the day"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "got halfway and went to do something else. Came back an hour later and started again from the top",
+            "strength": "moderate",
+            "trait": "sustained_attention_on_boring_tasks"
+          },
+          {
+            "quote": "stood there not knowing why I was in there",
+            "strength": "moderate",
+            "trait": "working_memory"
+          }
+        ],
+        "population": "adult",
+        "purpose": "handover notes after a run of night shifts (traits: sustained_attention_on_boring_tasks: moderate; working_memory: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "personal_journal",
+      "id": "V015",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Handover notes, night 7 of this stretch. Three weeks of nights now, so I'm sleeping maybe four hours in the day if the neighbour's drill stays off.\n\nWent fine: bloods for bay 3 all chased before 4am. Got the cannula in the difficult one first go. Handover sheet printed and filled in by 7:15, which is a record. Registrar said escalating the chest pain was the right call.\n\nDidn't go fine: started the med reconciliation for bed 12, 14 pages, got halfway and went to do something else. Came back an hour later and started again from the top. Also walked into the side room for the repeat potassium and stood there not knowing why I was in there. It was on my written list, list was in my pocket.\n\nRota. Nights, one day off, a long day, then nights again. Who builds this. Two of my gaps got swapped and nobody told me, found out from the board.\n\nNeed milk, bin day is Thursday. Will chase the bloods follow-up tomorrow, or actually tonight before handover.",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "4335b91f6589cbeb818fe1980cd4fe1ce1a6e7505bb0fc7108e62df1bcb51d7f",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "perimenopause symptoms disturbing sleep and memory",
+            "quote": "the hot flushes are back around three in the morning"
+          },
+          {
+            "alternative_explanation": "worry about her mother's illness taking up her attention",
+            "quote": "Mum's scan is on the 29th"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "it was the 12th, I think, or perhaps the other way round",
+            "strength": "weak",
+            "trait": "working_memory"
+          },
+          {
+            "quote": "I've started writing the time on my hand as well",
+            "strength": "weak",
+            "trait": "working_memory"
+          }
+        ],
+        "population": "adult",
+        "purpose": "missed appointments and lost words lately (traits: working_memory: moderate; distractibility: weak)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "email",
+      "id": "V016",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "Dear Hannah, I'm sorry I've been so slow to answer, and sorry too about missing Thursday's coffee, which I know you had booked the table for. What happened is that I was at my mother's flat until nearly six helping her sort her tablets into the weekly box, and when I finally looked at the clock it was already twenty past. I did ring the dentist on Monday to move my check-up and that went fine, I got there ten minutes early and read a magazine. The hairdresser I did miss, because I'd put it in the kitchen calendar for the 14th and it was the 12th, I think, or perhaps the other way round. I've started writing the time on my hand as well, which my daughter thinks is funny. The words are odd too. At the desk on Tuesday I wanted to say stapler and said \"the clicky thing\", and the student just waited kindly. I'm sleeping badly and the hot flushes are back around three in the morning, so I'm blaming that mostly, and Mum's scan is on the 29th so I'm probably a bit preoccupied anyway. Story time on Saturday ran exactly on schedule, forty children, nobody cried. Are you free the week after next?",
+      "variant": null,
+      "version": 1
+    },
+    {
+      "content_hash": "7abc1ffd8936264f88730409ab429416370af91099f2b1e106e9dd5a60d2ad0e",
+      "design": {
+        "confounders": [
+          {
+            "alternative_explanation": "A toddler waking at night explains tiredness and the streaky first coat of oil.",
+            "quote": "he's been up around 3 every night this week, teething I think"
+          }
+        ],
+        "is_control": false,
+        "knowledge_target": null,
+        "origin": "llm",
+        "planted_cues": [
+          {
+            "quote": "I did all the sanding in one go on Tuesday, 80 grit then 120 then 180, about two and a half hours",
+            "strength": "moderate",
+            "trait": "sustained_attention_on_boring_tasks"
+          },
+          {
+            "quote": "now I want to make that next, maybe even before the shelves, not sure",
+            "strength": "weak",
+            "trait": "novelty_seeking"
+          }
+        ],
+        "population": "adult",
+        "purpose": "a woodworking project while the washing piles up (traits: sustained_attention_on_boring_tasks: strong; novelty_seeking: moderate)",
+        "source_ref": null,
+        "track": "general"
+      },
+      "framing": "forum_post",
+      "id": "V017",
+      "q4_whatif": null,
+      "question_ids": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q5",
+        "Q6"
+      ],
+      "text": "So the hallway bookshelf is finally done (well, the frame is, the shelves are still just boards in the garage). Started it three weeks ago during naps, which is the only time I get. I did all the sanding in one go on Tuesday, 80 grit then 120 then 180, about two and a half hours, and the nap ran over and I only noticed when he started yelling from the cot. The washing basket is overflowing again, I know, I know. (Husband says it's fine, it's mostly his socks.)\n\nJoints came out tighter than I expected. Used pocket screws because I don't trust my hand chisel yet, and the clamps held fine overnight. Bought the oil finish on Friday, it was on the list and I got it on the weekly shop, so that went to plan at least.\n\nTired today though, he's been up around 3 every night this week, teething I think, so the first coat of oil went on a bit streaky. Will redo that. Also I saw a video of a little wall-mounted spice rack and now I want to make that next, maybe even before the shelves, not sure. Anyway does anyone know if you can sand between oil coats or do you wait for full cure?",
+      "variant": null,
+      "version": 1
+    }
+  ]
+}

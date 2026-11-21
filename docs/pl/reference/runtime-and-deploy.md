@@ -236,7 +236,7 @@ Uruchamiaj z katalogu głównego repozytorium (`scripts/README.md`). Skrypty w j
 | `psql.sh` | `psql` w kontenerze `postgres` (albo przez `DATABASE_URL`, gdy brak `docker`); `overview` wypisuje rozszerzenia, rozmiary tabel i szacowane liczby wierszy oraz indeksy schematu `public`; pozostałe argumenty trafiają do `psql` |
 | `chips_backup.py` | Tworzy kopię zapasową, sprawdza, odtwarza i opróżnia tabele schematu `chips` przez binarny COPY |
 | `chips_schema.sql` | Tabele testu chips z placeholderem `{schema}` |
-| `chips_snapshot.py` | `freeze` i `check` migawki silver chips w `tests/fixtures/retrieval_silver/` |
+| `chips_fixture.py` | `export`, `check` i `seed` wypełnionych winiet z `tests/fixtures/scale_answers/`; buduje z nich jednostki, embeduje je i seeduje schemat dla testów integracyjnych |
 | `explore_chips.sql` | Przegląd samych SELECT-ów schematu `chips` i tabel `app`, które go zasilają |
 | `load_chips_pg.py` | Ładuje zbudowane jednostki chips do schematu (domyślnie `chips_eval`) |
 | `seed_silver_reviews.py` | Dane deweloperskie: odpowiedzi silver złożone przez dwóch ekspertów i ocenione w recenzji koleżeńskiej przez dwóch kolejnych |
@@ -317,7 +317,7 @@ Uruchamiaj z katalogu głównego repozytorium (`scripts/README.md`). Skrypty w j
 - `scripts/README.md` - zasady uruchamiania i mapa katalogów
 - `scripts/db/chips_backup.py:1` - docstring modułu
 - `scripts/db/chips_schema.sql:1-7` - komentarz nagłówkowy
-- `scripts/db/chips_snapshot.py:1-8` - docstring modułu
+- `scripts/db/chips_fixture.py:1-21` - docstring modułu
 - `scripts/db/explore_chips.sql:1-6` - komentarz nagłówkowy
 - `scripts/db/load_chips_pg.py:1-8` - docstring modułu
 - `scripts/db/psql.sh:1-39` - wrapper psql i overview

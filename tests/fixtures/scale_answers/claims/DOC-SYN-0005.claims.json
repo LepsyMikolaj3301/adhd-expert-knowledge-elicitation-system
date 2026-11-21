@@ -1,0 +1,479 @@
+[
+  {
+    "claim_text": "The writer's decision to do chores before working is a conscious, organised prioritisation strategy, not avoidance.",
+    "condition": "organized_habit",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "executive_function",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The writer's poor sleep is attributed to environmental changes (noise, new bed) rather than internal dysfunction.",
+    "condition": "external_factor",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "sleep_disruption",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The text shows a coherent, linear narrative with self-correction, which argues against significant executive dysfunction.",
+    "condition": "self_correcting",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Anyway the report",
+    "trait": "narrative_coherence",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Sleep deprivation from the recent move is a major confounder that can mimic ADHD symptoms like inattention and poor planning.",
+    "condition": "sleep_deprivation",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "confounding_variable",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A sample from a calm day without a deadline is needed to separate trait from state.",
+    "condition": "baseline_sample",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "assessment_method",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the vague timing and forgetfulness as core deficits, ignoring the writer's overall organisation and external stressors.",
+    "condition": "over_interpretation",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "The commentary I think I can finish by eleven, maybe midnight, then read through it once in the morning",
+    "trait": "interpretation_bias",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The writer's reliance on the husband's compliance without full disclosure to Jo suggests a potential social-executive or communication awkwardness rather than pure forgetfulness.",
+    "condition": "high_stakes_social_planning",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "jo does not know yet. i asked her husband to keep the evening free and he said fine without asking why which is lucky",
+    "trait": "social_execution",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "The pre-writing of the card and setting a deadline for the head count demonstrates intact executive function and planning.",
+    "condition": "routine_task",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "can you bring the card and the wrapped present. i already wrote my bit inside it",
+    "trait": "executive_function",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "The behavior of buying extra candles despite having some at home is a common anxiety-driven or hedging behavior, not specific to ADHD.",
+    "condition": "low_stakes_decision",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "still need candles. i think we have some at home but i will buy a pack anyway",
+    "trait": "anxiety_hedging",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "The writer exhibits a pattern of attentional capture where physical movement leads to task abandonment and substitution with sensory comfort (mug/toastie).",
+    "condition": "present",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "came back ten minutes later with a clean mug and no table",
+    "trait": "attentional_capture",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer uses external scaffolding (time blocks, phone restriction) to manage focus, indicating intact executive function but need for structure.",
+    "condition": "present",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "made a plan of two blocks of 50 minutes with my phone in my bag",
+    "trait": "compensatory_strategy",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer demonstrates self-monitoring and awareness of their own performance variance.",
+    "condition": "present",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "at least one person at the university has proof I exist",
+    "trait": "self_monitoring",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The distraction pattern could be explained by low energy or anxiety rather than ADHD, especially given the high caffeine intake and upcoming exam.",
+    "condition": "possible",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I have had four coffees today",
+    "trait": "alternative_explanation",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "It is necessary to determine if the task-switching pattern is chronic or situational to the current deadline stress.",
+    "condition": "unknown",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "chronicity",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Less experienced clinicians might mistake the writer's self-awareness and compensatory strategies for a lack of clinical significance or dismiss the specific mechanical nature of the distraction.",
+    "condition": "risk",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writer ruminates on a comment about 'ownership', which suggests social anxiety or perfectionism rather than pure executive dysfunction.",
+    "condition": "social anxiety or perfectionism",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "the one about 'ownership', but that's another email",
+    "trait": "rumination",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The comparison to the sister's boiler manual is a common cognitive style and not strong evidence for ADHD.",
+    "condition": "over-reading trap",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "my sister has the same problem with her boiler manual",
+    "trait": "n/a",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The time estimation error (1 hour vs 3 hours) is relevant to time blindness but is contextualized as a prioritization choice.",
+    "condition": "prioritization choice",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": "time_blindness",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer explicitly attributes the main error to poor communication and rejects the ADHD interpretation, indicating intact metacognition.",
+    "condition": "intact self-correction",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "That's the ordinary reason, really",
+    "trait": "metacognition",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The rumination on the 'ownership' comment could be anxiety or low self-esteem rather than ADHD.",
+    "condition": "differential diagnosis",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "the one about 'ownership', but that's another email",
+    "trait": "anxiety",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "It is necessary to determine if the rumination is new or chronic to distinguish it from a stable trait.",
+    "condition": "assessment needed",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "chronicity",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Junior clinicians might miss that the writer identified a process failure as the root cause, interpreting it instead as a cognitive deficit.",
+    "condition": "risk of misinterpretation",
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "metacognition",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The writer admits to not telling a short version, indicating high verbal output or verbosity.",
+    "condition": "self_reported",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "and you know I never tell a short version",
+    "trait": "verbosity",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The writer reports talking for the entire journey but having no memory of it, suggesting a disconnect between output and monitoring or recall.",
+    "condition": "reported_by_third_party_and_self",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "impulsivity_or_distraction",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The trip was planned a week in advance, indicating preserved executive function and forethought.",
+    "condition": "self_reported",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I had planned for a week",
+    "trait": "planning",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The narrative structure is linear and coherent, moving from start to finish without skipping major steps.",
+    "condition": "observed_in_text",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": "organization",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The reported rambling and amnesia could be caused by fatigue, low mood, or social anxiety rather than ADHD.",
+    "condition": "hypothesis",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "differential_diagnosis",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The verbosity could be a stable personality trait rather than a symptom of a disorder.",
+    "condition": "hypothesis",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "and you know I never tell a short version",
+    "trait": "personality_trait",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Assessment is needed on a neutral or negative day to determine if the verbosity is state-dependent (e.g., excitement) or trait-based.",
+    "condition": "clinical_recommendation",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "assessment_strategy",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Less experienced clinicians might over-interpret the amnesia as ADHD while missing the strong evidence of planning and organization.",
+    "condition": "hypothesis",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The writer identified a specific technical error and immediately reran the test set, demonstrating intact problem-solving and follow-through rather than executive dysfunction.",
+    "condition": "intact",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the export from the test tool came out with the Android column merged into iOS, so I reran the nightly set",
+    "trait": "executive_functioning",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The smoke tests were completed on schedule with specific quantitative results, indicating strong planning and completion abilities.",
+    "condition": "intact",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The smoke tests I finished on Monday as planned, 212 run, 211 passed, one skipped on purpose",
+    "trait": "planning_and_organization",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The writer deliberately shortened the bug list to protect a new colleague's morale, showing high social awareness and cognitive control.",
+    "condition": "intact",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I kept the bug list short because Daniel will be reading it, being new, and I'd rather he not think we're drowning",
+    "trait": "social_cognition",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The uncertainty about who owns the load job likely reflects a lack of clear institutional documentation or general work stress, rather than a personal cognitive deficit.",
+    "condition": "ambiguous",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "which isn't anyone's fault really, although we never wrote down who owns that job, I think Piotr set it up, or it was before him, I should ask",
+    "trait": "attention",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "Less experienced clinicians might misinterpret the rambling explanation of the job ownership issue as a symptom of inattention or poor working memory, overlooking the underlying systemic issue.",
+    "condition": "misinterpreted",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "which isn't anyone's fault really, although we never wrote down who owns that job, I think Piotr set it up, or it was before him, I should ask",
+    "trait": "attention",
+    "vignette_id": "V021"
+  },
+  {
+    "claim_text": "The phrase 'just ordered it on my lunch break' suggests a low threshold for action.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I just ordered it on my lunch break",
+    "trait": "impulsivity",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The self-correction 'I measured after ordering' indicates a gap between decision and practical check.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I measured after ordering, obviously.",
+    "trait": "inattention",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Sticking to a food list and switching train passes shows planning and follow-through are intact.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I made a food list and only bought what was on it this week.",
+    "trait": "executive_function",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The TV purchase could be ordinary consumer behavior due to a good deal.",
+    "condition": "ordinary_consumer_behavior",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Bought a 55 inch tv with the staff discount",
+    "trait": null,
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The text explicitly attributes financial disorganization to being 'flat' since winter.",
+    "condition": "depression",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I've been a bit flat since winter",
+    "trait": "mood",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "It is unclear if the TV purchase is an isolated incident or a pattern.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "pattern_recognition",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "Experienced clinicians might overlook strong organizational skills in favor of impulsivity cues.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "I've switched my train pass to monthly so that's covered",
+    "trait": "organizational_skills",
+    "vignette_id": "V022"
+  },
+  {
+    "claim_text": "The repeated teacher comment 'Daydreaming again' is a specific external indicator of sustained inattention in childhood.",
+    "condition": "childhood",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Daydreaming again",
+    "trait": "inattention",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "Looking out the window during a full assembly is a specific instance of sustained inattention supported by a witness.",
+    "condition": "childhood",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "looking out of the window through the whole of a harvest assembly",
+    "trait": "inattention",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "Completing a complex task like clearing a garage ahead of schedule suggests intact executive function and motivation, arguing against a global deficit.",
+    "condition": "current",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did clear the garage on the Tuesday, the whole thing, because the skip was booked for ten and I was done by nine. That was easy.",
+    "trait": "executive_function",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The failure to open a report folder since October indicates difficulty with task initiation or avoidance, but is muddied by emotional significance.",
+    "condition": "current",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "it has sat on the hall table since October and I keep meaning to open it",
+    "trait": "executive_function",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The avoidance of the report folder and shifting attention to bus tickets could be confounded by grief, low mood, and poor sleep rather than a neurodevelopmental trait.",
+    "condition": "grief",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "it has sat on the hall table since October and I keep meaning to open it",
+    "trait": "executive_function",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "To distinguish trait from state, one would need to know if the garage task is typical or an exception, and the emotional content of the avoided report folder.",
+    "condition": "assessment_needed",
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": "executive_function",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "Less experienced clinicians might over-interpret childhood inattention comments as diagnostic while under-weighting the strong evidence of current competence in completing complex tasks.",
+    "condition": "clinical_judgment",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "inattention",
+    "vignette_id": "V023"
+  },
+  {
+    "claim_text": "The writer's low mood and reliance on external prompting explain their activity levels, pointing away from ADHD.",
+    "condition": "low_mood",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Mood has been low since the winter and I nearly stayed in.",
+    "trait": "executive_function",
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "The writer used a compensatory strategy (marking with string) to organize their work, which is inconsistent with ADHD.",
+    "condition": "compensatory_strategy",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I had marked the line with string the weekend before, so it took no time.",
+    "trait": "organization",
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "The incomplete task at the end is likely just a forgotten to-do rather than a sign of executive dysfunction.",
+    "condition": "ordinary_procrastination",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Bean netting still to check.",
+    "trait": "task_completion",
+    "vignette_id": "V024"
+  },
+  {
+    "claim_text": "A less experienced clinician might misinterpret the low mood as an ADHD symptom or the single incomplete task as evidence of dysfunction.",
+    "condition": "over-interpretation",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "clinical_bias",
+    "vignette_id": "V024"
+  }
+]

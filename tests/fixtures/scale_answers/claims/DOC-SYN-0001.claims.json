@@ -1,0 +1,1127 @@
+[
+  {
+    "claim_text": "Doing the dishes and bins before opening the document at nine, with the report due next day, is a start-up delay, but self-reported and mild; weak evidence toward task initiation difficulty.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A two-hour estimate for the commentary that has taken most of the evening is mildly suggestive of time underestimation, but common for writing tasks.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_underestimation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Having pulled the loss ratios into the template by Wednesday lunch shows work done ahead of schedule, pointing away from planning problems.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I had already pulled the loss ratios into the template by Wednesday lunch",
+    "trait": "planning_organisation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Sending the chart pack to a colleague before work and getting a reply by eight shows an early start and delivery, which points away from ADHD-related traits.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "sent the chart pack to Marcus before work",
+    "trait": "task_completion",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The aside about the lift and the shopping is flagged by the writer as irrelevant and the text returns to the report with 'Anyway the report', so the structure holds and does not suggest disorganised thinking.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": "narrative_organisation",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The note to ask Dan about the fridge shelf is an ordinary reminder to self and tells little.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Need to remember to ask Dan about the fridge shelf",
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The delay and blown time estimate could equally be ordinary procrastination, or tiredness from two months of bad sleep in a noisier flat.",
+    "condition": "poor sleep",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Possible mild performance anxiety about the unfinished commentary could explain the late start; distinguishing needs to know whether the pattern recurs across deadlines and with interesting versus dull tasks.",
+    "condition": "anxiety or ordinary procrastination",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A second writing sample from a calmer week, not at the end of a bad-sleep stretch, is needed to know whether this deadline rhythm is usual for him.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the dishes-and-bins delay, the digression and the overrun as inattention in what is an ordinary diary entry.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Overall the text shows little beyond ordinary stress and poor sleep.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Booking the restaurant days ahead and paying the deposit at once shows early, completed planning, which points away from ADHD-related traits.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "booked the restaurant on monday for saturday at seven",
+    "trait": "planning_organisation",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "Paying the deposit by card straight away shows prompt follow-through on a necessary step.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "they wanted a deposit so i paid it by card and the confirmation came straight away",
+    "trait": "task_completion",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "When the first bakery was full, the writer switched to a supermarket cake with a collection day fixed; flexible problem solving with a plan B.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the bakery on mill road was full for saturday so i ordered a lemon one from the supermarket and collect it friday after school",
+    "trait": "planning_organisation",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "Pet care and transport for relatives are all arranged, showing thorough coverage of practical details.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "cat sitter is sorted for the evening because the neighbour has a key",
+    "trait": "planning_organisation",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "Buying candles when some may already be at home is content only and tells little.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "still need candles. i think we have some at home but i will buy a pack anyway",
+    "trait": null,
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "The text ends on a dated next step (sending the final head count on Thursday) and the structure is linear with no drift.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "will send the final head count thursday",
+    "trait": "task_completion",
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "Nothing in the text is likely to be mistaken for ADHD traits; the thorough list-keeping could be anxious planning but there is no worry language.",
+    "condition": "anxiety",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "Little is missing; a message written in a rushed week would give a comparison.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "A less experienced reader might over-read the candle line as forgetfulness; nothing is hidden to under-read.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "still need candles. i think we have some at home but i will buy a pack anyway",
+    "trait": null,
+    "vignette_id": "V002"
+  },
+  {
+    "claim_text": "Drifting from entering figures to comparing invoicing apps, and to reorganising desktop folders, is a side-task drift, but in the setting of recent bereavement it says nothing about a lifelong pattern.",
+    "condition": "bereavement and low mood",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Around the third evening I caught myself comparing invoicing apps instead of typing in figures",
+    "trait": "distractibility",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Filing early with no penalty fees and screenshotting the receipt suggests a task completed in good time, but it is a single task.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I filed on the 9th, so no panic fees this year",
+    "trait": "task_completion",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Counting eleven subscriptions and finding two forgotten ones is ordinary content that anyone might find.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "There are eleven subscriptions, I counted, and two I had forgotten I even had",
+    "trait": null,
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Working in forty-minute blocks with a timer and no radio is a sensible self-made strategy, but whether it is long-standing or recent cannot be told from the text.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "What worked was forty minutes after lunch with the radio off and a timer on my phone",
+    "trait": "compensatory_strategy",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "The bereavement in April and low mood since could explain sitting at the spreadsheet doing little, and the drift to side tasks is ordinary avoidance of a dull job; the pre-April picture of how past returns were done would distinguish them.",
+    "condition": "low mood or grief",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "My dad died in April and I've been low on and off since",
+    "trait": "distractibility",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Material from before April, how the same task went in previous years, and a sample written in a better mood are needed before these features mean anything; the text alone cannot support a reading.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "A less experienced clinician might read the app comparison and folder reorganising as inattention while grief and low mood sit alongside them.",
+    "condition": "low mood or grief",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "anything longer and I was reorganising my desktop folders",
+    "trait": "distractibility",
+    "vignette_id": "V003"
+  },
+  {
+    "claim_text": "Going to find a survey table and returning ten minutes later with a clean mug and no table is a drift away from the task on the way, rather than a decision to stop.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "distractibility",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Going to ask a flatmate about the bins and coming back with a toastie and no answer repeats the same pattern of drifting from a small errand, a second instance in one post.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins",
+    "trait": "distractibility",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Writing 600 words in one sitting at the library shows he can sustain attention when the environment suits, so attention is conditional on setting rather than absent.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I wrote 600 of those words in one go at the library",
+    "trait": "sustained_attention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Sending the method section on time, and fixing the supervisor's comments the same evening, shows deadlines are met when someone external is waiting.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did send the method section on time last week",
+    "trait": "task_completion",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Planning two 50-minute blocks with the phone in his bag is a sensible self-built structure, and the first block was completed.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Today I made a plan of two blocks of 50 minutes with my phone in my bag",
+    "trait": "compensatory_strategy",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The writing is coherent and comes back to the chapter and the plan at the end, so the structure is intact.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": "narrative_organisation",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Nerves about the stats exam plus four coffees could explain restlessness and wandering to the kitchen; distinguishing needs to know whether the drift occurs when he is neither anxious nor caffeinated and predates the PhD stress.",
+    "condition": "anxiety or caffeine",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "The stats exam is on Thursday as well and I am quite nervous about it",
+    "trait": "distractibility",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The table-hunt drift could simply be ordinary procrastination around a dull task.",
+    "condition": "ordinary procrastination",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "distractibility",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "A sample from a quieter week and how he managed coursework before the thesis are needed, plus whether the library trick was found after years of failing at home.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the mug and toastie episodes as the whole diagnosis when anxiety, caffeine and the deadline explain much of it.",
+    "condition": "anxiety or caffeine",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "distractibility",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "A less experienced clinician might under-read the drift because he gets things done, though that output is conditional on external deadlines and a good setting.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "I did send the method section on time last week",
+    "trait": "task_completion",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "Booking the removal firm in March with the date confirmed in writing shows early planning and closing the item off.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I booked the removal firm in March and they have confirmed the date in writing",
+    "trait": "planning_organisation",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Twelve boxes labelled by room and numbered on a master sheet kept in a named folder is a maintained system, the strongest sign of organisation.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "twelve boxes, each labelled by room and numbered on a master sheet I keep in the green folder",
+    "trait": "planning_organisation",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Sending the council tax and utility changes a week earlier than needed shows administrative tasks completed ahead of time.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the council tax and utility changes were sent off on Monday, a week earlier than I needed",
+    "trait": "task_completion",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Leaving the curtains until the final weekend is a deliberate sequencing decision, not something forgotten.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I shall take the curtains down only on the final weekend",
+    "trait": "planning_organisation",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The garage is the only unresolved item and reflects a genuine decision about what fits the new house, not avoidance; he has already asked Peter about the workbench.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I am a little worried about the garage, because there is forty years of tools and paint in it",
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The email is formal and orderly, runs in sequence, and ends on the lunch question; nothing wanders.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": "narrative_organisation",
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Waking at four thinking about the boiler inspection reflects anxiety about the move, or possibly age-related early waking, not ADHD.",
+    "condition": "anxiety or poor sleep",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I woke at four this morning thinking about it",
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Hesitation over the garage could be low-grade avoidance but is equally an ordinary large sorting job after forty years.",
+    "condition": "ordinary procrastination",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I am a little worried about the garage, because there is forty years of tools and paint in it",
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "Very little is missing; at most a sample written under a looser deadline.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "The main risk is over-interpreting the garage and the worry as disorganisation when the rest of the email is careful.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V005"
+  },
+  {
+    "claim_text": "A mid-explanation tangent about the sister's boiler manual is self-caught with an apology; it is mild, a side story about someone else's problem, and the writer returns to the point.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "my sister has the same problem with her boiler manual, it's a PDF on a laptop she has since sold",
+    "trait": "digressive_thinking",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Allowing an hour for proofs that took nearer three, with the last pages given a quick look, shows time underestimation and rushed checking, but it is one episode.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three, so the last two pages got a quick look",
+    "trait": "time_underestimation",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Asking IT early and having the logins fixed the same day shows the writer follows up and does not drop tasks.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The logins worked, because I asked IT on Monday and they sorted it the same day",
+    "trait": "task_completion",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The closing summary of three causes answers the opening question about the handover in a tidy way, and the local-file problem was not his fault.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "So it was a local file, a wrong date and rushed proofing. I'm sorry this ran so long.",
+    "trait": "narrative_organisation",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Admitting he said the handover went fine when it did not is honest content that tells little.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "you asked how the handover went and I said fine, which was not true",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Going over the message about 'ownership' in his head is rumination suggesting job worry or anxiety rather than ADHD.",
+    "condition": "anxiety",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Priya in design also copied me on a message that I keep going over in my head",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The tangent and apology could reflect nerves at admitting the handover went badly, and the proofing overrun could be ordinary overrun under pressure.",
+    "condition": "anxiety or ordinary pressure",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": "time_underestimation",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Other writing samples from a time when no handover was going wrong are needed, along with whether the proofing overrun is usual and what the message from Priya actually said.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the brief tangent as disorganised thinking when he returns to the point, and might under-read the proofing time estimate.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Quotes running over by a day (two days becoming three, two and a half becoming four) are explained by specific site reasons such as thick plaster and cable not where the drawings said, and are common in the trade.",
+    "condition": "ordinary trade overrun",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I said about two and a half days and it took four, though a fair bit of that was the plaster",
+    "trait": "time_underestimation",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "A consumer unit swap done in one morning exactly as quoted shows estimates are accurate when the job is familiar.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I did a consumer unit swap in one morning, exactly as quoted",
+    "trait": "time_underestimation",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Six invoices unsent, the oldest about five weeks, with repeated 'soon' and 'after tea' promises, show deferral of paperwork that could matter, but cannot be judged from one post.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "six sitting in a folder, the oldest about five weeks, and I keep saying I'll sit down with them after tea",
+    "trait": "task_avoidance",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Being on site by seven and not home till gone seven means ten-hour days and fatigue, an ordinary reason to postpone invoicing.",
+    "condition": "fatigue from long working days",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Business has got busier since spring, I'm on site by seven most days and not home till gone seven",
+    "trait": null,
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Long days, tiredness and ordinary procrastination on paperwork, possibly low mood or poor sleep, could explain the invoice backlog; it is unknown whether the backlog predates the busy period since spring.",
+    "condition": "fatigue or ordinary procrastination",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Invoices wait. I'll do them soon, usually Sunday.",
+    "trait": "task_avoidance",
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "How he handled invoicing and quoting before spring, and a sample written in a quiet week, are needed before any of this is meaningful.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read overrun quotes and the invoice pile as ADHD in a self-employed tradesman working long days, or under-read the deferral wording; neither can be called from this post.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V007"
+  },
+  {
+    "claim_text": "Knowing exactly what to do yet leaving the corrected spreadsheet open on screen until the next afternoon shows a gap between knowing and starting; it is one example, three weeks into a job.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Twice walking into the stock room and forgetting why is described by the writer as small and is common to everyone, so ordinary.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Twice I've walked into the stock room and forgotten what I went in for, which I know is small",
+    "trait": "forgetfulness",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Being early every day and finishing the induction modules by Friday shows the first week held up while novelty was high.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I was early every day and finished my induction modules by the Friday",
+    "trait": "task_completion",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Buying a planner that has helped with remembering meetings is an immediate, sensible and working fix.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "the planner I bought last week has helped with remembering meetings",
+    "trait": "compensatory_strategy",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The writer's own explanation that it is a new job and he is trying hard not to get things wrong is plausible and should be taken seriously.",
+    "condition": "adjustment to a new job",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "some of this is just that it's new and I'm trying hard not to get things wrong",
+    "trait": null,
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The email is orderly, giving age, history, timeline and then the request, and the repeated apologies suggest anxiety about asking rather than distraction.",
+    "condition": "anxiety",
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I'm very sorry to trouble you, and I hope this is the right way to ask for an appointment",
+    "trait": "narrative_organisation",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Leaving the spreadsheet unsent could reflect nervousness about getting a supplier document wrong, freezing or over-checking, rather than inattention; asking what was in his mind that evening would distinguish them.",
+    "condition": "anxiety",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I knew exactly what to do, but it sat open on my screen until the next afternoon before I sent it",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "The stock room forgetting and the whole picture may be fatigue or overload from adjusting to a first job.",
+    "condition": "adjustment to a new job",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Twice I've walked into the stock room and forgotten what I went in for, which I know is small",
+    "trait": "forgetfulness",
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Information from before this job (university, how deadlines were managed, whether problems are lifelong) and a sample from a few months in, when the job is no longer new, are missing.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the stock room and spreadsheet lapses as ADHD when a first job and anxiety fit, or might under-read the spreadsheet delay because the writer is conscientious and apologetic.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V008"
+  },
+  {
+    "claim_text": "Setting off to do a fluid balance and ending up restocking glove boxes along the corridor, with the chart only remembered at 5, is a drift from the intended task to an easier visible one, though it was recovered.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Went to do the fluid balance on bed 9 and ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+    "trait": "distractibility",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Noting the chart was done before handover shows the lapse was recovered and the writer knows the task matters.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Done before handover anyway",
+    "trait": "task_completion",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Handling a cardiac arrest and finishing handover with nothing missed shows sustained, accurate work when the demand is high and acute.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "bed 14 who coded at 3, we got him back, handover done by 7 with nothing missed",
+    "trait": "sustained_attention",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Writing a reminder on the hand because the list is in the locker, or maybe the coat, is a workaround with a mild sign of not being sure where things are.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "wrote it on my hand because the list is in my locker. or my coat",
+    "trait": "misplacing_items",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The late pharmacy delivery and the saline chase were explicitly not the writer's fault and the typo apology reflects a phone note after a long shift; both are content that tell little.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Typing this on my phone with useless thumbs after twelve hours so excuse the typos",
+    "trait": null,
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "The glove-box drift could be ordinary ward interruption and tiredness after twelve-hour shifts or poor sleep, so what else was pulling at the writer's attention at the time needs asking.",
+    "condition": "fatigue or ward interruption",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "Went to do the fluid balance on bed 9 and ended up restocking glove boxes down the whole corridor, remembered the chart at 5",
+    "trait": "distractibility",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Having breaks covered and sitting down to eat properly make low mood less likely as an explanation.",
+    "condition": "low mood",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "More than one shift's writing, ideally from a quieter rota, is needed, along with whether the fluid-balance drift is typical, whether colleagues point it out, and how long the note-on-hand habit has gone on.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the glove-box episode as inattention on a busy ward, or under-read it because the arrest handover was perfect, though competence under acuity does not exclude it.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": "distractibility",
+    "vignette_id": "V009"
+  },
+  {
+    "claim_text": "Snapping at a colleague loudly enough for two customers to hear, and starting to pull signs down before she answered, shows irritability and acting before the other person could reply, but it is a single incident that the writer owns.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I started pulling the signs down myself before she'd even answered",
+    "trait": "impulsivity",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "Counting boxes already counted after the outburst looks like agitation or guilt rather than an ADHD trait.",
+    "condition": "guilt or agitation",
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I went to the stockroom and counted boxes I'd already counted",
+    "trait": null,
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "Recognising that he never told her which wall shows good insight into his own part in the conflict.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I never told her which wall. I should have just said that.",
+    "trait": "emotional_regulation",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "An on-time delivery, a till float matched to the penny and the rota sent before lunch as planned show precise, planned, completed work that day.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Delivery arrived on time, till float matched to the penny, and the Friday rota went out before lunch like I'd planned",
+    "trait": "task_completion",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "Feeling flat since the break-up about five weeks ago, low mood, explains the short fuse better than ADHD; whether he was this reactive before then would distinguish them.",
+    "condition": "low mood after break-up",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I've felt flat since the break-up, about five weeks now, so maybe that's some of it",
+    "trait": "emotional_regulation",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "How he was before the break-up, whether snapping is typical, and a sample from a calmer week are missing.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the outburst as impulsivity or emotional dysregulation; there is little to under-read.",
+    "condition": "low mood",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "I said, loud enough for two customers, that it was the third time and did anyone here actually read the planogram",
+    "trait": "emotional_regulation",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "The writer says he does not remember the maths-sheet story, which is one of his mother's stories, so the childhood anecdotes are second-hand and cannot be weighed as evidence.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I don't actually remember that, it's one of her stories",
+    "trait": null,
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "Sitting at the maths sheet for most of the evening with the pencil sharpened twice before writing a number could suggest start-up difficulty, but it is a retold family anecdote.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "Arriving an hour late because he was watching men dig up the road is a retold anecdote that could be dreaminess, but cannot be weighed.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "walking home the long way and arriving an hour late because I was watching the men dig up the road",
+    "trait": "distractibility",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "The one first-hand memory, planning the volcano a week ahead, buying supplies and finishing early to win a ribbon, argues against a planning problem, though it is a single project with outside structure and the year is hazy.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I planned the volcano the week before, bought the baking soda on the Tuesday and had it finished early",
+    "trait": "planning_organisation",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "A teacher comment on untidy and rushed handwriting every year is a consistent contemporaneous observation and the most useful line, worth checking in the original reports.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The handwriting comment came every year though, untidy and rushed",
+    "trait": "careless_work",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "Untidy handwriting could reflect poor fine motor skill or ordinary handwriting rather than attention, and the sharpened pencil could be perfectionism or fear of getting the sum wrong rather than avoidance.",
+    "condition": "fine motor difficulty or perfectionism",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "The handwriting comment came every year though, untidy and rushed",
+    "trait": "careless_work",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "The actual school reports, including other years and the loft or garage ones, and first-hand accounts of the present rather than family anecdotes, are needed before these features mean anything.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the affectionate second-hand family stories as evidence of childhood ADHD, or dismiss the every-year untidy and rushed comment; neither can be settled here.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "The writer notes his own long-windedness, and the email is long but follows the trip in order from departure to home.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "you know I never tell a short version",
+    "trait": "narrative_organisation",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Leaving at five, planned for a week, and reaching the lake by quarter to seven shows advance planning and keeping to times.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week, and we reached the lake by quarter to seven",
+    "trait": "planning_organisation",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The aside about sitting in the passenger seat after thirty-one years driving a bus is one sentence with a single 'Anyway' and a return to the boat; the digression goes nowhere new.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Dennis drove because my knee was sore, and after thirty-one years behind the wheel of a bus it feels odd to sit in the passenger seat",
+    "trait": "digressive_thinking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Wrong bait on the day was solved quickly by asking the jetty man for worms, showing practical problem solving.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it",
+    "trait": "problem_solving",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Talking the whole way back, as reported by Dennis, with little memory of it, is the only line of any interest, but it is second-hand and without detail.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "excessive_talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The talking could simply reflect a long happy day, tiredness after an early start, or a talkative personality; other people's accounts of how he talks on a normal day would distinguish them.",
+    "condition": "talkative personality or tiredness",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I talked the whole way back, Dennis says, though I don't remember much of it",
+    "trait": "excessive_talking",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Nothing specific is missing; at most a sample written on a flat day, which is not worth chasing.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the talking and the long email as hyperactivity or disorganised speech; there is nothing hidden to under-read.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Packing the lunch boxes the evening before is a routine that cost nothing in the morning and points away from disorganisation.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The lunch boxes were packed yesterday evening, so that part cost nothing",
+    "trait": "planning_organisation",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "Arriving at the gate five minutes before the bell, with the walk time and leaving time tracked accurately, shows the morning worked out and time is monitored.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "we reached the gate at 8:40. That was five minutes before the bell.",
+    "trait": "time_management",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "Budgeting five minutes for shoes and coats and taking twenty suggests time underestimation, but the overrun was caused by a missing boot and a jammed zip, two child-related snags.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I had told myself shoes and coats would take five minutes. It took twenty.",
+    "trait": "time_underestimation",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "Standing at the counter looking at the school bags without starting, and not knowing what was being waited for, is a self-observed stall before starting a task that then resolved; the most notable line.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I stood at the kitchen counter looking at the school bags and did not start on them for a while",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "The unsure aside about whether swimming is on Thursday, after the child remembered the kit, is a minor uncertainty and tells little.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "Oskar remembered his swimming kit without being asked. I think swimming is on Thursday, though.",
+    "trait": "forgetfulness",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "The entry is calm, sequential, uses short sentences, comes back to the point and ends with the dishes and table done, so the structure is intact.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": null,
+    "trait": "narrative_organisation",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "The stall at the counter after the baby woke three times in the night is most simply exhaustion or low mood; whether it happens when rested and in tasks outside the school run would distinguish it from ADHD.",
+    "condition": "poor sleep or low mood",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "The baby was up three times in the night",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "The overrun on shoes and coats is plain parenting with small children.",
+    "condition": "ordinary parenting demands",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I had told myself shoes and coats would take five minutes. It took twenty.",
+    "trait": "time_underestimation",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "Another entry from a better-slept day, what the swimming day actually is, and whether the counter stall is a one-off are missing.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-read the five-versus-twenty minutes as time blindness when a missing boot and jammed zip explain it, or might wave off the counter stall as tiredness when it merits a question.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "The writer stood at the counter looking at the school bags and did not start for a while, unable to say what she was waiting for; this is a possible task-initiation stall and the main pointer toward ADHD-related traits.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "stood at the kitchen counter looking at the school bags and did not start on them for a while",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Lunch boxes were packed the evening before, which shows planning ahead and organisation and points away from ADHD-related traits.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The lunch boxes were packed yesterday evening, so that part cost nothing.",
+    "trait": "planning_ahead",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Shoes and coats took twenty minutes instead of five, but a missing boot and a jammed zip explain the delay, so this is an ordinary morning rather than evidence of time misjudgement.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q1",
+    "quoted_span_text": "I had told myself shoes and coats would take five minutes. It took twenty.",
+    "trait": "time_estimation",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "The family reached the school gate five minutes before the bell, so the morning ended on time, which points away from ADHD-related traits.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "we reached the gate at 8:40. That was five minutes before the bell.",
+    "trait": "punctuality",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "The pause at the school bags could equally reflect tiredness, low mood, dread of the school run or ordinary procrastination; whether it recurs across other tasks would distinguish these.",
+    "condition": "low mood or ordinary procrastination",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "did not start on them for a while",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Being unsure which day swimming is could be ordinary parental busyness rather than a memory problem.",
+    "condition": "ordinary busyness",
+    "direction": "neutral",
+    "question_id": "Q2",
+    "quoted_span_text": "I think swimming is on Thursday, though.",
+    "trait": "forgetfulness",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Needed: other writing from a calm day, whether the counter freeze is typical, what was going through her mind in that gap, and a brief usual history.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "A less experienced clinician may over-read the late start and the twenty-minute shoes and coats as ADHD when a missing boot and a stuck zip explain them.",
+    "condition": "ADHD",
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": "It took twenty.",
+    "trait": "time_estimation",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "A less experienced clinician may under-read the pause at the school bags because the rest of the morning is organised.",
+    "condition": "ADHD",
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "did not start on them for a while",
+    "trait": "task_initiation_difficulty",
+    "vignette_id": "V014"
+  }
+]

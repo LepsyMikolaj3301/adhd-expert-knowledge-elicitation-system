@@ -1,0 +1,362 @@
+[
+  {
+    "claim_text": "The timing claim suggests difficulty with schedule adherence.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I told myself two hours for the commentary section and it has now been most of the evening",
+    "trait": "time_management",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The procrastination claim indicates executive dysfunction.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I only opened the document at nine because I did the dishes and the bins first",
+    "trait": "executive_function",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The forgetfulness about a task supports an ADHD profile.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Need to remember to ask Dan about the fridge shelf",
+    "trait": "working_memory",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "Sleep disturbance could be due to environmental change.",
+    "condition": "environmental",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Still sleeping badly since we moved flats two months ago, the street is louder than the old one and the bed is a different bed",
+    "trait": "sleep_quality",
+    "vignette_id": "V001"
+  },
+  {
+    "claim_text": "The fragment about missing the table shows a quick distraction",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The lost table could be due to low mood",
+    "condition": "low_mood",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "On Tuesday I opened the file, went to find the table from the second survey, and came back ten minutes later with a clean mug and no table",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The text lacks sleep quality, baseline mood, and prior work patterns that would clarify whether these behaviors are typical or atypical",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "A novice might see the block structure as strong organization, missing the fact that the interruptions may signal distractibility",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q5",
+    "quoted_span_text": "Block one happened. Then I went to the kitchen to ask my flatmate about the bins and came back with a toastie and still no answer about the bins. Block two is after dinner",
+    "trait": "inattention",
+    "vignette_id": "V004"
+  },
+  {
+    "claim_text": "The local file issue indicates a potential inattentiveness.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The calendar did not, because she'd saved it as a local file and nobody told me",
+    "trait": "inattention",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The apology shows self‑monitoring.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "I'm sorry this ran so long",
+    "trait": "self_monitoring",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The delayed proof review could be due to workload.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I'd allowed an hour to check the proofs and it took nearer three",
+    "trait": "time_management",
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "A calm‑day report is needed for definitive assessment.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "Less experienced clinicians may over‑attribute errors to ADHD.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "The newsletter went out on Tuesday with the wrong date for the webinar",
+    "trait": null,
+    "vignette_id": "V006"
+  },
+  {
+    "claim_text": "The sharp outburst toward Priya shows impulsive anger",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Snapped at Priya today. Not proud.",
+    "trait": "impulsivity",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "The loud reprimand for the repeated mistake indicates difficulty tolerating errors",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "She'd put the spring display up on the wrong wall and I said, loud enough for two customers, that it was the third time and did anyone here actually read the planogram.",
+    "trait": "inattention",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "Acting before the colleague responded reflects acting without forethought",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I started pulling the signs down myself before she'd even answered.",
+    "trait": "impulsivity",
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "The frustration could stem from work pressure",
+    "condition": "work_stress",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "She'd put the spring display up on the wrong wall and I said, loud enough for two customers, that it was the third time and did anyone here actually read the planogram.",
+    "trait": null,
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "The calmness with the refund case suggests normal emotional regulation",
+    "condition": "normal_regulation",
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I stayed calm with the man who wanted a refund without a receipt, which I'm weirdly happy about.",
+    "trait": null,
+    "vignette_id": "V010"
+  },
+  {
+    "claim_text": "The math‑sheet anecdote shows sustained inattention or procrastination",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Mum says I would sit at the kitchen table with the maths sheet for most of the evening, pencil sharpened twice, before I wrote a single number",
+    "trait": "inattention",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "The recollection of walking late and forgetting illustrates distractibility",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I don't actually remember that, it's one of her stories, same as the one about me walking home the long way and arriving an hour late because I was watching the men dig up the road",
+    "trait": "distractibility",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "The teacher’s note that the child is pleasant when expectations are clear indicates some executive control",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Mr Doyle wrote that I was a pleasure to teach when I knew what was expected",
+    "trait": "executive_control",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "The untidy handwriting suggests motor impulsivity or fine‑motor difficulties",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "The handwriting comment came every year though, untidy and rushed",
+    "trait": "motor_impulsivity",
+    "vignette_id": "V011"
+  },
+  {
+    "claim_text": "Planning the departure shows organised behaviour",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "We left Harlow at five on the Saturday, which I had planned for a week",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "Quickly fixing the wrong worms shows routine problem‑solving",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "The maggots Dennis brought were the wrong kind for roach, so the jetty man sold us a tub of worms and that sorted it",
+    "trait": null,
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The two‑hour gap after catching a perch could be a sign of distractibility",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q2",
+    "quoted_span_text": "I caught a perch first and then nothing for two hours",
+    "trait": "distractibility",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "A novice might read frequent fish mentions as hyperfocus",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "Dennis caught three roach and mentioned it often",
+    "trait": "hyperfocus",
+    "vignette_id": "V012"
+  },
+  {
+    "claim_text": "The delay in getting ready suggests a lapse in planning but could be a single event.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "It took twenty. Lena's left boot had gone missing.",
+    "trait": "planning",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "The delay could be due to a busy morning routine.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "It took twenty. Lena's left boot had gone missing.",
+    "trait": "planning",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "I would need a longer sample over several days and a sleep diary.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "A less experienced clinician might over-interpret the delay as inattention.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q5",
+    "quoted_span_text": "It took twenty. Lena's left boot had gone missing.",
+    "trait": "inattention",
+    "vignette_id": "V013"
+  },
+  {
+    "claim_text": "Time misestimation and delayed task initiation point toward ADHD traits.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "I had told myself shoes and coats would take five minutes. It took twenty.",
+    "trait": "time_management",
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Missing boot is an ordinary event, not evidence of ADHD.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q1",
+    "quoted_span_text": "Lena's left boot had gone missing. We found it under the radiator in the hall.",
+    "trait": null,
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Uncertainty about waiting could reflect low mood or anxiety, not ADHD.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "I am not sure what I was waiting for.",
+    "trait": null,
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Baseline routine, sleep, and mood history are needed to interpret delays.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q3",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "Novice clinicians may overinterpret delayed start as ADHD while ignoring ordinary context.",
+    "condition": null,
+    "direction": "neutral",
+    "question_id": "Q5",
+    "quoted_span_text": null,
+    "trait": null,
+    "vignette_id": "V014"
+  },
+  {
+    "claim_text": "The writer shows distractibility by stopping a task and doing something else.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "started the med reconciliation for bed 12, 14 pages, got halfway and went to do something else",
+    "trait": "distractibility",
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "The writer demonstrates difficulty maintaining focus by restarting a task an hour later.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "Came back an hour later and started again from the top",
+    "trait": "inattention",
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "The writer shows inattentiveness by standing in the side room without knowing why.",
+    "condition": null,
+    "direction": "raises",
+    "question_id": "Q1",
+    "quoted_span_text": "walked into the side room for the repeat potassium and stood there not knowing why I was in there",
+    "trait": "inattentiveness",
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "Sleep deprivation could explain the lapses described.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Three weeks of nights now, so I'm sleeping maybe four hours in the day if the neighbour's drill stays off",
+    "trait": "sleep_deprivation",
+    "vignette_id": "V015"
+  },
+  {
+    "claim_text": "A scheduling error may account for the writer’s confusion about gaps.",
+    "condition": null,
+    "direction": "lowers",
+    "question_id": "Q2",
+    "quoted_span_text": "Two of my gaps got swapped and nobody told me, found out from the board",
+    "trait": "systemic_issue",
+    "vignette_id": "V015"
+  }
+]
