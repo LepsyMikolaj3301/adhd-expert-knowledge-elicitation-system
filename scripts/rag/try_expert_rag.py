@@ -5,6 +5,9 @@ Usage: python scripts/rag/try_expert_rag.py --seed-silver
        python scripts/rag/try_expert_rag.py --schema chips_silver --models qwen3.8:27b \
            --run-dir data/eval/expert_runs/<name> [--suites labelled vignette patient] [--limit N]
        python scripts/rag/try_expert_rag.py --schema chips --suites vignette --run-dir <dir>
+       python scripts/rag/try_expert_rag.py --schema chips_scale --group-fragments \
+           --questions tests/fixtures/final_eval/queries.json --suites final vignette \
+           --vignettes V001 V004 V006 V012 --contexts rag oracle --models <m> --run-dir <dir>
 
 Only the package is used for retrieval and generation (retrievers, answer chains, ChatOllama); the
 script just feeds it questions and writes down what came back. Suites:
@@ -12,6 +15,15 @@ script just feeds it questions and writes down what came back. Suites:
   vignette  per vignette, three fixed questions limited to that vignette, k=8 (the several-experts
             case: do the notes carry both experts, and does the answer attribute each one?)
   patient   the silver patient texts with PatientTextRetriever (silver only)
+  final     the items of --questions (make_final_queries.py: clinician questions, new patient texts,
+            out-of-scope questions with their oracle units and key points), any schema they were
+            labelled on
+Contexts (--contexts): `rag` the retrieved notes; `oracle` the best notes the same retriever can give
+from its top 40 (expert_rag_lib.oracle_notes; items without labelled units get none); `none` the
+model asked without notes (the no-notes prompt of eval_expert_generation.py). Each context is retrieved
+once per item and kept, so a later call can add a context or a model to the same run dir.
+--think [low|medium|high] and --num-predict are recorded per model (run["model_options"]), and the
+VRAM Ollama gave each model (`/api/ps` after its first answer) in run["hardware"].
 Every suite needs a schema whose units are the silver answers; on the live `chips` schema only
 `vignette` runs, without reference points.
 
@@ -34,6 +46,7 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
+import httpx
 from expert_rag_lib import (
     OPTIONS,
     SEARCHES,
@@ -43,9 +56,12 @@ from expert_rag_lib import (
     checks,
     doc_of,
     experts_per_vignette,
+    is_patient,
     judge_question,
+    no_notes_answer,
     note_of,
     ollama_models,
+    oracle_notes,
     retrieval_record,
     retrieve,
     seed_silver,
@@ -54,6 +70,17 @@ from expert_rag_lib import (
 from langchain_ollama import ChatOllama
 
 from expert_knowledge_rag import ExpertKnowledgeStore, default_embeddings
+
+CONTEXTS = ("rag", "oracle", "none")
+
+
+def loaded(base_url: str, model: str) -> dict | None:
+    """What Ollama reports for a loaded model: size, size_vram (bytes), context length."""
+    for m in httpx.get(f"{base_url}/api/ps", timeout=10).json().get("models", []):
+        if m["name"] == model or m.get("model") == model:
+            return {k: m.get(k) for k in ("size", "size_vram", "context_length")}
+    return None
+
 
 # --- output ----------------------------------------------------------------------------------
 
@@ -77,7 +104,9 @@ def write_review(run: dict, records: dict, path: Path) -> None:
                 f"experts retrieved: {', '.join(rec['experts_retrieved'])}\n"
             )
         out.append(f"**Question:** {q['question']}\n")
-        out.append("### Notes the model saw\n")
+        if q.get("patient_text"):
+            out.append(f"**Patient text:** {q['patient_text']}\n")
+        out.append("### Notes the model saw (rag)\n")
         for n, note in enumerate(q["contexts"]["rag"], 1):
             m = note["metadata"]
             out.append(
@@ -88,9 +117,9 @@ def write_review(run: dict, records: dict, path: Path) -> None:
             out.append("### Reference points (from the labelled claims)\n")
             out += [f"- {p}" for p in q["reference_points"]]
             out.append("")
-        for g in sorted(by_item[qid], key=lambda g: g["model"]):
+        for g in sorted(by_item[qid], key=lambda g: (g["context"], g["model"])):
             c = g["checks"]
-            out.append(f"### Answer: {g['model']}\n")
+            out.append(f"### Answer: {g['model']} ({g['context']})\n")
             out.append(g["answer"] + "\n")
             out.append(
                 f"_cited {c['n_cited']} notes, experts cited: {', '.join(c['experts_cited']) or '-'}, "
@@ -114,7 +143,18 @@ def main() -> None:
     ap.add_argument(
         "--limit", type=int, default=None, help="items per suite (vignettes for that suite)"
     )
-    ap.add_argument("--think", action="store_true", help="let the model reason before answering")
+    ap.add_argument(
+        "--think",
+        nargs="?",
+        const=True,
+        default=False,
+        choices=[True, "low", "medium", "high"],
+        help="let the model reason before answering (a level for gpt-oss)",
+    )
+    ap.add_argument("--num-predict", type=int, help=f"default {OPTIONS['num_predict']}")
+    ap.add_argument("--questions", type=Path, help="final-evaluation items (suite final)")
+    ap.add_argument("--vignettes", nargs="+", help="only these vignettes in the vignette suite")
+    ap.add_argument("--contexts", nargs="+", default=["rag"], choices=CONTEXTS)
     ap.add_argument(
         "--group-fragments",
         action="store_true",
@@ -145,7 +185,11 @@ def main() -> None:
     experts = experts_per_vignette(dsn, args.schema)
     if not experts:
         sys.exit(f"schema {args.schema} has no units (--seed-silver builds {SILVER_SCHEMA})")
-    items = build_items(args.schema, args.suites, args.k, args.limit, experts)
+    if "final" in args.suites and not args.questions:
+        ap.error("suite final needs --questions")
+    items = build_items(
+        args.schema, args.suites, args.k, args.limit, experts, args.vignettes, args.questions
+    )
     if not items:
         sys.exit("no items: the labelled and patient suites need the silver schema")
 
@@ -167,6 +211,8 @@ def main() -> None:
             "generations": [],
         }
     )
+    run.setdefault("model_options", {})
+    run.setdefault("hardware", {})
     if (run["schema"], run["search"], run.get("group_fragments", False)) != (
         args.schema,
         args.search,
@@ -175,54 +221,81 @@ def main() -> None:
         sys.exit(f"{args.run_dir} was made with other retrieval settings; use a new --run-dir")
     records = json.loads(ret_path.read_text())["items"] if ret_path.exists() else {}
 
-    # 1. retrieval (bge-m3 only)
+    # 1. retrieval (bge-m3 only), every context once per item
     store = ExpertKnowledgeStore(dsn, schema=args.schema)
     embeddings = default_embeddings(base_url=base_url)
+    options = {"group_fragments": args.group_fragments}
     for item in items:
-        if item["id"] in run["questions"]:
-            continue
-        docs = retrieve(item, store, embeddings, args.search, group_fragments=args.group_fragments)
-        records[item["id"]] = retrieval_record(item, docs, experts)
-        run["questions"][item["id"]] = {
-            "question": judge_question(item),
-            "type": "patient_text" if item["suite"] == "patient" else "clinician_question",
-            "reference_points": item["refs"],
-            "optional_points": [],
-            "relevant_units": item["relevant_units"],
-            "contexts": {"rag": [note_of(d) for d in docs]},
-            "vignette": item.get("vignette"),
-            "question_only": item["question"],
-            "patient_text": item.get("patient_text"),
-        }
-        print(
-            f"retrieved {item['id']}: {len(docs)} notes, experts {records[item['id']]['experts_retrieved']}"
-        )
+        q = run["questions"].get(item["id"])
+        if q is None:
+            docs = retrieve(item, store, embeddings, args.search, **options)
+            records[item["id"]] = retrieval_record(item, docs, experts)
+            q = run["questions"][item["id"]] = {
+                "question": judge_question(item),
+                "type": "patient_text" if is_patient(item) else "clinician_question",
+                "suite": item["suite"],
+                "kind": item.get("kind"),
+                "answerable": item.get("answerable"),
+                "reference_points": item["refs"],
+                "optional_points": [],
+                "relevant_units": item["relevant_units"],
+                "contexts": {"rag": [note_of(d) for d in docs]},
+                "vignette": item.get("vignette"),
+                "question_only": item["question"],
+                "patient_text": item.get("patient_text"),
+            }
+            print(
+                f"retrieved {item['id']}: {len(docs)} notes, experts {records[item['id']]['experts_retrieved']}"
+            )
+        if "oracle" in args.contexts and "oracle" not in q["contexts"]:
+            oracle = oracle_notes(item, store, embeddings, args.search, **options)
+            q["contexts"]["oracle"] = [note_of(d) for d in oracle]
+            records[item["id"]]["oracle_notes"] = len(oracle)
+        if "none" in args.contexts:
+            q["contexts"].setdefault("none", [])
     ret_path.write_text(json.dumps({"summary": summarise(records), "items": records}, indent=1))
+    gen_path.write_text(json.dumps(run, indent=1))
 
     # 2. generation, one model at a time
-    done = {(g["model"], g["id"]) for g in run["generations"]}
+    done = {(g["model"], g["id"], g["context"]) for g in run["generations"]}
     wanted = {i["id"]: i for i in items}
+    model_options = {**OPTIONS}
+    if args.num_predict:
+        model_options["num_predict"] = args.num_predict
     for model in args.models:
-        llm = ChatOllama(model=model, base_url=base_url, reasoning=args.think, **OPTIONS)
-        for qid, item in wanted.items():
-            if (model, qid) in done:
-                continue
-            docs = [doc_of(n) for n in run["questions"][qid]["contexts"]["rag"]]
-            text, stats = answer(item, docs, llm)
-            run["generations"].append(
-                {
-                    "id": qid,
-                    "model": model,
-                    "context": "rag",
-                    "sample": 1,
-                    "answer": text,
-                    "checks": checks(text, docs),
-                    "stats": stats,
-                }
+        llm = ChatOllama(model=model, base_url=base_url, reasoning=args.think, **model_options)
+        used = {"think": args.think, **model_options}
+        if run["model_options"].setdefault(model, used) != used:
+            sys.exit(
+                f"{model} was run here with {run['model_options'][model]}; use a new --run-dir"
             )
-            run["generated_at"] = datetime.now(UTC).isoformat(timespec="seconds")
-            gen_path.write_text(json.dumps(run, indent=1))
-            print(f"{model} {qid}: {stats['seconds']}s, {len(text.split())} words")
+        for context in args.contexts:
+            for qid, item in wanted.items():
+                notes = run["questions"][qid]["contexts"].get(context)
+                if (model, qid, context) in done or (context == "oracle" and not notes):
+                    continue
+                docs = [doc_of(n) for n in notes]
+                if context == "none":
+                    text, stats = no_notes_answer(item, llm)
+                else:
+                    text, stats = answer(item, docs, llm, grouped=args.group_fragments)
+                run["generations"].append(
+                    {
+                        "id": qid,
+                        "model": model,
+                        "context": context,
+                        "sample": 1,
+                        "answer": text,
+                        "checks": checks(text, docs),
+                        "stats": stats,
+                    }
+                )
+                if model not in run["hardware"]:
+                    run["hardware"][model] = loaded(base_url, model)
+                    print(f"{model} loaded: {run['hardware'][model]}")
+                run["generated_at"] = datetime.now(UTC).isoformat(timespec="seconds")
+                gen_path.write_text(json.dumps(run, indent=1))
+                print(f"{model} {context} {qid}: {stats['seconds']}s, {len(text.split())} words")
 
     # only the items asked for this time go to the review sheet
     shown = {**run, "questions": {q: v for q, v in run["questions"].items() if q in wanted}}

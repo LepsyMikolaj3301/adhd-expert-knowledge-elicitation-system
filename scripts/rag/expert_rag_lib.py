@@ -7,6 +7,7 @@ chains, ChatOllama); this module builds the questions, calls it and writes down 
 Retrieval is always bge-m3 (the model of the stored vectors); the chosen local model only answers.
 """
 
+import json
 import re
 import sys
 import time
@@ -19,7 +20,8 @@ import httpx
 import psycopg
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.documents import Document
-from langchain_core.runnables import RunnableLambda
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.retrievers import BaseRetriever
 from psycopg import sql
 
 from expert_knowledge_core.prompts import NOT_IN_SOURCES
@@ -60,6 +62,13 @@ VIGNETTE_QUESTIONS = [
 PATIENT_QUESTION = (
     "Which passages would colleagues read as ADHD-related, and what else could explain them?"
 )
+ORACLE_DEPTH = 40  # notes the retriever returns when the oracle context picks the labelled ones
+# The no-notes control of eval_expert_generation.py, same words (the package's chains never call
+# the model without notes: they answer NOT_IN_SOURCES).
+NO_NOTES_SYSTEM_PROMPT = """You help a clinician with a question about reading patients' own writing
+for ADHD-related traits. No notes from colleagues are available for this question. Answer in 3 to 6
+sentences from general knowledge, and begin by saying that this is general knowledge and not
+colleagues' notes."""
 
 
 # --- seeding and data ------------------------------------------------------------------------
@@ -131,8 +140,12 @@ def build_items(
     k: int,
     limit: int | None,
     vignettes: dict[str, list[str]],
+    only_vignettes: list[str] | None = None,
+    final: Path | None = None,
 ) -> list[dict]:
-    """The questions to ask: {id, suite, question, patient_text?, vignette?, exclude?, k, refs, labels}."""
+    """The questions to ask: {id, suite, question, patient_text?, vignette?, exclude?, k, refs, labels}.
+    `only_vignettes` limits the vignette suite; `final` is tests/fixtures/final_eval/queries.json
+    (suite `final`, make_final_queries.py)."""
     silver = schema.startswith(SILVER_SCHEMA)
     queries = silver_corpus()[0].queries if silver else {}
     claims = load_claims() if silver else {}
@@ -162,7 +175,8 @@ def build_items(
         for claim_id, units in covers.items():
             for u in units:
                 by_vignette[vignette_of_unit(u)].append(claim_id)
-        for v in list(vignettes)[:limit]:
+        chosen = [v for v in vignettes if only_vignettes is None or v in only_vignettes]
+        for v in chosen[:limit]:
             ids = sorted(set(by_vignette.get(v, [])))[:MAX_REFERENCE]
             for name, text in VIGNETTE_QUESTIONS:
                 items.append(
@@ -194,7 +208,47 @@ def build_items(
                     ),
                 }
             )
+    if "final" in suites and final is not None:
+        items += final_items(final, k)[:limit]
     return items
+
+
+def key_point_line(kp: dict) -> str:
+    note = "; ".join(x for x in (kp.get("direction"), kp.get("condition")) if x)
+    return kp["text"] + (f" ({note})" if note else "")
+
+
+def final_items(path: Path, k: int) -> list[dict]:
+    """The final-evaluation items: clinician questions, new patient texts, out-of-scope questions.
+    The judge's key points are the grade-2 points (all points when none has grade 2); a key point
+    plays the part of a claim (`covers`)."""
+    items = []
+    for q in json.loads(path.read_text())["items"]:
+        points = q["key_points"]
+        main = [p for p in points if p["grade"] == 2] or points
+        refs = [key_point_line(p) for p in main] or [
+            "(none: the notes hold nothing that answers this; a good answer says so)"
+        ]
+        items.append(
+            {
+                "id": q["id"],
+                "suite": "final",
+                "kind": q["kind"],
+                "answerable": q["answerable"],
+                "question": q["question"],
+                "patient_text": q.get("patient_text"),
+                "k": k,
+                "refs": refs,
+                "claim_ids": [p["id"] for p in points],
+                "relevant_units": sorted({u for p in points for u in p["unit_ids"]}),
+                "covers": {p["id"]: p["unit_ids"] for p in points},
+            }
+        )
+    return items
+
+
+def is_patient(item: dict) -> bool:
+    return item["suite"] == "patient" or item.get("kind") == "patient"
 
 
 def silver_examples(k: int = 4) -> list[dict]:
@@ -204,7 +258,7 @@ def silver_examples(k: int = 4) -> list[dict]:
 
 def judge_question(item: dict) -> str:
     """What the judge reads as the question (for a patient text, the text comes with it)."""
-    if item["suite"] == "patient":
+    if is_patient(item):
         return f'Patient text: "{item["patient_text"]}"\n\n{item["question"]}'
     return item["question"]
 
@@ -257,13 +311,43 @@ def retrieve(
     retriever = make_retriever(
         store,
         embeddings,
-        patient=item["suite"] == "patient",
+        patient=is_patient(item),
         k=item["k"],
         search=search,
         filter=flt,
         **options,
     )
     return retriever.invoke(item.get("patient_text") or item["question"])
+
+
+def oracle_notes(
+    item: dict,
+    store: ExpertKnowledgeStore,
+    embeddings: Any,
+    search: str = "hybrid",
+    **options: Any,
+) -> list[Document]:
+    """The best notes the same retriever can give: among its top ORACLE_DEPTH, first the notes that
+    add a key point (claim) not yet covered, in rank order, then other notes with a labelled unit,
+    up to k. Same note format and grouping as `retrieve`; [] when nothing labelled is among them."""
+    deep = retrieve({**item, "k": ORACLE_DEPTH}, store, embeddings, search, **options)
+    covers = {c: set(u) for c, u in (item.get("covers") or {}).items()}
+    relevant = set(item["relevant_units"])
+    chosen: list[Document] = []
+    covered: set[str] = set()
+    for doc in deep:
+        units = set(doc.metadata["unit_ids"])
+        new = {c for c, u in covers.items() if u & units} - covered
+        if new and len(chosen) < item["k"]:
+            chosen.append(doc)
+            covered |= new
+    for doc in deep:
+        if len(chosen) >= item["k"]:
+            break
+        if doc not in chosen and set(doc.metadata["unit_ids"]) & relevant:
+            chosen.append(doc)
+    rank = {id(d): n for n, d in enumerate(deep)}
+    return sorted(chosen, key=lambda d: rank[id(d)])
 
 
 def retrieval_record(item: dict, docs: list[Document], experts: dict[str, list[str]]) -> dict:
@@ -305,12 +389,24 @@ class Usage(BaseCallbackHandler):
         self.tokens = dict(getattr(message, "usage_metadata", None) or {})
 
 
-def answer(item: dict, docs: list[Document], llm: Any) -> tuple[str, dict]:
-    """The package's answer chain over the notes already retrieved (so every model sees the same)."""
-    fixed = RunnableLambda(lambda _: docs)
+class FixedNotes(BaseRetriever):
+    """Hands the chain notes that were retrieved before. `group_fragments` is read by the chains to
+    add the agreement rule to the prompt, so it must match how the notes were retrieved."""
+
+    docs: list[Document]
+    group_fragments: bool = False
+
+    def _get_relevant_documents(self, query: str, *, run_manager: Any) -> list[Document]:
+        return self.docs
+
+
+def answer(item: dict, docs: list[Document], llm: Any, grouped: bool = False) -> tuple[str, dict]:
+    """The package's answer chain over the notes already retrieved (so every model sees the same).
+    `grouped`: the notes came from a retriever with group_fragments."""
+    fixed = FixedNotes(docs=docs, group_fragments=grouped)
     usage = Usage()
     t0 = time.monotonic()
-    if item["suite"] == "patient":
+    if is_patient(item):
         out = patient_answer_chain(fixed, llm).invoke(
             {"patient_text": item["patient_text"], "question": item["question"]},
             config={"callbacks": [usage]},
@@ -319,8 +415,21 @@ def answer(item: dict, docs: list[Document], llm: Any) -> tuple[str, dict]:
         out = expert_answer_chain(fixed, llm).invoke(
             item["question"], config={"callbacks": [usage]}
         )
-    seconds = time.monotonic() - t0
-    text = out["answer"].strip()
+    return out["answer"].strip(), _stats(usage, time.monotonic() - t0)
+
+
+def no_notes_answer(item: dict, llm: Any) -> tuple[str, dict]:
+    """The `none` control: the model asked without notes (eval_expert_generation's prompt)."""
+    usage = Usage()
+    t0 = time.monotonic()
+    out = llm.invoke(
+        [SystemMessage(content=NO_NOTES_SYSTEM_PROMPT), HumanMessage(content=judge_question(item))],
+        config={"callbacks": [usage]},
+    )
+    return str(out.content).strip(), _stats(usage, time.monotonic() - t0)
+
+
+def _stats(usage: "Usage", seconds: float) -> dict:
     tokens = usage.tokens
     stats = {
         "seconds": round(seconds, 2),
@@ -330,7 +439,7 @@ def answer(item: dict, docs: list[Document], llm: Any) -> tuple[str, dict]:
         if tokens.get("output_tokens")
         else None,
     }
-    return text, stats
+    return stats
 
 
 def cited(text: str) -> list[int]:
@@ -352,7 +461,7 @@ def checks(text: str, docs: list[Document]) -> dict:
 
 def summarise(records: dict) -> dict:
     summary: dict[str, dict] = {}
-    for suite in ("labelled", "vignette", "patient"):
+    for suite in ("labelled", "vignette", "patient", "final"):
         recs = [r for r in records.values() if r["suite"] == suite]
         if not recs:
             continue
