@@ -254,4 +254,139 @@ pytania per winieta ograniczone do tej winiety (przypadek „wielu ekspertów o 
 
 ## 6. Aspekt 2: generacja na modelach średnich i małych
 
-_(uzupełniane po teście generacji)_
+### 6.1 Co zrobiono
+
+- **Pytania**: 50 nowych pozycji z części 4 (30 pytań klinicysty, 15 tekstów pacjenta, 5 spoza
+  zakresu) na `chips_scale` (32 ekspertów). Pytania „per winieta” wypadły z testu: na `chips_scale`
+  nie mają etykiet, więc sędzia nie miałby punktów kluczowych.
+- **Retrieval**: `hybrid`, k = 4 noty, **grupowanie fragmentów włączone** (run A). Każdy model
+  dostaje dokładnie te same noty (retrieval raz, potem generacja model po modelu).
+- **Łańcuch odpowiedzi**: `expert_answer_chain` / `patient_answer_chain` z pakietu (prompty
+  aplikacji, cytowanie `[E#]`, odmowa „not in sources”, reguła linii zgodności dla not grupowych).
+  `temperature` 0, `num_ctx` 8192, `num_predict` 600.
+- **Konteksty**:
+  - `rag`: noty z retrievalu;
+  - `oracle`: najlepsze noty, jakie ten sam retriever może dać (z top 40 najpierw noty wnoszące nowy
+    punkt kluczowy, potem inne trafne), 4 noty, ten sam format; pomijany dla 6 pozycji bez odpowiedzi
+    w notach. Różnica `oracle − rag` oddziela błędy retrievalu od błędów generatora;
+  - `none`: model pytany bez not (prompt „wiedza ogólna”), tylko qwen3.8:27b, jako kontrola, że sędzia
+    odróżnia odpowiedzi z not od wiedzy ogólnej.
+- **Run B**: qwen3.8:27b, `rag`, te same pytania **bez grupowania**, żeby zmierzyć wpływ grupowania
+  na odpowiedzi.
+- **Modele i sprzęt** (RTX 3090 24 GB; klasę 8 GB odwzorowano limitem warstw na GPU):
+
+| Klasa | Model | Jak uruchomiony | VRAM | Całość | tok/s | s / odp. |
+|---|---|---|---|---|---|---|
+| 24 GB | qwen3.8:27b (dense) | cały na GPU | 16,1 GiB | 16,1 GiB | 36,5 | 5,0 |
+| 24 GB | gpt-oss:20b (MoE) | cały na GPU, `think: low`, `num_predict` 1500 | 11,9 GiB | 11,9 GiB | 110,8 | 2,2 |
+| 8 GB | qwen3.5:9b (dense) | cały na GPU (mieści się bez offloadu) | 5,4 GiB | 5,4 GiB | 70,2 | 2,2 |
+| 8 GB | qwen3.6:35b-a3b (MoE) | alias `qwen3.6-35b-a3b-8gb`: 14 z 41 warstw na GPU, reszta w RAM (`scripts/rag/modelfiles/`) | 6,9 GiB | 20,9 GiB | 7,7 | 23,3 |
+
+  VRAM to `size_vram` z Ollamy po pierwszej odpowiedzi. gpt-oss przy limicie 600 tokenów zużywał
+  cały budżet na rozumowanie (pusta lub ucięta odpowiedź w smoke teście), dlatego dostał `think: low`
+  i 1500 tokenów: to inny warunek niż u pozostałych modeli. Żadna odpowiedź w pełnym teście nie
+  była ucięta ani pusta. Ollama przenosi do RAM całe warstwy, nie same eksperty MoE.
+- **Ocena**: ślepa, Claude Sonnet, dwa niezależne przejścia (j1, j2), rubryka klinicysty
+  `EXPERT_JUDGE_RUBRIC` (`scripts/rag/rag_common.py`): key_points, fidelity, attribution,
+  usefulness, citation_quality (1–5), unsupported_claims, abstention_ok, **pass** = fidelity ≥ 4
+  i attribution ≥ 4 i key_points ≥ 3 i brak niepopartych twierdzeń. Pozycja dla sędziego = pytanie ×
+  kontekst; sędzia widzi pytanie, punkty kluczowe (waga 2), noty i odpowiedzi wszystkich modeli pod
+  losowymi literami. 476 odpowiedzi × 2 przejścia, 18 części po 20–25 pozycji.
+- **Protokół i jego ograniczenia**: subagent ocenia 20–25 pozycji w jednym kontekście (możliwe
+  zakotwiczenie); konteksty jednego pytania są w tej samej części; j1 i j2 mają identyczny podział i
+  kolejność, więc kappa nie wychwyci efektu kolejności. Część sędziów zapisała etykiety systemów jako
+  „System A” albo pominęła literę przy jednym systemie; przed importem klucze ujednolicono
+  mechanicznie (oceny bez zmian, oryginały zachowane jako `*.json.orig`). Sędziowie niejednolicie
+  oceniali fidelity przy odmowach (null / 3 / 5), co dotyczy ~10% odpowiedzi.
+- **Raport**: `python scripts/rag/report_final_generation.py --run-dir data/eval/expert_runs/20261122-final-scale-group --compare data/eval/expert_runs/20261122-final-scale-nogroup`;
+  wartości pól to średnia z dwóch przejść, pass = odsetek przejść, które uznały odpowiedź, [95%
+  bootstrap po pytaniach]; różnice sparowane na tych samych pytaniach.
+
+### 6.2 Zgodność sędziego
+
+j1 vs j2 na 426 odpowiedziach: zgodność pass **0,90**; ważona kappa key_points 0,85, citation_quality
+0,72, fidelity 0,71, usefulness 0,71, attribution 0,68. Wystarczająco, by raportować pass i
+key_points; attribution czytać ostrożniej.
+
+### 6.3 Pytania klinicysty (29 pozycji, na które noty odpowiadają)
+
+| Model | Klasa | Kontekst | pass | key_points | fidelity | attribution | niepoparte |
+|---|---|---|---|---|---|---|---|
+| qwen3.8:27b | 24 GB | rag | **0,74** [0,60, 0,86] | 3,19 | 3,96 | 4,14 | 0,00 |
+| | | oracle | 0,84 [0,72, 0,95] | 3,52 | 3,91 | 4,16 | 0,02 |
+| gpt-oss:20b | 24 GB | rag | 0,41 [0,26, 0,60] | 3,10 | 3,33 | 3,50 | 0,03 |
+| | | oracle | 0,34 [0,19, 0,50] | 3,05 | 3,38 | 3,66 | 0,09 |
+| qwen3.5:9b | 8 GB | rag | 0,55 [0,40, 0,72] | 3,17 | 3,70 | 3,95 | 0,02 |
+| | | oracle | 0,41 [0,24, 0,57] | 3,33 | 3,43 | 3,59 | 0,05 |
+| qwen3.6:35b-a3b | 8 GB (offload) | rag | **0,76** [0,62, 0,88] | 3,16 | 3,98 | 4,19 | 0,02 |
+| | | oracle | 0,72 [0,57, 0,86] | 3,40 | 3,91 | 4,29 | 0,00 |
+| qwen3.8:27b | – | none | 0,02 | 2,31 | – | – | 0,91 |
+
+### 6.4 Teksty pacjenta (15 pozycji)
+
+| Model | Kontekst | pass | key_points | fidelity | attribution | odmowy (auto) |
+|---|---|---|---|---|---|---|
+| qwen3.8:27b | rag | 0,07 [0,00, 0,20] | 2,00 | 3,27 | 3,33 | 0,60 |
+| gpt-oss:20b | rag | 0,03 [0,00, 0,10] | 2,37 | 2,29 | 2,37 | 0,20 |
+| qwen3.5:9b | rag | 0,00 | 1,60 | 3,46 | 3,53 | 0,73 |
+| qwen3.6:35b-a3b (8 GB) | rag | **0,33** [0,10, 0,57] | 2,43 | 3,63 | 4,00 | 0,13 |
+| qwen3.6:35b-a3b (8 GB) | oracle | 0,40 [0,20, 0,63] | 2,87 | 3,50 | 3,70 | – |
+
+### 6.5 Różnice sparowane i kontrole
+
+Wszystkie 50 pozycji, kontekst `rag`, względem qwen3.8:27b (te same noty):
+- qwen3.6:35b-a3b (8 GB): pass +0,09 [−0,05, +0,22], attribution +0,23 [−0,08, +0,52]: **w granicach
+  szumu, czyli nie gorszy od 27b**.
+- qwen3.5:9b: pass **−0,13** [−0,23, −0,03]; na `oracle` pass −0,30, key_points −0,43, fidelity −0,33,
+  attribution −0,41 (wszystkie ≠ 0).
+- gpt-oss:20b: pass **−0,20**, fidelity **−0,64**, attribution **−0,66**, niepoparte twierdzenia
+  **+0,12** (wszystkie ≠ 0).
+
+`oracle − rag` (luka retrievalu przy danym generatorze): key_points **+0,43** (27b) i **+0,31**
+(35b), pass w granicach szumu dla wszystkich modeli. Dla 9b `oracle` obniża attribution (−0,35) i
+podnosi odsetek niepopartych twierdzeń (+0,08): noty oracle są bardziej zróżnicowane (pochodzą
+z kilku winiet) i mały model gorzej je referuje.
+
+Kontrola sędziego: qwen3.8:27b `rag − none` pass **+0,50** [+0,35, +0,64], key_points **+0,56**;
+bez not 77% odpowiedzi zawiera niepoparte twierdzenia. Sędzia odróżnia odpowiedź z not od wiedzy
+ogólnej.
+
+**Grupowanie (run A − run B, qwen3.8:27b, `rag`)**: pass +0,00 [−0,11, +0,10], key_points −0,08,
+fidelity +0,11, attribution −0,03: **w granicach szumu**. Na pytaniach klinicysty pass 0,74 vs 0,71.
+Na tekstach pacjenta model z grupowaniem częściej odmawia: 9 z 15 vs 3 z 15 (7 pozycji odmowy
+tylko z grupowaniem, 1 odwrotnie; McNemar p ≈ 0,07). To sygnał, nie wynik: nota grupy zaczyna się
+od „Teaching case V…” i cytatów innego tekstu, więc model chętniej uznaje, że noty „nie dotyczą” tekstu
+pacjenta.
+
+**Pytania spoza zakresu**: wszystkie 4 modele odmówiły na wszystkich 6 pozycjach bez odpowiedzi w
+notach (5 spoza zakresu + C30). Fałszywe odmowy (odmowa, choć noty odpowiadają): qwen3.8:27b 24%,
+qwen3.5:9b 28%, gpt-oss 7%, qwen3.6:35b-a3b 4–7%; prawie wszystkie na tekstach pacjenta. Sędziowie
+uznali 78 z 90 ocen takich odmów za niesłuszne.
+
+### 6.6 Co to znaczy
+
+1. **Model MoE 35B-A3B z offloadem mieści się w budżecie 8 GB VRAM i odpowiada tak dobrze jak dense
+   27B na karcie 24 GB** (pass 0,76 vs 0,74 na pytaniach klinicysty, różnice w granicach szumu), za
+   cenę szybkości: 7,7 tok/s i ~23 s na odpowiedź zamiast ~5 s. Dla czatbota klinicysty to
+   akceptowalne opóźnienie; dla przetwarzania wsadowego już mniej.
+2. **Dense 9B (8 GB, bez offloadu) jest wyraźnie słabszy** (pass 0,55 vs 0,74 na pytaniach klinicysty),
+   a przy lepszych notach (`oracle`) nie zyskuje, tylko traci: ograniczeniem jest generator, jak we
+   wcześniejszych testach.
+3. **gpt-oss:20b jest najszybszy, ale najmniej wierny notom**: najniższe fidelity i attribution i
+   najwięcej niepopartych twierdzeń (dokłada wiedzę ogólną mimo instrukcji). Przy tym promptcie nie
+   nadaje się do tej roli.
+4. **Retrieval nie jest wąskim gardłem na pytaniach klinicysty**: `oracle` podnosi pokrycie punktów
+   kluczowych (+0,3–0,4), ale nie zmienia pass rate w sposób mierzalny.
+5. **Teksty pacjenta to najsłabszy punkt całego systemu**, i to po stronie generacji: retrieval znajduje
+   trafne noty (hit@4 1,00, część 4), ale modele 9B i 27B w większości odmawiają przeniesienia odczytu
+   z cudzego tekstu na tekst pacjenta. Tylko 35B-A3B robi to w co trzecim przypadku. Kierunek do
+   poprawy: prompt pacjenta (wprost: „noty dotyczą innych tekstów; przenieś odczyt, jeśli pasuje ten
+   sam rodzaj sygnału”) i sprawdzenie, czy grupowanie nie nasila odmów.
+6. **Grupowanie nie szkodzi odpowiedziom na pytania klinicysty**, a w retrievalu niesie więcej
+   klinicystów i punktów kluczowych w 4 notach. Przed włączeniem go dla trybu pacjenta warto powtórzyć
+   test odmów na większej liczbie tekstów.
+7. **Odmowa poza zakresem działa** u wszystkich modeli (6/6), mimo że retrieval zawsze coś zwraca
+   (część 4, pkt 4): tę rolę skutecznie pełni generator.
+
+Ograniczenia z 1.6 obowiązują: dane syntetyczne, autor pytań, etykiet i sędzia to ten sam rodzaj
+modelu (Claude), 15 tekstów pacjenta to mała próba.
