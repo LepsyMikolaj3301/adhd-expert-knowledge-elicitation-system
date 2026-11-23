@@ -33,6 +33,9 @@ DIAGRAMS = [
     ("05_kontekst", "Kontekst kliniki (IBD)", "interconnection", "KontekstElicytacji::kontekstKliniki", ["LR"]),
     ("06_wnetrze_systemu", "Wnętrze systemu (IBD)", "interconnection", "StrukturaElicytacji::SystemElicytacji", ["LR"]),
     ("07_model_danych", "Model danych (BDD)", "tree", "StrukturaElicytacji::Data", ["LR"]),
+    ("08a_struktura_systemu", "Struktura systemu (BDD)", "tree", "StrukturaElicytacji::SystemElicytacji", ["LR"]),
+    ("08b_struktura_api", "Struktura API (BDD)", "tree", "StrukturaElicytacji::BackendApi", ["LR"]),
+    ("08c_struktura_workera", "Struktura workera (BDD)", "tree", "StrukturaElicytacji::Worker", ["LR"]),
 ]
 
 

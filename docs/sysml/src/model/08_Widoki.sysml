@@ -87,30 +87,33 @@ package WidokiElicytacji {
         expose SekwencjaElicytacji::SesjaElicytacji::**;
     }
 
-    // ---- 7. BDD
+    // ---- 7. BDD (trzy widoki, żeby diagramy były czytelne)
     view strukturaSystemu : GeneralView {
-        doc /* SysML 1.x: bdd. Bloki systemu: kontenery, moduły API, części workera. */
+        doc /* SysML 1.x: bdd. Kontenery systemu. */
         expose StrukturaElicytacji::SystemElicytacji;
-        expose StrukturaElicytacji::SystemElicytacji::*;
         expose StrukturaElicytacji::Frontend;
         expose StrukturaElicytacji::BackendApi;
-        expose StrukturaElicytacji::BackendApi::*;
         expose StrukturaElicytacji::Worker;
-        expose StrukturaElicytacji::Worker::*;
         expose StrukturaElicytacji::AppDatabase;
+    }
+    view strukturaApi : GeneralView {
+        doc /* SysML 1.x: bdd. Moduły backendu API. */
+        expose StrukturaElicytacji::BackendApi;
         expose StrukturaElicytacji::Auth;
         expose StrukturaElicytacji::Users;
         expose StrukturaElicytacji::Vignettes;
         expose StrukturaElicytacji::Assignments;
-        expose StrukturaElicytacji::Assignments::*;
         expose StrukturaElicytacji::StateMachine;
         expose StrukturaElicytacji::Proofread;
         expose StrukturaElicytacji::Reviews;
         expose StrukturaElicytacji::Knowledge;
+    }
+    view strukturaWorkera : GeneralView {
+        doc /* SysML 1.x: bdd. Części workera i jego zadania. */
+        expose StrukturaElicytacji::Worker;
         expose StrukturaElicytacji::Compute;
         expose StrukturaElicytacji::JobQueue;
         expose StrukturaElicytacji::JobHandlers;
-        expose StrukturaElicytacji::JobHandlers::*;
         expose StrukturaElicytacji::ProofreadJob;
         expose StrukturaElicytacji::ProcessJob;
         expose StrukturaElicytacji::IngestJob;
