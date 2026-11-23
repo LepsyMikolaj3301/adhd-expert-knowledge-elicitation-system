@@ -229,7 +229,7 @@ describe('writing a vignette', () => {
     expect(buttonNamed('Save draft').attributes('disabled')).toBeUndefined()
     await buttonNamed('Save draft').trigger('click')
     await vi.waitFor(() => expect(writes()).toHaveLength(1))
-    expect((writes()[0]?.body as Record<string, unknown>).code).toBe(sent)
+    expect((writes()[0]!.body as Record<string, unknown>).code).toBe(sent)
   })
 
   it('says what is wrong with a code it cannot use', async () => {
