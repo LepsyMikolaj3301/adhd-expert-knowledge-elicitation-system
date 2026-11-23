@@ -1,8 +1,11 @@
 """Tests for expert_rag_lib.py (the try-out shared by the script and the notebook): no database."""
 
 import json
+import zlib
 
 import expert_rag_lib as lib
+import numpy as np
+import pytest
 from langchain_core.documents import Document
 from langchain_core.embeddings import DeterministicFakeEmbedding
 from langchain_core.messages import AIMessage
@@ -77,7 +80,27 @@ def test_summarise_per_suite():
     assert s["vignette"]["all_experts_retrieved"] == 1.0 and "patient" not in s
 
 
-def test_build_items_on_silver():
+@pytest.fixture
+def offline_silver(monkeypatch):
+    """silver_corpus() with fake vectors instead of bge-m3 (questions, patient texts and labels do
+    not depend on the vectors), so no Ollama is needed."""
+    import chips_fixture
+
+    class FakeEmbeddings(chips_fixture.IndexEmbeddings):
+        def __init__(self) -> None:
+            self.model, self.dimensions, self._seen = "fake", 8, {}
+
+        def matrix(self, texts):
+            rng = [np.random.default_rng(zlib.crc32(t.encode())).random(8) for t in texts]
+            return np.asarray(rng, dtype=np.float32).reshape(len(texts), 8)
+
+    monkeypatch.setattr(chips_fixture, "IndexEmbeddings", FakeEmbeddings)
+    lib.silver_corpus.cache_clear()
+    yield
+    lib.silver_corpus.cache_clear()
+
+
+def test_build_items_on_silver(offline_silver):
     items = lib.build_items(lib.SILVER_SCHEMA, ["labelled", "patient"], 4, None, {})
     labelled = [i for i in items if i["suite"] == "labelled"]
     patients = [i for i in items if i["suite"] == "patient"]
