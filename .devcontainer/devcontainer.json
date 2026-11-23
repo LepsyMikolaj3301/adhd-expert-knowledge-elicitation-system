@@ -47,6 +47,7 @@
       ],
       "settings": {
         "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "python.envFile": "${workspaceFolder}/.devcontainer/kernel.env",
         "jupyter.notebookFileRoot": "${workspaceFolder}",
         "notebook.output.textLineLimit": 60,
         "[python]": {
