@@ -31,7 +31,10 @@ from expert_knowledge_rag import (
     ExpertQuestionRetriever,
     PatientTextRetriever,
     expert_answer_chain,
+    expert_prompt,
+    format_notes,
     patient_answer_chain,
+    patient_prompt,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -398,6 +401,21 @@ class FixedNotes(BaseRetriever):
 
     def _get_relevant_documents(self, query: str, *, run_manager: Any) -> list[Document]:
         return self.docs
+
+
+def prompt_messages(
+    item: dict, docs: list[Document], grouped: bool = False
+) -> list[tuple[str, str]]:
+    """(role, text) of the messages `answer` sends to the model: the system prompt and the human
+    turn with the notes, rendered by the package's own prompt templates."""
+    notes = format_notes(docs)
+    if is_patient(item):
+        prompt = patient_prompt(grouped).invoke(
+            {"notes": notes, "patient_text": item["patient_text"], "question": item["question"]}
+        )
+    else:
+        prompt = expert_prompt(grouped).invoke({"notes": notes, "question": item["question"]})
+    return [(m.type, str(m.content)) for m in prompt.to_messages()]
 
 
 def answer(item: dict, docs: list[Document], llm: Any, grouped: bool = False) -> tuple[str, dict]:
