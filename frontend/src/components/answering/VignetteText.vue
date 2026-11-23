@@ -20,7 +20,11 @@ const props = withDefaults(
 const emit = defineEmits<{ cite: [start: number, end: number] }>()
 
 const root = ref<HTMLElement>()
+const box = ref<HTMLElement>()
+const button = ref<HTMLButtonElement>()
 const mark = ref<HTMLElement>()
+/** Where "Add quote" sits in the box: just under the last line of the selected words. */
+const place = ref<{ top: number; left: number } | null>(null)
 /** A pointer is down on the text: a selection may be about to start. */
 const pressing = ref(false)
 /** The selected words, waiting for the button. */
@@ -61,7 +65,39 @@ function readSelection(): [number, number] | null {
  */
 function onSelectionChange() {
   pending.value = props.canCite ? readSelection() : null
+  if (pending.value) void placeButton()
 }
+
+/**
+ * Under the end of the selection, inside the text's box. On a touch screen it drops a little
+ * further, below the phone's selection handle. Without layout (or a selection) it keeps its
+ * last place, which starts at the left under the first line.
+ */
+async function placeButton() {
+  await nextTick()
+  const selection = window.getSelection()
+  if (!box.value || !selection?.rangeCount) return
+  const rects = selection.getRangeAt(0).getClientRects()
+  const last = rects[rects.length - 1]
+  if (!last) return
+  const outer = box.value.getBoundingClientRect()
+  const width = button.value?.offsetWidth ?? 0
+  const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false
+  const top = last.bottom - outer.top + (coarse ? 28 : 6)
+  // Its left edge at the start of the selection's last line, kept inside the box.
+  const left = Math.max(8, Math.min(last.left - outer.left, outer.width - width - 8))
+  place.value = { top, left }
+}
+
+/** Once the words are chosen, the button is scrolled into view if the text box cut it off. */
+watch(
+  () => Boolean((pending.value || armed.value) && !pressing.value),
+  async (ready) => {
+    if (!ready) return
+    await placeButton()
+    button.value?.scrollIntoView?.({ block: 'nearest' })
+  },
+)
 
 function onPointerDown() {
   if (!props.canCite) return
@@ -84,13 +120,25 @@ function addQuote() {
   const offsets = armed.value ?? pending.value
   armed.value = null
   pending.value = null
+  place.value = null
   if (!offsets) return
   window.getSelection()?.removeAllRanges()
   emit('cite', offsets[0], offsets[1])
 }
 
-onMounted(() => document.addEventListener('selectionchange', onSelectionChange))
-onBeforeUnmount(() => document.removeEventListener('selectionchange', onSelectionChange))
+/** The lines wrap differently after a resize: the button follows the words. */
+function onResize() {
+  if (pending.value || armed.value) void placeButton()
+}
+
+onMounted(() => {
+  document.addEventListener('selectionchange', onSelectionChange)
+  window.addEventListener('resize', onResize)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('selectionchange', onSelectionChange)
+  window.removeEventListener('resize', onResize)
+})
 
 watch(
   () => props.canCite,
@@ -109,7 +157,9 @@ watch(shown, async (citation) => {
 </script>
 
 <template>
-  <div class="px-5 py-5 md:px-7">
+  <!-- Room at the bottom, so that "Add quote" fits under a selection on the last line. Always
+       there: in a review quoting comes and goes with the comment box, and the text must not jump. -->
+  <div ref="box" class="relative px-5 pt-5 pb-16 md:px-7">
     <p ref="root" class="patient-text" data-testid="vignette-text" @pointerdown="onPointerDown">
       <span>{{ parts.before }}</span
       ><mark
@@ -120,38 +170,31 @@ watch(shown, async (citation) => {
         >{{ parts.marked }}</mark
       ><span v-if="parts.after">{{ parts.after }}</span>
     </p>
-    <!-- At the bottom of the screen: clear of the phone's own copy menu and selection handles. -->
-    <Teleport to="body">
-      <div v-if="pending || armed" class="add-quote-bar">
-        <button
-          type="button"
-          class="btn shadow-lg"
-          data-testid="add-quote"
-          @pointerdown.prevent="arm"
-          @pointercancel="armed = null"
-          @mousedown.prevent
-          @click="addQuote"
-        >
-          <span aria-hidden="true">+</span> {{ citeLabel }}
-        </button>
-      </div>
-    </Teleport>
+    <!-- Right under the selected words, so it is seen where the eye already is. -->
+    <button
+      v-if="pending || armed"
+      ref="button"
+      type="button"
+      class="btn add-quote shadow-lg"
+      :style="place ? { top: `${place.top}px`, left: `${place.left}px` } : undefined"
+      data-testid="add-quote"
+      @pointerdown.prevent="arm"
+      @pointercancel="armed = null"
+      @mousedown.prevent
+      @click="addQuote"
+    >
+      <span aria-hidden="true">+</span> {{ citeLabel }}
+    </button>
   </div>
 </template>
 
 <style scoped>
-.add-quote-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  z-index: 40;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.add-quote-bar > button {
-  pointer-events: auto;
+.add-quote {
+  position: absolute;
+  /* Before the first measurement: under the start of the text. */
+  top: 2.5rem;
+  left: 1.25rem;
+  z-index: 20;
+  white-space: nowrap;
 }
 </style>

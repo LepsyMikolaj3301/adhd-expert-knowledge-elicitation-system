@@ -289,6 +289,7 @@ onUnmounted(() => {
             :counts="{}"
             :pulse-chip="null"
             :pinned-chip="pinnedChip"
+            column-scrolls
             @active="activeChip = $event"
             @pin="pinnedChip = pinnedChip === $event ? null : $event"
             @insert="sink?.insertChip($event)"

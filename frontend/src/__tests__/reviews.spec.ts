@@ -627,7 +627,7 @@ describe('HomeView', () => {
     ])
   })
 
-  it("shows five updates at a time under What's new, and the privacy placeholder", async () => {
+  it("shows five updates at a time under What's new, and the privacy summary", async () => {
     logIn(expert)
     stubFetch(() =>
       jsonResponse(200, {
@@ -655,7 +655,10 @@ describe('HomeView', () => {
     await wrapper!.get('[data-testid="news-more"]').trigger('click')
     expect(items()).toHaveLength(12)
     expect(wrapper!.find('[data-testid="news-more"]').exists()).toBe(false)
-    expect(wrapper!.get('[data-testid="gdpr"]').text()).toContain('GDPR')
+    const gdpr = wrapper!.get('[data-testid="gdpr"]')
+    expect(gdpr.text()).toContain('GDPR')
+    expect(gdpr.text()).not.toMatch(/placeholder/i)
+    expect(gdpr.get('[data-testid="privacy-link"]').attributes('href')).toBe('/privacy')
   })
 
   it('links a comment to its thread, and marks the feed as seen up to the newest item', async () => {

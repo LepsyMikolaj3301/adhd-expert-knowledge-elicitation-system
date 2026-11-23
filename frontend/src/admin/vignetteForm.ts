@@ -44,6 +44,12 @@ export function nextCode(codes: string[]): string {
   return `V${String(next).padStart(3, '0')}`
 }
 
+/** A code typed by hand, written the way the server takes it (`v7` → `V007`). Null if unusable. */
+export function codeFrom(typed: string): string | null {
+  const digits = /^V?(\d+)$/i.exec(typed.trim())?.[1]
+  return digits ? `V${digits.padStart(3, '0')}` : null
+}
+
 export function emptyDesign(): VignetteDesign {
   return {
     purpose: '',

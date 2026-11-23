@@ -5,7 +5,7 @@ import { CITE } from '@/copy'
 
 /**
  * "How to add a quote", under the case text. Pointing at it (or tapping it) opens a short loop on
- * a small screen: a cursor selects some words, "Add quote" rises at the bottom, a tap presses it,
+ * a small screen: a cursor selects some words, "Add quote" rises under the words, a tap presses it,
  * and the selection turns into a numbered quote. The panel only exists while open, so the loop
  * starts from the beginning every time.
  */

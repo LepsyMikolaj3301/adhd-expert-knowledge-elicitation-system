@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
-import { emptyDesign, fieldForError, nextCode } from '@/admin/vignetteForm'
+import { codeFrom, emptyDesign, fieldForError, nextCode } from '@/admin/vignetteForm'
 import App from '@/App.vue'
 import { ApiError, type VersionAdminView } from '@/api/client'
 import router from '@/router'
@@ -115,6 +115,15 @@ describe('nextCode', () => {
     expect(nextCode(['V001', 'V014', 'V003'])).toBe('V015')
     expect(nextCode(['V999'])).toBe('V1000')
   })
+
+  it('reads a code typed by hand', () => {
+    expect(codeFrom('V020')).toBe('V020')
+    expect(codeFrom(' v7 ')).toBe('V007')
+    expect(codeFrom('1234')).toBe('V1234')
+    expect(codeFrom('')).toBeNull()
+    expect(codeFrom('V')).toBeNull()
+    expect(codeFrom('V12a')).toBeNull()
+  })
 })
 
 describe('fieldForError', () => {
@@ -201,6 +210,50 @@ describe('writing a vignette', () => {
         .findAll('button')
         .some((b) => b.text() === 'Publish'),
     ).toBe(true)
+  })
+
+  it.each([
+    ['V020', 'V020'],
+    ['V20', 'V020'],
+    ['v020', 'V020'],
+    ['20', 'V020'],
+    [' V1234 ', 'V1234'],
+  ])('saves a code typed by hand (%j) instead of the suggested one', async (typed, sent) => {
+    serve({
+      'GET /vignettes': () => jsonResponse(200, [vignette()]),
+      'POST /vignettes': () => jsonResponse(201, vignette([version()], sent)),
+    })
+    await open('/vignettes/new')
+    await app().get('[data-testid="code"]').setValue(typed)
+    await fillRequired()
+    expect(buttonNamed('Save draft').attributes('disabled')).toBeUndefined()
+    await buttonNamed('Save draft').trigger('click')
+    await vi.waitFor(() => expect(writes()).toHaveLength(1))
+    expect((writes()[0]?.body as Record<string, unknown>).code).toBe(sent)
+  })
+
+  it('says what is wrong with a code it cannot use', async () => {
+    serve({ 'GET /vignettes': () => jsonResponse(200, []) })
+    await open('/vignettes/new')
+    await fillRequired()
+    await app().get('[data-testid="code"]').setValue('case 7')
+    expect(buttonNamed('Save draft').attributes('disabled')).toBeDefined()
+    expect(app().get('[data-error="code"]').text()).toContain('V012')
+  })
+
+  it('drops a refusal about the code once the code changes', async () => {
+    serve({
+      'GET /vignettes': () => jsonResponse(200, [vignette()]),
+      'POST /vignettes': () =>
+        jsonResponse(409, { code: 'vignette_code_taken', message: 'V008 already exists.' }),
+    })
+    await open('/vignettes/new')
+    await fillRequired()
+    await buttonNamed('Save draft').trigger('click')
+    await flushPromises()
+    expect(app().get('[data-error="code"]').text()).toBe('V008 already exists.')
+    await app().get('[data-testid="code"]').setValue('V009')
+    expect(app().find('[data-error="code"]').exists()).toBe(false)
   })
 
   it('needs the required parts before saving', async () => {

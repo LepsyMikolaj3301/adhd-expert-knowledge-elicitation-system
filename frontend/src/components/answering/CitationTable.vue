@@ -22,6 +22,11 @@ const props = defineProps<{
   insertInto?: string
   /** The quote clicked to stay lit in the text (the review). */
   pinnedChip?: number | null
+  /**
+   * The whole column scrolls (the review), so the list must not scroll in a box of its own on
+   * large screens: that box would keep the header from sticking. Answering leaves it off.
+   */
+  columnScrolls?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -127,7 +132,11 @@ watch(
 </script>
 
 <template>
-  <section aria-labelledby="citations-heading" class="relative flex min-h-0 flex-col">
+  <section
+    aria-labelledby="citations-heading"
+    class="relative flex flex-col"
+    :class="columnScrolls ? 'shrink-0' : 'min-h-0'"
+  >
     <h2 id="citations-heading" class="font-sans text-sm font-semibold text-ink">Quotes</h2>
     <p v-if="!citations.length" class="mt-2 text-sm text-muted" data-testid="no-citations">
       <template v-if="editable">Select the words your answer is about.</template>
@@ -147,12 +156,22 @@ watch(
         </template>
         <template v-else>Click a quote to keep it lit in the text.</template>
       </p>
-      <div ref="rows" class="mt-2 min-h-0 overflow-y-auto">
+      <div ref="rows" class="mt-2 min-h-0" :class="{ 'lg:overflow-y-auto': !columnScrolls }">
         <table class="w-full border-collapse text-left text-sm">
-          <thead>
+          <!-- Stays at the top while the quotes scroll under it. Its lines are drawn as shadows:
+               with collapsed borders, a sticky cell's own borders would scroll away. -->
+          <thead class="sticky top-0 z-10" data-testid="citations-head">
             <tr class="eyebrow font-medium">
-              <th scope="col" class="pb-1 pr-4 font-medium">Quote</th>
-              <th scope="col" class="w-52 border-l border-line pb-1 pl-3 font-medium xl:w-60">
+              <th
+                scope="col"
+                class="bg-page pr-4 pb-1 font-medium shadow-[inset_0_-1px_0_var(--color-line)]"
+              >
+                Quote
+              </th>
+              <th
+                scope="col"
+                class="w-52 bg-page pb-1 pl-3 font-medium shadow-[inset_1px_0_0_var(--color-line),inset_0_-1px_0_var(--color-line)] xl:w-60"
+              >
                 <div ref="helpRoot" class="relative flex items-center gap-1.5">
                   <span :class="marked && anyMissing ? 'text-danger' : ''">Direction</span>
                   <span

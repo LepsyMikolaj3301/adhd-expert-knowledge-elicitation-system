@@ -9,6 +9,7 @@ import {
   fieldForError,
   MAX_WORDS,
   MIN_WORDS,
+  codeFrom,
   nextCode,
   type FormField,
 } from '@/admin/vignetteForm'
@@ -59,8 +60,14 @@ const readOnly = computed(() => Boolean(current.value && current.value.status !=
 const words = computed(() => countTextWords(text.value))
 const wordsOk = computed(() => words.value >= MIN_WORDS && words.value <= MAX_WORDS)
 
+const typedCode = computed(() => codeFrom(code.value))
 const canSave = computed(
-  () => /^V\d{3,}$/.test(code.value) && Boolean(text.value.trim() && whatIf.value.trim()),
+  () => Boolean(typedCode.value && text.value.trim() && whatIf.value.trim()),
+)
+const codeError = computed(
+  () =>
+    fieldErrors.value.code ??
+    (isNew.value && !typedCode.value ? 'Use V and a number, like V012.' : ''),
 )
 
 function content() {
@@ -141,7 +148,7 @@ async function attempt(action: () => Promise<void>): Promise<boolean> {
 async function saveChanges() {
   if (isNew.value) {
     const { data } = await api.POST('/api/v1/vignettes', {
-      body: { code: code.value, ...content() },
+      body: { code: typedCode.value ?? code.value, ...content() },
     })
     await router.replace(`/vignettes/${data?.id}`)
     return
@@ -219,6 +226,9 @@ async function open() {
 
 onMounted(open)
 // A message about the text stops being true once the text changes.
+watch(code, () => {
+  fieldErrors.value = { ...fieldErrors.value, code: undefined }
+})
 watch(text, () => {
   fieldErrors.value = { ...fieldErrors.value, text: undefined }
 })
@@ -288,8 +298,8 @@ watch(() => props.id, open)
               :disabled="!isNew"
               maxlength="32"
             />
-            <span v-if="fieldErrors.code" class="mt-1 block text-sm text-danger" data-error="code">
-              {{ fieldErrors.code }}
+            <span v-if="codeError" class="mt-1 block text-sm text-danger" data-error="code">
+              {{ codeError }}
             </span>
           </label>
           <label class="block">

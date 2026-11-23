@@ -5,7 +5,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 import { api, type UserAdmin } from '@/api/client'
 import ConfirmDialog from '@/components/answering/ConfirmDialog.vue'
 import PseudonymChip from '@/components/PseudonymChip.vue'
-import { describeAdminError } from '@/copy'
+import { describeAdminError, PRIVACY } from '@/copy'
 
 const users = ref<UserAdmin[]>([])
 const loading = ref(true)
@@ -23,6 +23,29 @@ const toggling = ref<UserAdmin | null>(null)
 function status(u: UserAdmin): string {
   if (!u.is_active) return 'Deactivated'
   return u.invite_pending ? 'Invite not accepted' : 'Active'
+}
+
+/**
+ * Who confirmed the privacy notice, which version and when: the server's record. Admins are not
+ * asked to confirm it, so they show a dash.
+ */
+function privacy(u: UserAdmin): { text: string; detail?: string; tone: string } {
+  if (u.role !== 'expert') return { text: '—', tone: 'text-muted' }
+  if (!u.privacy_version || !u.privacy_accepted_at) return { text: 'Not yet', tone: 'text-muted' }
+  const when = new Date(u.privacy_accepted_at).toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return u.privacy_version === PRIVACY.version
+    ? { text: `Accepted ${when}`, tone: 'text-success' }
+    : {
+        text: `Accepted ${when}`,
+        detail: `An older version (${u.privacy_version}): asked again before the next case.`,
+        tone: 'text-warn',
+      }
 }
 
 async function load() {
@@ -164,7 +187,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warn))
       <thead>
         <tr class="border-b border-line text-muted">
           <th
-            v-for="h in ['Name', 'Email', 'Pseudonym', 'Role', 'Status', '']"
+            v-for="h in ['Name', 'Email', 'Pseudonym', 'Role', 'Status', 'Privacy notice', '']"
             :key="h"
             scope="col"
             class="py-2 pr-4 font-medium"
@@ -191,6 +214,12 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warn))
           <td class="py-3 pr-4"><PseudonymChip :pseudonym="u.pseudonym" /></td>
           <td class="py-3 pr-4 capitalize">{{ u.role }}</td>
           <td class="py-3 pr-4" data-testid="status">{{ status(u) }}</td>
+          <td class="py-3 pr-4" data-testid="privacy">
+            <span :class="privacy(u).tone">{{ privacy(u).text }}</span>
+            <span v-if="privacy(u).detail" class="block text-xs text-muted">
+              {{ privacy(u).detail }}
+            </span>
+          </td>
           <td class="space-x-2 py-3 text-right whitespace-nowrap">
             <button
               type="button"

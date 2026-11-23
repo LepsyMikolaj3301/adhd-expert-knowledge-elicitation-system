@@ -205,7 +205,7 @@ async function dragOver(text: string) {
   await flushPromises()
 }
 
-/** The "Add quote" button, which lives at the bottom of the screen, outside the app's tree. */
+/** The "Add quote" button, which appears under the selected words. */
 function addQuoteButton(): HTMLButtonElement | null {
   return document.querySelector('[data-testid="add-quote"]')
 }
@@ -336,6 +336,13 @@ describe('the vignette text', () => {
     expect(window.getSelection()?.isCollapsed).toBe(false)
   })
 
+  it('puts "Add quote" in the case text box, under the words, not at the bottom of the screen', async () => {
+    await open(assignment({ answers: {}, highlights: [] }))
+    await dragOver('barely slept')
+    const box = app().get('[data-testid="vignette-text"]').element.parentElement
+    expect(box?.contains(addQuoteButton())).toBe(true)
+  })
+
   it('hides "Add quote" when the selection goes away', async () => {
     await open(assignment({ answers: {}, highlights: [] }))
     await dragOver('barely slept')
@@ -406,7 +413,7 @@ describe('the vignette text', () => {
     expect(demo.get('.words').text()).toContain('lose my keys')
     expect(demo.get('[data-testid="cite-demo-button"]').text()).toBe('+ Add quote')
     expect(demo.find('.tap').exists()).toBe(true)
-    expect(app().text()).toContain('then press “Add quote” at the bottom of the screen')
+    expect(app().text()).toContain('then press “Add quote” right under them')
   })
 
   it('says how the text was written in the text box, not in the breadcrumb', async () => {

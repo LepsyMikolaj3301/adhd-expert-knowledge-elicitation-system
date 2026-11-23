@@ -218,3 +218,21 @@ describe('adding, renaming and deactivating accounts', () => {
     expect(wrapper!.get('[role="alert"]').text()).toBe('That account does not exist.')
   })
 })
+
+describe('who accepted the privacy notice', () => {
+  it('shows, for each expert, whether and when they accepted it', async () => {
+    await open([
+      person({ id: 'u1', privacy_accepted_at: '2026-11-23T09:30:00Z' }),
+      person({ id: 'u2', privacy_version: null, privacy_accepted_at: null }),
+      person({ id: 'u3', privacy_version: '2020-01-01', privacy_accepted_at: '2026-01-02T09:00Z' }),
+      { ...person({ id: 'u4' }), ...admin, invite_pending: false },
+    ])
+    const cells = wrapper!.findAll('[data-testid="privacy"]').map((c) => c.text())
+    expect(wrapper!.find('thead').text()).toContain('Privacy notice')
+    expect(cells[0]).toMatch(/^Accepted 23 Nov 2026/)
+    expect(cells[1]).toBe('Not yet')
+    expect(cells[2]).toMatch(/^Accepted 2 Jan 2026/)
+    expect(cells[2]).toContain('An older version (2020-01-01)')
+    expect(cells[3]).toBe('—')
+  })
+})
