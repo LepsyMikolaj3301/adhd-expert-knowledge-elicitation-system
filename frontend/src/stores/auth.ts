@@ -41,6 +41,12 @@ export const useAuthStore = defineStore('auth', () => {
     loaded.value = true
   }
 
+  /** "I understand" on the privacy notice: the server records who confirmed which version. */
+  async function acceptPrivacy(version: string): Promise<void> {
+    const { data } = await api.POST('/api/v1/me/privacy', { body: { version } })
+    if (data) user.value = data
+  }
+
   /** Throws `invalid_invite` when the link was used, replaced or has expired. */
   async function checkInvite(token: string): Promise<void> {
     await api.POST('/api/v1/auth/check-invite', { body: { token } })
@@ -73,6 +79,7 @@ export const useAuthStore = defineStore('auth', () => {
     load,
     login,
     acceptInvite,
+    acceptPrivacy,
     checkInvite,
     logout,
     clear,

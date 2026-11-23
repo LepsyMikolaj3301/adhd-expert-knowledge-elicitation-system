@@ -2169,6 +2169,24 @@
         "title": "PlantedCue",
         "type": "object"
       },
+      "PrivacyAcceptance": {
+        "additionalProperties": false,
+        "description": "The version of the privacy notice the user confirmed (the frontend owns the text).",
+        "properties": {
+          "version": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[0-9A-Za-z._-]+$",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "PrivacyAcceptance",
+        "type": "object"
+      },
       "ProofreadFeedback": {
         "properties": {
           "comment": {
@@ -2985,6 +3003,29 @@
             "title": "Is Active",
             "type": "boolean"
           },
+          "privacy_accepted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privacy Accepted At"
+          },
+          "privacy_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privacy Version"
+          },
           "pseudonym": {
             "title": "Pseudonym",
             "type": "string"
@@ -3001,6 +3042,8 @@
           "pseudonym",
           "is_active",
           "created_at",
+          "privacy_version",
+          "privacy_accepted_at",
           "invite_pending"
         ],
         "title": "UserAdminView",
@@ -3087,6 +3130,29 @@
             "title": "Is Active",
             "type": "boolean"
           },
+          "privacy_accepted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privacy Accepted At"
+          },
+          "privacy_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Privacy Version"
+          },
           "pseudonym": {
             "title": "Pseudonym",
             "type": "string"
@@ -3102,7 +3168,9 @@
           "role",
           "pseudonym",
           "is_active",
-          "created_at"
+          "created_at",
+          "privacy_version",
+          "privacy_accepted_at"
         ],
         "title": "UserView",
         "type": "object"
@@ -5266,6 +5334,48 @@
         "summary": "Home",
         "tags": [
           "home"
+        ]
+      }
+    },
+    "/api/v1/me/privacy": {
+      "post": {
+        "description": "Records 'I understand' on the privacy notice: who confirmed which version, and when.",
+        "operationId": "accept_privacy_api_v1_me_privacy_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivacyAcceptance"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "4XX": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Client Error"
+          }
+        },
+        "summary": "Accept Privacy",
+        "tags": [
+          "auth"
         ]
       }
     },

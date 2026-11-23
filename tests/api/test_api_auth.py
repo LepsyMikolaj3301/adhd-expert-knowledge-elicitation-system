@@ -6,6 +6,7 @@ import pytest
 from api_helpers import PASSWORD, Api, admin_api, expert_api
 from sqlalchemy import select, update
 
+from app.audit.models import AuditEvent
 from app.auth import service as auth_service
 from app.auth.models import AuthSession, Invite
 from app.core.db import session_factory, utcnow
@@ -379,3 +380,35 @@ async def test_the_session_cookie_is_https_only_in_production(
     )
     attributes = [part.strip().lower() for part in response.headers["set-cookie"].split(";")[1:]]
     assert ("secure" in attributes) is expected
+
+
+async def test_privacy_notice_confirmation_is_recorded_and_shown_to_the_admin():
+    expert = await expert_api("e@example.com")
+    me = await expert.ok("GET", "/me")
+    assert me["privacy_version"] is None
+    assert me["privacy_accepted_at"] is None
+
+    me = await expert.ok("POST", "/me/privacy", json={"version": "2026-11-23"})
+    assert me["privacy_version"] == "2026-11-23"
+    assert me["privacy_accepted_at"] is not None
+    assert (await expert.ok("GET", "/me"))["privacy_version"] == "2026-11-23"
+
+    admin = await admin_api()
+    row = next(u for u in await admin.ok("GET", "/users") if u["email"] == "e@example.com")
+    assert row["privacy_version"] == "2026-11-23"
+    assert row["privacy_accepted_at"] == me["privacy_accepted_at"]
+
+    async with session_factory()() as db:
+        events = list(
+            await db.scalars(select(AuditEvent).where(AuditEvent.action == "privacy_accepted"))
+        )
+    assert [e.meta for e in events] == [{"version": "2026-11-23"}]
+    assert str(events[0].actor_id) == me["id"]
+
+
+async def test_privacy_confirmation_needs_a_login_and_a_plain_version():
+    expert = await expert_api("e@example.com")
+    await expert.fails("POST", "/me/privacy", 422, "validation_error", json={"version": "<script>"})
+    await expert.fails("POST", "/me/privacy", 422, "validation_error", json={"version": ""})
+    await expert.ok("POST", "/auth/logout", 204)
+    await expert.fails("POST", "/me/privacy", 401, "not_authenticated", json={"version": "1"})

@@ -17,6 +17,17 @@ class UserView(BaseModel):
     pseudonym: str
     is_active: bool
     created_at: datetime
+    # The privacy notice last confirmed, by its version, and when. None: not confirmed yet.
+    privacy_version: str | None
+    privacy_accepted_at: datetime | None
+
+
+class PrivacyAcceptance(BaseModel):
+    """The version of the privacy notice the user confirmed (the frontend owns the text)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version: str = Field(min_length=1, max_length=32, pattern=r"^[0-9A-Za-z._-]+$")
 
 
 class UserAdminView(UserView):

@@ -291,10 +291,15 @@ watch(
         {{ TRUST_SENTENCE }}
       </p>
 
-      <!-- Placeholder until the privacy notice is written. -->
+      <!-- The short version: the full notice is its own page. -->
       <section aria-labelledby="privacy" class="mt-12 card p-5" data-testid="gdpr">
         <h2 id="privacy">{{ HOME.privacy.heading }}</h2>
-        <p class="mt-2 text-muted">{{ HOME.privacy.text }}</p>
+        <ul class="mt-3 list-disc space-y-1.5 pl-5 text-text">
+          <li v-for="point in HOME.privacy.points" :key="point">{{ point }}</li>
+        </ul>
+        <RouterLink to="/privacy" class="mt-4 inline-block font-medium" data-testid="privacy-link">
+          {{ HOME.privacy.link }} →
+        </RouterLink>
       </section>
     </div>
   </div>

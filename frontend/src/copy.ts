@@ -122,12 +122,12 @@ export const CASE_TEXT = {
   reviewLead: 'The text the answers are about.',
 } as const
 
-/** Quoting from the case: select words, then press the button at the bottom of the screen. */
+/** Quoting from the case: select words, then press the button that appears under them. */
 export const CITE = {
   add: 'Add quote',
   toComment: 'Quote in comment',
   help: 'How to add a quote',
-  helpSteps: 'Select words in the text above, then press “Add quote” at the bottom of the screen.',
+  helpSteps: 'Select words in the text above, then press “Add quote” right under them.',
   helpThen: 'Then choose its direction in the list of quotes.',
 } as const
 
@@ -333,8 +333,13 @@ export const HOME = {
   },
   learnMore: 'Learn more',
   privacy: {
-    heading: 'Your data and GDPR',
-    text: 'Placeholder: how PsyKnowHow processes your personal data under the GDPR, who to contact and your rights will be described here.',
+    heading: 'Your data and the GDPR',
+    points: [
+      'Other experts see your answers under a pseudonym, never your name or email.',
+      'Your answers are proofread on our own servers, not by an outside AI provider.',
+      'You can see, correct or delete your data, and stop taking part at any time.',
+    ],
+    link: 'Read the full privacy notice',
   },
   sectionsHeading: 'Your sections',
   cards: {
@@ -711,3 +716,108 @@ export function postedAt(iso: string): string {
 export function commentExcerpt(text: string): string {
   return text.replace(/⟦h(\d+)⟧/g, '[Quote $1]').replace(/⟦h?\d*…$/, '…')
 }
+
+/**
+ * The privacy notice (GDPR Art. 13), shown once before the first case and from the home page.
+ * Values in [square brackets] are for the study team to fill in: the controller, contacts, legal
+ * basis and how long data is kept are decisions, not facts the code can know. Raise `version`
+ * whenever the substance changes: every expert is then asked to read it again.
+ */
+export const PRIVACY = {
+  version: '2026-11-23',
+  title: 'Your data and the GDPR',
+  lead: 'Before your first case, please read how we use your personal data. It takes about three minutes. You can open this notice again at any time from the home page.',
+  sections: [
+    {
+      id: 'who',
+      heading: 'Who is responsible',
+      items: [
+        {
+          term: 'Data controller',
+          text: '[Name and address of the institution running the study].',
+        },
+        {
+          term: 'Contact for this study',
+          text: '[Name and email of the principal investigator].',
+        },
+        {
+          term: 'Data protection officer',
+          text: '[Name and email of the institution’s data protection officer].',
+        },
+      ],
+    },
+    {
+      id: 'what',
+      heading: 'What we collect',
+      items: [
+        {
+          term: 'Your account',
+          text: 'Your email address and name, the pseudonym we give you, and your password, which we keep only in scrambled (hashed) form that cannot be read back.',
+        },
+        {
+          term: 'Your work',
+          text: 'The quotes you mark, their directions, your answers and ratings, the proofread versions of your answers, and your comments and votes in reviews.',
+        },
+        {
+          term: 'Security records',
+          text: 'A record of what was done to each case and when (for example, submitted or sent back), and failed sign-in attempts, so that we can lock an account under attack.',
+        },
+        {
+          term: 'In your browser',
+          text: 'One cookie that keeps you signed in, and a note of whether you have read the instructions and this notice. No advertising or tracking cookies.',
+        },
+      ],
+    },
+    {
+      id: 'why',
+      heading: 'Why, and on what legal basis',
+      paragraphs: [
+        'We collect your clinical reading of short case texts to build a knowledge base of clinician opinion. After review, an AI assistant can find your answers and cite them, word for word, under your pseudonym, as one clinician’s view.',
+        'Legal basis: [for example, a task in the public interest (GDPR Art. 6(1)(e)) for research at a public university, or your consent (Art. 6(1)(a)). To be confirmed by the data protection officer]. Research use is subject to the safeguards of GDPR Art. 89, above all pseudonymisation and collecting no more than the study needs.',
+        'We do not ask for any health data about you. Please do not write anything in your answers that identifies you, a patient or anyone else.',
+      ],
+    },
+    {
+      id: 'who-sees',
+      heading: 'Who sees your data',
+      items: [
+        {
+          term: 'Other experts',
+          text: 'See your answers in reviews under your pseudonym only, never your name or email.',
+        },
+        {
+          term: 'The study team',
+          text: 'Can link your pseudonym to your account, to manage invitations, assignments and reviews.',
+        },
+        {
+          term: 'Automatic proofreading',
+          text: 'Your answers are checked for spelling and grammar by a language model and a spell-checker that the study team runs itself. Your text is not sent to an outside AI provider.',
+        },
+        {
+          term: 'Hosting',
+          text: '[Name of the hosting provider and where the servers are, e.g. within the EU/EEA]. We do not transfer your data outside the EEA [unless stated here, with the safeguard used].',
+        },
+      ],
+    },
+    {
+      id: 'how-long',
+      heading: 'How long we keep it',
+      paragraphs: [
+        'Your account data is kept until the end of the study [date or period], then deleted. Answers accepted into the knowledge base are kept, under your pseudonym, for [period] after the study ends, so that the results can be checked and reused for research.',
+      ],
+    },
+    {
+      id: 'rights',
+      heading: 'Your rights',
+      paragraphs: [
+        'You can ask to see the data we hold about you, have it corrected or deleted, restrict or object to its use, and receive a copy of it. Taking part is voluntary: you can stop at any time without giving a reason, and ask for your answers to be withdrawn. Answers already used in published results may not be removable once anonymised.',
+        'Write to [the study contact] to use any of these rights. If you think we have mishandled your data, you can complain to the data protection authority: [for example, in Poland, the President of the Personal Data Protection Office (UODO), uodo.gov.pl].',
+      ],
+    },
+  ],
+  confirm:
+    'By pressing “I understand”, you confirm that you have read how your personal data is used in this study.',
+  understand: 'I understand',
+  confirmed: 'You have confirmed this notice.',
+  updated: 'Last updated',
+} as const

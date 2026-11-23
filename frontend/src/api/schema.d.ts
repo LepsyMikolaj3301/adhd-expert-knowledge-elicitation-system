@@ -566,6 +566,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/privacy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Privacy
+         * @description Records 'I understand' on the privacy notice: who confirmed which version, and when.
+         */
+        post: operations["accept_privacy_api_v1_me_privacy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reviews": {
         parameters: {
             query?: never;
@@ -1584,6 +1604,14 @@ export interface components {
             /** Trait */
             trait: string;
         };
+        /**
+         * PrivacyAcceptance
+         * @description The version of the privacy notice the user confirmed (the frontend owns the text).
+         */
+        PrivacyAcceptance: {
+            /** Version */
+            version: string;
+        };
         /** ProofreadFeedback */
         ProofreadFeedback: {
             /** Comment */
@@ -1884,6 +1912,10 @@ export interface components {
             invite_pending: boolean;
             /** Is Active */
             is_active: boolean;
+            /** Privacy Accepted At */
+            privacy_accepted_at: string | null;
+            /** Privacy Version */
+            privacy_version: string | null;
             /** Pseudonym */
             pseudonym: string;
             role: components["schemas"]["Role"];
@@ -1924,6 +1956,10 @@ export interface components {
             id: string;
             /** Is Active */
             is_active: boolean;
+            /** Privacy Accepted At */
+            privacy_accepted_at: string | null;
+            /** Privacy Version */
+            privacy_version: string | null;
             /** Pseudonym */
             pseudonym: string;
             role: components["schemas"]["Role"];
@@ -3131,6 +3167,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HomeView"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_privacy_api_v1_me_privacy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivacyAcceptance"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserView"];
                 };
             };
             /** @description Client Error */

@@ -2,6 +2,7 @@ import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router'
 
 import type { User } from '@/api/client'
 import { introNeeded } from '@/intro'
+import { privacyNeeded } from '@/privacy'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -14,7 +15,9 @@ declare module 'vue-router' {
     wide?: boolean
     /** When the session ends, stay on the page and ask for the password over it. */
     keepOnExpiry?: boolean
-    /** Sends an expert to the instructions first, until they have read them. */
+    /**
+     * Sends an expert to the privacy notice, then the instructions, until they have read them.
+     */
     needsIntro?: boolean
   }
 }
@@ -35,6 +38,10 @@ export function guardRoute(
   }
   if (to.meta.guestOnly && user) {
     return { name: 'home' }
+  }
+  // The privacy notice comes first: it says what happens to everything written after it.
+  if (to.meta.needsIntro && user && privacyNeeded(user)) {
+    return { name: 'privacy', query: { next: to.fullPath } }
   }
   if (to.meta.needsIntro && user && introNeeded(user.id)) {
     return { name: 'instructions', query: { next: to.fullPath } }

@@ -9,6 +9,7 @@ from app.assignments.models import Assignment
 from app.assignments.states import State
 from app.audit.service import record_event
 from app.auth.service import end_all_sessions
+from app.core.db import utcnow
 from app.core.errors import DomainError, not_found
 from app.core.security import hash_password
 from app.users.models import PSEUDONYM_SEQUENCE, Role, User
@@ -60,6 +61,22 @@ async def get_user(db: AsyncSession, user_id: UUID) -> User:
 
 async def list_users(db: AsyncSession) -> list[User]:
     return list(await db.scalars(select(User).order_by(User.created_at)))
+
+
+def accept_privacy(db: AsyncSession, user: User, version: str) -> User:
+    """Records that the user confirmed this version of the privacy notice, now. Pressing it again
+    (another browser, a newer notice) moves the date on; the audit trail keeps each one."""
+    user.privacy_version = version
+    user.privacy_accepted_at = utcnow()
+    record_event(
+        db,
+        actor_id=user.id,
+        entity_type="user",
+        entity_id=user.id,
+        action="privacy_accepted",
+        meta={"version": version},
+    )
+    return user
 
 
 async def update_user(

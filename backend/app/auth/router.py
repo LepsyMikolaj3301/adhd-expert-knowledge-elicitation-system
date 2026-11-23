@@ -4,7 +4,8 @@ from app.auth import service
 from app.auth.dependencies import CurrentUser
 from app.auth.schemas import AcceptInviteRequest, CheckInviteRequest, LoginRequest
 from app.core.db import DbSession
-from app.users.schemas import UserView
+from app.users import service as users
+from app.users.schemas import PrivacyAcceptance, UserView
 
 router = APIRouter(tags=["auth"])
 
@@ -38,4 +39,12 @@ async def accept_invite(body: AcceptInviteRequest, response: Response, db: DbSes
 
 @router.get("/me")
 async def me(user: CurrentUser) -> UserView:
+    return UserView.model_validate(user)
+
+
+@router.post("/me/privacy")
+async def accept_privacy(body: PrivacyAcceptance, user: CurrentUser, db: DbSession) -> UserView:
+    """Records 'I understand' on the privacy notice: who confirmed which version, and when."""
+    users.accept_privacy(db, user, body.version)
+    await db.commit()
     return UserView.model_validate(user)

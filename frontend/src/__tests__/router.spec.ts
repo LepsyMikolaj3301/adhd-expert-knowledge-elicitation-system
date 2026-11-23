@@ -68,7 +68,11 @@ describe('where the router lets each kind of visitor go', () => {
     },
   )
 
-  it('sends an expert to the instructions first, once, with the way on', async () => {
+  it('sends an expert to the privacy notice, then the instructions, once, with the way on', async () => {
+    const first = await visit({ ...expert, privacy_version: null }, '/assignments/a1')
+    expect(first.name).toBe('privacy')
+    expect(first.query.next).toBe('/assignments/a1')
+
     const route = await visit(expert, '/assignments/a1')
     expect(route.name).toBe('instructions')
     expect(route.query.next).toBe('/assignments/a1')

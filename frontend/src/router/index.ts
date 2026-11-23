@@ -55,6 +55,11 @@ const router = createRouter({
           meta: { roles: ['expert'], title: 'Instructions' },
         },
         {
+          path: 'privacy',
+          name: 'privacy',
+          component: () => import('@/views/PrivacyView.vue'),
+        },
+        {
           path: 'reviews',
           name: 'reviews',
           component: () => import('@/views/ReviewsView.vue'),

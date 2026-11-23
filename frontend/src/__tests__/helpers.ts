@@ -1,6 +1,7 @@
 import { vi } from 'vitest'
 
 import type { User } from '@/api/client'
+import { PRIVACY } from '@/copy'
 
 type FetchInput = RequestInfo | URL
 
@@ -58,6 +59,9 @@ export const expert: User = {
   pseudonym: 'E01',
   is_active: true,
   created_at: '2026-11-04T10:00:00Z',
+  // Confirmed the current notice: most tests are about what comes after it.
+  privacy_version: PRIVACY.version,
+  privacy_accepted_at: '2026-11-04T10:05:00Z',
 }
 
 export const admin: User = {

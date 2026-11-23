@@ -92,3 +92,33 @@ describe('safeNextPath', () => {
     expect(safeNextPath(input)).toBe(expected)
   })
 })
+
+describe('the privacy notice', () => {
+  const meta: RouteMeta = { requiresAuth: true, roles: ['expert'], needsIntro: true }
+
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
+  const fresh = { ...expert, privacy_version: null, privacy_accepted_at: null }
+
+  it('comes before the instructions, and remembers where the expert was going', () => {
+    expect(guardRoute(to(meta, '/assignments/a1'), fresh)).toEqual({
+      name: 'privacy',
+      query: { next: '/assignments/a1' },
+    })
+    acknowledgeIntro(expert.id, true)
+    expect(guardRoute(to(meta), expert)).toBe(true)
+  })
+
+  it('is asked again when the notice changes', () => {
+    acknowledgeIntro(expert.id, true)
+    const older = { ...expert, privacy_version: 'an-older-version' }
+    expect(guardRoute(to(meta), older)).toEqual({ name: 'privacy', query: { next: '/target' } })
+  })
+
+  it('is not in the way of the routes that do not ask for it', () => {
+    expect(guardRoute(to({ requiresAuth: true }), expert)).toBe(true)
+  })
+})

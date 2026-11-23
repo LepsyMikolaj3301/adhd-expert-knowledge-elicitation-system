@@ -32,6 +32,10 @@ class User(Base):
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # When the home page's activity list was last looked at: what is newer is unread.
     activity_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The privacy notice the user last confirmed ("I understand") and when. NULL until then; every
+    # confirmation is also in the audit trail (`privacy_accepted`), so older ones are kept.
+    privacy_version: Mapped[str | None] = mapped_column(String(32))
+    privacy_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, server_default=func.now()
     )
